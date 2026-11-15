@@ -1,0 +1,1009 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lockpick</title>
+<style>
+:root{
+  --bg:#f6f4ee; --panel:#fffdf8; --ink:#1f2328; --muted:#6b7078; --line:#d9d4c7;
+  --accent:#c2410c; --accent-ink:#ffffff; --good:#2e7d4f; --hatch:#8b9099;
+  --k0:#0f7c86; --k1:#7a4fc0; --kA:#2e7d4f; --kC:#2b5fb3; --kG:#9a6b00; --kT:#b83a4b;
+  /* lockers, displays and scraps are illustrations: one palette in both themes */
+  --steel1:#93a7b9; --steel2:#63788c; --steel3:#2b3743;
+  --glow1:#fff3bf; --glow2:#ffc94d; --glow-ink:#4a3200;
+  --lcd:#0f2219; --lcd-ink:#86ffb6; --lcd-dim:#2c6145;
+  --paper:#fbf6e4; --paper-ink:#2a2620;
+  --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme:dark){
+  :root{
+    --bg:#15181c; --panel:#1d2126; --ink:#e8e6e1; --muted:#9aa0a8; --line:#343a42;
+    --accent:#ff9b5e; --accent-ink:#2b1200; --good:#6fcf97; --hatch:#7d848e;
+    --k0:#4fc3cc; --k1:#b89cf5; --kA:#6fcf97; --kC:#7fb0ff; --kG:#e6bd4f; --kT:#ff8a98;
+  }
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 system-ui,-apple-system,"Segoe UI",sans-serif}
+button{font:inherit;color:inherit}
+code{font-family:var(--mono);font-size:.95em;background:color-mix(in srgb,var(--ink) 8%,transparent);padding:1px 5px;border-radius:4px;overflow-wrap:anywhere}
+.key-0{--kc:var(--k0);--lc:#48d6e0}.key-1{--kc:var(--k1);--lc:#c0a4ff}
+.key-A{--kc:var(--kA);--lc:#62e394}.key-C{--kc:var(--kC);--lc:#74b4ff}
+.key-G{--kc:var(--kG);--lc:#ffd557}.key-T{--kc:var(--kT);--lc:#ff8494}
+.wrap{max-width:1040px;margin:0 auto;padding:18px 16px 48px}
+
+/* header */
+.top{display:flex;flex-wrap:wrap;align-items:center;gap:10px 18px}
+h1{font-size:1.55rem;line-height:1.1;margin:0;letter-spacing:.01em}
+.tag{margin:2px 0 0;color:var(--muted);font-size:.9rem}
+.lv{display:flex;flex-wrap:wrap;gap:6px;margin-left:auto}
+.lv button{width:2.1rem;height:2.1rem;border-radius:50%;border:1.5px solid var(--line);background:var(--panel);font-weight:700;cursor:pointer}
+.lv button.gold{border-color:var(--good);box-shadow:inset 0 0 0 2px color-mix(in srgb,var(--good) 30%,transparent)}
+.lv button.on{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.lv button:disabled{opacity:.38;cursor:not-allowed}
+.aux{min-height:2.4rem;padding:0 .85rem;border-radius:9px;border:1.5px solid var(--line);background:var(--panel);cursor:pointer}
+.aux:hover{border-color:var(--muted)}
+.primary{min-height:2.6rem;padding:0 1.1rem;border-radius:10px;border:0;background:var(--accent);color:var(--accent-ink);font-weight:700;cursor:pointer}
+.link{border:0;background:none;padding:0;color:var(--accent);text-decoration:underline;cursor:pointer}
+button:focus-visible,.node:focus-visible,.term:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+
+/* brief and vocabulary */
+.brief h2{font-size:1.15rem;margin:16px 0 4px}
+.brief p{margin:0;max-width:70ch}
+.vocab{margin-top:10px;display:flex;flex-wrap:wrap;gap:6px;align-items:center;font-size:.9rem}
+.vocabhead{font-size:.72rem;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);margin-right:4px}
+.vocabhead span{text-transform:none;letter-spacing:0}
+.term{border-bottom:1.5px dotted currentColor;cursor:help;position:relative}
+.vocab .term{border:1px solid var(--line);border-radius:999px;padding:1px 10px;background:var(--panel)}
+.tip{position:absolute;z-index:30;width:max-content;max-width:min(300px,calc(100vw - 16px));background:var(--ink);color:var(--bg);padding:8px 11px;border-radius:9px;font-size:.84rem;line-height:1.4;box-shadow:0 6px 18px rgba(0,0,0,.25);pointer-events:none}
+
+/* the wall */
+.wallbox{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px 10px 16px;margin:14px 0}
+.wall{display:flex;flex-wrap:wrap;justify-content:center;gap:8px 5px;--lw:56px;--lh:68px;--lf:.92rem}
+.wall.small{--lw:41px;--lh:52px;--lf:.72rem;gap:8px 3px}
+.wall.huge{--lw:68px;--lh:82px;--lf:1.06rem;gap:10px 8px}
+.bank{display:flex;flex-direction:column;align-items:center;gap:4px;padding:3px;border-radius:9px;border:1.5px solid transparent}
+.bank .lab{font:700 .68rem/1 var(--mono);letter-spacing:.08em;color:var(--muted);height:.75rem;visibility:hidden}
+.wall.labels .lab{visibility:visible}
+.bank.cur{border-color:var(--accent);background:color-mix(in srgb,var(--accent) 11%,transparent)}
+.bank.cur .lab{color:var(--accent)}
+.locker{position:relative;display:block;width:var(--lw);height:var(--lh);padding:0;border:0;background:none;perspective:260px;cursor:pointer}
+.locker .in{position:absolute;inset:0;border-radius:5px;background:radial-gradient(circle at 65% 40%,var(--glow1),var(--glow2));color:var(--glow-ink);display:flex;flex-direction:column;align-items:center;justify-content:center;padding-left:24%;font:700 var(--lf)/1.15 var(--mono);box-shadow:inset 0 0 0 1.5px rgba(0,0,0,.3),inset 0 0 12px rgba(120,70,0,.35)}
+.locker .in small{font-weight:600;font-size:.82em;opacity:.85}
+.locker .door{position:absolute;inset:0;border-radius:5px;background:linear-gradient(155deg,var(--steel1),var(--steel2));color:#fff;display:flex;align-items:center;justify-content:center;padding-top:22%;font:700 var(--lf)/1 var(--mono);text-shadow:0 1px 1px rgba(0,0,0,.45);transform-origin:left center;transition:transform .5s cubic-bezier(.3,1.5,.5,1);box-shadow:inset 0 0 0 1.5px var(--steel3),inset 0 2px 0 rgba(255,255,255,.22);backface-visibility:hidden}
+.locker .door i{position:absolute;top:11%;left:24%;right:24%;height:15%;background:repeating-linear-gradient(to bottom,rgba(20,30,40,.55) 0 2px,transparent 2px 5px)}
+.locker .door::after{content:"";position:absolute;right:9%;top:56%;width:5px;height:9px;border-radius:3px;background:rgba(20,30,40,.6)}
+.locker.open .door{transform:rotateY(-76deg)}
+.locker.reach .door{box-shadow:0 0 0 3px var(--accent),inset 0 0 0 1.5px var(--steel3)}
+.locker.pick .door{box-shadow:0 0 0 3.5px var(--ink),inset 0 0 0 1.5px var(--steel3);filter:brightness(1.18)}
+.locker.hl,.scrap.hl{outline:3px solid var(--ink);outline-offset:2px;border-radius:6px}
+.wall.pile{gap:14px 16px;padding:8px 4px;--kA:#2e7d4f;--kC:#2b5fb3;--kG:#9a6b00;--kT:#b83a4b}
+.scrap{position:relative;border:0;background:none;padding:0;transform:rotate(var(--rot,0deg));filter:drop-shadow(0 1.5px 1.5px rgba(0,0,0,.35));transition:opacity .35s,transform .35s;cursor:default}
+.scrap .pp{display:block;background:var(--paper);padding:.6rem .7rem .6rem .8rem;font:700 1.2rem/1 var(--mono);letter-spacing:.14em;clip-path:polygon(0 9%,7% 0,15% 8%,25% 0,36% 7%,48% 0,59% 8%,71% 1%,83% 8%,93% 0,100% 7%,100% 93%,93% 100%,82% 92%,70% 100%,58% 93%,46% 100%,34% 92%,23% 100%,12% 93%,5% 100%,0 92%)}
+.scrap .pp span{color:var(--kc)}
+.scrap.open{opacity:.4;transform:rotate(var(--rot,0deg)) scale(.9)}
+.scrap.open::after{content:"\2713";position:absolute;right:-5px;top:-8px;width:1.15rem;height:1.15rem;border-radius:50%;background:var(--good);color:#fff;font:700 .75rem/1.15rem system-ui,sans-serif;text-align:center}
+
+/* bench: tape, display, keypad */
+.work{display:grid;gap:16px;grid-template-columns:minmax(0,1fr);max-width:680px;margin:0 auto}
+.work.withmap{max-width:none}
+@media (min-width:880px){.work.withmap{grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);align-items:start}}
+.tapehead{display:flex;justify-content:space-between;align-items:baseline;gap:10px;flex-wrap:wrap;margin-bottom:6px}
+#stats{color:var(--muted);font-size:.92rem}
+#stats b{color:var(--ink)}
+#stats b.bad{color:var(--accent)}
+.tape{min-height:4.7rem;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:10px;display:flex;flex-wrap:wrap;align-content:flex-start;gap:6px 3px;cursor:text}
+.tok{width:1.6rem;height:1.9rem;border-radius:5px;display:grid;place-items:center;font:700 .98rem/1 var(--mono);border:1.5px solid transparent;user-select:none}
+.tok.new{border-color:var(--kc);background:color-mix(in srgb,var(--kc) 17%,transparent)}
+.tok.prime{border:1.5px dashed var(--muted);color:var(--muted)}
+.tok.waste{border-color:var(--hatch);color:var(--muted);text-decoration:line-through;text-decoration-thickness:2px;background:repeating-linear-gradient(135deg,transparent 0 4px,color-mix(in srgb,var(--hatch) 40%,transparent) 4px 6px)}
+.tok.win{box-shadow:0 4px 0 -1px var(--ink)}
+.tok.hl{outline:2.5px solid var(--ink);outline-offset:0}
+.caret{width:2.5px;height:1.9rem;background:var(--accent);border-radius:1px;margin:0 1px;animation:blink 1.1s steps(2,start) infinite}
+@keyframes blink{to{visibility:hidden}}
+.ghost{color:var(--muted);align-self:center;margin-left:6px}
+.legend,.cap2{margin:6px 0 0;color:var(--muted);font-size:.8rem}
+.controls{display:flex;flex-wrap:wrap;align-items:center;gap:14px 22px;margin:14px 0 4px}
+.lcdbox{display:flex;flex-direction:column;align-items:center;gap:6px}
+.lcd{--cw:2.2rem;width:calc(var(--k)*var(--cw));overflow:hidden;background:var(--lcd);border-radius:8px;padding:7px 0;box-shadow:inset 0 0 0 2px #000,0 0 0 4px var(--steel2),0 0 0 5.5px var(--steel3)}
+.lcd .strip{display:flex;margin-left:calc(var(--cw)*-1)}
+.lcd .strip.still{margin-left:0}
+.lcd .cell{flex:0 0 var(--cw);text-align:center;font:700 1.55rem/1.2 var(--mono);color:var(--lcd-ink);text-shadow:0 0 7px color-mix(in srgb,var(--lcd-ink) 70%,transparent)}
+.lcd .cell.old{color:var(--lcd-dim);text-shadow:none}
+.lcd .strip.shift{animation:shift .2s ease-out}
+@keyframes shift{from{transform:translateX(var(--cw))}}
+.pad{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.key{width:3.4rem;height:3.4rem;border-radius:12px;border:0;background:var(--kc);color:var(--bg);font:700 1.4rem/1 var(--mono);cursor:pointer;box-shadow:0 4px 0 rgba(0,0,0,.28)}
+.key:active{transform:translateY(3px);box-shadow:0 1px 0 rgba(0,0,0,.28)}
+.undertape{display:flex;flex-wrap:wrap;gap:8px 14px;align-items:flex-start;justify-content:space-between;margin-top:6px}
+.undertape .legend{margin:0;flex:1 1 14rem}
+.tools{display:flex;gap:6px;flex:none}
+.aux.sm{min-height:2rem;padding:0 .65rem;font-size:.88rem}
+.aside{margin:10px 0 0}
+@media (max-width:640px){
+  .controls{position:sticky;bottom:0;background:var(--bg);padding:10px 0 8px;margin-bottom:0;z-index:5;flex-wrap:nowrap;gap:12px}
+  .lcdbox .cap2{display:none}
+  .lcd{--cw:1.7rem;margin:6px}
+  .lcd .cell{font-size:1.25rem}
+  .pad{flex-wrap:nowrap;gap:6px}
+  .key{width:2.9rem;height:2.9rem}
+}
+
+/* messages, cards, reveals */
+.note{margin:12px 0 0;padding:10px 13px;border-radius:10px;border:1px solid var(--line);background:var(--panel);font-size:.95rem}
+.note.dead{border-left:5px solid var(--accent)}
+.note.hint{border-style:dashed}
+.card{margin:14px 0 0;padding:14px 16px 16px;border-radius:14px;border:2px solid var(--good);background:var(--panel)}
+.card h3{margin:0 0 6px;font-size:1.1rem}
+.card p{margin:0 0 10px}
+.seqs code{display:inline-block;margin-left:4px;letter-spacing:.06em}
+.reveal{margin:14px 0;padding:12px 14px;border-left:5px solid var(--accent);background:color-mix(in srgb,var(--accent) 9%,transparent);border-radius:0 12px 12px 0}
+.reveal .lead{font-size:1.2rem;margin:0 0 6px}
+.reveal p{margin:0 0 8px}
+.reveal .vmap{font-weight:600}
+.reveal .ros{font-size:.82rem;color:var(--muted);margin:0}
+.vis{display:flex;flex-direction:column;align-items:center;gap:4px;margin:6px 0 10px;overflow-x:auto;max-width:100%}
+.ring text{font-family:var(--mono);font-weight:700;fill:var(--kc);text-anchor:middle;dominant-baseline:central}
+.ring .sweep{transform-origin:90px 90px;animation:sweep linear infinite}
+.ring .sweep path{fill:none;stroke:var(--accent);stroke-opacity:.3;stroke-linecap:round}
+@keyframes sweep{to{transform:rotate(360deg)}}
+.stitch{display:flex;flex-wrap:wrap;gap:3px 0;justify-content:center;max-width:34rem}
+.stitch .st{font:700 .9rem/1.5rem var(--mono);width:1.15rem;text-align:center;border-bottom:4px solid var(--hatch)}
+.stitch .g1{border-color:var(--kC);background:color-mix(in srgb,var(--kC) 22%,transparent);transform:translateY(-5px)}
+.stitch .g2{border-color:var(--kT);background:color-mix(in srgb,var(--kT) 22%,transparent);transform:translateY(-5px)}
+.stitch .g3{border-color:var(--kA);background:color-mix(in srgb,var(--kA) 22%,transparent);transform:translateY(-5px)}
+.stitch .g4{border-color:var(--k1);background:color-mix(in srgb,var(--k1) 22%,transparent);transform:translateY(-5px)}
+.stitch .g5{border-color:var(--kG);background:color-mix(in srgb,var(--kG) 22%,transparent);transform:translateY(-5px)}
+.mini{display:inline-block;background:var(--lcd);color:var(--lcd-ink);font:700 .92rem/1.5 var(--mono);padding:0 8px;border-radius:5px;box-shadow:0 0 0 2.5px var(--steel2)}
+.bal{display:flex;align-items:center;gap:8px;margin:5px 0;font-size:.9rem}
+.bal .arr{font-weight:700;min-width:3.4em;letter-spacing:-.05em}
+.bal .arr:first-child{text-align:right}
+.bal .tag{color:var(--muted)}
+.bal i{font-style:normal;color:var(--muted);font-size:.8rem}
+.pill{display:inline-block;min-width:1.5rem;text-align:center;font:700 .9rem/1.5 var(--mono);border-radius:5px;background:var(--kc);color:var(--bg)}
+.tiling{position:relative;font:700 .82rem/1 var(--mono)}
+.tiling .trow{display:flex;margin-bottom:5px}
+.tiling .trow span{text-align:center;color:var(--kc);font-size:.95rem}
+.tiling .treads{position:relative}
+.tiling .tread{position:absolute;height:18px;line-height:18px;text-align:center;letter-spacing:.2em;text-indent:.2em;border-radius:3px;color:#fff;background:linear-gradient(155deg,var(--steel1),var(--steel2));box-shadow:inset 0 0 0 1px var(--steel3);opacity:0;animation:drop .35s ease-out forwards}
+@keyframes drop{from{opacity:0;transform:translateY(-10px)}to{opacity:1;transform:none}}
+.twin{font:700 .95rem/1 var(--mono)}
+.twin .trow2{display:flex;margin:4px 0}
+.twin .trow2 span{width:1.15rem;line-height:1.6rem;text-align:center}
+.twin .d1{background:color-mix(in srgb,var(--kC) 28%,transparent);box-shadow:inset 0 -3px 0 var(--kC)}
+.twin .d2{background:color-mix(in srgb,var(--kT) 28%,transparent);box-shadow:inset 0 -3px 0 var(--kT)}
+.split{display:flex;flex-wrap:wrap;gap:8px 34px;justify-content:center}
+
+/* quiz */
+.quiz{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px 16px}
+.quiz h3{margin:0 0 6px}
+.quiz p{margin:8px 0}
+.quiz .lcd{margin:10px 6px}
+.quiz .row{display:flex;flex-wrap:wrap;align-items:center;gap:12px}
+.qmsg{font-size:.95rem}
+.qmsg.ok{color:var(--good);font-weight:700}
+
+/* the map */
+.mapbox{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:12px}
+.maphead{display:flex;flex-direction:column;gap:2px}
+.maphead span{color:var(--muted);font-size:.8rem}
+#map{width:100%;height:auto;display:block}
+.edge{fill:none;stroke:var(--kc);stroke-width:3;stroke-linecap:round}
+.edge.fresh{stroke-dasharray:1;stroke-dashoffset:1;animation:draw .3s ease-out forwards}
+@keyframes draw{to{stroke-dashoffset:0}}
+.head{fill:var(--kc)}
+.egrp.bad .edge{stroke:var(--hatch);stroke-dasharray:5 5}
+.egrp.bad .head{fill:var(--hatch)}
+.dense .edge{stroke-width:2;opacity:.45}
+.dense .head{opacity:.5}
+.dense .egrp.near .edge{stroke-width:3.2;opacity:1}
+.dense .egrp.near .head{opacity:1}
+.egrp.hl .edge{stroke-width:6.5;opacity:1}
+.cap{fill:var(--kc);stroke:var(--panel);stroke-width:1.5}
+.capt{font:700 9.5px var(--mono);fill:var(--bg);text-anchor:middle;dominant-baseline:central;pointer-events:none}
+.mult{font:800 12.5px system-ui,sans-serif;fill:var(--ink);text-anchor:middle;dominant-baseline:central;paint-order:stroke;stroke:var(--panel);stroke-width:4.5px}
+.node{cursor:pointer}
+.node .case{fill:var(--steel2);stroke:var(--steel3);stroke-width:1.5}
+.node .scr{fill:var(--lcd)}
+.node text{font-family:var(--mono);font-weight:700;fill:var(--lcd-ink);text-anchor:middle;dominant-baseline:central;pointer-events:none}
+.node.cur .case{stroke:var(--accent);stroke-width:4.5}
+.node.offw .case{fill:var(--hatch);stroke-dasharray:4 3}
+.led{fill:#27303a;stroke:#161b21;stroke-width:.8}
+.led.lit{fill:var(--lc);stroke:#fff;stroke-width:1}
+.bead{fill:var(--glow2);stroke:#fff;stroke-width:1.6;animation:bead .55s forwards}
+@keyframes bead{0%,72%{opacity:1}100%{opacity:0}}
+.empty{font-size:14px;fill:var(--muted);text-anchor:middle}
+
+/* footer and dialog */
+footer{margin-top:28px;padding-top:12px;border-top:1px solid var(--line);display:flex;flex-wrap:wrap;gap:8px 10px;align-items:center;font-size:.88rem;color:var(--muted)}
+footer input{width:9rem;min-height:2.4rem;padding:0 .6rem;border-radius:9px;border:1.5px solid var(--line);background:var(--panel);color:var(--ink);font:inherit}
+footer .link{margin-left:auto}
+dialog{border:1px solid var(--line);border-radius:16px;background:var(--bg);color:var(--ink);padding:18px;width:min(620px,94vw);max-height:86vh}
+dialog::backdrop{background:rgba(0,0,0,.45)}
+.dlghead{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+.dlghead h2{margin:0;font-size:1.2rem}
+.cx{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:10px 14px;margin:8px 0}
+.cx h3{margin:0 0 4px;font-size:1rem}
+.cx p{margin:0 0 4px;font-size:.93rem}
+.cx.hid{border-style:dashed;color:var(--muted)}
+.cx .ros{font-size:.8rem;color:var(--muted)}
+.vh{margin:16px 0 4px;font-size:1rem}
+dl{margin:0}
+dt{font-weight:700;margin-top:8px}
+dd{margin:0;font-size:.93rem}
+@media (prefers-reduced-motion:reduce){*{animation-duration:.01s!important;transition-duration:.01s!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div class="brand">
+      <h1>Lockpick</h1>
+      <p class="tag">One keypad. A wall of lockers. No Enter key.</p>
+    </div>
+    <nav class="lv" id="lv" aria-label="Parts"></nav>
+    <button class="aux" id="codexBtn" type="button">Discoveries <b id="codexN"></b></button>
+  </header>
+
+  <section class="brief">
+    <h2 id="title"></h2>
+    <p id="brief"></p>
+    <div id="vocab" class="vocab" hidden></div>
+  </section>
+
+  <section class="wallbox" aria-label="Wall">
+    <div id="wall" class="wall"></div>
+  </section>
+
+  <div class="work" id="work">
+    <section class="bench">
+      <div id="quiz" class="quiz" hidden></div>
+      <div id="play">
+        <div class="tapehead"><b>Your tape</b><span id="stats"></span></div>
+        <div id="tape" class="tape" aria-label="Your tape of key presses"></div>
+        <div class="undertape">
+          <p class="legend" id="legend"></p>
+          <div class="tools" id="tools">
+            <button class="aux sm" type="button" data-a="back" title="Delete the press before the cursor (Backspace)" aria-label="Delete the press before the cursor">&#9003;</button>
+            <button class="aux sm" type="button" data-a="end" title="Put the cursor at the end of the tape">End</button>
+            <button class="aux sm" type="button" data-a="undo" title="Undo (Ctrl or Cmd + Z)">Undo</button>
+            <button class="aux sm" type="button" data-a="clear">Clear</button>
+          </div>
+        </div>
+        <div id="note" aria-live="polite"></div>
+        <div class="controls">
+          <div class="lcdbox" id="lcdbox"><div class="lcd" id="lcd"></div><span class="cap2" id="lcdcap"></span></div>
+          <div class="pad" id="pad"></div>
+        </div>
+      </div>
+      <div id="msg" aria-live="polite"></div>
+    </section>
+    <section class="mapbox" id="mapbox" hidden>
+      <div class="maphead"><b id="maptitle"></b><span id="maplegend"></span></div>
+      <svg id="map" viewBox="0 0 460 460" role="group" aria-label="Drawn from your tape"></svg>
+    </section>
+  </div>
+
+  <footer>
+    <label for="seed">Puzzle code</label>
+    <input id="seed" autocomplete="off" spellcheck="false" maxlength="24">
+    <button class="aux" id="setSeed" type="button">Set</button>
+    <button class="aux" id="dl" type="button">Download move log</button>
+    <button class="link" id="reset" type="button">Reset progress</button>
+  </footer>
+</div>
+
+<dialog id="codex">
+  <div class="dlghead"><h2>Discoveries</h2><button class="aux" id="codexClose" type="button">Close</button></div>
+  <div id="codexList"></div>
+</dialog>
+
+<script>
+(()=>{
+'use strict';
+const $=s=>document.querySelector(s);
+const esc=s=>String(s).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+const f=n=>String(Math.round(n*10)/10);
+const params=new URLSearchParams(location.search);
+const KEY='lockpick:v1',STRIP_LEN=18,QUIZ_LEVEL=3,FINALE=7,MC=230;
+const QUIZ=['01','11','10'];
+
+/* ---------- seeded random ---------- */
+function xmur3(str){let h=1779033703^str.length;for(let i=0;i<str.length;i++){h=Math.imul(h^str.charCodeAt(i),3432918353);h=h<<13|h>>>19;}return()=>{h=Math.imul(h^(h>>>16),2246822507);h=Math.imul(h^(h>>>13),3266489909);return(h^=h>>>16)>>>0;};}
+function mulberry32(a){return()=>{a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^(a>>>15),1|a);t=t+Math.imul(t^(t>>>7),61|t)^t;return((t^(t>>>14))>>>0)/4294967296;};}
+const rng=key=>mulberry32(xmur3(key)());
+
+/* ---------- strings and walks ---------- */
+function kmers(s,k){const o=[];for(let i=0;i+k<=s.length;i++)o.push(s.slice(i,i+k));return o;}
+function allCodes(keys,k){let o=[''];for(let i=0;i<k;i++){const n=[];for(const p of o)for(const c of keys)n.push(p+c);o=n;}return o;}
+/* every string whose k-mers are exactly `codes` (all distinct), up to `limit` of them */
+function spellings(codes,k,limit){
+  const by={},used=new Set(),out=[];
+  for(const c of codes){const p=c.slice(0,k-1);(by[p]||(by[p]=[])).push(c);}
+  const go=s=>{
+    if(used.size===codes.length){out.push(s);return;}
+    for(const c of by[s.slice(s.length-k+1)]||[]){
+      if(used.has(c))continue;
+      used.add(c);go(s+c[k-1]);used.delete(c);
+      if(out.length>=limit)return;
+    }
+  };
+  for(const c of codes){used.add(c);go(c);used.delete(c);if(out.length>=limit)break;}
+  return out;
+}
+/* a strip whose 3-letter scraps are all different, can be put together in exactly two ways,
+   and whose first scrap nothing leads into */
+function makeStrip(key){
+  const r=rng(key);
+  for(let n=0;n<60000;n++){
+    let s='';for(let i=0;i<STRIP_LEN;i++)s+='ACGT'[Math.floor(r()*4)];
+    const c3=kmers(s,3);
+    if(new Set(c3).size!==c3.length)continue;
+    if(s.indexOf(s.slice(0,2),1)>=0)continue;
+    const sp=spellings(c3,3,3);
+    if(sp.length!==2)continue;
+    return{text:s,alt:sp[0]===s?sp[1]:sp[0]};
+  }
+  return{text:'CATGGATCTATT',alt:'CATCTATGGATT'};
+}
+/* Hierholzer, used only by the debug hook */
+function solve(codes,k){
+  const adj={},deg={};
+  for(const c of codes){const u=c.slice(0,k-1),v=c.slice(1);(adj[u]||(adj[u]=[])).push(c);deg[u]=(deg[u]||0)+1;deg[v]=(deg[v]||0)-1;}
+  const st=[Object.keys(deg).find(u=>deg[u]===1)||codes[0].slice(0,k-1)],out=[];
+  while(st.length){const u=st[st.length-1];if(adj[u]&&adj[u].length)st.push(adj[u].pop().slice(1));else out.push(st.pop());}
+  out.reverse();
+  return out.length===codes.length+1?out[0]+out.slice(1).map(x=>x[x.length-1]).join(''):null;
+}
+const AA='FFLLSSSSYY**CC*WLLLLPPPPHHQQRRRRIIIMTTTTNNKKSSRRVVVVAAAADDEEGGGG';
+const AA3={F:'Phe',L:'Leu',S:'Ser',Y:'Tyr','*':'Stop',C:'Cys',W:'Trp',P:'Pro',H:'His',Q:'Gln',R:'Arg',I:'Ile',M:'Met',T:'Thr',N:'Asn',K:'Lys',V:'Val',A:'Ala',D:'Asp',E:'Glu',G:'Gly'};
+const amino=c=>{const o='TCAG';return AA3[AA[o.indexOf(c[0])*16+o.indexOf(c[1])*4+o.indexOf(c[2])]];};
+
+/* ---------- parts ---------- */
+const LEVELS=[
+ {id:1,title:'The shredded strip',keys:'ACGT',k:3,wall:'strip',skin:'scraps'},
+ {id:2,title:'Four lockers',keys:'01',k:2,wall:'full'},
+ {id:3,title:'Eight lockers',keys:'01',k:3,wall:'full'},
+ {id:4,title:'Sixteen lockers',keys:'01',k:4,wall:'full'},
+ {id:5,title:'A new keypad',keys:'ACGT',k:2,wall:'full'},
+ {id:6,title:'The codon wall',keys:'ACGT',k:3,wall:'full'},
+ {id:7,title:'The shredded strip, again',keys:'ACGT',k:3,wall:'strip'},
+ {id:8,title:'Longer scraps',keys:'ACGT',k:4,wall:'strip'}
+];
+
+/* Vocabulary, in the order it is earned: [term, discovery that earns it, definition shown on hover]. */
+const VOCAB=[
+ ['k-mer','seq','A string of k symbols. 011 is a 3-mer, and so is ACG.'],
+ ['de Bruijn sequence','seq','A string that contains every possible k-mer exactly once. Joined into a ring it is called a k-universal circular string.'],
+ ['node','graph','A point in a graph. Here a node is what the lock remembers: its last k−1 presses.'],
+ ['edge','graph','An arrow from one node to another. Here an edge is one press, and each press completes one k-mer.'],
+ ['graph','graph','A set of nodes joined by edges.'],
+ ['de Bruijn graph','graph','The graph with one edge for each k-mer, running from the k-mer’s first k−1 symbols to its last k−1 symbols.'],
+ ['cycle','cycle','A walk through a graph that ends on the node where it began.'],
+ ['Eulerian cycle','cycle','A cycle that uses every edge of the graph exactly once.'],
+ ['Hierholzer’s algorithm','hier','Builds an Eulerian cycle by walking until stuck, then stitching in more cycles at nodes that still have unused edges.'],
+ ['balanced','euler','A node is balanced when as many edges enter it as leave it.'],
+ ['Eulerian path','euler','A walk that uses every edge exactly once but may end on a different node from the one where it began.'],
+ ['Euler’s theorem','euler','A connected graph has an Eulerian cycle exactly when every node is balanced. It has an Eulerian path when only the start (one extra edge out) and the end (one extra edge in) are unbalanced.'],
+ ['read','recon','A short stretch of DNA reported by a sequencing machine. Reads cut to length k are k-mers.'],
+ ['genome assembly','recon','Rebuilding a genome from reads. With k-mer reads it means finding an Eulerian path in their de Bruijn graph: the String Reconstruction Problem.'],
+ ['repeat','repeat','A stretch that occurs more than once in a genome. Repeats let the same reads be assembled in more than one way.'],
+ ['read length','klen','The number of letters in each read. Longer reads reach across repeats.']
+];
+const TERMS={};VOCAB.forEach(v=>{TERMS[v[0]]=v[2];});
+
+/* What the game says when something is discovered. vis() draws it from the player's own tape. */
+const FINDS=[
+ {id:'seq',name:'de Bruijn sequence',lead:'That’s called a <b>de Bruijn sequence</b>.',
+  text:'Every code, exactly once. Bend your tape into a ring and nothing is missing and nothing is doubled.',
+  vocab:'A code that is k symbols long is called a <b>k-mer</b>. From here on the game says k-mer.',
+  ros:'BA3I, Find a k-Universal Circular String',clue:'It is on any complete wall.',vis:t=>ringSVG(t.join(''),I.k)},
+ {id:'graph',name:'de Bruijn graph',lead:'This map is called a <b>de Bruijn graph</b>.',
+  text:'You drew it. The game only followed your presses.',
+  vocab:'Each display is called a <b>node</b> and each arrow is called an <b>edge</b>. Nodes joined by edges make a <b>graph</b>. From here on the game uses those words.',
+  ros:'BA3D, Construct the De Bruijn Graph of a String',clue:'It comes after the wall with eight lockers.'},
+ {id:'cycle',name:'Eulerian cycle',lead:'That walk is called an <b>Eulerian cycle</b>.',
+  text:'Every edge once, and back on the node where it began. Leonhard Euler studied walks like this in 1735, when he showed that no walk crosses each of the seven bridges of Königsberg exactly once.',
+  vocab:'A walk that ends where it began is called a <b>cycle</b>.',
+  ros:'BA3F, Find an Eulerian Cycle in a Graph',clue:'It is on any complete wall, once the map exists.'},
+ {id:'hier',name:'Hierholzer’s algorithm',lead:'That’s <b>Hierholzer’s algorithm</b>.',
+  text:'Walk until you dead-end, go back to a node with a light still lit, stitch in another cycle. Repeat until every light is out. It touches each edge once, so it still works on a wall of a billion lockers.',
+  ros:'BA3F, with this as the method',clue:'It is in how you get out of a dead end.',vis:t=>stitchHTML(t)},
+ {id:'euler',name:'Euler’s theorem',lead:'That’s <b>Euler’s theorem</b>.',
+  text:'You began in the right place before trying anything. Every node here is <b>balanced</b>, with as many edges in as out, except two: the walk has to start at the one with an extra edge out and end at the one with an extra edge in. A walk like that is an <b>Eulerian path</b>.',
+  ros:'BA3G, Find an Eulerian Path in a Graph',clue:'It is on a fresh strip in part 7, and it depends on your very first presses.',vis:()=>balanceHTML()},
+ {id:'recon',name:'Genome assembly',lead:'That’s <b>genome assembly</b>.',
+  text:'Every scrap, used once, each overlapping the next. The textbook calls this the String Reconstruction Problem, and real assemblers solve it the way you just did: build the de Bruijn graph of the scraps, then find a walk that uses every edge once.',
+  vocab:'A scrap is called a <b>read</b>. From here on the game says read.',
+  ros:'BA3H, Reconstruct a String from its k-mer Composition',clue:'It is in part 7.',vis:t=>tilingHTML(t.join(''),I.k)},
+ {id:'repeat',name:'The repeat problem',lead:'That’s the <b>repeat problem</b>.',
+  text:'The same reads, two different strips. The strip comes back to a node it has already been through, and the stretches in between can be taken in either order. Nothing in 3-letter reads says which strip is the real one.',
+  ros:'BA3K, Generate Contigs from a Collection of Reads',clue:'It is in part 7, after you finish it once.',vis:()=>twinHTML()},
+ {id:'klen',name:'Read length',lead:'That’s why <b>read length</b> matters.',
+  text:'One more letter per read and the crowded node splits into separate ones. Only one strip is left.',
+  ros:'BA3J, Reconstruct a String from its Paired Composition',clue:'It is in part 8.',vis:()=>splitHTML()}
+];
+const FIND={};FINDS.forEach(F=>{FIND[F.id]=F;});
+
+/* ---------- saved state ---------- */
+function freshState(seed){return{v:1,seed:seed||Math.random().toString(36).slice(2,8),variant:0,unlocked:1,map:false,cur:1,gaveUp:false,tapes:{},grps:{},sp:{},best:{},found:{},perf:{},first:{},spoiled:{},log:[]};}
+let S=null;
+try{S=JSON.parse(localStorage.getItem(KEY)||'null');}catch(e){}
+if(!S||S.v!==1)S=freshState();
+for(const m of['tapes','grps','sp','best','found','perf','first','spoiled'])if(!S[m])S[m]={};
+if(!Array.isArray(S.log))S.log=[];
+const pSeed=(params.get('seed')||'').replace(/[^\w-]/g,'').slice(0,24);
+if(pSeed&&pSeed!==S.seed)S=freshState(pSeed);
+/* instructor shortcuts leave a mark in the saved state, so they show up in the move log */
+if(params.get('unlock')==='all'){S.unlocked=LEVELS.length;S.map=true;S.shortcuts=(S.shortcuts||0)+1;S.log.push({t:Date.now(),lvl:0,ev:'unlock_all'});}
+let saveT=0;
+function save(){clearTimeout(saveT);saveT=0;try{localStorage.setItem(KEY,JSON.stringify(S));}catch(e){}}
+function saveSoon(){if(!saveT)saveT=setTimeout(save,400);}
+addEventListener('pagehide',save);
+function log(ev,data){S.log.push(Object.assign({t:Date.now(),lvl:S.cur,ev},data||{}));if(S.log.length>8000)S.log.splice(0,S.log.length-8000);}
+const has=id=>!!S.found[id];
+
+/* ---------- the current part ---------- */
+let I=null,tape=[],grp=[],caret=0,hist=[],sess=null,phase='play',quiz=null,replay=null,news=[],lv={},
+    prevEdges=new Set(),showHint=false,lastIns=false,wasPerfect=false,wasDone=false,els={},intro=false;
+const strips={};
+const stripKey=()=>S.seed+'|'+S.variant;
+function getStrip(){const k=stripKey();return strips[k]||(strips[k]=makeStrip('strip|'+k));}
+const keyFor=L=>L.wall==='full'?'L'+L.id:L.id+'|'+stripKey();
+function build(L){
+  const keys=L.keys.split(''),k=L.k,o={L,k,keys,scraps:L.skin==='scraps',strip:null};
+  if(L.wall==='full')o.codes=allCodes(keys,k);
+  else{o.strip=getStrip();o.codes=kmers(o.strip.text,k).sort();}
+  o.key=keyFor(L);o.set=new Set(o.codes);o.naive=o.codes.length*k;
+  const banks=[],bm={},nodes=new Set(),deg={};
+  for(const c of o.codes){
+    const u=c.slice(0,k-1),v=c.slice(1);
+    if(!bm[u]){bm[u]={p:u,codes:[]};banks.push(bm[u]);}
+    bm[u].codes.push(c);nodes.add(u);nodes.add(v);
+    deg[u]=(deg[u]||0)+1;deg[v]=(deg[v]||0)-1;
+  }
+  o.banks=banks;o.nodes=[...nodes].sort();
+  o.start=o.nodes.find(s=>deg[s]===1)||null;o.end=o.nodes.find(s=>deg[s]===-1)||null;
+  if(o.scraps){const r=rng('pile|'+o.key);o.show=o.codes.slice();for(let i=o.show.length-1;i>0;i--){const j=Math.floor(r()*(i+1));const x=o.show[i];o.show[i]=o.show[j];o.show[j]=x;}}
+  return o;
+}
+function analyze(t){
+  const k=I.k,n=t.length,st=new Array(n),opened=new Map(),cnt=new Map();let waste=0;
+  for(let i=0;i<n;i++){
+    if(i<k-1){st[i]='prime';continue;}
+    const c=t.slice(i-k+1,i+1).join('');
+    cnt.set(c,(cnt.get(c)||0)+1);
+    if(I.set.has(c)&&!opened.has(c)){opened.set(c,i);st[i]='new';}
+    else{st[i]='waste';waste++;}
+  }
+  return{st,opened,cnt,waste,open:opened.size,done:opened.size===I.codes.length};
+}
+const stateAt=(t,p)=>p>=I.k-1?t.slice(p-I.k+1,p).join(''):null;
+function deadEnd(A,t){
+  if(A.done)return null;
+  const s=stateAt(t,t.length);if(s===null)return null;
+  for(const x of I.keys){const c=s+x;if(I.set.has(c)&&!A.opened.has(c))return null;}
+  return s;
+}
+function litNodes(A,t){
+  const out=new Set();
+  for(let p=I.k-1;p<=t.length;p++){const s=stateAt(t,p);for(const x of I.keys){const c=s+x;if(I.set.has(c)&&!A.opened.has(c)){out.add(s);break;}}}
+  return out;
+}
+const busy=()=>!!replay||phase!=='play';
+/* the map is on screen once earned, and also while the tape is replayed to introduce it */
+const mapOn=()=>S.map||intro;
+
+/* ---------- words that change once the real term is earned ---------- */
+function term(label,key){const d=TERMS[key||label];return d?`<span class="term" tabindex="0" data-tip="${esc(d)}">${label}</span>`:label;}
+const sym=()=>I.keys.length===2?'digit':'letter';
+const wCode=(k,pl)=>has('seq')?term(k+'-mer'+(pl?'s':''),'k-mer'):`${k}-${sym()} code${pl?'s':''}`;
+const wDot=pl=>has('graph')?term('node'+(pl?'s':''),'node'):'display'+(pl?'s':'');
+const wArrow=pl=>has('graph')?term('edge'+(pl?'s':''),'edge'):'arrow'+(pl?'s':'');
+const wMap=()=>has('graph')?term('graph','graph'):'map';
+const wLoop=pl=>has('cycle')?term('cycle'+(pl?'s':''),'cycle'):'loop'+(pl?'s':'');
+const wScrap=pl=>has('recon')?term('read'+(pl?'s':''),'read'):'scrap'+(pl?'s':'');
+function briefFor(){
+  const N=I.codes.length;
+  switch(I.L.id){
+    case 1:return `A strip of DNA ${I.strip.text.length} letters long went through a shredder that cuts out a 3-letter scrap at every position. Here are all ${N} scraps, shuffled. Type the strip back. Each time the last 3 letters you typed match an unused scrap, that scrap is used up.`;
+    case 2:return `Every locker has its own ${wCode(2)}, and all four listen to this one keypad. A locker pops open the moment the last 2 keys pressed match it. There is no Enter key. Open them all in as few presses as you can.`;
+    case 3:return `Same lock, ${wCode(3,1)} now: eight lockers. Trying them one at a time takes 24 presses.`;
+    case 4:return `Sixteen lockers, one for every ${wCode(4)}.`+(S.map?` The ${wMap()} keeps drawing as you type. Click a ${wDot()} on it to put your cursor at that point in the tape.`:'');
+    case 5:return `Four keys now: A, C, G and T. Sixteen lockers, one for every ${wCode(2)}.`;
+    case 6:return `Sixty-four lockers, one for every ${wCode(3)}. A cell reads these 3-letter words as codons, and each locker holds what its codon stands for.`;
+    case 7:return `Remember the shredded strip? Its ${N} ${wScrap(1)} are bolted onto locker doors now, and the rest of the wall is gone. A press with no locker to open is wasted.`;
+    default:return `The same strip, shredded into 4-letter ${wScrap(1)} this time.`;
+  }
+}
+function hintFor(){
+  switch(I.L.id){
+    case 1:return 'Pick a scrap to start with, then look for one that overlaps it by two letters.';
+    case 2:return 'One press can finish one code and start the next.';
+    case 3:return 'A struck-through press re-opened a locker. Watch the display: what was the lock still holding?';
+    case 4:case 5:return `A dead end is not the end. Click a ${wDot()} that still has a light lit and type from there until you are back on it.`;
+    case 6:return `Walk until you dead-end. Then stitch a ${wLoop()} in wherever a light is still lit, and keep doing that until none are.`;
+    case 7:return 'Where the tape begins matters now. Is there a locker that no other locker leads to?';
+    default:return 'Find the locker that nothing leads to, and start there.';
+  }
+}
+
+/* ---------- editing the tape ---------- */
+function snapshot(){hist.push({t:tape.join(''),g:grp.slice(),c:caret,sp:lv.splices});if(hist.length>400)hist.shift();}
+function insert(x){
+  if(busy())return;
+  snapshot();
+  if(caret<tape.length){
+    if(!sess||sess.at!==caret){const A=analyze(tape);sess={at:caret,open:A.open,waste:A.waste,n:0,state:stateAt(tape,caret),g:++lv.gid};}
+  }else sess=null;
+  tape.splice(caret,0,x);grp.splice(caret,0,sess?sess.g:0);caret++;lv.presses++;
+  let spliced=false;
+  if(sess){
+    sess.n++;sess.at=caret;
+    const A=analyze(tape);
+    /* a clean splice: back on the same display, nothing wasted, every inserted press opened something */
+    if(sess.state!==null&&stateAt(tape,caret)===sess.state&&A.waste<=sess.waste&&A.open===sess.open+sess.n){lv.splices++;spliced=true;log('splice',{n:sess.n,at:caret-sess.n});sess=null;}
+  }
+  lastIns=true;
+  changed('press',{x,spliced});
+}
+function back(){
+  if(busy()||!caret)return;snapshot();
+  tape.splice(caret-1,1);grp.splice(caret-1,1);caret--;
+  if(sess){sess.n--;sess.at=caret;if(sess.n<=0)sess=null;}
+  changed('back');
+}
+function del(){if(busy()||caret>=tape.length)return;snapshot();tape.splice(caret,1);grp.splice(caret,1);sess=null;changed('del');}
+function clearTape(){if(busy()||!tape.length)return;snapshot();tape=[];grp=[];caret=0;sess=null;changed('clear');}
+function undo(){if(busy()||!hist.length)return;const h=hist.pop();tape=h.t.split('');grp=h.g.slice();caret=h.c;lv.splices=h.sp;sess=null;changed('undo');}
+function setCaret(p){if(busy())return;caret=Math.max(0,Math.min(tape.length,p));render();}
+function jumpTo(node){
+  if(busy())return;
+  const ps=[];for(let p=I.k-1;p<=tape.length;p++)if(stateAt(tape,p)===node)ps.push(p);
+  if(!ps.length)return;
+  const nx=ps.find(p=>p>caret);log('jump',{node});setCaret(nx===undefined?ps[0]:nx);
+}
+function changed(ev,data){
+  const A=analyze(tape),key=I.key;
+  S.tapes[key]=tape.join('');S.grps[key]=grp.map(g=>(g%36).toString(36)).join('');
+  if(!tape.length){lv.splices=0;lv.gid=0;}
+  S.sp[key]=lv.splices;
+  if(I.L.id===FINALE&&S.first[key]==null&&tape.length>=I.k)S.first[key]=tape.slice(0,I.k-1).join('');
+  log(ev,Object.assign({n:tape.length,at:caret,open:A.open,waste:A.waste},data||{}));
+  const dead=deadEnd(A,tape)!==null&&caret===tape.length;
+  if(dead&&!lv.dead){lv.deads++;log('dead_end',{node:stateAt(tape,tape.length)});}
+  lv.dead=dead;
+  const perfect=A.done&&A.waste===0,fresh=perfect&&!wasPerfect;
+  if(A.done&&!wasDone)log('all_open',{n:tape.length,waste:A.waste});
+  if(fresh)onPerfect();
+  wasPerfect=perfect;wasDone=A.done;
+  if(perfect)save();else saveSoon();
+  render();
+  if(fresh)showCard();
+}
+function showCard(){const c=$('#msg .card');if(c&&c.scrollIntoView)c.scrollIntoView({behavior:'smooth',block:'nearest'});}
+function award(id){if(S.found[id])return;S.found[id]=Date.now();news.push(id);log('award',{id});}
+function onPerfect(){
+  const L=I.L,s=tape.join('');
+  if(!S.best[I.key])S.best[I.key]={n:tape.length,t:Date.now()};
+  if(L.wall==='full'){award('seq');if(S.map)award('cycle');}
+  else if(L.id===FINALE){
+    const list=S.perf[I.key]||(S.perf[I.key]=[]),firstTime=!list.length;
+    if(!list.includes(s))list.push(s);
+    award('recon');
+    if(firstTime&&!S.spoiled[stripKey()]&&S.first[I.key]===s.slice(0,L.k-1))award('euler');
+    if(list.length>1)award('repeat');
+  }else if(L.id===FINALE+1)award('klen');
+  if(I.strip)S.spoiled[stripKey()]=1;
+  if(S.map&&!I.scraps&&lv.splices>0)award('hier');
+  if(!(L.id===QUIZ_LEVEL&&!S.map))S.unlocked=Math.max(S.unlocked,Math.min(LEVELS.length,L.id+1));
+  log('perfect',{n:tape.length,splices:lv.splices,tape:s});
+}
+
+/* ---------- loading a part ---------- */
+function loadLevel(id){
+  stopReplay();
+  id=Math.max(1,Math.min(id|0,S.unlocked,LEVELS.length));
+  S.cur=id;I=build(LEVELS[id-1]);
+  tape=(S.tapes[I.key]||'').split('').filter(c=>I.keys.includes(c));
+  const gs=S.grps[I.key]||'';grp=tape.map((c,i)=>parseInt(gs[i]||'0',36)||0);
+  caret=tape.length;hist=[];sess=null;phase='play';quiz=null;news=[];showHint=false;lastIns=false;intro=false;
+  lv={splices:S.sp[I.key]||0,gid:Math.max(0,...grp),presses:0,deads:0,dead:false,gave:false};
+  const A=analyze(tape);wasPerfect=A.done&&A.waste===0;wasDone=A.done;
+  prevEdges=new Set(kmers(tape.join(''),I.k));
+  buildWall();buildPad();log('part',{id});save();render();
+}
+function buildWall(){
+  const w=$('#wall');w.innerHTML='';els={};
+  w.className='wall '+(I.scraps?'pile':I.codes.length>16?'small':I.codes.length<=8?'huge':'big');
+  if(I.scraps){
+    I.show.forEach((c,i)=>{
+      const b=document.createElement('button');b.type='button';b.className='scrap';b.dataset.code=c;
+      b.style.setProperty('--rot',((i*37)%9-4)+'deg');
+      b.innerHTML='<span class="pp">'+c.split('').map(ch=>`<span class="key-${ch}">${ch}</span>`).join('')+'</span>';
+      w.appendChild(b);els[c]=b;
+    });
+    return;
+  }
+  for(const b of I.banks){
+    const be=document.createElement('div');be.className='bank';be.dataset.p=b.p;
+    be.innerHTML=`<div class="lab">${b.p}</div>`;
+    for(const c of b.codes){
+      const lk=document.createElement('button');lk.type='button';lk.className='locker';lk.dataset.code=c;
+      lk.innerHTML=`<span class="in"><b>${c}</b>${I.L.id===6?`<small>${amino(c)}</small>`:''}</span><span class="door"><i></i><b>${c}</b></span>`;
+      be.appendChild(lk);els[c]=lk;
+    }
+    w.appendChild(be);
+  }
+}
+function buildPad(){
+  $('#pad').innerHTML=I.keys.map(x=>`<button class="key key-${x}" type="button" data-k="${x}" aria-label="Press ${x}">${x}</button>`).join('');
+}
+
+/* ---------- drawing ---------- */
+const cache=new Map();
+function put(sel,h){if(cache.get(sel)!==h){$(sel).innerHTML=h;cache.set(sel,h);}}
+function render(){
+  const t=replay?tape.slice(0,replay.n):tape,p=replay?replay.n:caret,A=analyze(t);
+  renderHead();renderWall(A,t,p);renderQuiz();renderTape(A,t,p);renderLCD(t,p);renderMap(A,t,p);renderMsg(A,t,p);
+  lastIns=false;
+}
+function vocabHTML(){return VOCAB.filter(v=>S.found[v[1]]).map(v=>term(v[0],v[0])).join(' ');}
+function renderHead(){
+  const L=I.L;
+  put('#title',`${L.id}. ${L.id===FINALE+1&&has('recon')?'Longer reads':L.title}`);
+  put('#brief',briefFor()+` <button class="link" type="button" data-a="hint">${showHint?'Hide hint':'Hint'}</button>`);
+  put('#lv',LEVELS.map(x=>`<button type="button" data-lvl="${x.id}" class="${x.id===L.id?'on':''}${S.best[keyFor(x)]?' gold':''}"${x.id>S.unlocked?' disabled':''} aria-label="Part ${x.id}: ${x.title}"${x.id===L.id?' aria-current="true"':''}>${x.id}</button>`).join(''));
+  put('#codexN',FINDS.filter(F=>S.found[F.id]).length+'/'+FINDS.length);
+  const v=vocabHTML();$('#vocab').hidden=!v;
+  put('#vocab',v?`<span class="vocabhead">Vocabulary you have earned <span>(hover for the definition)</span></span>${v}`:'');
+}
+function renderWall(A,t,p){
+  const s=stateAt(t,p),lab=mapOn()&&!I.scraps,live=phase==='play'&&!replay;
+  $('#wall').classList.toggle('labels',lab);
+  for(const c of I.codes){
+    const e=els[c],open=phase==='quiz'?false:A.opened.has(c);
+    e.classList.toggle('open',open);
+    e.classList.toggle('reach',lab&&live&&s!==null&&c.slice(0,I.k-1)===s&&!open);
+    e.classList.toggle('pick',phase==='quiz'&&quiz.picked.has(c));
+    e.setAttribute('aria-label',(I.scraps?'Scrap ':'Locker ')+c+(open?(I.scraps?', used':', open'):''));
+  }
+  if(!I.scraps)document.querySelectorAll('#wall .bank').forEach(b=>b.classList.toggle('cur',lab&&live&&b.dataset.p===s));
+}
+function renderTape(A,t,p){
+  const k=I.k;let h='';
+  for(let i=0;i<=t.length;i++){
+    if(i===p&&!replay&&phase==='play')h+='<span class="caret"></span>';
+    if(i===t.length)break;
+    const code=i>=k-1?t.slice(i-k+1,i+1).join(''):'';
+    h+=`<span class="tok ${A.st[i]} key-${t[i]}${i>=p-k&&i<p?' win':''}" data-i="${i}"${code?` data-code="${code}"`:''}>${t[i]}</span>`;
+  }
+  if(!t.length)h+='<span class="ghost">press a key, or type on your keyboard</span>';
+  $('#tape').innerHTML=h;
+  put('#stats',`Presses <b>${t.length}</b> &middot; Wasted <b class="${A.waste?'bad':''}">${A.waste}</b> &middot; ${I.scraps?'Used':'Open'} <b>${A.open}</b>/${I.codes.length}`);
+  put('#legend',I.scraps?'dashed: not three letters yet &middot; solid: used up a scrap &middot; struck through: wasted &middot; underlined: the last three letters'
+    :'dashed: the lock is still filling up &middot; solid: opened a locker &middot; struck through: wasted &middot; underlined: what the lock hears now');
+}
+function renderLCD(t,p){
+  $('#lcdbox').hidden=I.scraps;if(I.scraps)return;
+  const k=I.k;let h='';
+  for(let j=p-k-1;j<p;j++){const ch=j>=0?t[j]:'';h+=`<span class="cell${j===p-k&&mapOn()?' old':''}">${ch||'&nbsp;'}</span>`;}
+  $('#lcd').style.setProperty('--k',k);
+  $('#lcd').innerHTML=`<span class="strip${lastIns?' shift':''}">${h}</span>`;
+  put('#lcdcap',mapOn()?'the faded one is about to be forgotten':`the last ${k} presses`);
+}
+
+/* the map: positions are fixed, but a display only appears once the tape has been there */
+function layout(t){
+  const N=I.nodes.length,R=N<=2?120:N<=4?150:N<=8?156:164,P={};
+  I.nodes.forEach((s,j)=>{const a=-Math.PI/2+2*Math.PI*j/N;P[s]={x:MC+R*Math.cos(a),y:MC+R*Math.sin(a),on:true};});
+  const order=[],seen=new Set();
+  for(let p=I.k-1;p<=t.length;p++){const s=stateAt(t,p);if(!seen.has(s)){seen.add(s);order.push(s);}}
+  const off=order.filter(s=>!P[s]);
+  off.forEach((s,j)=>{const a=-Math.PI/2+2*Math.PI*j/Math.max(off.length,5);P[s]={x:MC+58*Math.cos(a),y:MC+58*Math.sin(a),on:false};});
+  const u=N>12?9.5:12;
+  return{P,order,b:{hw:(u*(I.k-1)+12)/2+3,hh:N>12?17:19,fs:N>12?11.5:14}};
+}
+function rim(p,hw,hh,a){const c=Math.cos(a),s=Math.sin(a),d=Math.min(hw/Math.abs(c||1e-9),hh/Math.abs(s||1e-9));return[p.x+d*c,p.y+d*s];}
+function geom(u,v,b){
+  if(u===v){
+    const a=Math.atan2(u.y-MC,u.x-MC),w=.55,o=Math.max(b.hw,b.hh)*2.5;
+    const p1=rim(u,b.hw,b.hh,a-w),tip=rim(u,b.hw+2,b.hh+2,a+w),p2=rim(u,b.hw+9,b.hh+9,a+w);
+    const c1=[u.x+o*Math.cos(a-w*1.5),u.y+o*Math.sin(a-w*1.5)],c2=[u.x+o*Math.cos(a+w*1.5),u.y+o*Math.sin(a+w*1.5)];
+    return{d:`M${f(p1[0])},${f(p1[1])}C${f(c1[0])},${f(c1[1])} ${f(c2[0])},${f(c2[1])} ${f(p2[0])},${f(p2[1])}`,tip,ang:Math.atan2(tip[1]-c2[1],tip[0]-c2[0]),mid:[u.x+o*.78*Math.cos(a),u.y+o*.78*Math.sin(a)]};
+  }
+  const dx=v.x-u.x,dy=v.y-u.y,len=Math.hypot(dx,dy)||1,bow=Math.min(28,len*.18);
+  const cx=(u.x+v.x)/2-dy/len*bow,cy=(u.y+v.y)/2+dx/len*bow;
+  const a1=Math.atan2(cy-u.y,cx-u.x),a2=Math.atan2(cy-v.y,cx-v.x);
+  const s=rim(u,b.hw,b.hh,a1),tip=rim(v,b.hw+2,b.hh+2,a2),e=rim(v,b.hw+9,b.hh+9,a2);
+  return{d:`M${f(s[0])},${f(s[1])}Q${f(cx)},${f(cy)} ${f(e[0])},${f(e[1])}`,tip,ang:Math.atan2(tip[1]-cy,tip[0]-cx),mid:[.25*s[0]+.5*cx+.25*e[0],.25*s[1]+.5*cy+.25*e[1]]};
+}
+function head(tip,ang){const L=10,w=.45;return[tip,[tip[0]-L*Math.cos(ang-w),tip[1]-L*Math.sin(ang-w)],[tip[0]-L*Math.cos(ang+w),tip[1]-L*Math.sin(ang+w)]].map(q=>f(q[0])+','+f(q[1])).join(' ');}
+function renderMap(A,t,p){
+  const show=mapOn()&&!I.scraps;
+  $('#mapbox').hidden=!show;$('#work').classList.toggle('withmap',show);
+  if(!show)return;
+  put('#maptitle',has('graph')?'The graph of your tape':'Map of your tape');
+  put('#maplegend',`${wDot()}: what the lock remembers &middot; ${wArrow()}: one press &middot; lit light: a key not yet tried from there`);
+  const{P,order,b}=layout(t),k=I.k,cur=stateAt(t,p),E=new Map();
+  for(let i=k-1;i<t.length;i++){const c=t.slice(i-k+1,i+1).join(''),e=E.get(c);if(e)e.n++;else E.set(c,{c,n:1});}
+  const caps=E.size<=20,last=lastIns&&p>=k?t.slice(p-k,p).join(''):null;
+  let h='',bead='';
+  $('#map').classList.toggle('dense',E.size>20);
+  for(const e of E.values()){
+    const from=e.c.slice(0,k-1),to=e.c.slice(1),g=geom(P[from],P[to],b),bad=e.n>1||!I.set.has(e.c),fr=!prevEdges.has(e.c)&&!bad;
+    h+=`<g class="egrp key-${e.c[k-1]}${bad?' bad':''}${from===cur||to===cur?' near':''}" data-code="${e.c}"><path class="edge${fr?' fresh':''}" d="${g.d}"${fr?' pathLength="1"':''}/><polygon class="head" points="${head(g.tip,g.ang)}"/>`;
+    if(caps&&!bad)h+=`<rect class="cap" x="${f(g.mid[0]-7)}" y="${f(g.mid[1]-7)}" width="14" height="14" rx="3.5"/><text class="capt" x="${f(g.mid[0])}" y="${f(g.mid[1])}">${e.c[k-1]}</text>`;
+    if(e.n>1)h+=`<text class="mult" x="${f(g.mid[0])}" y="${f(g.mid[1])}">&times;${e.n}</text>`;
+    h+='</g>';
+    if(e.c===last)bead=`<circle class="bead" r="5.5"><animateMotion dur="0.28s" begin="indefinite" fill="freeze" path="${g.d}"/></circle>`;
+  }
+  prevEdges=new Set(E.keys());
+  for(const s of order){
+    const q=P[s];let leds='';
+    if(q.on)I.keys.forEach((x,j)=>{const c=s+x;if(I.set.has(c))leds+=`<circle class="led key-${x}${A.cnt.get(c)?'':' lit'}" cx="${f((j-(I.keys.length-1)/2)*7)}" cy="${f(b.hh-8)}" r="2.7"/>`;});
+    h+=`<g class="node${s===cur?' cur':''}${q.on?'':' offw'}" data-node="${s}" tabindex="0" role="button" aria-label="${s}" transform="translate(${f(q.x)},${f(q.y)})"><title>The lock remembers ${s}. Click to put your cursor here.</title><rect class="case" x="${f(-b.hw)}" y="${f(-b.hh)}" width="${f(b.hw*2)}" height="${f(b.hh*2)}" rx="7"/><rect class="scr" x="${f(-b.hw+3)}" y="${f(-b.hh+3)}" width="${f(b.hw*2-6)}" height="${f(b.hh*2-17)}" rx="3"/><text x="0" y="${f(-b.hh+3+(b.hh*2-17)/2)}" style="font-size:${b.fs}px">${s}</text>${leds}</g>`;
+  }
+  if(!order.length)h=`<text class="empty" x="${MC}" y="${MC}">It draws itself as you type.</text>`;
+  $('#map').innerHTML=h+bead;
+  const m=$('#map animateMotion');
+  if(m&&m.beginElement){try{m.beginElement();}catch(e){}}
+  if(m){const dot=m.parentNode;setTimeout(()=>{if(dot.parentNode)dot.remove();},620);}
+}
+
+/* ---------- pictures for the reveals, drawn from the player's own tape ---------- */
+function ringSVG(s,k){
+  const body=s.slice(0,s.length-(k-1)),n=body.length,R=n<=16?58:72,c=90,fs=n<=8?17:n<=16?13:7.5,st=2*Math.PI/n;
+  const pt=(a,r)=>f(c+r*Math.cos(a))+','+f(c+r*Math.sin(a)),a0=-Math.PI/2-st*.42,a1=-Math.PI/2+st*(k-1)+st*.42;
+  let h=`<svg class="ring" viewBox="0 0 180 180" width="176" height="176" aria-hidden="true"><g class="sweep" style="animation-duration:${f(n*.62)}s;animation-timing-function:steps(${n})"><path d="M${pt(a0,R)}A${R},${R} 0 ${a1-a0>Math.PI?1:0} 1 ${pt(a1,R)}" stroke-width="${f(fs+6)}"/></g>`;
+  for(let i=0;i<n;i++){const a=-Math.PI/2+st*i;h+=`<text class="key-${body[i]}" x="${f(c+R*Math.cos(a))}" y="${f(c+R*Math.sin(a))}" style="font-size:${fs}px">${body[i]}</text>`;}
+  return h+`</svg><span class="cap2">your tape as a ring: the band is what the lock hears</span>`;
+}
+function stitchHTML(t){
+  const seen=new Set();let h='<div class="stitch">';
+  t.forEach((c,i)=>{const g=grp[i]||0;if(g)seen.add(g);h+=`<span class="st g${g?(g-1)%5+1:0}">${c}</span>`;});
+  return h+`</div><span class="cap2">grey: the walk you began with &middot; raised: ${seen.size} cycle${seen.size===1?'':'s'} you stitched in</span>`;
+}
+function balanceHTML(){
+  const k=I.k,io={};
+  for(const c of I.codes){const u=c.slice(0,k-1),v=c.slice(1);(io[u]||(io[u]={i:0,o:0})).o++;(io[v]||(io[v]={i:0,o:0})).i++;}
+  const row=(s,tag)=>`<div class="bal"><span class="arr">${'&rarr;'.repeat(io[s].i)||'&nbsp;'}</span><span class="mini">${s}</span><span class="arr">${'&rarr;'.repeat(io[s].o)||'&nbsp;'}</span><span class="tag">${tag}</span></div>`;
+  const mid=I.nodes.find(s=>io[s].i===io[s].o&&io[s].i>1)||I.nodes.find(s=>io[s].i===io[s].o);
+  return `<div>${I.start?row(I.start,'start: one more out than in'):''}${mid?row(mid,'in between: balanced'):''}${I.end?row(I.end,'end: one more in than out'):''}</div>`;
+}
+function tilingHTML(s,k){
+  const cw=17,rh=21;
+  let h=`<div class="tiling" style="width:${s.length*cw}px"><div class="trow">`+s.split('').map(c=>`<span class="key-${c}" style="width:${cw}px">${c}</span>`).join('')+`</div><div class="treads" style="height:${k*rh}px">`;
+  for(let i=0;i+k<=s.length;i++)h+=`<span class="tread" style="left:${i*cw}px;top:${(i%k)*rh}px;width:${k*cw-2}px;animation-delay:${i*70}ms">${s.slice(i,i+k)}</span>`;
+  return h+`</div></div><span class="cap2">every locker door, laid back where it was cut from</span>`;
+}
+function twinHTML(){
+  const a=I.strip.text,b=I.strip.alt,n=a.length;let p=0,q=0,x=0,z=0;
+  while(p<n&&a[p]===b[p])p++;
+  while(q<n-p&&a[n-1-q]===b[n-1-q])q++;
+  /* between the shared ends, one strip reads X·M·Z and the other Z·M·X */
+  const m1=a.slice(p,n-q),m2=b.slice(p,n-q),m=m1.length;
+  find:for(let i=1;i<m;i++)for(let j=1;i+j<=m;j++)if(m1.slice(m-j)+m1.slice(i,m-j)+m1.slice(0,i)===m2){x=i;z=j;break find;}
+  const cls=(i,first)=>{
+    const j=i-p;if(j<0||j>=m)return'';
+    if(!x)return'd1';
+    if(first)return j<x?'d1':j>=m-z?'d2':'';
+    return j<z?'d2':j>=m-x?'d1':'';
+  };
+  const row=(s,first)=>`<div class="trow2">${s.split('').map((c,i)=>`<span class="${cls(i,first)}">${c}</span>`).join('')}</div>`;
+  return `<div class="twin">${row(a,true)}${row(b,false)}</div><span class="cap2">the same two stretches, in either order</span>`;
+}
+function splitHTML(){
+  const s=I.strip.text,cnt={};
+  for(let i=0;i+2<s.length;i++){const u=s.slice(i,i+2);cnt[u]=(cnt[u]||0)+1;}
+  const u=Object.keys(cnt).sort((x,y)=>cnt[y]-cnt[x])[0],rows=[];
+  for(let i=0;i+2<s.length;i++)if(s.slice(i,i+2)===u)rows.push([i>0?s[i-1]+u:u,s[i+2]]);
+  const pill=x=>`<span class="pill key-${x}">${x}</span>`;
+  return `<div class="split"><div><span class="cap2">3-letter reads: one crowded node</span><div class="bal"><span class="mini">${u}</span><b>&rarr;</b>${rows.map(r=>pill(r[1])).join('<i>or</i>')}</div></div>`+
+    `<div><span class="cap2">4-letter reads: it splits</span>${rows.map(r=>`<div class="bal"><span class="mini">${r[0]}</span><b>&rarr;</b>${pill(r[1])}</div>`).join('')}</div></div>`;
+}
+function revealHTML(id,t){
+  const F=FIND[id];let vis='';
+  try{vis=F.vis?F.vis(t):'';}catch(e){vis='';}
+  return `<div class="reveal"><p class="lead">${F.lead}</p>${vis?`<div class="vis">${vis}</div>`:''}<p>${F.text}</p>${F.vocab?`<p class="vmap">${F.vocab}</p>`:''}<p class="ros">Now make a computer do it: Rosalind ${F.ros}</p></div>`;
+}
+
+/* ---------- messages ---------- */
+function deadHTML(s,A,t){
+  if(I.scraps)return `<div class="note dead"><b>Dead end.</b> No unused scrap continues from <code>${s}</code>. Back up with &#9003;, or click inside your tape and type there.</div>`;
+  if(!S.map)return `<div class="note dead"><b>Dead end.</b> Every key from here re-opens a locker that is already open. Back up with &#9003;, or click inside your tape and type there.</div>`;
+  if(!litNodes(A,t).size)return `<div class="note dead"><b>Dead end.</b> The lockers still shut cannot be reached from anywhere this tape has been. Perhaps it should begin somewhere else.</div>`;
+  if(A.waste===0&&I.L.wall==='full'&&s===stateAt(t,I.k-1))return `<div class="note dead"><b>Dead end</b>, and look where: <code>${s}</code> is the ${wDot()} your tape started from. So far it is one closed ${wLoop()}, and a ${wLoop()} can be opened up anywhere. Click a ${wDot()} that still has a light lit, then type from there.</div>`;
+  return `<div class="note dead"><b>Dead end.</b> Every key from <code>${s}</code> is wasted now. Click a ${wDot()} that still has a light lit to put your cursor there.</div>`;
+}
+function cardHTML(A,t){
+  const L=I.L,s=t.join(''),N=I.codes.length,nFound=FINDS.filter(F=>S.found[F.id]).length;
+  if(L.id===1)return `<div class="card"><h3>You rebuilt it</h3><p><code>${s}</code>: ${N} scraps, each used once. That took trial and error. Keep the feeling in mind.</p><button class="primary" type="button" data-a="next">Next &rarr;</button></div>`;
+  let h=`<div class="card"><h3>Perfect tape</h3><p>${t.length} presses, ${N} lockers, nothing wasted. One ${has('seq')&&!news.includes('seq')?'k-mer':'code'} at a time would take ${I.naive}.`;
+  if(L.id===2)h+=` No tape can be shorter: the first press cannot open anything, and each of the other ${N} opened a different locker.`;
+  h+='</p>';
+  if(L.id===FINALE){
+    const G=I.strip.text,found=(S.perf[I.key]||[]).length;
+    h+=`<p class="seqs">Your tape <code>${s}</code><br>The strip that was shredded <code>${G}</code></p>`;
+    if(found<2)h+=s===G?'<p>Letter for letter. But one other tape opens this wall just as perfectly. Clear yours and find it.</p>':'<p>Not the same strip, and yet nothing was wasted. Clear your tape and find the real one too.</p>';
+  }else if(L.id===FINALE+1)h+=`<p class="seqs">Your tape <code>${s}</code> is the strip, and this time no other tape will do.</p>`;
+  for(const id of news)h+=revealHTML(id,t);
+  if(L.id===QUIZ_LEVEL&&!S.map)return h+'<p>Before the next wall, one question about how this lock thinks.</p><button class="primary" type="button" data-a="quiz">Ask me &rarr;</button></div>';
+  if(L.id<LEVELS.length)h+='<button class="primary" type="button" data-a="next">Next wall &rarr;</button>';
+  else h+=`<p><b>That was the last wall.</b> You have made ${nFound} of ${FINDS.length} discoveries.${nFound<FINDS.length?' The rest are listed under Discoveries, each with a clue.':''}</p>`;
+  if(S.map)h+=' <button class="aux" type="button" data-a="replay">Walk it again</button>';
+  if(L.id===FINALE)h+=' <button class="aux" type="button" data-a="newstrip">Try a new strip</button>';
+  return h+'</div>';
+}
+function renderMsg(A,t,p){
+  const perfect=A.done&&A.waste===0;let note='',card='';
+  if(replay)note='<div class="note">Your tape, one press at a time.</div>';
+  else if(phase==='quiz')note='';
+  else if(perfect)card=cardHTML(A,t);
+  else{
+    if(A.done)note+=`<div class="note"><b>Everything is ${I.scraps?'used':'open'}</b>, but ${A.waste} press${A.waste===1?' was':'es were'} wasted: the struck-through one${A.waste===1?'':'s'}. It can be done with none.</div>`;
+    else{const d=deadEnd(A,t);if(d!==null&&p===t.length)note+=deadHTML(d,A,t);}
+    if(showHint)note+=`<div class="note hint">${hintFor()}</div>`;
+    if(lv.gave)card=`<div class="card"><h3>Good call</h3><p>${I.codes.length} scraps, and the only way to learn which one comes next is to try it and see. Leave the strip where it is. We will come back for it.</p><p>First, there is a lock to pick.</p><button class="primary" type="button" data-a="next">Next &rarr;</button></div>`;
+    else if(I.L.id===1&&(lv.presses>=12||lv.deads>=1||S.gaveUp))note+='<p class="aside"><button class="aux" type="button" data-a="giveup">This is hard. Set it aside &rarr;</button></p>';
+  }
+  put('#note',note);put('#msg',card);
+}
+
+/* ---------- the question between walls 3 and 4 ---------- */
+function renderQuiz(){
+  const on=phase==='quiz';$('#quiz').hidden=!on;$('#play').hidden=on;
+  if(!on)return;
+  const s=QUIZ[quiz.round],last=quiz.round===QUIZ.length-1;
+  put('#quiz',`<h3>How the lock thinks</h3><p>The lock forgets everything except its last ${I.k-1} presses. Right now it is holding</p><div class="lcd" style="--k:${I.k-1}"><span class="strip still">${s.split('').map(c=>`<span class="cell">${c}</span>`).join('')}</span></div><p>On the wall above, tap every locker that the <b>very next press</b> could open.</p><div class="row"><button class="primary" type="button" data-a="${quiz.ok?'quiznext':'check'}">${quiz.ok?(last?'Show me &rarr;':'Next'):'Check'}</button><span class="qmsg${quiz.ok?' ok':''}">${quiz.msg}</span></div><p class="cap2">Question ${quiz.round+1} of ${QUIZ.length}</p>`);
+}
+function checkQuiz(){
+  const s=QUIZ[quiz.round],want=I.keys.map(x=>s+x),got=[...quiz.picked];
+  const wrong=got.filter(c=>!want.includes(c)),missed=want.filter(c=>!quiz.picked.has(c));
+  if(!wrong.length&&!missed.length){quiz.ok=true;quiz.msg='Yes. One locker for each key, and no others.';}
+  else if(wrong.length)quiz.msg=`Locker ${wrong[0]} needs the lock to be holding ${wrong[0].slice(0,I.k-1)}. It is holding ${s}.`;
+  else quiz.msg=got.length?'Right so far, but there is another.':'Tap lockers on the wall first.';
+  log('quiz',{round:quiz.round,picked:got,ok:quiz.ok});
+  render();
+}
+function nextQuiz(){
+  if(quiz.round<QUIZ.length-1){quiz={round:quiz.round+1,picked:new Set(),ok:false,msg:''};render();return;}
+  phase='play';quiz=null;intro=true;
+  startReplay(()=>{intro=false;S.map=true;award('graph');award('cycle');S.unlocked=Math.max(S.unlocked,QUIZ_LEVEL+1);log('map_earned');save();render();showCard();});
+}
+function startReplay(done){
+  stopReplay();
+  if(tape.length<I.k){if(done)done();return;}
+  const step=Math.max(90,Math.min(460,5200/tape.length));
+  replay={n:I.k-1,timer:0};prevEdges=new Set();
+  const tick=()=>{
+    if(!replay)return;
+    lastIns=true;render();
+    if(replay.n>=tape.length){replay.timer=setTimeout(()=>{replay=null;if(done)done();else render();},650);return;}
+    replay.n++;replay.timer=setTimeout(tick,step);
+  };
+  tick();
+}
+function stopReplay(){if(replay){clearTimeout(replay.timer);replay=null;}}
+
+/* ---------- the discoveries list ---------- */
+function renderCodex(){
+  let h='';
+  for(const F of FINDS){
+    if(S.found[F.id])h+=`<div class="cx"><h3>${F.name}</h3><p>${F.text}</p><p class="ros">Rosalind ${F.ros}</p></div>`;
+    else h+=`<div class="cx hid"><h3>?</h3><p>Not found yet. ${F.clue}</p></div>`;
+  }
+  const v=VOCAB.filter(x=>S.found[x[1]]);
+  h+='<h3 class="vh">Vocabulary you have earned</h3>'+(v.length?'<dl>'+v.map(x=>`<dt>${x[0]}</dt><dd>${x[2]}</dd>`).join('')+'</dl>':'<p class="cap2">None yet.</p>');
+  $('#codexList').innerHTML=h;
+}
+
+/* ---------- hover: a locker, its arrow and its place on the tape are the same thing ---------- */
+let focusCode=null;
+function focus(code){
+  if(code===focusCode)return;focusCode=code;
+  document.querySelectorAll('.hl').forEach(e=>e.classList.remove('hl'));
+  if(!code)return;
+  document.querySelectorAll(`[data-code="${code}"]`).forEach(e=>{
+    e.classList.add('hl');
+    if(!e.classList.contains('tok'))return;
+    let q=e;
+    for(let j=1;j<I.k;j++){do{q=q.previousElementSibling;}while(q&&!q.classList.contains('tok'));if(!q)break;q.classList.add('hl');}
+  });
+}
+/* one floating definition, kept inside the window */
+const tip=document.createElement('div');tip.className='tip';tip.hidden=true;tip.setAttribute('role','tooltip');document.body.appendChild(tip);
+function showTip(el){
+  tip.textContent=el.dataset.tip;tip.hidden=false;
+  const r=el.getBoundingClientRect(),x=Math.max(8,Math.min(r.left,document.documentElement.clientWidth-tip.offsetWidth-8));
+  tip.style.left=(x+scrollX)+'px';tip.style.top=(r.bottom+scrollY+7)+'px';
+}
+const near=(e,sel)=>e.target.closest?e.target.closest(sel):null;
+document.addEventListener('mouseover',e=>{
+  const x=near(e,'[data-code]');focus(x?x.dataset.code:null);
+  const t=near(e,'.term');if(t)showTip(t);else tip.hidden=true;
+});
+document.addEventListener('focusin',e=>{const t=near(e,'.term');if(t)showTip(t);});
+document.addEventListener('focusout',()=>{tip.hidden=true;});
+
+/* ---------- controls ---------- */
+$('#pad').addEventListener('click',e=>{const b=e.target.closest('[data-k]');if(b)insert(b.dataset.k);});
+$('#tools').addEventListener('click',e=>{
+  const b=e.target.closest('[data-a]');if(!b)return;const a=b.dataset.a;
+  if(a==='back')back();else if(a==='end')setCaret(tape.length);else if(a==='undo')undo();else clearTape();
+});
+$('#tape').addEventListener('click',e=>{
+  const tk=e.target.closest('.tok');
+  if(tk){const i=+tk.dataset.i,r=tk.getBoundingClientRect();setCaret(e.clientX<r.left+r.width/2?i:i+1);}
+  else setCaret(tape.length);
+});
+$('#wall').addEventListener('click',e=>{
+  const b=e.target.closest('[data-code]');if(!b||replay)return;
+  const c=b.dataset.code;
+  if(phase==='quiz'){if(quiz.ok)return;if(quiz.picked.has(c))quiz.picked.delete(c);else quiz.picked.add(c);quiz.msg='';render();return;}
+  const A=analyze(tape);if(A.opened.has(c))setCaret(A.opened.get(c)+1);
+});
+$('#map').addEventListener('click',e=>{const n=e.target.closest('.node');if(n)jumpTo(n.dataset.node);});
+$('#map').addEventListener('keydown',e=>{if(e.key!=='Enter'&&e.key!==' ')return;const n=e.target.closest('.node');if(n){e.preventDefault();e.stopPropagation();jumpTo(n.dataset.node);}});
+$('#lv').addEventListener('click',e=>{const b=e.target.closest('[data-lvl]');if(b&&!b.disabled)loadLevel(+b.dataset.lvl);});
+$('#brief').addEventListener('click',e=>{if(e.target.closest('[data-a="hint"]')){showHint=!showHint;if(showHint)log('hint');render();}});
+$('#quiz').addEventListener('click',e=>{const b=e.target.closest('[data-a]');if(!b)return;if(b.dataset.a==='check')checkQuiz();else nextQuiz();});
+function act(e){
+  const b=e.target.closest('[data-a]');if(!b)return;const a=b.dataset.a;
+  if(a==='next'){S.unlocked=Math.max(S.unlocked,Math.min(LEVELS.length,I.L.id+1));loadLevel(I.L.id+1);scrollTo(0,0);}
+  else if(a==='quiz'){phase='quiz';quiz={round:0,picked:new Set(),ok:false,msg:''};render();scrollTo(0,0);}
+  else if(a==='replay'){startReplay();const m=$('#mapbox');if(m.scrollIntoView)m.scrollIntoView({behavior:'smooth',block:'nearest'});}
+  else if(a==='giveup'){S.gaveUp=true;lv.gave=true;S.unlocked=Math.max(S.unlocked,2);log('set_aside',{presses:lv.presses,dead_ends:lv.deads});save();render();showCard();}
+  else if(a==='newstrip'){S.variant++;log('new_strip',{variant:S.variant});loadLevel(FINALE);scrollTo(0,0);}
+}
+$('#msg').addEventListener('click',act);
+$('#note').addEventListener('click',act);
+document.addEventListener('keydown',e=>{
+  if($('#codex').open)return;
+  const tg=e.target;if(tg&&(tg.tagName==='INPUT'||tg.tagName==='TEXTAREA'))return;
+  if(e.metaKey||e.ctrlKey){if(e.key.toLowerCase()==='z'){e.preventDefault();undo();}return;}
+  if(e.altKey)return;
+  const x=e.key.length===1?e.key.toUpperCase():e.key;
+  if(I.keys.includes(x)){e.preventDefault();insert(x);}
+  else if(x==='Backspace'){e.preventDefault();back();}
+  else if(x==='Delete'){e.preventDefault();del();}
+  else if(x==='ArrowLeft'){e.preventDefault();setCaret(caret-1);}
+  else if(x==='ArrowRight'){e.preventDefault();setCaret(caret+1);}
+  else if(x==='Home'){e.preventDefault();setCaret(0);}
+  else if(x==='End'){e.preventDefault();setCaret(tape.length);}
+});
+$('#codexBtn').onclick=()=>{renderCodex();$('#codex').showModal();};
+$('#codexClose').onclick=()=>$('#codex').close();
+$('#codex').addEventListener('click',e=>{if(e.target===$('#codex'))$('#codex').close();});
+$('#seed').value=S.seed;
+$('#setSeed').onclick=()=>{
+  const v=$('#seed').value.replace(/[^\w-]/g,'').slice(0,24);
+  if(!v||v===S.seed){$('#seed').value=S.seed;return;}
+  if(S.log.length>1&&!confirm('Setting a new puzzle code starts the game over. Continue?')){$('#seed').value=S.seed;return;}
+  S=freshState(v);cache.clear();$('#seed').value=S.seed;save();loadLevel(1);
+};
+$('#dl').onclick=()=>{
+  save();
+  const blob=new Blob([JSON.stringify({game:'lockpick',version:1,seed:S.seed,variant:S.variant,exported:new Date().toISOString(),unlocked:S.unlocked,
+    discoveries:S.found,vocabulary:VOCAB.filter(v=>S.found[v[1]]).map(v=>v[0]),best:S.best,shortcuts_used:S.shortcuts||0,events:S.log},null,1)],{type:'application/json'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='lockpick-'+S.seed+'.json';
+  document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),1000);
+};
+$('#reset').onclick=()=>{
+  if(!confirm('Erase all Lockpick progress in this browser?'))return;
+  clearTimeout(saveT);try{localStorage.removeItem(KEY);}catch(e){}
+  location.href=location.pathname;
+};
+
+loadLevel(S.cur||1);
+if(params.get('debug'))window.__lp={
+  state:()=>S,inst:()=>I,tape:()=>tape.join(''),caret:()=>caret,stats:()=>lv,
+  type:s=>{S.shortcuts=(S.shortcuts||0)+1;log('debug_type',{n:s.length});for(const c of s)insert(c);},
+  load:id=>{S.shortcuts=(S.shortcuts||0)+1;log('debug_load',{id});loadLevel(id);},setCaret,jumpTo,clear:clearTape,
+  solve:()=>solve(I.codes,I.k),spellings:()=>spellings(I.codes,I.k,5),analyze:()=>analyze(tape)
+};
+})();
+</script>
+</body>
+</html>

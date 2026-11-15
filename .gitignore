@@ -1,0 +1,6 @@
+.DS_Store
+_site/
+node_modules/
+bridge-walker/reading-guide/
+*key.docx
+*key.pdf
