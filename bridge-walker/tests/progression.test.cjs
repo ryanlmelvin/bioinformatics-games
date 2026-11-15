@@ -62,6 +62,7 @@ test('direct level links start fresh without debug or inherited vocabulary',()=>
   assert.match(ui.el('#title').textContent,/Level 12:/);
   assert.equal(ui.el('#gcount').textContent,'0 of 21 terms');
   assert.match(ui.el('#pips').innerHTML,/<button data-lvl="12" class="on"/);
+  assert.doesNotMatch(ui.el('#pips').innerHTML,/ disabled/);
   assert.deepEqual(ui.persisted(),saved);assert.equal(ui.writes.length,0);
  }
 });
@@ -82,5 +83,6 @@ test('invalid direct levels fall back to normal saved progress',()=>{
  for(const value of ['0','13','1.5','abc']){
   const ui=boot(null,true,null,{search:'?debug=1&level='+value});
   assert.equal(ui.api.state().L.id,11);assert(ui.api.saved().badges.includes('debruijn'));
+  assert.match(ui.el('#pips').innerHTML,/<button data-lvl="12" disabled/);
  }
 });

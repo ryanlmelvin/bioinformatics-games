@@ -1478,7 +1478,7 @@ function renderScene(){
   else drawEul();
 }
 function renderHeader(){
-  $('#pips').innerHTML=LEVELS.map(l=>'<button data-lvl="'+l.id+'"'+(l.id>S.unlocked&&l.id!==previewLevel?' disabled':'')+
+  $('#pips').innerHTML=LEVELS.map(l=>'<button data-lvl="'+l.id+'"'+(!previewLevel&&l.id>S.unlocked?' disabled':'')+
     (l.id===cur.L.id?' class="on" aria-current="true"':'')+' aria-label="Level '+l.id+'">'+l.id+'</button>').join('');
   $('#badges').innerHTML=VOCAB.map(x=>S.badges.includes(x.id)
     ?'<span class="badge got term" tabindex="0">'+x.name+'<span class="tip" role="tooltip"><b>'+x.name+'</b>'+x.def+'</span></span>'
