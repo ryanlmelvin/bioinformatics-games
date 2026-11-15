@@ -626,13 +626,17 @@ const BLOCKS={
 };
 
 /* ---------- saved state ---------- */
+const params=new URLSearchParams(location.search),urlSeed=params.get('seed');
+const pathLevel=(location.pathname.match(/\/level-(\d+)(?:\/(?:index\.html)?)?$/)||[])[1];
+const requestedLevel=Number(pathLevel||params.get('level'));
+const previewLevel=Number.isInteger(requestedLevel)&&requestedLevel>=1&&requestedLevel<=LEVELS.length?requestedLevel:0;
 function load(){try{return JSON.parse(localStorage.getItem(KEY))||{};}catch(e){return {};}}
-function save(){try{localStorage.setItem(KEY,JSON.stringify(S));}catch(e){}}
+function save(){if(previewLevel)return;try{localStorage.setItem(KEY,JSON.stringify(S));}catch(e){}}
 function freshState(seed){return {seed,unlocked:1,badges:[],earnedAt:{},variants:{},clean:[],intros:[],log:[]};}
 function randomCode(){const c='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';let s='';for(let i=0;i<6;i++)s+=c[Math.floor(Math.random()*c.length)];return s;}
 
-let S=load();
-const params=new URLSearchParams(location.search),urlSeed=params.get('seed');
+// Direct level links are fresh practice sessions, separate from course progress.
+let S=previewLevel?freshState(urlSeed||randomCode()):load();
 if(urlSeed&&urlSeed!==S.seed)S=freshState(urlSeed);
 if(!S.seed)S=freshState(randomCode());
 save();
@@ -1474,7 +1478,7 @@ function renderScene(){
   else drawEul();
 }
 function renderHeader(){
-  $('#pips').innerHTML=LEVELS.map(l=>'<button data-lvl="'+l.id+'"'+(l.id>S.unlocked?' disabled':'')+
+  $('#pips').innerHTML=LEVELS.map(l=>'<button data-lvl="'+l.id+'"'+(l.id>S.unlocked&&l.id!==previewLevel?' disabled':'')+
     (l.id===cur.L.id?' class="on" aria-current="true"':'')+' aria-label="Level '+l.id+'">'+l.id+'</button>').join('');
   $('#badges').innerHTML=VOCAB.map(x=>S.badges.includes(x.id)
     ?'<span class="badge got term" tabindex="0">'+x.name+'<span class="tip" role="tooltip"><b>'+x.name+'</b>'+x.def+'</span></span>'
@@ -1634,7 +1638,7 @@ $('#skip').onclick=()=>{
   else if(cur.mode==='konig')prove();
 };
 $('#seed').value=S.seed;
-$('#setSeed').onclick=()=>{const v=$('#seed').value.trim();if(!v||v===S.seed)return;S=freshState(v);save();cur=null;loadLevel(1);};
+$('#setSeed').onclick=()=>{const v=$('#seed').value.trim();if(!v||v===S.seed)return;S=freshState(v);save();cur=null;loadLevel(previewLevel||1);};
 $('#dl').onclick=()=>{
   const blob=new Blob([JSON.stringify({game:'bridge-walker',version:5,seed:S.seed,exported:new Date().toISOString(),
     unlocked:S.unlocked,vocabulary:S.badges,earnedAt:S.earnedAt,events:S.log},null,1)],{type:'application/json'});
@@ -1642,8 +1646,7 @@ $('#dl').onclick=()=>{
   document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),1000);
 };
 
-const debugLevel=params.get('debug')&&Number(params.get('level'));
-loadLevel(debugLevel>=1&&debugLevel<=LEVELS.length?Math.floor(debugLevel):Math.min(S.unlocked,LEVELS.length));
+loadLevel(previewLevel||Math.min(S.unlocked,LEVELS.length));
 /* Test handle, only with ?debug=1 in the address. */
 if(params.get('debug'))window.__bw={state:()=>cur,saved:()=>S,nodeClick,cardClick,loadLevel,morphFrame,cardsFrame,
   buildPick,buildClick,candClick,balRemove,choosePairAnswer,pairSplitFrame,skip:()=>$('#skip').click()};
