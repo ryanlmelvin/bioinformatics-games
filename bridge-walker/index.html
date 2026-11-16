@@ -35,6 +35,7 @@ button{font:inherit;color:var(--ink);background:var(--panel);border:1px solid va
 button:hover:not(:disabled){border-color:var(--accent)}
 button:disabled{opacity:.45;cursor:default}
 button.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent);font-weight:600}
+button.advance{display:block;width:fit-content;max-width:100%;min-height:44px;margin-top:14px;padding:10px 18px;text-align:left}
 a{color:var(--accent)}
 .pips{display:flex;flex-wrap:wrap;gap:6px}
 .pips button{width:32px;height:32px;padding:0;border-radius:50%}
@@ -83,6 +84,7 @@ svg#map.building .pl-base,svg#map.building .pl-top,svg#map.building .mread{point
 .status{min-height:1.6em;margin:10px 2px 0;font-weight:500}
 .status.warn{color:var(--warn)} .status.good{color:var(--good)}
 .controls{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:12px}
+#skip:not([hidden]) + .controls{margin-top:20px;padding-top:14px;border-top:1px solid var(--line)}
 .controls label{font-size:.92rem;display:flex;gap:6px;align-items:center;padding:4px 8px;border-radius:8px}
 .nudge{outline:2px solid var(--m-gold);animation:pulse 1.2s ease-in-out infinite}
 @keyframes pulse{50%{outline-color:transparent}}
@@ -288,13 +290,14 @@ footer input{font:inherit;width:9em;padding:5px 8px;border:1px solid var(--line)
 
   <div class="status" id="status" role="status"></div>
 
+  <button id="skip" class="primary advance" hidden></button>
+
   <div class="controls">
     <button id="undo">Undo</button>
     <button id="restart">Restart</button>
     <button id="fresh">New puzzle</button>
     <label id="countsLabel" hidden><input type="checkbox" id="counts"> Count the edges at each node</label>
     <label id="fogLabel" hidden><input type="checkbox" id="fog"> Hide the edges (list only)</label>
-    <button id="skip" class="primary" hidden></button>
   </div>
 
   <div id="panel"></div>
@@ -978,7 +981,7 @@ function pairTape(c,i){
   return '<div class="tape"><b>String '+(i?'B':'A')+'</b><div class="tapeletters" aria-label="'+c.text+'">'+letters+'</div>'+
     '<div class="pairstencil" id="stencil'+i+'" style="--offset:'+cur.pairOffsets[i]+'" aria-label="'+p.left+', one unknown letter, '+p.right+'">'+stencil+'</div>'+
     '<input type="range" min="0" max="9" step="1" value="'+cur.pairOffsets[i]+'" data-slide="'+i+'" aria-label="Slide pair under string '+(i?'B':'A')+'">'+
-    '<button data-answer="'+i+'">Choose string '+(i?'B':'A')+'</button></div>';
+    '<button class="primary" data-answer="'+i+'">Choose string '+(i?'B':'A')+'</button></div>';
 }
 function renderPairWork(){
   const el=$('#pairwork'),active=cur.L.pairs&&cur.phase==='pairs';el.hidden=!active;
@@ -1433,7 +1436,7 @@ function renderPanel(){
        '<a href="'+s.url+'" target="_blank" rel="noopener">'+s.cite+': “'+s.title+'”</a> <span class="gmeta">'+s.where+'.</span></div>';
   }
   const missing=VOCAB.filter(x=>!S.badges.includes(x.id)).length;
-  if(cur.L.id<LEVELS.length)h+='<button class="primary" id="next">Next level →</button>';
+  if(cur.L.id<LEVELS.length)h+='<button class="primary advance" id="next">Next level →</button>';
   else h+='<p>'+(missing?plural(missing,'vocabulary term')+' still hidden. Try a new puzzle on levels 6 to 11.'
      :'You have earned the whole vocabulary. Your field guide, below, lists every term with its source.')+'</p>';
   $('#panel').innerHTML=h+'</div>';
