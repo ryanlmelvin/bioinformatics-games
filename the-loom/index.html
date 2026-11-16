@@ -1,0 +1,1424 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>The Loom</title>
+<style>
+:root{
+  --bg:#f6f4ee; --panel:#fffdf8; --ink:#1f2328; --muted:#6b7078; --line:#d9d4c7;
+  --accent:#c2410c; --accent-ink:#ffffff; --good:#2e7d4f; --warn:#b4541a; --chip:#e3f0f3;
+  /* the loom is an illustration: one palette in both themes */
+  --wood:#8a5a2b; --wood2:#b07a43; --wood3:#5e3b1a; --cloth:#f3ead6; --warp:#d8ccb0; --paper:#f3e9cf;
+}
+@media (prefers-color-scheme:dark){
+  :root{--bg:#15181c; --panel:#1d2126; --ink:#e8e6e1; --muted:#9aa0a8; --line:#343a42;
+    --accent:#ff9b5e; --accent-ink:#2b1200; --good:#6fcf97; --warn:#f0a36b; --chip:#1d3a44;}
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 system-ui,-apple-system,"Segoe UI",sans-serif}
+.wrap{max-width:900px;margin:0 auto;padding:20px 16px 40px}
+header{display:flex;flex-wrap:wrap;align-items:center;gap:12px 20px;margin-bottom:8px}
+h1{font-size:1.35rem;margin:0;display:flex;align-items:center;gap:8px}
+h1 svg{width:40px;height:40px}
+h1 a{color:inherit;text-decoration:none}
+h2{font-size:1.1rem;margin:18px 0 4px}
+p{margin:4px 0 12px}
+.mono,.strip,.cell,svg text{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+button{font:inherit;color:var(--ink);background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:6px 12px;cursor:pointer}
+button:hover:not(:disabled){border-color:var(--accent)}
+button:disabled{opacity:.45;cursor:default}
+button.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent);font-weight:600}
+button.advance{display:block;width:fit-content;max-width:100%;min-height:44px;margin-top:14px;padding:10px 18px;text-align:left}
+a{color:var(--accent)}
+input[type=text],input[type=number],textarea{font:inherit;color:var(--ink);background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:5px 8px}
+.pips{display:flex;flex-wrap:wrap;gap:6px}
+.pips button{width:32px;height:32px;padding:0;border-radius:50%}
+.pips button.on{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.vocabhead{font-size:.75rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-top:8px}
+.badges{display:flex;flex-wrap:wrap;gap:6px;margin:4px 0;position:relative}
+.badge{font-size:.8rem;border:1px dashed var(--line);color:var(--muted);border-radius:999px;padding:2px 10px}
+.badge.got{border:1px solid var(--good);color:var(--good);font-weight:600}
+.term{cursor:help;position:relative}
+span.term:not(.badge){border-bottom:1px dotted currentColor;font-weight:600}
+.tip{display:none;position:absolute;left:0;top:calc(100% + 6px);z-index:20;width:min(360px,84vw);padding:9px 11px;border-radius:8px;
+  background:var(--ink);color:var(--bg);font:400 .82rem/1.45 system-ui,sans-serif;letter-spacing:0;text-transform:none;text-align:left;box-shadow:0 4px 14px rgba(0,0,0,.25)}
+.tip b{display:block;margin-bottom:2px;color:inherit}
+.term:hover>.tip,.term:focus>.tip{display:block}
+.rule{display:inline-flex;align-items:center;gap:8px;font-size:.9rem;font-weight:600;padding:3px 12px;border-radius:999px;background:var(--chip);margin-bottom:8px}
+.stage{border:1px solid var(--line);border-radius:12px;overflow:hidden;background:var(--cloth);color:#1f2328;padding:12px 14px}
+.stage .sub{font-size:.75rem;text-transform:uppercase;letter-spacing:.08em;color:#6b6250;margin:10px 0 3px}
+.stage .sub:first-child{margin-top:0}
+.stage p{font-size:.95rem}
+.stage button{background:#fffdf8;color:#1f2328;border-color:#cdbf9a}
+.stage button.primary{background:#c2410c;color:#fff;border-color:#c2410c}
+.stage input{background:#fffdf8;color:#1f2328;border-color:#cdbf9a}
+svg.loom{width:100%;height:auto;display:block;touch-action:none;user-select:none;-webkit-user-select:none}
+.status{min-height:1.6em;margin:10px 2px 0;font-weight:500}
+.status.warn{color:var(--warn)} .status.good{color:var(--good)}
+.controls{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:12px}
+#skip:not([hidden]) + .controls{margin-top:20px;padding-top:14px;border-top:1px solid var(--line)}
+/* letters */
+.L-A{color:#2e7d4f}.L-C{color:#2b5fb3}.L-G{color:#9a6b00}.L-T{color:#b83a4b}.L-\${color:#6b7078}
+.text{display:flex;flex-wrap:wrap;gap:2px 0;font:700 1.05rem/1 ui-monospace,SFMono-Regular,Menlo,monospace}
+.cell{display:inline-flex;flex-direction:column;align-items:center;justify-content:center;width:1.45em;min-height:1.9em;padding:2px 0;border:0;border-radius:4px;background:transparent;font:inherit;cursor:pointer}
+.cell small{font-size:.55em;font-weight:400;color:#857b66;line-height:1}
+.cell.hit{background:#ffe2a8}.cell.bad{background:#ffd3cf;color:#8a1010}.cell.ok{background:#cfeedd}.cell.done{background:#e6dcc0}
+.cell.sel{outline:2px solid #c2410c}
+button.cell:hover{background:#fff3d6}
+.cell.gap{width:.6em;cursor:default}
+.rowbreak{flex-basis:100%;height:6px}
+.card{font:700 1.1rem/1 ui-monospace,SFMono-Regular,Menlo,monospace;letter-spacing:.12em;padding:8px 14px;background:var(--paper);color:#2a2416;border:1px solid #cdbf9a;border-radius:3px}
+.cards{display:flex;flex-wrap:wrap;gap:8px;margin:6px 0}
+.card.on{background:#ffc56e}.card.placed{background:#cfeedd}
+.meter{font-weight:700;font-variant-numeric:tabular-nums}
+/* strips (sortable rows) */
+.strips{display:flex;flex-direction:column;gap:6px;margin:6px 0;max-width:520px}
+.srow{display:flex;align-items:center;gap:8px}
+.strip{flex:1;display:flex;align-items:center;gap:0;min-height:40px;padding:4px 10px 4px 6px;background:var(--paper);border:1px solid #cdbf9a;border-radius:3px;
+  font:700 1.15rem/1 ui-monospace,SFMono-Regular,Menlo,monospace;letter-spacing:.18em;cursor:grab;touch-action:none;user-select:none;-webkit-user-select:none;color:#2a2416;text-align:left}
+.strip .grip{width:14px;height:22px;margin-right:10px;flex:none;background:radial-gradient(circle,#a8987a 1.3px,transparent 1.5px) 0 0/7px 7px}
+.strip.lift{background:#ffe2a8;box-shadow:0 3px 10px rgba(0,0,0,.18)}
+.strip.match{background:#cfeedd}
+.strip.nope{animation:shake .35s}
+.strip.ghost{opacity:.4}
+.strip .lastl{margin-left:auto;padding:2px 6px;border-radius:4px;background:#e6dcc0}
+@keyframes shake{25%{transform:translateX(-5px)}75%{transform:translateX(5px)}}
+.srow input{width:3.6em;text-align:center}
+.srow input.ok{border-color:#2e7d4f;background:#cfeedd}
+.srow .tag{font-size:.85rem;color:#6b6250;min-width:4.5em}
+.word{display:flex;gap:2px;margin:6px 0 2px}
+.word .cell{cursor:default}
+/* storage bill */
+.bill{display:grid;gap:10px;margin:8px 0}
+.opt{display:grid;grid-template-columns:1fr auto;gap:4px 10px;align-items:center;padding:8px 10px;background:#fffdf8;border:1px solid #cdbf9a;border-radius:8px}
+.opt .cost{font-weight:700;font-variant-numeric:tabular-nums;text-align:right}
+.opt .bar{grid-column:1/3;height:12px;border-radius:6px;background:#e6dcc0;overflow:hidden;position:relative}
+.opt .bar i{display:block;height:100%;background:#2e7d4f}
+.opt .bar i.over{background:#b83a4b}
+.opt .bar b{position:absolute;top:-3px;bottom:-3px;width:2px;background:#1f2328}
+.shelfnote{font-size:.85rem;color:#6b6250}
+input[type=range]{width:100%;accent-color:#c2410c}
+.handover{margin:10px 0;padding:12px 14px;border-left:4px solid #c2410c;background:#fffdf8;border-radius:0 8px 8px 0}
+.handover p{margin:4px 0 8px}
+.mini{border-collapse:collapse;font:700 .95rem/1.2 ui-monospace,SFMono-Regular,Menlo,monospace;margin:6px 0}
+.mini td{padding:2px 5px;text-align:center}
+.mini th{padding:2px 4px}
+.mini th button{font-size:.75rem;padding:2px 6px}
+.mini td.colon{background:#ffe2a8}
+.runs{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:.92rem;margin:4px 0}
+.tscroll{overflow-x:auto}
+/* pileup */
+.pile{font:700 .95rem/1 ui-monospace,SFMono-Regular,Menlo,monospace;overflow-x:auto}
+.pile .prow{display:flex;height:1.6em;align-items:center}
+.pile .pc{width:1.25em;flex:none;text-align:center}
+.pile .pc.diff{background:#ffd3cf;color:#8a1010;border-radius:3px}
+.pile button.pc{padding:0;border:0;background:transparent;font:inherit;height:1.5em;border-radius:3px}
+.pile button.pc:hover{background:#ffe2a8}
+.pile .colhit{background:#ffe2a8}
+/* reveals, sources, field guide */
+.reveal{border:1px solid var(--good);border-radius:12px;padding:14px 16px;margin-top:14px;background:var(--panel)}
+.reveal h3{margin:0 0 8px;font-size:1.05rem}
+.called{margin:10px 0 4px;padding-left:12px;border-left:3px solid var(--good)}
+.called p{margin:0;position:relative}
+.called b{color:var(--good)}
+.src{margin:4px 0 10px 15px;padding:8px 12px;border-radius:8px;background:var(--chip);font-size:.9rem}
+.src .tag{display:block;font-size:.7rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted)}
+.src a{font-weight:600}
+.wild{margin:12px 0 10px;padding:10px 14px;border-radius:8px;border:1px dashed var(--line)}
+.guide{margin-top:22px;border:1px solid var(--line);border-radius:12px;padding:10px 14px;background:var(--panel)}
+.guide summary{cursor:pointer;font-weight:600}
+.gentry{padding:8px 0;border-top:1px solid var(--line)}
+.gentry h4{margin:0;font-size:1rem}
+.gentry p{margin:2px 0;font-size:.92rem}
+.gmeta{color:var(--muted);font-size:.9rem}
+footer{margin-top:26px;padding-top:12px;border-top:1px solid var(--line);display:flex;flex-wrap:wrap;gap:10px;align-items:center;font-size:.9rem;color:var(--muted)}
+footer input{font:inherit;width:9em;padding:5px 8px;border:1px solid var(--line);border-radius:8px;background:var(--panel);color:var(--ink)}
+/* workbench */
+.bench textarea{width:100%;min-height:4em;font-family:ui-monospace,Menlo,monospace}
+.bench table{border-collapse:collapse;font-family:ui-monospace,Menlo,monospace}
+.bench td,.bench th{border:1px solid var(--line);padding:2px 6px;text-align:center}
+.bench .c1{background:#ffe2a8;color:#1f2328}.bench .c2{background:#d7eaff;color:#1f2328}.bench .cL{background:#cfeedd;color:#1f2328}
+.thread.glow{stroke-width:6}.thread.dim{opacity:.28}.thread.bad{stroke:#b83a4b!important;stroke-width:6}
+.thread.new{stroke-dasharray:700;stroke-dashoffset:0;animation:draw .6s ease-out}
+@keyframes draw{from{stroke-dashoffset:700}to{stroke-dashoffset:0}}
+svg.loom g[data-drag]:focus-visible circle,svg.loom g[data-drop]:focus-visible circle,svg.loom g[data-act]:focus-visible circle{stroke:#c2410c;stroke-width:3}
+svg.loom g[data-drag]:hover circle,svg.loom g[data-act]:hover circle,svg.loom g[data-drop]:hover circle{stroke:#c2410c}
+.tally{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:4px 24px}
+.trow{display:flex;align-items:center;gap:8px;height:30px;padding-left:4px;border-radius:6px}
+.trow.band{background:#ffe2a8}
+.trow .rn{width:2em;text-align:right;color:#857b66;font-size:.8rem;font-family:ui-monospace,Menlo,monospace}
+.trow .cell{min-height:1.6em}
+.fing{font-size:.8rem;color:#6b6250}
+button.board{display:block;width:100%;margin:6px 0 2px;padding:4px 8px;font:600 .82rem/1.3 ui-monospace,Menlo,monospace;background:#3b4a3f!important;color:#f3ead6!important;border:3px solid #8a5a2b!important;border-radius:4px;text-align:left}
+button.board span{filter:brightness(1.9)}
+button.board.on{outline:3px solid #c2410c}
+input.ok{border-color:#2e7d4f!important;background:#cfeedd!important}
+.text.grid{display:grid;grid-template-columns:repeat(var(--per),minmax(0,1fr));gap:2px;max-width:calc(var(--per)*2.2rem)}
+.text.grid .cell{width:auto}
+@media (max-width:600px){.text.grid{grid-template-columns:repeat(var(--pp),minmax(0,1fr))}}
+[hidden]{display:none!important}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+@media print{
+  body{background:#fff;color:#000}
+  .wrap>*:not(#guide){display:none!important}
+  .guide{border:0;padding:0;margin:0}
+  .guide summary,#printGuide{display:none}
+}
+
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <!-- ===== ARTWORK: edit these shapes to restyle the game ===== -->
+    <linearGradient id="gWood" x1="0" x2="1"><stop offset="0" stop-color="#6e4520"/><stop offset=".35" stop-color="#b07a43"/><stop offset=".7" stop-color="#8a5a2b"/><stop offset="1" stop-color="#5e3b1a"/></linearGradient>
+    <linearGradient id="gWoodH" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#b07a43"/><stop offset=".6" stop-color="#8a5a2b"/><stop offset="1" stop-color="#5e3b1a"/></linearGradient>
+    <pattern id="pCloth" width="8" height="8" patternUnits="userSpaceOnUse"><rect width="8" height="8" fill="#f3ead6"/><path d="M0,4H8M4,0V8" stroke="#e7dcc2" stroke-width="1"/></pattern>
+    <g id="a-bird">
+      <path d="M14,2 L30,-4 L28,4 Z" fill="#8a6a1a"/>
+      <ellipse cx="4" cy="2" rx="15" ry="10" fill="#f2c230" stroke="#7a5a10" stroke-width="1"/>
+      <path d="M-2,-2 Q8,-6 16,2 Q8,8 -2,5 Z" fill="#c99512"/>
+      <path d="M2,0 Q9,-2 14,3" fill="none" stroke="#7a5a10" stroke-width="1"/>
+      <circle cx="-10" cy="-6" r="8" fill="#f2c230" stroke="#7a5a10" stroke-width="1"/>
+      <path d="M-17,-9 Q-12,-14 -6,-11 L-5,-2 Q-12,0 -17,-4 Z" fill="#2a2016"/>
+      <path d="M-17,-8 L-27,-5 L-17,-3 Z" fill="#3a3a3a"/>
+      <circle cx="-11" cy="-7" r="1.6" fill="#e9b04a"/>
+      <path d="M0,11 L-2,17 M6,11 L7,17" stroke="#7a5a10" stroke-width="1.4"/>
+    </g>
+    <g id="a-finger"><path d="M0,-9 C-14,-9 -22,-6 -26,-3 L-30,-3 L-30,3 L-26,3 C-22,6 -14,9 0,9 C4,9 6,6 6,0 C6,-6 4,-9 0,-9 Z" fill="#f0c9a6" stroke="#8a5a3a" stroke-width="1.2"/><path d="M-4,-6 Q0,0 -4,6" fill="none" stroke="#8a5a3a" stroke-width="1"/></g>
+  </defs>
+</svg>
+<div class="wrap">
+  <header>
+    <h1><a href="../" title="All games" aria-label="All games"><svg viewBox="-30 -30 60 60" aria-hidden="true"><circle r="30" fill="#f3ead6"/><rect x="-22" y="-20" width="7" height="42" rx="2" fill="url(#gWood)"/><rect x="15" y="-20" width="7" height="42" rx="2" fill="url(#gWood)"/><path d="M-15,-10 C0,-10 0,0 15,0 M-15,0 C0,0 0,10 15,10 M-15,10 C0,10 0,-10 15,-10" fill="none" stroke="#b83a4b" stroke-width="2.4"/><use href="#a-bird" transform="translate(4,-20) scale(.5)"/></svg></a>The Loom</h1>
+    <div class="pips" id="pips" aria-label="Levels"></div>
+  </header>
+  <div class="vocabhead">Vocabulary you have earned <span style="text-transform:none;letter-spacing:0">(hover for the definition)</span></div>
+  <div class="badges" id="badges"></div>
+
+  <h2 id="title"></h2>
+  <p id="brief"></p>
+  <div class="rule" id="rule"></div>
+
+  <div class="stage" id="stage"></div>
+
+  <div class="status" id="status" role="status"></div>
+
+  <button id="skip" class="primary advance" hidden></button>
+
+  <div class="controls">
+    <button id="undo">Undo</button>
+    <button id="restart">Restart</button>
+    <button id="fresh">New puzzle</button>
+  </div>
+
+  <div id="panel"></div>
+
+  <details class="guide" id="guide">
+    <summary>Field guide: your glossary and sources (<span id="gcount"></span>)</summary>
+    <div id="guideBody"></div>
+  </details>
+
+  <footer>
+    <label for="seed">Puzzle code</label>
+    <input id="seed" autocomplete="off" spellcheck="false">
+    <button id="setSeed">Use code (resets progress)</button>
+    <button id="dl">Download move log</button>
+    <a href="?bench=1">Workbench</a>
+  </footer>
+</div>
+
+<script id="engine">
+/* Pure puzzle logic: no DOM. Positions are 0-based. '$' sorts before every letter. */
+function hashStr(s){let h=2166136261>>>0;for(let i=0;i<s.length;i++){h^=s.charCodeAt(i);h=Math.imul(h,16777619);}return h>>>0;}
+function rng(seed){let a=seed>>>0;return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
+function shuffled(n,rand){const a=[...Array(n).keys()];for(let i=n-1;i>0;i--){const j=Math.floor(rand()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+const pick=(arr,rand)=>arr[Math.floor(rand()*arr.length)];
+const dna=(n,rand)=>Array.from({length:n},()=>'ACGT'[Math.floor(rand()*4)]).join('');
+
+/* The curated word list (property 1): 6- and 7-letter words with one letter at least three times. */
+const WORDS7=['possess','baggage','cantata','referee','alfalfa','entente','bananas','tsetses'];
+const WORDS6=['banana','papaya','pepper','mammal','assess','teeter','tattoo','cocoon','voodoo','ananas','rococo'];
+const WORDS3=['banana','ananas','rococo','alfalfa','entente','bananas','tsetses'];   /* these have a 3-letter piece that repeats */
+const WORDS=[...new Set([...WORDS7,...WORDS6,...WORDS3])];
+
+function occurrences(text,p){const o=[];if(!p)return o;for(let i=0;i+p.length<=text.length;i++)if(text.startsWith(p,i))o.push(i);return o;}
+function kmerCounts(s,k){const m={};for(let i=0;i+k<=s.length;i++){const p=s.slice(i,i+k);m[p]=(m[p]||0)+1;}return m;}
+function runs(s){let r=0;for(let i=0;i<s.length;i++)if(!i||s[i]!==s[i-1])r++;return r;}
+
+/* BA9G */
+function suffixArray(t){return [...Array(t.length).keys()].sort((a,b)=>{const x=t.slice(a),y=t.slice(b);return x<y?-1:x>y?1:0;});}
+function endings(t){return suffixArray(t).map(i=>({start:i,text:t.slice(i)}));}
+/* rotations, unsorted, in the order the ring is cut: the i-th starts at position i */
+function rotations(t){return [...t].map((_,i)=>t.slice(i)+t.slice(0,i));}
+/* the sorted table: rows of {rot,start}. With a single '$' at the end this is the suffix order. */
+function sortedRotations(t){return [...Array(t.length).keys()].map(i=>({rot:t.slice(i)+t.slice(0,i),start:i})).sort((a,b)=>a.rot<b.rot?-1:a.rot>b.rot?1:0);}
+/* BA9I */
+function bwt(t){return sortedRotations(t).map(r=>r.rot[r.rot.length-1]).join('');}
+function firstColumn(L){return [...L].sort().join('');}
+/* BA9K: row in the first column of the letter at row i of the last column (k-th occurrence to k-th occurrence) */
+function lastToFirst(L){
+  const order=[...L].map((c,i)=>[c,i]).sort((a,b)=>a[0]<b[0]?-1:a[0]>b[0]?1:a[1]-b[1]);
+  const lf=Array(L.length);order.forEach((x,row)=>lf[x[1]]=row);return lf;
+}
+/* rank of each letter within its own column: a letter's subscript when the column is read top down */
+function ranks(col){const seen={};return [...col].map(c=>(seen[c]=(seen[c]||0)+1));}
+/* BA9J. Also returns the rows visited, starting from the row that begins with '$'. */
+function unweave(L){
+  const lf=lastToFirst(L),rows=[0];let out='',row=0;
+  for(let k=0;k<L.length-1;k++){out=L[row]+out;row=lf[row];rows.push(row);}
+  return {text:out+'$',rows};
+}
+function inverseBwt(L){return unweave(L).text;}
+/* BA9L: the band after each step. A step keeps the band rows whose last letter is the symbol and follows their threads. */
+function bandSteps(L,pattern){
+  const lf=lastToFirst(L);let top=0,bottom=L.length-1;const steps=[];
+  for(let j=pattern.length-1;j>=0;j--){
+    const sym=pattern[j],kept=[];
+    for(let r=top;r<=bottom;r++)if(L[r]===sym)kept.push(r);
+    if(!kept.length){steps.push({sym,from:[top,bottom],kept,band:null});return {count:0,steps,band:null};}
+    const nb=[lf[kept[0]],lf[kept[kept.length-1]]];
+    steps.push({sym,from:[top,bottom],kept,land:kept.map(r=>lf[r]),band:nb});
+    [top,bottom]=nb;
+  }
+  return {count:bottom-top+1,steps,band:[top,bottom]};
+}
+function bwMatching(L,patterns){return patterns.map(p=>bandSteps(L,p).count);}
+/* BA9M */
+function firstOccurrence(L){const F=firstColumn(L),o={};[...F].forEach((c,i)=>{if(!(c in o))o[c]=i;});return o;}
+function countAbove(L,sym,i){let n=0;for(let r=0;r<i;r++)if(L[r]===sym)n++;return n;}
+function betterBWMatching(L,pattern){
+  const fo=firstOccurrence(L);let top=0,bottom=L.length-1;
+  for(let j=pattern.length-1;j>=0;j--){
+    const s=pattern[j];
+    if(!(s in fo)||countAbove(L,s,bottom+1)-countAbove(L,s,top)===0)return 0;
+    top=fo[s]+countAbove(L,s,top);bottom=fo[s]+countAbove(L,s,bottom+1)-1;
+  }
+  return bottom-top+1;
+}
+/* checkpoint arrays: at every row divisible by C, how many of each letter lie above it in the last column */
+function checkpoints(L,C){const alpha=[...new Set(L)].sort(),out={};
+  for(let i=0;i<=L.length;i+=C){const o={};alpha.forEach(a=>o[a]=countAbove(L,a,i));out[i]=o;}return out;}
+/* BA9Q: rows whose ending starts at a multiple of K, as [row, position] */
+function partialSuffixArray(t,K){return suffixArray(t).map((p,row)=>[row,p]).filter(x=>x[1]%K===0);}
+/* From a row, follow threads until a labelled row; position = label + steps. */
+function walkToLabel(L,row,labels){
+  const lf=lastToFirst(L),path=[row];let steps=0;
+  while(!(row in labels)){row=lf[row];steps++;path.push(row);}
+  return {steps,label:labels[row],pos:labels[row]+steps,path};
+}
+function labelMap(t,K){const m={};partialSuffixArray(t,K).forEach(([r,p])=>m[r]=p);return m;}
+/* BA9N, done the Loom's way: backward search for the band, then walk to a labelled row. */
+function locateAll(t,L,pattern,K){
+  const labels=labelMap(t,K),res=bandSteps(L,pattern);if(!res.band)return [];
+  const out=[];for(let r=res.band[0];r<=res.band[1];r++)out.push(walkToLabel(L,r,labels).pos);
+  return out.sort((a,b)=>a-b);
+}
+function multiplePatternMatching(text,patterns,K){
+  const t=text.endsWith('$')?text:text+'$',L=bwt(t);
+  return patterns.flatMap(p=>locateAll(t,L,p,K||4)).sort((a,b)=>a-b);
+}
+function mismatches(a,b){let d=0;for(let i=0;i<a.length;i++)if(a[i]!==b[i])d++;return d;}
+/* BA9O by seeds: cut the pattern into d+1 pieces; a match with at most d mismatches keeps one piece intact. */
+function seedPieces(p,d){const n=d+1,k=Math.floor(p.length/n),out=[];
+  for(let i=0;i<n;i++){const a=i*k,b=i===n-1?p.length:a+k;out.push({off:a,piece:p.slice(a,b)});}return out;}
+function approxOccurrences(text,p,d){
+  const t=text.endsWith('$')?text:text+'$',L=bwt(t),plainText=t.slice(0,-1),hits=new Set();
+  seedPieces(p,d).forEach(s=>locateAll(t,L,s.piece,4).forEach(pos=>{
+    const start=pos-s.off;
+    if(start>=0&&start+p.length<=plainText.length&&mismatches(plainText.slice(start,start+p.length),p)<=d)hits.add(start);
+  }));
+  return [...hits].sort((a,b)=>a-b);
+}
+function approximateMatching(text,patterns,d){return patterns.flatMap(p=>approxOccurrences(text,p,d)).sort((a,b)=>a-b);}
+function approxBrute(text,p,d){const o=[];for(let i=0;i+p.length<=text.length;i++)if(mismatches(text.slice(i,i+p.length),p)<=d)o.push(i);return o;}
+/* the plain scan of level 1: slide the read along, compare letters until one differs */
+function naiveScan(text,read){
+  let comps=0;const pos=[];
+  for(let i=0;i+read.length<=text.length;i++){let j=0;for(;j<read.length;j++){comps++;if(text[i+j]!==read[j])break;}if(j===read.length)pos.push(i);}
+  return {pos,comps};
+}
+/* comparisons for one try at one start: letters compared until the first difference */
+function tryAt(text,read,i){let j=0;for(;j<read.length;j++)if(text[i+j]!==read[j])return {comps:j+1,match:false,miss:j};return {comps:read.length,match:true,miss:-1};}
+
+/* ---------- puzzle generators: every puzzle is a function of (code, level, variant) ---------- */
+function keyOf(code,id,variant){return code+'|'+id+'|'+(variant||0);}
+function uniqueReads(text,len,count,rand,gap){gap=gap||len;
+  const ok=[];for(let i=0;i+len<=text.length;i++){const r=text.slice(i,i+len);if(occurrences(text,r).length===1)ok.push(i);}
+  const order=shuffled(ok.length,rand),out=[];
+  for(const j of order){const p=ok[j];if(out.every(o=>Math.abs(o.pos-p)>=gap&&o.read!==text.slice(p,p+len)))out.push({read:text.slice(p,p+len),pos:p});if(out.length===count)break;}
+  return out.length===count?out:null;
+}
+function makeL1(key){
+  const rand=rng(hashStr(key));
+  for(let t=0;t<5000;t++){
+    const a=dna(40,rand),ra=uniqueReads(a,4,3,rand);if(!ra)continue;
+    const b=dna(200,rand),rb=uniqueReads(b,6,10,rand);if(!rb)continue;
+    return {short:{text:a,reads:ra},long:{text:b,reads:rb}};
+  }
+  throw new Error('level 1');
+}
+function wordWithPattern(list,k,rand){
+  const w=pick(list,rand),c=kmerCounts(w,k),cands=Object.keys(c).filter(p=>c[p]>=2&&c[p]<=4).sort();
+  return {word:w,pattern:cands.length?pick(cands,rand):null};
+}
+function makeWordLevel(code,id,variant){
+  const rand=rng(hashStr(keyOf(code,id,variant)));
+  if(id===2){const x=wordWithPattern(WORDS7,2,rand);return {word:x.word,pattern:x.pattern,rows:endings(x.word)};}
+  if(id===7){
+    const x=wordWithPattern(WORDS3,3,rand),t=x.word+'$',L=bwt(t);
+    // two more patterns run automatically after the hand-made one: one that is there, one that is not
+    const subs=[...new Set(Object.keys(kmerCounts(x.word,2)).concat(Object.keys(kmerCounts(x.word,3))))].filter(p=>p!==x.pattern).sort();
+    const present=pick(subs,rand),letters=[...new Set(x.word)].sort();
+    let absent=null;for(const a of letters)for(const b of letters)for(const c of letters){const p=a+b+c;if(!absent&&!x.word.includes(p))absent=p;}
+    return {word:x.word,text:t,L,F:firstColumn(L),pattern:x.pattern,more:[present,absent]};
+  }
+  // levels 4, 5, 6: 6-letter words. Level 6 never repeats level 5's word, so the word must be unwoven.
+  let avoid=null;if(id===6)avoid=makeWordLevel(code,5,variant).word;
+  let w=pick(WORDS6,rand);while(w===avoid)w=pick(WORDS6,rand);
+  const t=w+'$',L=bwt(t);
+  return {word:w,text:t,L,F:firstColumn(L),rows:sortedRotations(t),ring:rotations(t)};
+}
+function makeL8(key){
+  const rand=rng(hashStr(key)),K=4;
+  for(let tr=0;tr<20000;tr++){
+    const body=dna(15,rand),t=body+'$',L=bwt(t),labels=labelMap(t,K);
+    const c3=kmerCounts(body,3),twice=Object.keys(c3).filter(p=>c3[p]===2).sort();if(!twice.length)continue;
+    const first=pick(twice,rand);
+    const reads=uniqueReads(body,4,4,rand,2);if(!reads)continue;
+    const walks=[first,...reads.map(r=>r.read)].map(p=>{const b=bandSteps(L,p).band,o=[];for(let r=b[0];r<=b[1];r++)o.push(walkToLabel(L,r,labels));return o;});
+    const all=walks.flat();
+    if(all.some(w=>w.steps>3))continue;
+    if(all.filter(w=>w.steps>=2).length<2||all.every(w=>w.steps!==3))continue;
+    return {text:t,body,L,F:firstColumn(L),K,labels,first,reads,walks,sa:suffixArray(t)};
+  }
+  throw new Error('level 8');
+}
+function makeL9(key){
+  const rand=rng(hashStr(key)),C=4;
+  for(let tr=0;tr<20000;tr++){
+    const body=dna(31,rand),t=body+'$',L=bwt(t),fo=firstOccurrence(L);
+    const y=pick('ACGT',rand),s=pick('ACGT',rand);
+    if(!(y in fo))continue;
+    const F=firstColumn(L),top=fo[y],bottom=F.lastIndexOf(y);
+    if(top%C===0||(bottom+1)%C===0||top%C===1||(bottom+1)%C===1)continue;   // at least two letters to count past a board
+    const above=countAbove(L,s,top),upto=countAbove(L,s,bottom+1);
+    if(above<3||upto-above<2)continue;
+    const nt=fo[s]+above,nb=fo[s]+upto-1;
+    return {text:t,body,L,F,C,boards:checkpoints(L,C),fo,pattern:s+y,first:y,sym:s,top,bottom,above,upto,band:[nt,nb]};
+  }
+  throw new Error('level 9');
+}
+function makeL10(key){
+  const rand=rng(hashStr(key)),n=24,m=8,h=m/2;
+  for(let tr=0;tr<50000;tr++){
+    const arr=[...dna(n,rand)],p=Math.floor(rand()*(n-m+1)),j=Math.floor(rand()*m);
+    const read=[...arr.slice(p,p+m)];read[j]=pick('ACGT'.replace(read[j],''),rand);
+    // plant a decoy: a copy of one half somewhere the whole read does not fit
+    const dh=Math.floor(rand()*2),half=read.slice(dh*h,dh*h+h),q=Math.floor(rand()*(n-m+1));
+    if(Math.abs(q-p)<m)continue;
+    for(let i=0;i<h;i++)arr[q+dh*h+i]=half[i];
+    const text=arr.join(''),r=read.join('');
+    if(occurrences(text,r).length)continue;
+    const one=approxBrute(text,r,1);if(one.length!==1)continue;
+    const at=one[0],miss=[...r].findIndex((c,i)=>text[at+i]!==c);
+    const halves=[0,1].map(i=>({off:i*h,piece:r.slice(i*h,i*h+h)}));
+    const hits=[];halves.forEach((s,i)=>occurrences(text,s.piece).forEach(pos=>hits.push({half:i,pos,start:pos-s.off})));
+    if(hits.some(x=>x.start<0||x.start+m>n))continue;
+    if(hits.length<2||hits.length>4)continue;
+    if(!hits.some(x=>x.start!==at))continue;
+    if(new Set(hits.map(x=>x.start)).size!==hits.length)continue;
+    return {text,read:r,at,miss,halves,hits:hits.sort((a,b)=>a.pos-b.pos)};
+  }
+  throw new Error('level 10');
+}
+function makeL11(key){
+  const rand=rng(hashStr(key)),n=32,m=10;
+  for(let tr=0;tr<50000;tr++){
+    const ref=dna(n,rand),v=10+Math.floor(rand()*12),alt=pick('ACGT'.replace(ref[v],''),rand);
+    const patient=ref.slice(0,v)+alt+ref.slice(v+1);
+    const starts=[0,3,6,9,12,15,18,22].map(s=>Math.min(n-m,s+Math.floor(rand()*3)));
+    const reads=starts.map(s=>({start:s,read:patient.slice(s,s+m)}));
+    const cover=reads.filter(r=>r.start<=v&&v<r.start+m);if(cover.length<4)continue;
+    const others=reads.map((r,i)=>i).filter(i=>!(reads[i].start<=v&&v<reads[i].start+m));if(!others.length)continue;
+    const ei=pick(others,rand),er=reads[ei],ej=Math.floor(rand()*m),e=er.start+ej;
+    if(reads.filter(r=>r.start<=e&&e<r.start+m).length<3)continue;
+    er.read=er.read.slice(0,ej)+pick('ACGT'.replace(er.read[ej],''),rand)+er.read.slice(ej+1);er.err=e;
+    if(!reads.every(r=>{const o=approxOccurrences(ref,r.read,1);return o.length===1&&o[0]===r.start;}))continue;
+    return {ref,v,alt,patient,reads,err:e};
+  }
+  throw new Error('level 11');
+}
+/* an illustrative text for level 3's run meter */
+const RUNTEXT='TAGATAGATAGACAT$';
+function makeLevel(code,id,variant){
+  const key=keyOf(code,id,variant);
+  if(id===1)return makeL1(key);
+  if(id>=2&&id<=7&&id!==3)return makeWordLevel(code,id,variant);
+  if(id===3)return {rows:sortedRotations(RUNTEXT),text:RUNTEXT,L:bwt(RUNTEXT)};
+  if(id===8)return makeL8(key);
+  if(id===9)return makeL9(key);
+  if(id===10)return makeL10(key);
+  if(id===11)return makeL11(key);
+  return {};
+}
+/* the workbench */
+function benchReport(text,patterns){
+  const t=text.endsWith('$')?text:text+'$',rows=sortedRotations(t),L=bwt(t);
+  return {text:t,rows:rows.map(r=>r.rot),F:firstColumn(L),second:rows.map(r=>r.rot[1]).join(''),L,sa:suffixArray(t),
+    patterns:patterns.map(p=>({pattern:p,steps:bandSteps(L,p).steps,count:bandSteps(L,p).count,positions:locateAll(t,L,p,4)}))};
+}
+if(typeof module!=='undefined')module.exports={hashStr,rng,shuffled,WORDS,WORDS6,WORDS7,WORDS3,occurrences,kmerCounts,runs,suffixArray,endings,rotations,sortedRotations,
+  bwt,firstColumn,lastToFirst,ranks,unweave,inverseBwt,bandSteps,bwMatching,firstOccurrence,countAbove,betterBWMatching,checkpoints,partialSuffixArray,
+  walkToLabel,labelMap,locateAll,multiplePatternMatching,mismatches,seedPieces,approxOccurrences,approximateMatching,approxBrute,naiveScan,tryAt,
+  keyOf,makeLevel,makeL1,makeWordLevel,makeL8,makeL9,makeL10,makeL11,RUNTEXT,benchReport};
+</script>
+<script id="ui">
+(function(){
+const KEY='theloom:v1',BIRD='Tess';
+const $=s=>document.querySelector(s);
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const plural=(n,w)=>n+' '+w+(n===1?'':/(ch|sh|s|x)$/.test(w)?'es':'s');
+const numWord=n=>['zero','one','two','three','four','five','six','seven','eight','nine','ten','eleven','twelve'][n]||String(n);
+const cap=s=>s[0].toUpperCase()+s.slice(1);
+const fmt=n=>n>=1e15?sci(n):Math.round(n).toLocaleString('en-US');
+const reduced=()=>{try{return matchMedia('(prefers-reduced-motion: reduce)').matches;}catch(e){return true;}};
+
+const LEVELS=[
+  {id:1,title:'Where does this read come from?',rule:'Click where each read starts',
+   brief:'A sequencing machine reads short pieces of a patient’s DNA. Each piece came from somewhere in a known reference. Find where: click the letter where each read starts.'},
+  {id:2,title:'A sorted list',rule:'Drag the strips into alphabetical order',
+   brief:'Here is one way to prepare a text before anyone asks about it. Cut off every ending of the word, from each letter to the end, and sort the endings like words in a dictionary.'},
+  {id:3,title:'The bill',rule:'The shelf holds one column of letters',
+   brief:'Your sorted list found a pattern without reading the text. Now price it for a real genome: three billion letters.'},
+  {id:4,title:'Make the last column',rule:'Sort the strips · read down the right edge',
+   brief:'Write the word on a ring, with the $ after its last letter. Cut the ring before each letter in turn and you get one strip per letter. Sort the strips, then read their last letters from top to bottom.'},
+  {id:5,title:'Is it enough?',rule:'Tie each right-edge letter to the same letter on the left',
+   brief:null},   /* written by LV[5].brief, which names the word’s own repeated letter */
+  {id:6,title:'Unweave',rule:'Threads of the same letter never cross',
+   brief:'Only the right beam survives. Rebuild everything else from it, and read off the word.'},
+  {id:7,title:'Two fingers',rule:'Read the pattern from its last letter',
+   brief:'The two beams and their threads, nothing else. How many times does the pattern occur in the word? Two fingers mark a band of rows. They start on the whole loom.'},
+  {id:8,title:'Where, exactly?',rule:'Follow threads to a tag · add the steps',
+   brief:'The fingers give a count, not a place. A tag on every row saying where its strip starts would be the bill from level 3 all over again, so only the rows that start at 0, 4, 8 and 12 carry one.'},
+  {id:9,title:'Tally boards',rule:'Count from the nearest board',
+   brief:'Each finger move needs a count: how many of a letter lie above a row on the right beam. On a real genome that means scanning millions of letters. Here are 32 rows of a DNA loom, right beam only.'},
+  {id:10,title:'One typo',rule:'The loom only finds exact matches',
+   brief:'Reads come off the machine with mistakes. This read came from the text below, but one of its letters was misread.'},
+  {id:11,title:'The patient',rule:'Look down each column',
+   brief:'Eight reads from a patient, placed against a short stretch of the reference by everything you have built: backward search for the seeds, threads to the tags for the places, one letter allowed to differ. Most columns agree with the reference. Find the column that matters, and click it.'}
+];
+
+/* Primary sources. Each link was opened and checked. */
+const SRC={
+  manber:{cite:'Manber & Myers, 1993',title:'Suffix arrays: a new method for on-line string searches',where:'SIAM Journal on Computing 22, 935–948',
+    url:'https://doi.org/10.1137/0222058',look:'The paper that introduced the suffix array as a leaner alternative to the suffix tree. The abstract says it uses several times less space, and that a pattern is found by sorting and searching: what you did with the strips.'},
+  ferragina:{cite:'Ferragina & Manzini, 2000',title:'Opportunistic data structures with applications',where:'Proceedings of the 41st Symposium on Foundations of Computer Science, 390–398',
+    url:'https://doi.org/10.1109/SFCS.2000.892127',look:'The abstract describes an index that takes less space when the text compresses well, yet still finds every occurrence of a pattern in time that depends on the pattern’s length and the number of matches, not on the length of the text. That is the idea behind searching a compressed transform, as your two fingers did.'},
+  langmead:{cite:'Langmead et al., 2009',title:'Ultrafast and memory-efficient alignment of short DNA sequences to the human genome',where:'Genome Biology 10, R25',
+    url:'https://doi.org/10.1186/gb-2009-10-3-r25',look:'Bowtie. The abstract reports aligning more than 25 million reads an hour to the human genome in about 1.3 GB of memory, thanks to a Burrows–Wheeler index, with backtracking to tolerate mismatched letters.'},
+  li:{cite:'Li & Durbin, 2009',title:'Fast and accurate short read alignment with Burrows–Wheeler transform',where:'Bioinformatics 25, 1754–1760',
+    url:'https://doi.org/10.1093/bioinformatics/btp324',look:'BWA. The abstract says it aligns short reads to large genomes with backward search on the Burrows–Wheeler transform, allowing mismatches and gaps, and is 10 to 20 times faster than an earlier hash-table aligner.'},
+  worthey:{cite:'Worthey et al., 2011',title:'Making a definitive diagnosis: successful clinical application of whole exome sequencing in a child with intractable inflammatory bowel disease',where:'Genetics in Medicine 13, 255–262',
+    url:'https://doi.org/10.1097/GIM.0b013e3182088158',look:'The abstract: a boy whose bowel disease began at 15 months had no diagnosis after standard tests; sequencing his exome found a new mutation in the XIAP gene, and a transplant followed.'}
+};
+
+const VOCAB=[
+  {id:'mapping',name:'Read mapping',code:'BA9N',def:'Finding where each sequencing read (a pattern) occurs in a reference genome (the text). With many reads this is the Multiple Pattern Matching Problem: find every position in Text where a string from Patterns occurs.'},
+  {id:'sa',name:'Suffix array',src:'manber',code:'BA9G',def:'The start positions of a text’s suffixes, listed in the alphabetical order of the suffixes. SuffixArray(“panamabananas$”) = 13, 5, 3, 1, 7, 9, 11, 6, 4, 2, 8, 10, 0, 12.'},
+  {id:'end',name:'End marker',def:'The symbol $, added once to the end of a text and sorted before every letter. It makes the endings of the text all different and marks where the text stops.'},
+  {id:'bwt',name:'Burrows–Wheeler transform',code:'BA9I',def:'Sort all cyclic rotations of Text into alphabetical order to form the Burrows–Wheeler matrix. BWT(Text) is the matrix’s last column. BWT(“panamabananas$”) = smnpbnnaaaaa$a.'},
+  {id:'rot',name:'Cyclic rotation',def:'A string formed by moving a suffix of Text to its front: the text read around a ring, starting from one of its letters. A text of length n has n cyclic rotations.'},
+  {id:'fl',name:'First-last property',def:'The k-th occurrence of a symbol in the first column and the k-th occurrence of that symbol in the last column correspond to the same position of that symbol in Text.'},
+  {id:'lf',name:'Last-to-first mapping',code:'BA9K',def:'LastToFirst(i) is the row, in the first column, of the symbol at row i of the last column. Following it from the row that begins with $ spells Text from right to left, which inverts the transform (BA9J).'},
+  {id:'bs',name:'Backward search',src:'ferragina',code:'BA9L',def:'BWMatching: count a pattern from the first and last columns alone. Start with every row in the band (top and bottom pointers). For each symbol of the pattern, last to first, keep the band rows whose last-column symbol it is and follow them with LastToFirst. The rows reached form the new band; its size at the end is the number of matches.'},
+  {id:'psa',name:'Partial suffix array',src:'langmead',code:'BA9Q',def:'SuffixArray_K(Text): only the suffix array entries that are multiples of K, kept with their rows. To place a match, follow LastToFirst from its row until a row with an entry, and add the number of steps taken.'},
+  {id:'ckpt',name:'Checkpoint arrays',src:'li',code:'BA9M',def:'Count_symbol(i, LastColumn), the number of each symbol in the first i rows of the last column, stored only for rows i divisible by C. With FirstOccurrence(symbol), its first row in the first column, a band step is top ← FirstOccurrence(symbol) + Count_symbol(top) and bottom ← FirstOccurrence(symbol) + Count_symbol(bottom + 1) − 1.'},
+  {id:'seed',name:'Seed',src:'langmead',code:'BA9O',def:'If a pattern matches a text with at most d mismatches, then cutting the pattern into d + 1 pieces leaves at least one piece that matches exactly. Those pieces are seeds: find them exactly, then extend each hit across the whole pattern and count mismatches.'}
+];
+const DEF={};VOCAB.forEach(v=>DEF[v.id]=v);
+function term(id,label){return '<span class="term" tabindex="0">'+label+'<span class="tip" role="tooltip"><b>'+DEF[id].name+'</b>'+DEF[id].def+'</span></span>';}
+
+/* ---------- saved state ---------- */
+const params=new URLSearchParams(location.search),urlSeed=params.get('seed');
+const requestedLevel=Number(params.get('level'));
+const previewLevel=Number.isInteger(requestedLevel)&&requestedLevel>=1&&requestedLevel<=LEVELS.length?requestedLevel:0;
+function load(){try{return JSON.parse(localStorage.getItem(KEY))||{};}catch(e){return {};}}
+function save(){if(previewLevel||bench)return;try{localStorage.setItem(KEY,JSON.stringify(S));}catch(e){}}
+function freshState(seed){return {seed,unlocked:1,badges:[],earnedAt:{},variants:{},log:[]};}
+function randomCode(){const c='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';let s='';for(let i=0;i<6;i++)s+=c[Math.floor(Math.random()*c.length)];return s;}
+const bench=!!params.get('bench');
+let S=previewLevel||bench?freshState(urlSeed||randomCode()):load();
+if(urlSeed&&urlSeed!==S.seed)S=freshState(urlSeed);
+if(!S.seed)S=freshState(randomCode());
+save();
+
+let cur=null;
+function log(ev,data){
+  S.log.push(Object.assign({t:Date.now(),lvl:cur?cur.L.id:0,variant:cur?cur.variant:0,ev},data||{}));
+  if(S.log.length>8000)S.log.splice(0,S.log.length-8000);
+  save();
+}
+function say(text,kind){cur.msg={text,kind:kind||''};}
+
+/* ---------- letters ---------- */
+const SUBS='₀₁₂₃₄₅₆₇₈₉',sub=n=>String(n).split('').map(d=>SUBS[d]).join('');
+const PAL=['#2b5fb3','#b83a4b','#2e7d4f','#9a6b00','#7a3fa0','#0f7c80','#a0522d','#556b2f'];
+const DNAC={A:'#2e7d4f',C:'#2b5fb3',G:'#9a6b00',T:'#b83a4b',$:'#6b7078'};
+function colorOf(c){
+  if(c in DNAC)return DNAC[c];
+  const al=cur&&cur.alpha||'abcdefghijklmnopqrstuvwxyz';const i=al.indexOf(c);return PAL[(i<0?c.charCodeAt(0):i)%PAL.length];
+}
+function lt(c,cls,extra){return '<span class="'+(cls||'')+'" style="color:'+colorOf(c)+'"'+(extra||'')+'>'+esc(c)+'</span>';}
+/* identity numbers: k-th occurrence of each letter, counted along a string */
+function occNums(s){const seen={};return [...s].map(c=>(seen[c]=(seen[c]||0)+1));}
+
+/* ---------- the loom ---------- */
+let LW=600,XF=110,XL=440;const ROWH=40,Y0=52;
+/* narrow screens get a narrower loom, so the same rows are drawn taller and pegs are easier to hit */
+function loomGeometry(){const nar=typeof innerWidth==='number'&&innerWidth<600;LW=nar?410:600;XF=nar?80:110;XL=nar?290:440;}
+const rowY=r=>Y0+r*ROWH;
+function threadPath(rRight,rLeft){
+  const y1=rowY(rRight),y2=rowY(rLeft),a=XL-17,b=XF+17;
+  const k=Math.round((XL-XF)*0.42);return 'M'+a+','+y1+' C'+(a-k)+','+y1+' '+(b+k)+','+y2+' '+b+','+y2;
+}
+/* o: {n, F:[{c,sub,cls,drop}], R:[{c,sub,cls,drag}], mid:[string]|null, threads:[{r,l,cls}], tags:{row:text}, band:[t,b], fingers:[top,bottom], hl:row, bird:row} */
+function loomSvg(o){
+  loomGeometry();
+  const n=o.n,H=Y0+n*ROWH+6;
+  let h='<svg class="loom" viewBox="0 0 '+LW+' '+H+'" style="max-width:'+Math.min(640,Math.round(LW*900/H))+'px;margin:0 auto" role="group" aria-label="Loom">';
+  h+='<rect width="'+LW+'" height="'+H+'" fill="url(#pCloth)"/>';
+  h+='<rect x="'+(XF-26)+'" y="8" width="'+(XL-XF+52)+'" height="16" rx="4" fill="url(#gWoodH)"/>';
+  if(o.band&&o.band[0]!==null){const t=o.band[0],b=o.band[1];
+    h+='<rect x="'+(XF-24)+'" y="'+(rowY(t)-ROWH/2+2)+'" width="'+(XL-XF+48)+'" height="'+((b-t+1)*ROWH-4)+'" rx="8" fill="#ffe2a8" opacity=".75"/>';}
+  if(o.hl!==undefined&&o.hl!==null)h+='<rect x="'+(XF-24)+'" y="'+(rowY(o.hl)-ROWH/2+3)+'" width="'+(XL-XF+48)+'" height="'+(ROWH-6)+'" rx="8" fill="none" stroke="#c2410c" stroke-width="2.5" stroke-dasharray="6 4"/>';
+  for(let r=0;r<n;r++){const y=rowY(r);
+    h+='<line x1="'+XF+'" x2="'+XL+'" y1="'+y+'" y2="'+y+'" stroke="#d8ccb0" stroke-width="1.2"/>';
+    if(o.rowNums!==false)h+='<text x="34" y="'+(y+5)+'" font-size="13" fill="#857b66" text-anchor="middle">'+r+'</text>';
+  }
+  h+='<rect x="'+(XF-14)+'" y="18" width="28" height="'+(H-22)+'" rx="5" fill="url(#gWood)"/>';
+  h+='<rect x="'+(XL-14)+'" y="18" width="28" height="'+(H-22)+'" rx="5" fill="url(#gWood)"/>';
+  if(o.mid){
+    const m=o.mid[0].length,span=(XL-XF-70)/Math.max(1,m-1);
+    o.mid.forEach((s,r)=>[...s].forEach((c,j)=>{
+      h+='<text x="'+(XF+35+j*span)+'" y="'+(rowY(r)+6)+'" font-size="17" text-anchor="middle" fill="'+colorOf(c.c||c)+'" opacity=".42">'+esc(c.c||c)+(c.s?'<tspan font-size="10" dy="4">'+sub(c.s)+'</tspan>':'')+'</text>';}));
+  }
+  (o.threads||[]).forEach(t=>{const d=threadPath(t.r,t.l),col=colorOf(o.R[t.r].c);
+    h+='<path d="'+d+'" fill="none" stroke="#2a2016" stroke-opacity=".25" stroke-width="6" class="'+(t.cls||'')+'"/>'+
+       '<path d="'+d+'" fill="none" stroke="'+col+'" stroke-width="3.6" stroke-linecap="round" class="thread '+(t.cls||'')+'"'+(t.cut?' data-act="cut" data-i="'+t.r+'" style="cursor:pointer"':'')+'/>';
+    if(t.cut)h+='<path d="'+d+'" fill="none" stroke="transparent" stroke-width="16" data-act="cut" data-i="'+t.r+'" style="cursor:pointer"/>';});
+  if(o.refused)h+='<path d="'+threadPath(o.refused.r,o.refused.l)+'" fill="none" stroke="#b83a4b" stroke-width="3.5" stroke-dasharray="7 6" stroke-linecap="round" opacity=".9"/>';   /* the tie the world refused */
+  h+='<path id="ghost" d="" fill="none" stroke="#c2410c" stroke-width="3" stroke-dasharray="6 5" pointer-events="none"/>';
+  const peg=(x,y,p,side,r)=>{
+    if(!p)return '';
+    const attrs=(p.drag?' data-drag="'+p.drag+'" data-i="'+r+'"':'')+(p.drop?' data-drop="'+p.drop+'" data-i="'+r+'"':'')+(p.act?' data-act="'+p.act+'" data-i="'+r+'"':'');
+    const live=p.drag||p.drop||p.act;
+    return '<g'+attrs+(live?' tabindex="0" role="button" style="cursor:pointer"':'')+' aria-label="'+side+' beam, row '+r+(p.c?', '+(p.c==='$'?'end sign':p.c)+(p.sub?' '+p.sub:''):', empty')+'">'+
+      (live?'<circle cx="'+x+'" cy="'+y+'" r="20" fill="#000" fill-opacity="0"/>':'')+'<circle cx="'+x+'" cy="'+y+'" r="17" fill="'+(p.fill||'#fffdf8')+'" stroke="'+(p.ring||'#5e3b1a')+'" stroke-width="'+(p.ring?3:1.5)+'" class="'+(p.cls||'')+'"/>'+
+      (p.c?'<text x="'+(x-(p.sub?3:0))+'" y="'+(y+6)+'" font-size="18" font-weight="700" text-anchor="middle" fill="'+colorOf(p.c)+'" pointer-events="none">'+esc(p.c)+
+        (p.sub?'<tspan font-size="11" dy="4">'+sub(p.sub)+'</tspan>':'')+'</text>':'')+'</g>';
+  };
+  for(let r=0;r<n;r++){h+=peg(XF,rowY(r),o.F[r],'Left',r)+peg(XL,rowY(r),o.R[r],'Right',r);}
+  Object.keys(o.tags||{}).forEach(r=>{const y=rowY(+r);
+    h+='<g><path d="M'+(XL+60)+','+(y-12)+' h44 v24 h-44 l-8,-12 z" fill="#f3e9cf" stroke="#8a6a4a"/><circle cx="'+(XL+58)+'" cy="'+y+'" r="2.5" fill="#8a6a4a"/>'+
+      '<text x="'+(XL+82)+'" y="'+(y+5)+'" font-size="14" font-weight="700" text-anchor="middle" fill="#2a2416">'+esc(o.tags[r])+'</text></g>';});
+  (o.fingers||[]).forEach((r,i)=>{if(r===null||r===undefined)return;
+    h+='<use href="#a-finger" transform="translate('+(XL+50)+','+(rowY(r)+(i?6:-6))+')"/>';});
+  if(o.bird!==undefined&&o.bird!==null){
+    const y=o.bird<0?2:rowY(o.bird)-20;h+='<use href="#a-bird" transform="translate('+(XL+30)+','+y+') scale(.9)"/>';}
+  else h+='<use href="#a-bird" transform="translate('+(XL-40)+',6) scale(.8)"/>';
+  return h+'</svg>';
+}
+
+/* ---------- level loading ---------- */
+const LV={};
+function loadLevel(id){
+  if(cur&&cur.timer)clearTimeout(cur.timer);
+  const L=LEVELS[id-1],variant=S.variants[id]||0;
+  cur={L,id,variant,done:false,blocks:[],msg:{text:'',kind:''},t0:Date.now(),hist:[],sel:null};
+  cur.inst=makeLevel(S.seed,id,variant);
+  const t=cur.inst.text||cur.inst.word||'';cur.alpha=[...new Set(t.replace(/\$/g,''))].sort().join('');
+  cur.st=LV[id].init(cur.inst);
+  log('load');render();
+}
+function snap(){cur.hist.push(JSON.stringify(cur.st));}
+function undo(){if(cur.done||!cur.hist.length)return;cur.st=JSON.parse(cur.hist.pop());cur.sel=null;log('undo');say('One move undone.');render();}
+function restart(){if(cur.done)return;cur.st=LV[cur.id].init(cur.inst);cur.hist=[];cur.sel=null;log('restart');say('Back to the start of this level.');render();}
+
+/* ---------- completion ---------- */
+function grant(ids){let fresh=[];ids.forEach(id=>{if(!S.badges.includes(id)){S.badges.push(id);S.earnedAt[id]=cur.L.id;fresh.push(id);}});return fresh;}
+function complete(ids,block){
+  if(cur.done)return;
+  cur.done=true;cur.sel=null;
+  const fresh=grant(ids);cur.blocks.push(block);
+  if(cur.L.id<LEVELS.length)S.unlocked=Math.max(S.unlocked,cur.L.id+1);
+  log('complete',{ms:Date.now()-cur.t0,earned:fresh,undos:cur.hist.length});
+  save();
+}
+const BLOCKS={};
+function srcCard(id){const s=SRC[id];
+  return '<div class="src"><span class="tag">Primary source</span><a href="'+s.url+'" target="_blank" rel="noopener">'+s.cite+': “'+s.title+'”</a> <span class="gmeta">'+s.where+'.</span><br>'+s.look+'</div>';}
+function renderPanel(){
+  if(!cur.done){$('#panel').innerHTML='';return;}
+  let h='<div class="reveal"><h3>Level '+cur.L.id+' complete</h3>';
+  cur.blocks.forEach(id=>{const B=BLOCKS[id];if(!B)return;
+    h+='<div class="called"><p>'+(typeof B.html==='function'?B.html():B.html)+'</p></div>';
+    (B.src||[]).forEach(s=>{h+=srcCard(s);});
+    if(B.wild)h+='<div class="wild">'+(typeof B.wild==='function'?B.wild():B.wild)+'</div>';
+  });
+  const missing=VOCAB.filter(x=>!S.badges.includes(x.id)).length;
+  if(cur.L.id<LEVELS.length)h+='<button class="primary advance" id="next">Next level →</button>';
+  else h+='<p>'+(missing?plural(missing,'vocabulary term')+' still hidden.':'You have earned the whole vocabulary. Your field guide, below, lists every term with its source.')+'</p>';
+  $('#panel').innerHTML=h+'</div>';
+}
+
+/* ---------- chrome ---------- */
+function renderHeader(){
+  $('#pips').innerHTML=LEVELS.map(l=>'<button data-lvl="'+l.id+'"'+(!previewLevel&&l.id>S.unlocked?' disabled':'')+
+    (l.id===cur.L.id?' class="on" aria-current="true"':'')+' aria-label="Level '+l.id+'">'+l.id+'</button>').join('');
+  $('#badges').innerHTML=VOCAB.map(x=>S.badges.includes(x.id)
+    ?'<span class="badge got term" tabindex="0">'+x.name+'<span class="tip" role="tooltip"><b>'+x.name+'</b>'+x.def+'</span></span>'
+    :'<span class="badge">? ? ?</span>').join('');
+}
+function renderGuide(){
+  const got=VOCAB.filter(v=>S.badges.includes(v.id));
+  $('#gcount').textContent=got.length+' of '+VOCAB.length+' terms';
+  $('#guideBody').innerHTML='<p class="gmeta">The Loom field guide · puzzle code '+esc(S.seed)+' · '+got.length+' of '+VOCAB.length+' terms earned</p>'+
+    got.map(v=>{const s=v.src&&SRC[v.src];
+      return '<div class="gentry"><h4>'+v.name+'</h4><p>'+v.def+'</p><p class="gmeta">Met in level '+(S.earnedAt[v.id]||'?')+
+        (s?' · Source: <a href="'+s.url+'" target="_blank" rel="noopener">'+s.cite+', “'+s.title+'”</a>':'')+
+        (v.code?' · Code it: <a href="https://rosalind.info/problems/'+v.code.toLowerCase()+'/" target="_blank" rel="noopener">Rosalind '+v.code+'</a>':'')+'</p></div>';}).join('')+
+    (got.length?'<p style="margin-top:10px"><button id="printGuide">Print field guide</button></p>':'<p class="gmeta">Nothing yet. Finish level 1.</p>');
+}
+function render(){
+  const ae=document.activeElement,fid=ae&&ae.id,pos=ae&&ae.selectionStart;
+  renderHeader();
+  $('#title').textContent='Level '+cur.L.id+': '+cur.L.title;
+  $('#brief').innerHTML=LV[cur.id].brief?LV[cur.id].brief():esc(cur.L.brief);
+  $('#rule').textContent=LV[cur.id].rule?LV[cur.id].rule():cur.L.rule;
+  $('#stage').innerHTML=LV[cur.id].view();
+  $('#status').textContent=cur.msg.text;$('#status').className='status '+cur.msg.kind;
+  const sk=$('#skip'),label=!cur.done&&LV[cur.id].skipLabel?LV[cur.id].skipLabel():'';
+  sk.hidden=!label;sk.textContent=label||'';
+  $('#undo').disabled=cur.done||!cur.hist.length;$('#restart').disabled=cur.done||!cur.hist.length;
+  $('#fresh').disabled=!!LV[cur.id].fixed;
+  renderPanel();renderGuide();
+  if(fid){const e=document.getElementById(fid);if(e&&e!==document.body){e.focus();if(pos!=null&&e.setSelectionRange)try{e.setSelectionRange(pos,pos);}catch(x){}}}
+}
+
+/* ---------- pointer: drag a thing onto a target, or click one then the other ---------- */
+let drag=null;
+function keyOf2(el){return el.dataset.drag+':'+el.dataset.i;}
+function svgPt(svg,ev){const pt=svg.createSVGPoint();pt.x=ev.clientX;pt.y=ev.clientY;return pt.matrixTransform(svg.getScreenCTM().inverse());}
+function doDrop(src,tgt){
+  if(cur.done)return;
+  const f=LV[cur.id].drop;if(!f)return;
+  cur.sel=null;f(src.kind,+src.i,tgt.dataset.drop,+tgt.dataset.i);render();
+}
+document.addEventListener('pointerdown',ev=>{
+  if(!cur||cur.done)return;
+  const el=ev.target.closest&&ev.target.closest('[data-drag]');if(!el)return;
+  drag={el,kind:el.dataset.drag,i:el.dataset.i,x:ev.clientX,y:ev.clientY,moved:false};
+  if(el.classList.contains('strip'))ev.preventDefault();
+});
+document.addEventListener('pointermove',ev=>{
+  if(!drag)return;
+  const dx=ev.clientX-drag.x,dy=ev.clientY-drag.y;
+  if(!drag.moved&&Math.hypot(dx,dy)>6){drag.moved=true;drag.el.classList.add('lift');drag.el.style.pointerEvents='none';}
+  if(!drag.moved)return;
+  if(drag.el.classList.contains('strip'))drag.el.style.transform='translateY('+dy+'px)';
+  const svg=drag.el.closest('svg.loom');
+  if(svg){const p=svgPt(svg,ev),g=svg.querySelector('#ghost'),r=+drag.i;if(g)g.setAttribute('d','M'+(XL-17)+','+rowY(r)+' L'+p.x.toFixed(1)+','+p.y.toFixed(1));}
+});
+document.addEventListener('pointerup',ev=>{
+  if(!cur)return;
+  const hitEl=document.elementFromPoint(ev.clientX,ev.clientY),tgt=hitEl&&hitEl.closest&&hitEl.closest('[data-drop]'),src=drag;drag=null;
+  if(src&&src.moved){
+    src.el.style.transform='';src.el.style.pointerEvents='';src.el.classList.remove('lift');
+    if(tgt&&!(tgt.dataset.drop===src.kind&&tgt.dataset.i===src.i))doDrop(src,tgt);else render();
+    return;
+  }
+  if(cur.done)return;
+  if(cur.sel&&tgt&&!(src&&cur.sel.kind===src.kind&&cur.sel.i===src.i)){doDrop(cur.sel,tgt);return;}
+  if(src){cur.sel=cur.sel&&cur.sel.kind===src.kind&&cur.sel.i===src.i?null:{kind:src.kind,i:src.i};render();}
+});
+document.addEventListener('click',ev=>{
+  const t=ev.target.closest('[data-act],[data-lvl],#next,#printGuide,[data-drag],[data-drop]');
+  if(!t||!cur)return;
+  const d=t.dataset;
+  if(d.lvl!==undefined)return loadLevel(+d.lvl);
+  if(t.id==='next'){loadLevel(cur.L.id+1);if(window.scrollTo)window.scrollTo(0,0);return;}
+  if(t.id==='printGuide'){$('#guide').open=true;window.print();return;}
+  if(cur.done)return;
+  if(d.act!==undefined){LV[cur.id].act(d.act,d,ev);return;}
+  if(ev.detail===0){   /* keyboard: Enter on a peg or strip picks it up, Enter on a target puts it down */
+    if(d.drop!==undefined&&cur.sel&&!(d.drag!==undefined&&cur.sel.kind===d.drag&&cur.sel.i===d.i))return doDrop(cur.sel,t);
+    if(d.drag!==undefined){cur.sel=cur.sel&&cur.sel.i===d.i?null:{kind:d.drag,i:d.i};render();}
+  }
+});
+document.addEventListener('keydown',ev=>{
+  const t=ev.target.closest&&ev.target.closest('g[data-drag],g[data-drop],g[data-act]');
+  if(t&&(ev.key==='Enter'||ev.key===' ')){ev.preventDefault();t.dispatchEvent(new MouseEvent('click',{bubbles:true,detail:0}));}
+});
+document.addEventListener('input',ev=>{
+  const t=ev.target;if(!cur||cur.done||!t.dataset||t.dataset.inp===undefined)return;
+  LV[cur.id].input(t.dataset.inp,t.value,t.dataset,t);
+});
+document.addEventListener('change',ev=>{
+  const t=ev.target;if(!cur||cur.done||!t.dataset||t.dataset.chg===undefined)return;
+  LV[cur.id].input(t.dataset.chg,t.value,t.dataset,t);
+});
+
+/*@l1.js*/
+/* ---------- level 1: find reads by eye, then count what a scan costs ---------- */
+const sci=n=>{const e=Math.floor(Math.log10(n)),m=n/Math.pow(10,e);return m.toFixed(1)+' × 10<sup>'+e+'</sup>';};
+function textCells(text,o){
+  o=o||{};const per=o.per||20;let h='<div class="text grid" style="--per:'+per+';--pp:'+(per/2)+'" role="group" aria-label="Text">';
+  for(let i=0;i<text.length;i++){
+    const cls='cell '+(o.cls&&o.cls[i]||''),num=i%5===0?i:'';
+    const inner=lt(text[i])+'<small>'+(num===''?'&nbsp;':num)+'</small>';
+    h+=o.act?'<button class="'+cls+'" data-act="'+o.act+'" data-i="'+i+'" aria-label="Position '+i+', '+text[i]+'">'+inner+'</button>':'<span class="'+cls+'">'+inner+'</span>';
+  }
+  return h+'</div>';
+}
+function colourRead(r){return [...r].map(c=>lt(c)).join('');}
+LV[1]={
+  init(){return {stage:1,placed:[],cur:0,comps:0,last:null,auto:false};},
+  view(){
+    const x=cur.inst,st=cur.st,g=st.stage===1?x.short:x.long,cls={};
+    st.placed.forEach(p=>{for(let j=0;j<g.reads[p.k].read.length;j++)cls[p.pos+j]='done';});
+    if(st.last){const L=st.last;for(let j=0;j<L.len&&L.pos+j<g.text.length;j++)cls[L.pos+j]=L.match?'ok':j<L.miss?'ok':j===L.miss?'bad':cls[L.pos+j]||'';}
+    let h='<div class="sub">Reference, '+g.text.length+' letters</div>'+textCells(g.text,{act:st.auto||st.cur>=g.reads.length?null:'start',cls,per:20});
+    h+='<div class="sub">Reads</div><div class="cards">'+g.reads.map((r,k)=>{
+      const p=st.placed.find(q=>q.k===k);
+      return '<span class="card'+(p?' placed':k===st.cur&&!st.auto?' on':'')+'">'+colourRead(r.read)+(p?' <small style="letter-spacing:0">at '+p.pos+'</small>':'')+'</span>';}).join('')+'</div>';
+    h+='<p class="meter">Letters compared: '+st.comps.toLocaleString('en-US')+'</p>';
+    return h;
+  },
+  act(a,d){
+    if(a!=='start')return;
+    const x=cur.inst,st=cur.st,g=st.stage===1?x.short:x.long;if(st.cur>=g.reads.length||st.auto)return;
+    const read=g.reads[st.cur].read,pos=+d.i;
+    if(pos+read.length>g.text.length){say('The read is longer than what is left of the reference from there.','warn');return render();}
+    snap();
+    const r=tryAt(g.text,read,pos);st.comps+=r.comps;st.last={pos,len:read.length,miss:r.miss,match:r.match};
+    log('try',{stage:st.stage,read,pos,match:r.match,comps:r.comps});
+    if(r.match){
+      st.placed.push({k:st.cur,pos});st.cur++;
+      if(st.stage===1)say(st.cur<g.reads.length?read+' starts at '+pos+'. Next read.':'All three placed. '+st.comps+' letters compared along the way.','good');
+      else say(read+' starts at '+pos+'. It took '+st.comps+' letter comparisons to place one read.','good');
+    }else say(read+' does not start at '+pos+': letter '+(r.miss+1)+' differs. '+plural(r.comps,'letter')+' compared.','warn');
+    render();
+  },
+  skipLabel(){const st=cur.st;
+    if(st.stage===1&&st.cur===3)return 'Now ten reads against 200 letters →';
+    if(st.stage===2&&st.cur>=1&&!st.auto)return 'Let a scanner place the other nine';
+    return '';},
+  skip(){const st=cur.st,x=cur.inst;
+    if(st.stage===1){snap();Object.assign(st,{stage:2,placed:[],cur:0,comps:0,last:null});cur.hist=[];log('stage',{stage:2});
+      say('Find where the first read starts. Every try costs letter comparisons.');return render();}
+    if(st.stage===2&&!st.auto){
+      const g=x.long;let total=0;
+      g.reads.forEach((r,k)=>{const s=naiveScan(g.text,r.read);if(k>0){total+=s.comps;st.placed.push({k,pos:s.pos[0]});}});
+      st.comps+=total;st.auto=true;st.cur=g.reads.length;st.last=null;
+      st.scan=g.reads.reduce((a,r)=>a+naiveScan(g.text,r.read).comps,0);
+      log('scanner',{comps:total});
+      say('The scanner tried every start for each read, left to right: '+total.toLocaleString('en-US')+' more letter comparisons.','good');
+      complete(['mapping'],'mapping');render();
+    }
+  }
+};
+BLOCKS.mapping={html:()=>{const s=cur.st.scan,per=s/(10*195);
+  return 'Ten reads against 200 letters: '+s.toLocaleString('en-US')+' letter comparisons for a scanner, about '+per.toFixed(2)+' per read per letter of reference. '+
+  'A human genome has three billion letters and a single run of a sequencing machine gives hundreds of millions of reads. At this rate a hundred million reads would cost about '+sci(per*3e9*1e8)+' comparisons. '+
+  '<b>Finding where every read came from is called '+term('mapping','read mapping')+'.</b> The rest of this game prepares the reference once, so that each read can be found without scanning it.';}};
+/*@end l1.js*/
+/*@bench.js*/
+/* ---------- the workbench (?bench=1): plain, saves nothing ---------- */
+function renderBench(){
+  document.title='The Loom: workbench';
+  $('.wrap').innerHTML='<header><h1><a href="./">The Loom</a>: workbench</h1></header><div class="bench">'+
+    '<p>Paste a text (a $ is added at the end if it has none) and some patterns separated by spaces. The workbench shows the sorted rotations with the first, second and last columns picked out, the suffix array, and for each pattern the band after every step of backward search and where its matches start. A second text, if given, is shown beside the first with the number of leading columns the two tables share.</p>'+
+    '<label>Text<textarea id="bt" spellcheck="false">panamabananas</textarea></label>'+
+    '<label>Patterns <input type="text" id="bp" value="ana ban nab" style="width:100%"></label>'+
+    '<label>Second text (optional) <input type="text" id="bt2" value="" style="width:100%" spellcheck="false"></label>'+
+    '<p><button class="primary" id="brun">Run</button></p><div id="bout"></div></div>';
+  const table=r=>'<div class="tscroll"><table><tr><th>row</th><th colspan="'+r.text.length+'">sorted rotations</th><th>suffix array</th></tr>'+
+    r.rows.map((row,i)=>'<tr><td>'+i+'</td>'+[...row].map((c,j)=>'<td class="'+(j===0?'c1':j===1?'c2':j===row.length-1?'cL':'')+'">'+esc(c)+'</td>').join('')+'<td>'+r.sa[i]+'</td></tr>').join('')+'</table></div>'+
+    '<p class="mono">First column: '+esc(r.F)+'<br>Second column: '+esc(r.second)+'<br>Last column (BWT): '+esc(r.L)+'<br>Suffix array: '+r.sa.join(', ')+'</p>';
+  const run=()=>{
+    const t=$('#bt').value.replace(/\s+/g,''),pats=$('#bp').value.split(/\s+/).filter(Boolean),t2=$('#bt2').value.replace(/\s+/g,'');
+    if(!t){$('#bout').innerHTML='<p>Type a text first.</p>';return;}
+    if((t.match(/\$/g)||[]).length>1||(t.includes('$')&&!t.endsWith('$'))){$('#bout').innerHTML='<p>Use at most one $, at the very end.</p>';return;}
+    const r=benchReport(t,pats);let h='<h2>'+esc(r.text)+'</h2>'+table(r);
+    h+=r.patterns.map(p=>'<p class="mono"><b>'+esc(p.pattern)+'</b>: start rows 0–'+(r.text.length-1)+' · '+p.steps.map(s=>s.sym+' → '+(s.band?'rows '+s.band[0]+'–'+s.band[1]:'empty')).join(' · ')+' · '+plural(p.count,'match')+(p.positions.length?' at '+p.positions.join(', '):'')+'</p>').join('');
+    if(t2){const r2=benchReport(t2,[]);h+='<h2>'+esc(r2.text)+'</h2>'+table(r2);
+      if(r2.text.length===r.text.length){let k=0;while(k<r.text.length&&r.rows.every((row,i)=>row.slice(0,k+1)===r2.rows[i].slice(0,k+1)))k++;
+        h+='<p><b>'+(r2.text===r.text?'The two texts are the same.':'The two tables share their first '+plural(k,'column')+'.')+'</b></p>';}
+      else h+='<p>The two texts have different lengths, so their tables cannot match.</p>';}
+    $('#bout').innerHTML=h;
+  };
+  $('#brun').onclick=run;run();
+}
+/*@end bench.js*/
+/*@l2.js*/
+/* ---------- shared: sortable strips ---------- */
+function stripsHtml(texts,o){
+  o=o||{};
+  return '<div class="strips">'+texts.map((t,slot)=>{
+    const cls='strip'+(o.cls&&o.cls[slot]?' '+o.cls[slot]:'')+(cur.sel&&cur.sel.kind==='strip'&&+cur.sel.i===slot?' lift':'');
+    const attrs=o.act?' data-act="'+o.act+'" data-i="'+slot+'"':(o.drag===false?'':' data-drag="strip" data-drop="strip" data-i="'+slot+'"');
+    const letters=[...t].map((c,j)=>lt(c,o.last&&j===t.length-1?'lastl':'')).join('');
+    return '<div class="srow"><button class="'+cls+'"'+attrs+' aria-label="Strip '+esc(t)+'"><span class="grip"></span>'+letters+'</button>'+(o.after?o.after(slot):'')+'</div>';
+  }).join('')+'</div>';
+}
+function moveSlot(order,i,j){const x=order.splice(i,1)[0];order.splice(j,0,x);}
+function isSorted(arr){for(let i=1;i<arr.length;i++)if(arr[i-1]>arr[i])return false;return true;}
+function wordCells(w,hi){return '<div class="text">'+[...w].map((c,i)=>'<span class="cell'+(hi&&hi(i)?' hit':'')+'">'+lt(c)+'<small>'+i+'</small></span>').join('')+'</div>';}
+
+/* ---------- level 2: sort the endings, write where each starts, find a pattern ---------- */
+LV[2]={
+  init(x){
+    const r=rng(hashStr(keyOf(S.seed,2,cur.variant)+'|deal'));let order;
+    do{order=shuffled(x.rows.length,r);}while(isSorted(order.map(i=>x.rows[i].text)));
+    return {order,nums:{},phase:'sort',found:[],wrong:null,peek:null};
+  },
+  view(){
+    const x=cur.inst,st=cur.st,texts=st.order.map(i=>x.rows[i].text),cls={};
+    let hi=null;
+    if(st.peek!==null&&st.peek>=0&&st.peek<x.word.length)hi=i=>i>=st.peek;
+    if(st.phase==='find'){st.found.forEach(s=>cls[s]='match');if(st.wrong!==null)cls[st.wrong]='nope';}
+    if(st.phase==='done')st.found.forEach(s=>cls[s]='match');
+    const foundStarts=st.phase!=='sort'?st.found.map(s=>x.rows[st.order[s]].start):[];
+    if(st.phase==='find'||st.phase==='done')hi=st.found.length?i=>foundStarts.some(p=>i>=p&&i<p+2):hi;
+    let h='<div class="sub">The word, with each letter’s position</div>'+wordCells(x.word,hi);
+    h+='<div class="sub">'+(st.phase==='sort'?'Its seven endings. Drag them into dictionary order (as comes before ass)':
+      st.phase==='num'?'In order. Beside each ending, write the position where it starts':
+      'Find every ending that begins with '+x.pattern)+'</div>';
+    h+=stripsHtml(texts,{cls,act:st.phase==='find'?'find':null,drag:st.phase==='sort'?undefined:false,
+      after:st.phase==='sort'?null:slot=>{const v=st.nums[slot];
+        return '<input type="text" inputmode="numeric" maxlength="2" id="n'+slot+'" data-inp="num" data-i="'+slot+'" aria-label="Starts at" placeholder="at…" value="'+(v!==undefined?v:'')+'"'+(v!==undefined?' class="ok" readonly':'')+'>';}});
+    return h;
+  },
+  drop(k,i,tk,j){
+    const st=cur.st,x=cur.inst;if(st.phase!=='sort'||k!=='strip'||tk!=='strip')return;
+    snap();moveSlot(st.order,i,j);log('move',{from:i,to:j});
+    if(isSorted(st.order.map(r=>x.rows[r].text))){st.phase='num';say('Dictionary order. Now: where does each ending start in the word?','good');log('sorted');}
+    else say('Keep going.');
+  },
+  input(n,v,d){
+    const st=cur.st,x=cur.inst,slot=+d.i;if(n!=='num'||st.phase!=='num'||st.nums[slot]!==undefined)return;
+    const k=parseInt(v,10);st.peek=isNaN(k)?null:k;
+    const want=x.rows[st.order[slot]];
+    if(k===want.start){snap();st.nums[slot]=k;log('num',{slot,k});
+      if(Object.keys(st.nums).length===x.rows.length){st.phase='find';st.peek=null;say('Every ending has its start. Now look something up.','good');}
+      else say('Yes: '+want.text+' starts at '+k+'.','good');
+      render();const nx=[...Array(x.rows.length).keys()].find(s=>st.nums[s]===undefined);if(nx!==undefined){const e=document.getElementById('n'+nx);if(e)e.focus();}
+      return;}
+    if(!isNaN(k)&&k>=0&&k<x.word.length)say('From position '+k+' the word reads '+x.word.slice(k)+'.');else say('');
+    $('#status').textContent=cur.msg.text;$('#status').className='status';
+    const cells=document.querySelectorAll('#stage .word .cell, #stage .text .cell');
+    cells.forEach((c,i)=>c.classList.toggle('hit',!isNaN(k)&&i>=k));
+  },
+  act(a,d){
+    const st=cur.st,x=cur.inst;if(a!=='find'||st.phase!=='find')return;
+    const slot=+d.i,t=x.rows[st.order[slot]].text;if(st.found.includes(slot))return;
+    snap();
+    if(t.startsWith(x.pattern)){st.found.push(slot);st.wrong=null;log('find',{slot,ok:true});
+      const need=st.order.filter(r=>x.rows[r].text.startsWith(x.pattern)).length;
+      if(st.found.length===need){st.phase='done';say('All '+numWord(need)+' are found, and they sit next to each other.','good');complete(['sa'],'sa');}
+      else say(t+' begins with '+x.pattern+'.','good');
+    }else{st.wrong=slot;log('find',{slot,ok:false});say(t+' begins with '+t.slice(0,2)+'.','warn');}
+    render();
+  }
+};
+BLOCKS.sa={src:['manber'],html:()=>{const x=cur.inst,st=cur.st,list=st.order.map(r=>x.rows[r].start);
+  const m=st.found.map(s=>x.rows[st.order[s]].start).sort((a,b)=>a-b);
+  return 'The endings that begin with '+x.pattern+' sit in one band of neighbouring rows, because sorting puts things that begin alike together. Their numbers, '+m.join(' and ')+', are where '+x.pattern+' occurs in '+x.word+'. '+
+  'You never read the word to find them: you looked them up, as in a dictionary, where you can halve the pages at each glance. '+
+  '<b>The column of start positions, '+list.join(', ')+', is the '+term('sa','suffix array')+' of '+x.word+'.</b> An ending is a suffix.';}};
+
+/* ---------- level 3: the bill, and the handover ---------- */
+const LENS=[7,70,700,7000,70000,700000,7e6,7e7,7e8,3e9];
+function bytes(b){const u=['bytes','KB','MB','GB','TB','PB','EB','ZB'];let i=0;while(b>=1000&&i<u.length-1){b/=1000;i++;}return (b<10&&i?b.toFixed(2):b<100&&i?b.toFixed(1):Math.round(b).toLocaleString('en-US'))+' '+u[i];}
+const OPTS=[
+  {k:'A',name:'Every ending, written out in full',cost:n=>n*(n+1)/2/4,note:n=>fmt(n*(n+1)/2)+' letters at 2 bits each'},
+  {k:'B',name:'Only where each ending starts',cost:n=>4*n,note:n=>fmt(n)+' numbers at 4 bytes each'},
+  {k:'C',name:'One column of letters',cost:n=>n/4,note:n=>fmt(n)+' letters at 2 bits each'}
+];
+LV[3]={
+  fixed:true,
+  init(){return {li:0,tried:{},handed:false,cols:{},done:false};},
+  view(){
+    const st=cur.st,n=LENS[st.li],cap=n/4,x=cur.inst;
+    let h='<div class="sub">Length of the text</div><input type="range" min="0" max="'+(LENS.length-1)+'" step="1" value="'+st.li+'" data-inp="len" id="len" aria-label="Length of the text">'+
+      '<p class="meter">'+fmt(n)+' letters'+(st.li===LENS.length-1?' · a human genome':st.li===0?' · your word':'')+'</p>';
+    h+='<p class="shelfnote">The shelf holds one column of letters: '+bytes(cap)+' for this text (a DNA letter fits in 2 bits). The black line on each bar is the shelf’s limit.</p><div class="bill">';
+    OPTS.forEach(o=>{
+      const lock=o.k==='C'&&!st.cols[x.rows.length-1];
+      if(lock){h+='<div class="opt"><span>? ? ?</span><span class="cost">?</span><div class="bar"><b style="left:50%"></b></div></div>';return;}
+      const c=o.cost(n),ratio=c/cap,t=st.tried[o.k],fill=Math.min(1,ratio)*50;
+      h+='<div class="opt"><span><b>'+o.name+'</b><br><small>'+o.note(n)+'</small></span><span class="cost">'+bytes(c)+'</span>'+
+        '<div class="bar"><i class="'+(ratio>1.0001?'over':'')+'" style="width:'+(ratio>1.0001?100:fill)+'%"></i><b style="left:50%"></b></div>'+
+        '<span>'+(t?(t.over?'The shelf gave way at '+fmt(t.n)+' letters: '+(t.ratio>=1e6?sci(t.ratio):fmt(t.ratio))+' times what it holds.':'It fits.'):'')+'</span>'+
+        '<button data-act="shelf" data-k="'+o.k+'">Put it on the shelf</button></div>';
+    });
+    h+='</div>';
+    if(st.handed){
+      h+='<div class="handover"><p><b>What Burrows and Wheeler did</b> (Burrows &amp; Wheeler, 1994, “A block-sorting lossless data compression algorithm”, Digital SRC Research Report 124).</p>'+
+        '<p>1. Put one new sign at the end of the text, <b class="mono">$</b>, and let it sort before every letter.</p>'+
+        '<p>2. Write the text on a ring. Cut the ring before each letter in turn, so there is one strip per letter. Sort the strips.</p>'+
+        '<p>3. Keep only the last column. Throw the rest away.</p>'+
+        '<p><b>Their claim: that one column is enough to get everything back.</b> The text, and where every pattern sits in it. The next five levels are your chance to catch them out.</p></div>';
+      const rows=x.rows.map(r=>r.rot),m=rows.length;
+      h+='<div class="sub">The sorted strips of '+esc(x.text)+'. Click a column to count its runs of repeated letters</div><div class="tscroll"><table class="mini"><tr>'+
+        [...Array(m).keys()].map(j=>'<th><button data-act="col" data-c="'+j+'" aria-label="Column '+(j+1)+'">'+(j===0?'first':j===m-1?'last':j+1)+'</button></th>').join('')+'</tr>'+
+        rows.map(r=>'<tr>'+[...r].map((c,j)=>'<td class="'+(st.cols.sel===j?'colon':'')+'" style="color:'+colorOf(c)+'">'+c+'</td>').join('')+'</tr>').join('')+'</table></div>';
+      if(st.cols.sel!==undefined){const col=rows.map(r=>r[st.cols.sel]).join('');
+        h+='<div class="runs"><span>Text as written: <b class="mono">'+esc(x.text)+'</b>, '+runs(x.text)+' runs</span><span>This column: <b class="mono">'+col+'</b>, '+runs(col)+' runs</span></div>'+
+          '<p class="shelfnote">Fewer runs pack smaller: a run like AAAA can be stored as “4A”.</p>';}
+    }
+    return h;
+  },
+  input(n,v){if(n!=='len')return;const st=cur.st;snap();st.li=+v;log('length',{n:LENS[st.li]});say('');render();},
+  act(a,d){
+    const st=cur.st,x=cur.inst;
+    if(a==='shelf'){
+      if(d.k==='C'&&!st.cols[x.rows.length-1])return;
+      const o=OPTS.find(q=>q.k===d.k),n=LENS[st.li],c=o.cost(n),ratio=c/(n/4);snap();
+      st.tried[o.k]={n,over:ratio>1.0001,ratio};log('shelf',{opt:o.k,n,ratio});
+      if(o.k==='C'){if(st.li!==LENS.length-1){say('It fits. Try it with the whole genome too.','good');return render();}
+        say('Three billion letters, 0.75 GB: exactly one shelf.','good');complete(['end','bwt'],'bwt');return render();}
+      say(ratio>1.0001?'The shelf gives way.':'It fits.',ratio>1.0001?'warn':'good');
+      if(st.tried.A&&st.tried.B&&st.tried.A.n===3e9&&st.tried.B.n===3e9&&!st.handed)say('Neither way of keeping the sorted list fits the shelf for a genome.','warn');
+      return render();
+    }
+    if(a==='col'&&st.handed){snap();st.cols[+d.c]=true;st.cols.sel=+d.c;log('runs',{col:+d.c});
+      if(+d.c===x.rows.length-1)say('The last column has '+runs(x.L)+' runs; the text has '+runs(x.text)+'. Now put one column on the shelf.','good');
+      render();}
+  },
+  skipLabel(){const st=cur.st;return st.tried.A&&st.tried.B&&st.tried.A.n===3e9&&st.tried.B.n===3e9&&!st.handed?'What did Burrows and Wheeler keep?':'';},
+  skip(){snap();cur.st.handed=true;log('handover');say('Read their three steps, then click the last column of the table.');render();}
+};
+BLOCKS.bwt={html:()=>'The sign that marks the end of the text is the '+term('end','end marker')+', written $. '+
+  '<b>The last column of the sorted strips is the '+term('bwt','Burrows–Wheeler transform')+' of the text.</b> Burrows and Wheeler invented it to make files smaller: it gathers repeated letters into runs, as the meter showed. '+
+  'It costs one column: 0.75 GB for a human genome, against 12 GB for the start positions alone. Whether that column really holds everything is still only their claim.'};
+
+/* ---------- level 4: cut the ring, sort the strips, read the last column ---------- */
+function ringSvg(t){
+  const n=t.length,R=62;let h='<svg viewBox="-90 -90 180 180" style="width:150px;height:150px;display:block;margin:0 auto" aria-label="The word on a ring">'+
+    '<circle r="'+R+'" fill="none" stroke="#b07a43" stroke-width="18" opacity=".35"/><circle r="'+R+'" fill="none" stroke="#8a5a2b" stroke-width="1.5"/>';
+  [...t].forEach((c,i)=>{const a=-Math.PI/2+i*2*Math.PI/n,x=R*Math.cos(a),y=R*Math.sin(a),a2=a-Math.PI/n;
+    h+='<line x1="'+((R-13)*Math.cos(a2)).toFixed(1)+'" y1="'+((R-13)*Math.sin(a2)).toFixed(1)+'" x2="'+((R+13)*Math.cos(a2)).toFixed(1)+'" y2="'+((R+13)*Math.sin(a2)).toFixed(1)+'" stroke="#c2410c" stroke-width="1.5" stroke-dasharray="3 2"/>'+
+      '<text x="'+x.toFixed(1)+'" y="'+(y+6).toFixed(1)+'" font-size="17" font-weight="700" text-anchor="middle" fill="'+colorOf(c)+'">'+esc(c)+'</text>';});
+  return h+'</svg>';
+}
+LV[4]={
+  init(x){return {order:[...Array(x.ring.length).keys()],phase:'sort',typed:''};},
+  view(){
+    const x=cur.inst,st=cur.st,texts=st.order.map(i=>x.ring[i]),cls={};
+    let h='<div class="sub">'+esc(x.word)+' and its $ on a ring, cut before every letter</div>'+ringSvg(x.text);
+    if(st.phase==='read'){const t=st.typed;texts.forEach((s,k)=>{if(k<t.length)cls[k]=t[k]===s[s.length-1]?'match':'nope';});}
+    h+='<div class="sub">'+(st.phase==='sort'?'The strips. Drag them into alphabetical order ($ sorts before every letter)':'Sorted. Read the last letter of each strip, top to bottom')+'</div>';
+    h+=stripsHtml(texts,{cls,last:st.phase!=='sort',drag:st.phase==='sort'?undefined:false});
+    if(st.phase!=='sort')h+='<label class="sub" for="lastcol">The last column, top to bottom</label><input type="text" id="lastcol" data-inp="lastcol" autocomplete="off" spellcheck="false" maxlength="'+x.text.length+'" value="'+esc(st.typed)+'" style="font-family:ui-monospace,Menlo,monospace;letter-spacing:.2em;width:14em"'+(st.phase==='done'?' readonly':'')+'>';
+    return h;
+  },
+  drop(k,i,tk,j){
+    const st=cur.st,x=cur.inst;if(st.phase!=='sort'||k!=='strip'||tk!=='strip')return;
+    snap();moveSlot(st.order,i,j);log('move',{from:i,to:j});
+    if(isSorted(st.order.map(r=>x.ring[r]))){st.phase='read';say('Sorted. Now read down the right edge.','good');log('sorted');}else say('Keep going.');
+  },
+  input(n,v){
+    const st=cur.st,x=cur.inst;if(n!=='lastcol'||st.phase!=='read')return;
+    st.typed=v.trim();const want=x.L;
+    if(st.typed===want){snap();st.phase='done';log('lastcol',{ok:true});say(want+'. That is the column Burrows and Wheeler keep.','good');complete(['rot'],'rot');return render();}
+    const bad=[...st.typed].findIndex((c,k)=>c!==want[k]);
+    say(bad>=0?'Strip '+(bad+1)+' ends with '+want[bad]+'.':'');
+    render();
+  }
+};
+BLOCKS.rot={html:()=>{const x=cur.inst;return 'Each strip is the word read around the ring from a different letter. <b>A strip like that is a '+term('rot','cyclic rotation')+'</b>, and '+esc(x.text)+' has '+numWord(x.text.length)+' of them. '+
+  'Sorted, they form a table whose last column, '+esc(x.L)+', is the '+term('bwt','Burrows–Wheeler transform')+' of '+esc(x.text)+'. Because the $ appears once and sorts first, the sorted rotations come in the same order as the sorted endings of level 2.';}};
+/*@end l2.js*/
+/*@l5.js*/
+/* ---------- loom levels: shared helpers ---------- */
+const repeated=(s,c)=>s.split(c).length>2;
+const labelOf=(c,k)=>(c==='$'?'$':c)+(k?sub(k):'');
+const crosses=(r1,l1,r2,l2)=>(r1-r2)*(l1-l2)<0;
+function outStrip(n,letters){   /* letters fill from the right end */
+  let h='<div class="text" aria-label="The word so far">';
+  for(let i=0;i<n;i++){const k=i-(n-letters.length),c=k>=0?letters[k]:'';
+    h+='<span class="cell'+(c?' done':'')+'" style="border:1px dashed #b9ab8a;margin-right:3px">'+(c?lt(c):'&nbsp;')+'<small>&nbsp;</small></span>';}
+  return h+'</div>';
+}
+
+/* ---------- level 5: tie the threads on the full table ---------- */
+LV[5]={
+  init(){return {tied:{},last:null,bad:null};},
+  brief(){const w=cur.inst.word,c=[...w].find(ch=>repeated(cur.inst.text,ch));return 'The sorted strips of '+esc(cur.inst.text)+', on a loom. The left beam holds the first column and the right beam holds the last. Every letter is numbered by where it sits in the word: '+c+sub(1)+' is the first '+c+', '+c+sub(2)+' the second. Tie a thread from each letter on the right beam to the very same letter on the left beam.';},
+  view(){
+    const x=cur.inst,t=x.text,n=t.length,occ=occNums(t),st=cur.st,rows=x.rows;
+    const idAt=p=>repeated(t,t[p])?occ[p]:0;
+    const F=rows.map(r=>({c:t[r.start],sub:idAt(r.start),drop:'lpeg',ring:st.bad&&st.bad.l===rows.indexOf(r)?'#b83a4b':null}));
+    const R=rows.map((r,i)=>{const p=(r.start+n-1)%n;return {c:t[p],sub:idAt(p),drag:st.tied[i]===undefined?'peg':null,
+      ring:cur.sel&&+cur.sel.i===i?'#c2410c':st.bad&&st.bad.r===i?'#b83a4b':null,fill:st.tied[i]!==undefined?'#efe6cf':null};});
+    const mid=rows.map(r=>{const o=[];for(let j=1;j<n-1;j++){const p=(r.start+j)%n;o.push({c:t[p],s:idAt(p)});}return o;});
+    const threads=Object.keys(st.tied).map(r=>({r:+r,l:st.tied[r],cls:+r===st.last?'new':''}));
+    return loomSvg({n,F,R,mid,threads,refused:st.bad})+'<p class="meter">Threads tied: '+threads.length+' of '+n+'</p>';
+  },
+  drop(k,i,tk,j){
+    const x=cur.inst,t=x.text,n=t.length,st=cur.st,rows=x.rows,occ=occNums(t);
+    if(k!=='peg'||tk!=='lpeg'||st.tied[i]!==undefined)return;
+    const p=(rows[i].start+n-1)%n,q=rows[j].start,id=z=>labelOf(t[z],repeated(t,t[z])?occ[z]:0);
+    if(p===q){snap();st.tied[i]=j;st.last=i;st.bad=null;log('tie',{r:i,l:j});
+      if(Object.keys(st.tied).length===n){say('Every letter on the right is tied to itself on the left.','good');complete(['fl'],'fl');}
+      else say(id(p)+' tied.');
+    }else{st.bad={r:i,l:j};log('snap',{r:i,l:j});say('The thread will not hold: '+id(p)+' and '+id(q)+' are different letters of the word.','warn');}
+  },
+  act(){}
+};
+BLOCKS.fl={html:()=>{const x=cur.inst,c=[...x.word].find(ch=>repeated(x.text,ch));
+  return 'Look at the threads of one colour. The '+c+' threads run side by side and never cross: the first '+c+' on the right beam is the first '+c+' on the left, the second is the second, and so on. That holds for every letter. '+
+  '<b>It is called the '+term('fl','first-last property')+'.</b> It is why the right beam can stand in for the whole table, as the next level shows.';}};
+
+/* ---------- level 6: unweave a last column ---------- */
+LV[6]={
+  init(){return {phase:'sort',left:[],tied:{},path:[0],bad:null,cross:null,last:null};},
+  view(){
+    const x=cur.inst,L=x.L,F=x.F,n=L.length,st=cur.st,rk=ranks(L);
+    const R=[...L].map((c,i)=>({c,sub:repeated(L,c)?rk[i]:0,
+      act:st.phase==='sort'&&!st.left.includes(i)?'put':null,drag:st.phase==='tie'&&st.tied[i]===undefined?'peg':null,
+      fill:st.phase==='sort'&&st.left.includes(i)?'#e6dcc0':null,
+      ring:(cur.sel&&+cur.sel.i===i)||(st.phase==='follow'&&i===st.path[st.path.length-1])?'#c2410c':st.bad===i?'#b83a4b':null}));
+    const byLeft={};Object.keys(st.tied).forEach(r=>byLeft[st.tied[r]]=+r);
+    const Fp=[...Array(n).keys()].map(k=>{
+      if(k>=st.left.length)return {c:'',drop:null};
+      const r=byLeft[k];
+      return {c:F[k],sub:r!==undefined&&repeated(L,F[k])?rk[r]:0,drop:st.phase==='tie'?'lpeg':null,act:st.phase==='follow'?'land':null};
+    });
+    const cur0=st.path[st.path.length-1];
+    const threads=Object.keys(st.tied).map(r=>({r:+r,l:st.tied[r],cut:st.phase==='tie',
+      cls:st.phase==='follow'?(+r===cur0&&L[cur0]!=='$'?'glow':st.path.includes(+r)&&+r!==cur0?'':'dim'):(+r===st.last?'new':'')+(st.cross&&st.cross===+r?' bad':'')}));
+    let h=loomSvg({n,F:Fp,R,threads,refused:st.phase==='tie'?st.refused:null,hl:st.phase==='follow'?cur0:null,bird:st.phase==='follow'?cur0:null});
+    if(st.phase==='sort')h+='<p>What was on the left beam? Fill it from the top: click a letter on the right beam to put a copy of it in the next empty row.</p>';
+    if(st.phase==='tie')h+='<p>Drag a thread from each letter on the right beam to the same letter on the left. Click a thread to cut it.</p>';
+    if(st.phase!=='sort'&&st.phase!=='tie'||st.phase==='follow'){
+      const letters=st.path.map(r=>L[r]).filter(c=>c!=='$').reverse().join('')+'$';
+      h+='<div class="sub">The word, written from its right end</div>'+outStrip(n,letters);
+    }
+    return h;
+  },
+  act(a,d){
+    const x=cur.inst,L=x.L,F=x.F,n=L.length,st=cur.st,i=+d.i,lf=lastToFirst(L);
+    if(a==='put'&&st.phase==='sort'){
+      if(st.left.includes(i))return;
+      const k=st.left.length;
+      if(L[i]===F[k]){snap();st.left.push(i);st.bad=null;log('put',{r:i,row:k});
+        if(st.left.length===n){st.phase='tie';say('The left beam is the right beam’s letters, sorted: every letter of the word sits once on each beam, and the strips were in order. Now the threads.','good');}else say('');}
+      else{st.bad=i;log('put_reject',{r:i,row:k});say('Not '+(L[i]==='$'?'the $':L[i])+' in row '+k+': the strips were sorted, so their first letters ran in order down the left beam, and a letter that sorts earlier is still waiting on the right.','warn');}
+      return render();
+    }
+    if(a==='cut'&&st.phase==='tie'){if(st.tied[i]===undefined)return;snap();delete st.tied[i];st.cross=null;st.refused=null;log('cut',{r:i});say('Thread cut.');return render();}
+    if(a==='land'&&st.phase==='follow'){
+      const r=st.path[st.path.length-1];if(L[r]==='$')return;
+      if(lf[r]===i){snap();st.path.push(i);log('follow',{to:i});
+        if(L[i]==='$'){st.phase='done';const w=unweave(L).text;say('The thread from row '+i+' ends at the $: the word is '+w+'.','good');complete(['lf'],'lf');}
+        else say('Row '+i+' ends with '+L[i]+'. Follow its thread.');
+      }else{log('follow_miss',{to:i});say('The glowing thread does not land on row '+i+'.','warn');}
+      return render();
+    }
+  },
+  drop(k,i,tk,j){
+    const x=cur.inst,L=x.L,F=x.F,st=cur.st,rk=ranks(L);
+    if(st.phase!=='tie'||k!=='peg'||tk!=='lpeg'||st.tied[i]!==undefined)return;
+    if(Object.values(st.tied).includes(j)){st.refused=null;say('That peg already holds a thread. Click a thread to cut it.','warn');return;}
+    if(L[i]!==F[j]){st.refused={r:i,l:j};log('snap',{r:i,l:j});say('A thread joins a letter to the same letter: '+labelOf(L[i])+' is not '+labelOf(F[j])+'.','warn');return;}
+    const hit=Object.keys(st.tied).map(Number).find(r=>L[r]===L[i]&&crosses(r,st.tied[r],i,j));
+    if(hit!==undefined){st.cross=hit;st.refused={r:i,l:j};log('cross',{r:i,l:j,with:hit});say('That thread would cross '+labelOf(L[hit],repeated(L,L[hit])?rk[hit]:0)+'’s thread, and threads of the same letter never cross. Cut one.','warn');return;}
+    snap();st.tied[i]=j;st.last=i;st.cross=null;st.refused=null;log('tie',{r:i,l:j});
+    if(Object.keys(st.tied).length===L.length){st.phase='follow';say('All tied. Row 0 begins with $, the end of the word. Its right-beam letter came just before it: follow that letter’s thread.','good');}
+    else say('');
+  }
+};
+BLOCKS.lf={html:()=>'You never saw the table, only its last column. Sorting that column gave the first; the rule that same-letter threads never cross told you which thread goes where; and each thread took you one letter to the left in the word. '+
+  '<b>Following a thread from the right beam to the left is the '+term('lf','last-to-first mapping')+'.</b> The claim from level 3 holds for the text: one column was enough to get it back.'};
+
+/* ---------- level 7: two fingers ---------- */
+LV[7]={
+  init(x){return {j:x.pattern.length-1,band:[0,x.L.length-1],kept:[],phase:'keep',fingers:[0,x.L.length-1],newTop:null,auto:null,bad:null};},
+  view(){
+    const x=cur.inst,L=x.L,F=x.F,n=L.length,st=cur.st,lf=lastToFirst(L),rk=ranks(L),rf=ranks(F);
+    const inBand=r=>r>=st.band[0]&&r<=st.band[1];
+    const R=[...L].map((c,i)=>({c,sub:repeated(L,c)?rk[i]:0,act:st.phase==='keep'&&inBand(i)?'keep':null,
+      fill:st.kept.includes(i)?'#ffd08a':null,ring:st.bad===i?'#b83a4b':st.kept.includes(i)?'#c2410c':null}));
+    const Fp=[...F].map((c,i)=>({c,sub:repeated(F,c)?rf[i]:0,act:st.phase==='land'?'finger':null,
+      ring:st.phase==='land'&&st.kept.some(r=>lf[r]===i)?'#c2410c':null}));
+    const threads=[...L].map((c,r)=>({r,l:lf[r],cls:st.kept.includes(r)?'glow':'dim'}));
+    const fingers=st.phase==='land'?[st.newTop,null]:st.fingers;
+    let h=loomSvg({n,F:Fp,R,threads,band:st.phase==='land'?(st.newTop!==null?[st.newTop,st.newTop]:null):st.band,fingers});
+    const p=x.pattern;
+    h+='<div class="sub">Pattern, read from its last letter</div><div class="cards">'+[...p].map((c,k)=>'<span class="card'+(k===st.j&&st.phase!=='done'?' on':k>st.j?' placed':'')+'">'+lt(c)+'</span>').join('')+'</div>';
+    if(st.phase==='done'||st.auto){
+      h+='<p class="meter">The band holds '+plural(st.band[1]-st.band[0]+1,'row')+': '+esc(p)+' occurs '+numWord(st.band[1]-st.band[0]+1)+' times.</p>';
+    }
+    if(st.auto){
+      h+='<div class="sub">Two more patterns, fingers running on their own</div>'+st.auto.map(a=>'<p class="mono">'+esc(a.p)+': '+
+        a.steps.map(s=>s.sym+' → '+(s.band?'rows '+s.band[0]+'–'+s.band[1]:'no rows')).join(' · ')+' → <b>'+plural(a.count,'match')+'</b></p>').join('');
+    }
+    return h;
+  },
+  act(a,d){
+    const x=cur.inst,L=x.L,st=cur.st,i=+d.i,lf=lastToFirst(L),sym=x.pattern[st.j];
+    if(a==='keep'&&st.phase==='keep'){
+      if(i<st.band[0]||i>st.band[1]||st.kept.includes(i))return;
+      if(L[i]!==sym){st.bad=i;log('keep_miss',{r:i});say('Row '+i+' ends with '+labelOf(L[i])+', not '+sym+'.','warn');return render();}
+      snap();st.kept.push(i);st.bad=null;log('keep',{r:i});
+      const need=[];for(let r=st.band[0];r<=st.band[1];r++)if(L[r]===sym)need.push(r);
+      if(st.kept.length===need.length){st.phase='land';st.newTop=null;say('Follow the glowing threads. Put the top finger on the highest row they reach.','good');}
+      else say('Row '+i+' kept.');
+      return render();
+    }
+    if(a==='finger'&&st.phase==='land'){
+      const lands=st.kept.map(r=>lf[r]),top=Math.min(...lands),bot=Math.max(...lands);
+      if(!lands.includes(i)){log('finger_miss',{r:i});say('No glowing thread reaches row '+i+'.','warn');return render();}
+      if(st.newTop===null){if(i!==top){say('A glowing thread reaches higher than row '+i+'.','warn');return render();}
+        snap();st.newTop=i;log('finger',{top:i});say('Now the bottom finger, on the lowest row they reach.');return render();}
+      if(i!==bot){say('A glowing thread reaches lower than row '+i+'.','warn');return render();}
+      snap();st.band=[top,bot];st.fingers=[top,bot];st.kept=[];st.j--;st.newTop=null;log('finger',{bottom:i});
+      if(st.j<0){st.phase='done';say('The fingers hold rows '+top+' to '+bot+'.','good');}
+      else{st.phase='keep';say('Between the fingers: rows that begin with '+x.pattern.slice(st.j+1)+'. Next letter: '+x.pattern[st.j]+'. Keep the band rows whose right-beam letter is '+x.pattern[st.j]+'.');}
+      return render();
+    }
+  },
+  skipLabel(){return cur.st.phase==='done'&&!cur.st.auto?'Let the fingers run on two more patterns':'';},
+  skip(){const x=cur.inst,st=cur.st;snap();
+    st.auto=x.more.map(p=>{const b=bandSteps(x.L,p);return {p,steps:b.steps,count:b.count};});log('auto',{});
+    say('Each pattern took one finger move per letter, however long the word.','good');complete(['bs'],'bs');render();}
+};
+BLOCKS.bs={src:['ferragina'],html:()=>'You counted the pattern from the two beams alone, one letter at a time from its end. After each move the band held exactly the rows that begin with the part of the pattern read so far. '+
+  '<b>Two fingers closing on a band of rows is '+term('bs','backward search')+'.</b> It costs one move per letter of the pattern, not one pass over the text.'};
+/*@end l5.js*/
+/*@l8.js*/
+/* ---------- level 8: follow threads to a tag ---------- */
+function l8patterns(x){return [x.first,...x.reads.map(r=>r.read)];}
+function l8rows(x,t){const b=bandSteps(x.L,l8patterns(x)[t]).band,o=[];for(let r=b[0];r<=b[1];r++)o.push(r);return o;}
+LV[8]={
+  init(x){const r=l8rows(x,0)[0];return {task:0,m:0,row:r,steps:0,phase:x.labels[r]!==undefined?'type':'walk',placed:[[],[],[],[],[]]};},
+  view(){
+    const x=cur.inst,L=x.L,F=x.F,n=L.length,st=cur.st,lf=lastToFirst(L),pats=l8patterns(x);
+    const Fp=[...F].map(c=>({c,act:st.phase==='walk'?'land':null}));
+    const R=[...L].map((c,i)=>({c,ring:i===st.row&&st.phase!=='done'?'#c2410c':null}));
+    const threads=[...L].map((c,r)=>({r,l:lf[r],cls:r===st.row&&st.phase==='walk'?'glow':'dim'}));
+    const tags={};Object.keys(x.labels).forEach(r=>tags[r]=x.labels[r]);
+    const rows=st.phase==='done'?null:l8rows(x,st.task);
+    let h=loomSvg({n,F:Fp,R,threads,tags,band:rows?[rows[0],rows[rows.length-1]]:null,fingers:rows?[rows[0],rows[rows.length-1]]:[],
+      hl:st.phase==='done'?null:st.row,bird:st.phase==='done'?null:st.row});
+    h+='<div class="sub">Patterns</div><div class="cards">'+pats.map((p,t)=>'<span class="card'+(t===st.task&&st.phase!=='done'?' on':t<st.task||st.phase==='done'?' placed':'')+'">'+
+      [...p].map(c=>lt(c)).join('')+(st.placed[t].length?' <small style="letter-spacing:0">at '+st.placed[t].slice().sort((a,b)=>a-b).join(', ')+'</small>':'')+'</span>').join('')+'</div>';
+    if(st.phase==='walk')h+='<p class="meter">Steps along threads: '+st.steps+'</p><p>Row '+st.row+' has no tag. Its right-beam letter came one place earlier in the text: click where its thread lands.</p>';
+    if(st.phase==='type')h+='<p class="meter">Steps along threads: '+st.steps+' · tag on row '+st.row+': '+x.labels[st.row]+'</p>'+
+      '<label class="sub" for="pos">Where does the match from row '+l8rows(x,st.task)[st.m]+' start?</label><input type="text" inputmode="numeric" id="pos" data-inp="pos" data-chg="posc" maxlength="2" style="width:4em" autocomplete="off">';
+    if(st.phase==='done'){
+      const cls={};x.reads.forEach(r=>{for(let j=0;j<4;j++)cls[r.pos+j]='done';});
+      h+='<div class="sub">The text the loom was hiding</div>'+textCells(x.text,{cls,per:16});
+    }
+    return h;
+  },
+  act(a,d){
+    const x=cur.inst,st=cur.st,i=+d.i,lf=lastToFirst(x.L);
+    if(a!=='land'||st.phase!=='walk')return;
+    if(lf[st.row]!==i){log('walk_miss',{to:i});say('The glowing thread does not land on row '+i+'.','warn');return render();}
+    snap();st.row=i;st.steps++;log('walk',{to:i});
+    if(x.labels[i]!==undefined){st.phase='type';say('Row '+i+' carries a tag: its strip starts at '+x.labels[i]+'.','good');}else say('One step. No tag yet.');
+    render();
+  },
+  input(nm,v){
+    const x=cur.inst,st=cur.st;if(st.phase!=='type')return;
+    const want=x.labels[st.row]+st.steps,k=parseInt(v,10);
+    if(nm==='pos'&&k===want){
+      snap();st.placed[st.task].push(k);log('place',{task:st.task,pos:k,steps:st.steps});
+      const rows=l8rows(x,st.task);st.m++;
+      if(st.m>=rows.length){st.task++;st.m=0;}
+      if(st.task>=5){st.phase='done';say('All five patterns placed.','good');complete(['psa'],'psa');return render();}
+      const r=l8rows(x,st.task)[st.m];st.row=r;st.steps=0;st.phase=x.labels[r]!==undefined?'type':'walk';
+      say(k+' it is. '+(st.m?'Now the second match.':'Next pattern: its band is already marked by the fingers.'),'good');return render();
+    }
+    if(nm==='posc'&&!isNaN(k)&&k!==want){log('place_miss',{pos:k});say('Not '+k+'. Every step along a thread moved one letter to the left in the text.','warn');
+      $('#status').textContent=cur.msg.text;$('#status').className='status warn';}
+  }
+};
+BLOCKS.psa={src:['langmead'],html:()=>'Four tags placed every match, and no match was more than three steps from one. A tag on every fourth position costs a quarter of the full list of start positions; on a real genome a tag every hundred positions is common. '+
+  '<b>The tags are a '+term('psa','partial suffix array')+'.</b>'};
+
+/* ---------- level 9: tally boards ---------- */
+LV[9]={
+  init(){return {phase:'scan',marks:[],looked:[],board:null,marks2:[],vt:'',vb:''};},
+  view(){
+    const x=cur.inst,L=x.L,st=cur.st,s=x.sym,B=x.bottom+1;
+    const q=st.phase==='scan'?'How many '+s+'s lie above row '+x.top+' on the right beam? Click each one.':
+      st.phase==='boards'?'How many '+s+'s lie above row '+B+'? Click the board above it, then the '+s+'s between that board and row '+B+'.':
+      'Where do the fingers land?';
+    let h='<p><b>'+q+'</b></p><div class="sub">Right beam, 32 rows. The fingers hold rows '+x.top+' to '+x.bottom+'</div><div class="tally">';
+    for(let half=0;half<2;half++){
+      h+='<div class="half">';
+      for(let r=half*16;r<half*16+16;r++){
+        if(r%4===0&&st.phase!=='scan'){const b=x.boards[r];
+          h+='<button class="board'+(st.board===r?' on':'')+'" data-act="board" data-i="'+r+'" aria-label="Board above row '+r+'">Above row '+r+': '+Object.keys(b).filter(c=>c!=='$').map(c=>'<span style="color:'+colorOf(c)+'">'+c+' '+b[c]+'</span>').join(' ')+'</button>';}
+        const mark=st.marks.includes(r)||st.marks2.includes(r),band=r>=x.top&&r<=x.bottom;
+        h+='<div class="trow'+(band?' band':'')+'"><span class="rn">'+r+'</span><button class="cell'+(mark?' hit':st.looked.includes(r)?' done':'')+'" data-act="cell" data-i="'+r+'" aria-label="Row '+r+', '+L[r]+'">'+lt(L[r])+'</button>'+
+          (r===x.top?'<span class="fing">☚ top finger</span>':r===x.bottom?'<span class="fing">☚ bottom finger</span>':'')+'</div>';
+      }
+      h+='</div>';
+    }
+    h+='</div>';
+    if(st.phase==='scan')h+='<p class="meter">Letters looked at: '+st.looked.length+' · '+s+'s counted: '+st.marks.length+'</p>';
+    if(st.phase!=='scan')h+='<p class="meter">Above row '+x.top+': '+x.above+' '+s+'s'+(st.phase==='jump'?' · above row '+B+': '+x.upto+' '+s+'s':'')+'</p>';
+    if(st.phase==='jump'||st.phase==='done'){
+      h+='<div class="handover"><p>Note kept beside the loom: the first row of each letter on the left beam. '+Object.keys(x.fo).filter(c=>c!=='$').map(c=>'<b style="color:'+colorOf(c)+'">'+c+'</b> row '+x.fo[c]).join(' · ')+'</p>'+
+        '<p>The rows between the fingers end with '+(x.upto-x.above)+' '+s+'s. Their threads land on the left beam among the '+s+' rows, in the same order. Where?</p>'+
+        '<label>Top finger: row <input type="text" inputmode="numeric" maxlength="2" style="width:3.5em" id="vt" data-inp="vt" value="'+esc(st.vt)+'"></label> '+
+        '<label>Bottom finger: row <input type="text" inputmode="numeric" maxlength="2" style="width:3.5em" id="vb" data-inp="vb" value="'+esc(st.vb)+'"></label></div>';
+    }
+    return h;
+  },
+  act(a,d){
+    const x=cur.inst,L=x.L,st=cur.st,s=x.sym,r=+d.i,B=x.bottom+1;
+    if(a==='cell'&&st.phase==='scan'){
+      if(r>=x.top){say('Row '+r+' is not above row '+x.top+'.','warn');return render();}
+      snap();if(!st.looked.includes(r))st.looked.push(r);
+      if(L[r]===s&&!st.marks.includes(r)){st.marks.push(r);log('count',{r});}
+      if(st.marks.length===x.above){st.phase='boards';log('scanned',{looked:st.looked.length});
+        say(x.above+' '+s+'s above row '+x.top+'. To be sure of that you have to look at all '+x.top+' letters above it. Tally boards now hang every four rows.','good');}
+      else say(L[r]===s?s+' counted.':'');
+      return render();
+    }
+    if(a==='board'&&st.phase==='boards'){
+      if(r>B){say('That board counts the letters above row '+r+', which is past row '+B+'.','warn');return render();}
+      snap();st.board=r;st.marks2=[];log('board',{r});
+      const need=[];for(let k=r;k<B;k++)if(L[k]===s)need.push(k);
+      if(!need.length)return this.finish2();
+      say('The board says '+x.boards[r][s]+'. Now the '+s+'s from row '+r+' down to row '+(B-1)+'.');return render();
+    }
+    if(a==='cell'&&st.phase==='boards'){
+      if(st.board===null){say('Start from a board.','warn');return render();}
+      if(r<st.board||r>=B){say('Count only between the board (row '+st.board+') and row '+B+'.','warn');return render();}
+      if(L[r]!==s||st.marks2.includes(r))return;
+      snap();st.marks2.push(r);log('count2',{r});
+      const need=[];for(let k=st.board;k<B;k++)if(L[k]===s)need.push(k);
+      if(st.marks2.length===need.length)return this.finish2();
+      say(s+' counted.');return render();
+    }
+  },
+  finish2(){const x=cur.inst,st=cur.st;st.phase='jump';
+    say('Board '+x.boards[st.board][x.sym]+' plus '+st.marks2.length+' = '+x.upto+', after looking at '+(x.bottom+1-st.board)+' letters instead of '+(x.bottom+1)+'.','good');render();},
+  input(n,v){
+    const x=cur.inst,st=cur.st;if(st.phase!=='jump')return;
+    if(n==='vt')st.vt=v.trim();if(n==='vb')st.vb=v.trim();
+    const okT=+st.vt===x.band[0]&&st.vt!=='',okB=+st.vb===x.band[1]&&st.vb!=='';
+    const t=$('#vt'),b=$('#vb');if(t)t.classList.toggle('ok',okT);if(b)b.classList.toggle('ok',okB);
+    if(okT&&okB){snap();log('jump',{band:x.band});st.phase='done';say('Rows '+x.band[0]+' to '+x.band[1]+': the rows that begin with '+x.pattern+'.','good');complete(['ckpt'],'ckpt');render();}
+  }
+};
+BLOCKS.ckpt={src:['li'],html:()=>{const x=cur.inst;return 'A finger lands at the first row of its letter plus the number of that letter above the old finger: top = '+x.fo[x.sym]+' + '+x.above+' = '+x.band[0]+', and bottom = '+x.fo[x.sym]+' + '+x.upto+' − 1 = '+x.band[1]+'. '+
+  'The boards made each count a short walk from the nearest board, and the note of first rows replaced the whole left beam. <b>The boards are '+term('ckpt','checkpoint arrays')+'.</b>';}};
+
+/* ---------- level 10: one typo ---------- */
+LV[10]={
+  init(){return {phase:'whole',judged:{},bad:null};},
+  view(){
+    const x=cur.inst,st=cur.st,cls={};
+    if(st.phase!=='whole'&&st.phase!=='cut')x.hits.forEach(hh=>{for(let j=0;j<4;j++)cls[hh.pos+j]='hit';});
+    let h='<div class="sub">Text, '+x.text.length+' letters</div>'+textCells(x.text,{cls,per:24});
+    h+='<div class="sub">The read</div><div class="cards" style="align-items:center">';
+    [...x.read].forEach((c,k)=>{h+='<span class="card" style="padding:8px 10px">'+lt(c)+'</span>';
+      if(k===3)h+=st.phase==='cut'?'<button data-act="cut" aria-label="Cut the read in half" title="Cut here">✂</button>':st.phase!=='whole'?'<span style="width:14px"></span>':'';});
+    h+='</div>';
+    if(st.phase==='whole')h+='<button data-act="whole">Look the whole read up on the loom</button>';
+    if(st.phase==='cut'){const k=bandSteps(bwt(x.text+'$'),x.read).steps.length;h+='<p>The fingers closed on nothing: after '+numWord(k)+' of the read’s letters, taken from its last, no row was left between them. Somewhere one letter is wrong. Cut the read in half.</p>';}
+    if(st.phase==='check'||st.phase==='done'){
+      h+='<p>The loom found each half exactly here (marked). Lay the whole read at each place and look at all eight letters.</p>';
+      x.hits.forEach(hh=>{const s=hh.start,seg=x.text.slice(s,s+8),j=st.judged[s];
+        h+='<div class="opt" style="margin:6px 0"><span>Half '+(hh.half+1)+' at '+hh.pos+', so the read would start at '+s+'<br>'+
+          '<span class="mono" style="font-size:1.1rem;letter-spacing:.2em">'+[...seg].map(c=>lt(c)).join('')+'</span><br>'+
+          '<span class="mono" style="font-size:1.1rem;letter-spacing:.2em">'+[...x.read].map((c,k)=>j||st.bad===s?'<span style="'+(c!==seg[k]?'background:#ffd3cf;':'')+'color:'+colorOf(c)+'">'+c+'</span>':lt(c)).join('')+'</span></span>'+
+          (j?'<b>'+(j==='fit'?'Fits: one letter off':'Does not fit: '+mismatches(seg,x.read)+' letters off')+'</b>':
+           '<span style="display:flex;flex-direction:column;gap:6px"><button data-act="fit" data-s="'+s+'">At most one letter off</button><button data-act="no" data-s="'+s+'">More than one off</button></span>')+'</div>';});
+    }
+    return h;
+  },
+  act(a,d){
+    const x=cur.inst,st=cur.st;
+    if(a==='whole'&&st.phase==='whole'){snap();st.phase='cut';log('whole');say('No match.','warn');return render();}
+    if(a==='cut'&&st.phase==='cut'){snap();st.phase='check';log('cut');say('Each half went through the loom on its own: '+plural(x.hits.length,'exact hit')+' in all.','good');return render();}
+    if((a==='fit'||a==='no')&&st.phase==='check'){
+      const s=+d.s,mm=mismatches(x.text.slice(s,s+8),x.read),truth=mm<=1?'fit':'no';
+      snap();log('judge',{start:s,said:a,truth});
+      if(a!==truth){st.bad=s;say(a==='fit'?'Look again: '+mm+' letters differ here.':'Look again: only '+mm+' letter differs here.','warn');return render();}
+      st.judged[s]=truth;st.bad=null;
+      if(Object.keys(st.judged).length===x.hits.length){st.phase='done';say('One place survives: the read came from position '+x.at+', with letter '+(x.miss+1)+' misread.','good');complete(['seed'],'seed');}
+      else say(truth==='fit'?'This one fits.':'This one does not.');
+      return render();
+    }
+  }
+};
+BLOCKS.seed={src:['langmead'],html:()=>'With one wrong letter, at least one half of the read is untouched, so the loom, which only finds exact matches, can still find it. A half can also match by chance, as one did here, so every hit has to be checked across the whole read. '+
+  '<b>Each half is a '+term('seed','seed')+'.</b> To allow d wrong letters, cut the read into d + 1 pieces.'};
+
+/* ---------- level 11: the patient ---------- */
+LV[11]={
+  init(){return {tries:[]};},
+  view(){
+    const x=cur.inst,st=cur.st,n=x.ref.length,done=cur.done;
+    let h='<p class="shelfnote">Illustrative reads, made up for this level. They are not data from a real patient.</p><div class="pile">';
+    h+='<div class="prow">'+[...x.ref].map((c,i)=>'<button class="pc'+(done&&i===x.v?' colhit':st.tries.includes(i)?' done':'')+'" data-act="col" data-i="'+i+'" aria-label="Column '+i+', reference '+c+'" style="color:'+colorOf(c)+'">'+c+'</button>').join('')+'<span style="margin-left:8px;font-family:system-ui;font-weight:600">reference</span></div>';
+    h+='<div class="prow" style="height:4px;border-bottom:2px solid #8a6a4a;margin-bottom:4px"></div>';
+    x.reads.slice().sort((a,b)=>a.start-b.start).forEach(r=>{
+      h+='<div class="prow">';for(let i=0;i<n;i++){const k=i-r.start,c=k>=0&&k<r.read.length?r.read[k]:'';
+        h+='<span class="pc'+(c&&c!==x.ref[i]?' diff':'')+(done&&i===x.v?' colhit':'')+'" style="color:'+(c?colorOf(c):'')+'">'+(c||'·').replace('·','<span style="color:#cdbf9a">·</span>')+'</span>';}
+      h+='</div>';});
+    return h+'</div>';
+  },
+  act(a,d){
+    const x=cur.inst,st=cur.st,i=+d.i;if(a!=='col')return;
+    const over=x.reads.filter(r=>r.start<=i&&i<r.start+10),diff=over.filter(r=>r.read[i-r.start]!==x.ref[i]);
+    snap();st.tries.push(i);log('column',{i,variant:i===x.v});
+    if(i===x.v){say('Every one of the '+over.length+' reads over column '+i+' reads '+x.alt+' where the reference has '+x.ref[i]+'.','good');
+      complete(VOCAB.map(v=>v.id),'patient');return render();}
+    if(diff.length)say('Only '+numWord(diff.length)+' of the '+numWord(over.length)+' reads over column '+i+' differs from the reference; the others agree with it. One read, one misread letter.','warn');
+    else say('All '+numWord(over.length)+' reads over column '+i+' agree with the reference.');
+    render();
+  }
+};
+BLOCKS.patient={src:['worthey'],html:()=>{const x=cur.inst;return 'Every read over column '+x.v+' says '+x.alt+' where the reference says '+x.ref[x.v]+'. A letter on which all the reads agree, against the reference, is a variant: a real difference in this patient’s DNA. '+
+  'The lone difference in column '+x.err+' was a misread in a single read, the kind of error that seeds let you place anyway. '+
+  'This is what the whole game was for: a genome’s worth of reads, each placed by '+term('bs','backward search')+' on a '+term('bwt','Burrows–Wheeler transform')+', and then read down the columns.';},
+  wild:()=>'<span class="sub">In the wild</span><p>A boy’s inflammatory bowel disease began when he was 15 months old and resisted diagnosis by every standard test. His doctors sequenced the protein-coding part of his genome (the exome), mapped the reads to the reference and looked for variants. A new mutation in the XIAP gene explained the illness, and he was treated with a transplant of blood-forming cells. The paper reports no return of the bowel disease at follow-up.</p>'};
+/*@end l8.js*/
+/*LEVELS-END*/
+
+$('#undo').onclick=undo;
+$('#restart').onclick=restart;
+$('#fresh').onclick=()=>{S.variants[cur.id]=(S.variants[cur.id]||0)+1;log('new_puzzle');save();loadLevel(cur.id);};
+$('#skip').onclick=()=>{if(!cur.done&&LV[cur.id].skip)LV[cur.id].skip();};
+$('#seed').value=S.seed;
+$('#setSeed').onclick=()=>{const v=$('#seed').value.trim();if(!v||v===S.seed)return;S=freshState(v);save();cur=null;loadLevel(previewLevel||1);};
+$('#dl').onclick=()=>{
+  const blob=new Blob([JSON.stringify({game:'the-loom',version:1,seed:S.seed,exported:new Date().toISOString(),
+    unlocked:S.unlocked,vocabulary:S.badges,earnedAt:S.earnedAt,events:S.log},null,1)],{type:'application/json'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='the-loom-'+S.seed.replace(/[^\w-]/g,'_')+'.json';
+  document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),1000);
+};
+if(bench)renderBench();
+else loadLevel(previewLevel||Math.min(S.unlocked,LEVELS.length));
+/* Test handle, only with ?debug=1 in the address. */
+if(params.get('debug'))window.__tl={state:()=>cur,saved:()=>S,loadLevel,levels:()=>LEVELS.map(l=>({id:l.id,title:l.title})),
+  vocab:()=>VOCAB.map(v=>({id:v.id,name:v.name})),earned:()=>S.badges.slice(),log:()=>S.log.slice(),
+  act:(a,d)=>{LV[cur.id].act(a,d||{},{});},drop:(k,i,tk,j)=>{LV[cur.id].drop(k,i,tk,j);render();},
+  input:(n,v,d)=>{LV[cur.id].input(n,String(v),d||{},null);},skip:()=>$('#skip').click(),render:()=>render()};
+})();
+</script>
+
+</body>
+</html>

@@ -1,0 +1,1328 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Hollow Mountain</title>
+<style>
+:root{
+  --bg:#f6f4ee; --panel:#fffdf8; --ink:#1f2328; --muted:#6b7078; --line:#d9d4c7;
+  --accent:#c2410c; --accent-ink:#ffffff; --good:#2e7d4f; --warn:#b4541a; --chip:#efe6d6;
+  --bad-bg:#ffd9d6; --bad-ink:#8a1010; --ok-bg:#d9f2e1; --ok-ink:#14532d; --hot:#fff1c7;
+  /* the mountain is an illustration: one palette in both themes */
+  --rope:#ff8a1f; --chalk:#f4ead0; --lamp:#ffd36b;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --bg:#15181c; --panel:#1d2126; --ink:#e8e6e1; --muted:#9aa0a8; --line:#343a42;
+    --accent:#ff9b5e; --accent-ink:#2b1200; --good:#6fcf97; --warn:#f0a36b; --chip:#2a2620;
+    --bad-bg:#5a1f1c; --bad-ink:#ffd2cc; --ok-bg:#1d4a2e; --ok-ink:#c9f5d7; --hot:#4a3f1c;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#15181c; --panel:#1d2126; --ink:#e8e6e1; --muted:#9aa0a8; --line:#343a42;
+  --accent:#ff9b5e; --accent-ink:#2b1200; --good:#6fcf97; --warn:#f0a36b; --chip:#2a2620;
+  --bad-bg:#5a1f1c; --bad-ink:#ffd2cc; --ok-bg:#1d4a2e; --ok-ink:#c9f5d7; --hot:#4a3f1c;
+}
+*{box-sizing:border-box}
+html,body{overflow-x:hidden}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 system-ui,-apple-system,"Segoe UI",sans-serif}
+.wrap{max-width:900px;margin:0 auto;padding:20px 16px 40px}
+header{display:flex;flex-wrap:wrap;align-items:center;gap:12px 20px;margin-bottom:8px}
+h1{font-size:1.35rem;margin:0;display:flex;align-items:center;gap:8px}
+h1 svg{width:40px;height:40px}
+h1 a{color:inherit;text-decoration:none}
+h2{font-size:1.1rem;margin:18px 0 4px}
+p{margin:4px 0 12px}
+.mono,.seq,.chart,svg text{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+button{font:inherit;color:var(--ink);background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:6px 12px;cursor:pointer}
+button:hover:not(:disabled){border-color:var(--accent)}
+button:disabled{opacity:.45;cursor:default}
+button.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent);font-weight:600}
+button.advance{display:block;width:fit-content;max-width:100%;min-height:44px;margin-top:14px;padding:10px 18px;text-align:left}
+a{color:var(--accent)}
+.pips{display:flex;flex-wrap:wrap;gap:6px}
+.pips button{width:32px;height:32px;padding:0;border-radius:50%}
+.pips button.on{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.vocabhead{font-size:.75rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-top:8px}
+.badges{display:flex;flex-wrap:wrap;gap:6px;margin:4px 0;position:relative}
+.badge{font-size:.8rem;border:1px dashed var(--line);color:var(--muted);border-radius:999px;padding:2px 10px}
+.badge.got{border:1px solid var(--good);color:var(--good);font-weight:600}
+.term{cursor:help;position:relative}
+span.term:not(.badge){border-bottom:1px dotted currentColor;font-weight:600}
+.tip{display:none;position:absolute;left:0;top:calc(100% + 6px);z-index:20;width:min(360px,84vw);padding:9px 11px;border-radius:8px;
+  background:var(--ink);color:var(--bg);font:400 .82rem/1.45 system-ui,sans-serif;letter-spacing:0;text-transform:none;text-align:left;box-shadow:0 4px 14px rgba(0,0,0,.25)}
+.tip b{display:block;margin-bottom:2px;color:inherit}
+.term:hover>.tip,.term:focus>.tip{display:block}
+.rule{display:inline-flex;align-items:center;gap:8px;font-size:.9rem;font-weight:600;padding:3px 12px;border-radius:999px;background:var(--chip);margin-bottom:8px}
+.stage{border:1px solid var(--line);border-radius:12px;overflow:hidden;background:var(--panel)}
+svg.cave{width:100%;height:auto;display:block;touch-action:manipulation;background:#26314f}
+#work{padding:12px 14px 14px;border-top:1px solid var(--line)}
+#work:empty{display:none}
+.sub{font-size:.75rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin:8px 0 2px}
+.status{min-height:1.6em;margin:10px 2px 0;font-weight:500}
+.status.warn{color:var(--warn)} .status.good{color:var(--good)}
+.controls{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:12px}
+#skip:not([hidden]) + .controls{margin-top:20px;padding-top:14px;border-top:1px solid var(--line)}
+/* sequences */
+.seqscroll{overflow-x:auto;padding-bottom:4px}
+.seqrow{display:flex;align-items:center;gap:8px;margin:2px 0;width:max-content}
+.seqname{width:5.5em;flex:none;font-weight:700;font-size:.9rem}
+.seq{display:flex;gap:2px}
+.seq .b{width:2em;height:2.5em;display:inline-flex;align-items:center;justify-content:center;font-weight:700;border-radius:4px;background:var(--chip);padding:0;border:1px solid transparent}
+button.b:hover{border-color:var(--accent)}
+.seq .b.mark{background:var(--bad-bg);color:var(--bad-ink);border-color:var(--bad-ink)}
+.seq .b.same{animation:nod .5s}
+.seq .b.dim{opacity:.4}
+.seq .b.new{box-shadow:inset 0 -3px 0 var(--accent)}
+@keyframes nod{30%{transform:translateY(-4px)}60%{transform:translateY(2px)}}
+.A{color:#2e7d4f} .C{color:#2b5fb3} .G{color:#9a6b00} .T{color:#b83a4b}
+/* charts */
+.chartwrap{overflow-x:auto;margin:6px 0 10px}
+table.chart{border-collapse:collapse;font-size:.95rem}
+.chart th,.chart td{border:1px solid var(--line);min-width:2.7em;height:2.3em;text-align:center;padding:0 4px}
+.chart th{background:var(--chip);font-weight:700;font-family:system-ui,sans-serif;white-space:nowrap}
+.chart td.diag{color:var(--muted)}
+.chart td.hot{background:var(--hot)}
+.chart td.newrow{box-shadow:inset 0 0 0 2px var(--accent)}
+.chart td.bad{background:var(--bad-bg);color:var(--bad-ink)}
+.chart td.ok{background:var(--ok-bg);color:var(--ok-ink)}
+.chart td.pick{cursor:pointer}
+.chart td.pick:hover{outline:2px solid var(--accent);outline-offset:-2px}
+.chart td.chosen{background:var(--accent);color:var(--accent-ink);font-weight:700}
+.chart td small{display:block;font-size:.7rem;line-height:1;color:var(--muted)}
+.chart td.bad small{color:inherit}
+input.num{font:inherit;width:3.6em;padding:3px 4px;border:1px solid var(--line);border-radius:6px;background:var(--panel);color:var(--ink);text-align:center}
+input.num.bad{border-color:var(--bad-ink);background:var(--bad-bg);color:var(--bad-ink);animation:nod .5s}
+input.num:focus{outline:2px solid var(--accent);outline-offset:1px}
+.fixed{font-weight:700;color:var(--good)}
+.rows{display:grid;gap:6px;margin:6px 0 10px}
+.rowline{display:flex;flex-wrap:wrap;align-items:center;gap:6px 8px;font-size:.95rem}
+.rowline .lab{min-width:10em}
+.choice{display:flex;flex-wrap:wrap;gap:8px;margin:8px 0}
+.dig{display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px;margin:8px 0;padding:10px 12px;border:1px dashed var(--line);border-radius:10px}
+.dig select{font:inherit;color:var(--ink);background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:3px 6px}
+.handover{border-left:3px solid var(--accent);padding:4px 0 4px 12px;margin:10px 0}
+.handover p{margin:4px 0}
+.formula{font-family:ui-monospace,Menlo,monospace;font-size:.92rem;background:var(--chip);padding:2px 6px;border-radius:5px;white-space:nowrap}
+.quads{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:4px 10px;font-size:.85rem;margin:6px 0}
+.quads .ok{color:var(--good)} .quads .no{color:var(--warn);font-weight:600}
+.pairings{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px;margin:8px 0}
+.pairing{border:1px solid var(--line);border-radius:10px;padding:8px 10px}
+.pairing svg{width:100%;height:auto;max-width:180px;display:block;margin:0 auto 4px}
+.pairing .rowline{justify-content:center}
+.side{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.side>div{min-width:0}
+.side svg{width:100%;height:auto;display:block;border-radius:8px}
+.cap{font-size:.85rem;color:var(--muted);text-align:center;margin:2px 0 6px}
+@media (max-width:560px){.side{grid-template-columns:1fr}.jlab{font-size:22px}}
+.illus{display:inline-block;font-size:.75rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--warn);border:1px solid var(--warn);border-radius:6px;padding:0 6px}
+/* mountain artwork */
+.m-rock{fill:url(#gRock)} .m-strata{fill:none;stroke:#5c4c3e;stroke-width:2;opacity:.5}
+.m-snow{fill:#f3f1ea} .m-dark{fill:#16110d;opacity:.82} .m-lit{fill:#6b5643;opacity:.55}
+.m-ground{fill:#3b4a2f} .m-pine{fill:#2c3a25}
+.star{fill:#fff8dc}
+.tn-rock{fill:none;stroke:#1b130d;stroke-width:15;stroke-linecap:round}
+.tn-lit{fill:none;stroke:#d9a564;stroke-width:6;stroke-linecap:round}
+.tn-chalk{fill:none;stroke:var(--chalk);stroke-width:3.2;stroke-linecap:round;stroke-dasharray:9 5}
+.tn-sel{fill:none;stroke:var(--lamp);stroke-width:14;stroke-linecap:round;opacity:.55}
+.tn-hit{fill:none;stroke:transparent;stroke-width:44;cursor:pointer}
+.tn-sub0{stroke:#ff8fb1} .tn-sub1{stroke:#7fd1ff} .tn-sub2{stroke:#b5f27a} .tn-sub3{stroke:#ffd36b}
+.rope{fill:none;stroke:var(--rope);stroke-width:4;stroke-linecap:round;stroke-linejoin:round}
+.rope.b{stroke:#61d4ff}
+.rope.draw{stroke-dasharray:var(--len);stroke-dashoffset:var(--len);animation:ropein .9s ease-out forwards}
+@keyframes ropein{to{stroke-dashoffset:0}}
+.len{font-size:22px;font-weight:700;text-anchor:middle;dominant-baseline:central;fill:#2a1d12;pointer-events:none}
+.lenbg{fill:#f4ead0;stroke:#8a6a4a;stroke-width:1.2}
+.ent .door{fill:#120c08;stroke:#9c7a52;stroke-width:3}
+.ent .lab{font-weight:800;text-anchor:middle;dominant-baseline:central;fill:#fff7e6;font-family:system-ui,sans-serif;pointer-events:none}
+.labbg{fill:#16110d;fill-opacity:.82;stroke:#9c7a52;stroke-width:1.5}
+.ent.sel .labbg,.ent.hot .labbg{stroke:var(--lamp);stroke-width:3}
+.ent .ring{fill:none;stroke:transparent;stroke-width:4}
+.ent.sel .ring{stroke:var(--lamp)} .ent.hot .ring{stroke:var(--rope)}
+.ent.click{cursor:pointer}
+.ent:focus-visible{outline:none} .ent:focus-visible .ring{stroke:#fff}
+.jn{fill:#2a1d12;stroke:var(--chalk);stroke-width:2.5}
+.jn.lit{stroke:#d9a564}
+.jn.root{fill:#3a2414;stroke:var(--lamp);stroke-width:4}
+.jlab{font-size:14px;font-weight:700;text-anchor:middle;dominant-baseline:central;fill:var(--chalk);pointer-events:none}
+.ghost{opacity:.35}
+.capsvg{font-size:18px;font-weight:700;fill:#fff7e6;paint-order:stroke;stroke:#16110d;stroke-width:4px;font-family:system-ui,sans-serif}
+#surveyor{pointer-events:none}
+.sv-skin{fill:#f0c9a0} .sv-coat{fill:#3c6e8f} .sv-hat{fill:#e8b13a} .sv-lamp{fill:#fff3b0}
+.sv-beam{fill:#fff3b0;opacity:.25}
+.sv-coil{fill:none;stroke:var(--rope);stroke-width:3}
+/* reveals, sources, field guide */
+.reveal{border:1px solid var(--good);border-radius:12px;padding:14px 16px;margin-top:14px;background:var(--panel)}
+.reveal h3{margin:0 0 8px;font-size:1.05rem}
+.called{margin:10px 0 4px;padding-left:12px;border-left:3px solid var(--good)}
+.called p{margin:0}
+.src{margin:4px 0 10px 15px;padding:8px 12px;border-radius:8px;background:var(--chip);font-size:.9rem}
+.src .tag{display:block;font-size:.7rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted)}
+.src a{font-weight:600}
+.guide{margin-top:22px;border:1px solid var(--line);border-radius:12px;padding:10px 14px;background:var(--panel)}
+.guide summary{cursor:pointer;font-weight:600}
+.gentry{padding:8px 0;border-top:1px solid var(--line)}
+.gentry h4{margin:0;font-size:1rem}
+.gentry p{margin:2px 0;font-size:.92rem}
+.gmeta{color:var(--muted);font-size:.9rem}
+table.tt{border-collapse:collapse;font-size:.88rem;margin:8px 0}
+.tt th,.tt td{border-bottom:1px solid var(--line);padding:3px 8px;text-align:left;vertical-align:top}
+footer{margin-top:26px;padding-top:12px;border-top:1px solid var(--line);display:flex;flex-wrap:wrap;gap:10px;align-items:center;font-size:.9rem;color:var(--muted)}
+footer input{font:inherit;width:9em;padding:5px 8px;border:1px solid var(--line);border-radius:8px;background:var(--panel);color:var(--ink)}
+.bench textarea{width:100%;min-height:150px;font:14px/1.4 ui-monospace,Menlo,monospace;padding:8px;border:1px solid var(--line);border-radius:8px;background:var(--panel);color:var(--ink)}
+.bench pre{font-size:.85rem;background:var(--chip);padding:8px;border-radius:8px;overflow-x:auto}
+[hidden]{display:none!important}
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}.rope.draw{stroke-dashoffset:0}}
+@media print{
+  body{background:#fff;color:#000}
+  .wrap>*:not(#guide){display:none!important}
+  .guide{border:0;padding:0;margin:0}
+  .guide summary,#printGuide{display:none}
+  .guide a{color:#000}
+}
+</style>
+</head>
+<body>
+<div class="wrap" id="app">
+  <header>
+    <h1><svg viewBox="0 0 60 60" aria-hidden="true"><rect width="60" height="60" rx="12" fill="#26314f"/><path d="M4,52 L22,20 L28,28 L36,12 L56,52Z" fill="#7b6a58"/><path d="M36,12 L41,22 L36,20 L32,23Z" fill="#f3f1ea"/><path d="M24,52 v-7 a6,6 0 0 1 12,0 v7z" fill="#120c08" stroke="#9c7a52" stroke-width="2"/></svg><a href="../" title="All games">Hollow Mountain</a></h1>
+    <div class="pips" id="pips" aria-label="Levels"></div>
+  </header>
+  <div class="vocabhead">Vocabulary you have earned <span style="text-transform:none;letter-spacing:0">(hover for the definition)</span></div>
+  <div class="badges" id="badges"></div>
+
+  <h2 id="title"></h2>
+  <p id="brief"></p>
+  <div class="rule" id="rule"></div>
+
+  <div class="stage">
+    <svg class="cave" id="cave" viewBox="0 0 760 460" role="group" aria-label="The mountain">
+      <defs>
+        <!-- ===== ARTWORK: the mountain, drawn once and reused ===== -->
+        <linearGradient id="gSky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#1f2a48"/><stop offset=".7" stop-color="#46507a"/><stop offset="1" stop-color="#c98f6b"/></linearGradient>
+        <linearGradient id="gRock" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#8d7a66"/><stop offset="1" stop-color="#4d3f33"/></linearGradient>
+        <radialGradient id="gLamp"><stop offset="0" stop-color="#fff3b0" stop-opacity=".55"/><stop offset="1" stop-color="#fff3b0" stop-opacity="0"/></radialGradient>
+        <clipPath id="clipM"><path id="mtnClip"/></clipPath>
+        <g id="a-surveyor">
+          <path class="sv-beam" d="M2,-30 L40,-46 L40,-14Z"/>
+          <ellipse class="sv-coat" cx="0" cy="-8" rx="7" ry="10"/>
+          <circle class="sv-skin" cx="0" cy="-23" r="6"/>
+          <path class="sv-hat" d="M-7,-25 a7,6 0 0 1 14,0 z"/><circle class="sv-lamp" cx="5" cy="-28" r="2.6"/>
+          <circle class="sv-coil" cx="-7" cy="-6" r="5"/>
+          <path d="M-4,1 l-2,8 M4,1 l2,8" stroke="#2a1d12" stroke-width="3" stroke-linecap="round"/>
+        </g>
+      </defs>
+      <rect width="760" height="460" fill="url(#gSky)"/>
+      <g id="sky"></g>
+      <path id="mtn" class="m-rock"/>
+      <g clip-path="url(#clipM)"><g id="strata"></g><rect id="shade" width="760" height="460" class="m-dark"/></g>
+      <path id="snow" class="m-snow"/>
+      <rect y="440" width="760" height="20" class="m-ground"/>
+      <g id="pines"></g>
+      <g id="scene"></g>
+      <g id="surveyor" visibility="hidden"><use href="#a-surveyor"/></g>
+    </svg>
+    <div id="work"></div>
+  </div>
+
+  <div class="status" id="status" role="status"></div>
+  <button id="skip" class="primary advance" hidden></button>
+  <div class="controls">
+    <button id="walk" hidden>Walk it</button>
+    <button id="undo">Undo</button>
+    <button id="restart">Restart</button>
+    <button id="fresh">New puzzle</button>
+  </div>
+
+  <div id="panel"></div>
+
+  <details class="guide" id="guide">
+    <summary>Field guide: your glossary and sources (<span id="gcount"></span>)</summary>
+    <div id="guideBody"></div>
+  </details>
+
+  <footer>
+    <label for="seed">Puzzle code</label>
+    <input id="seed" autocomplete="off" spellcheck="false">
+    <button id="setSeed">Use code (resets progress)</button>
+    <button id="dl">Download move log</button>
+    <a href="../">All games</a>
+  </footer>
+</div>
+<script id="engine">
+/* Pure puzzle logic: no DOM. A cave is {n, N, edges:[{a,b,w}]}: entrances are nodes 0..n-1, junctions are n..N-1. */
+function hashStr(s){let h=2166136261>>>0;for(let i=0;i<s.length;i++){h^=s.charCodeAt(i);h=Math.imul(h,16777619);}return h>>>0;}
+function rng(seed){let a=seed>>>0;return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
+function shuffled(n,rand){const a=[...Array(n).keys()];for(let i=n-1;i>0;i--){const j=Math.floor(rand()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+const ri=(rand,lo,hi)=>lo+Math.floor(rand()*(hi-lo+1));
+const range=n=>[...Array(n).keys()];
+const near=(a,b)=>Math.abs(a-b)<1e-9;
+const whole=x=>Number.isInteger(x);
+
+function cloneT(t){const c={n:t.n,N:t.N,edges:t.edges.map(e=>({a:e.a,b:e.b,w:e.w}))};if(t.root!==undefined)c.root=t.root;if(t.H)c.H=t.H.slice();return c;}
+function adjOf(t){const A=Array.from({length:t.N},()=>[]);t.edges.forEach((e,i)=>{A[e.a].push({v:e.b,w:e.w,i});A[e.b].push({v:e.a,w:e.w,i});});return A;}
+function distFrom(t,s){const A=adjOf(t),d=Array(t.N).fill(null);d[s]=0;const st=[s];
+  while(st.length){const u=st.pop();for(const x of A[u])if(d[x.v]===null){d[x.v]=d[u]+x.w;st.push(x.v);}}return d;}
+/* the rope: distances between entrances (BA7A). Entrances not yet in the cave read null. */
+function leafDist(t){return range(t.n).map(i=>{const d=distFrom(t,i);return range(t.n).map(j=>d[j]);});}
+function presentLeaves(t){const s=new Set();t.edges.forEach(e=>{if(e.a<t.n)s.add(e.a);if(e.b<t.n)s.add(e.b);});return [...s].sort((a,b)=>a-b);}
+function pathNodes(t,u,v){const A=adjOf(t),par=Array(t.N).fill(-1);par[u]=u;const q=[u];
+  while(q.length){const x=q.shift();for(const y of A[x])if(par[y.v]<0){par[y.v]=x;q.push(y.v);}}
+  if(par[v]<0)return null;const p=[v];while(p[0]!==u)p.unshift(par[p[0]]);return p;}
+function edgeIndex(t,a,b){return t.edges.findIndex(e=>(e.a===a&&e.b===b)||(e.a===b&&e.b===a));}
+function pathEdges(t,u,v){const p=pathNodes(t,u,v);return p?p.slice(1).map((x,i)=>edgeIndex(t,p[i],x)):[];}
+function compact(t){const used=new Set();t.edges.forEach(e=>{used.add(e.a);used.add(e.b);});const map={};let k=t.n;
+  [...used].filter(v=>v>=t.n).sort((a,b)=>a-b).forEach(v=>map[v]=k++);const f=v=>v<t.n?v:map[v];
+  const c={n:t.n,N:k,edges:t.edges.map(e=>({a:f(e.a),b:f(e.b),w:e.w}))};if(t.root!==undefined)c.root=f(t.root);return c;}
+
+/* The one building move: split tunnel ei at distance x from its end `from`, hang entrance `leaf` on a dead end of length L. */
+function splitEdge(t,ei,x,from){const e=t.edges[ei],other=e.a===from?e.b:e.a,m=t.N++;
+  t.edges.splice(ei,1,{a:from,b:m,w:x},{a:m,b:other,w:e.w-x});return m;}
+function canHang(t,ei,x,from,L){const e=t.edges[ei];return !!e&&(e.a===from||e.b===from)&&whole(x)&&whole(L)&&x>0&&x<e.w&&L>0;}
+function hang(t,ei,x,from,leaf,L){const c=cloneT(t),m=splitEdge(c,ei,x,from);c.edges.push({a:m,b:leaf,w:L});return c;}
+
+/* LimbLength (BA7B) over the entrances `among` (default: all). */
+function limbRows(D,j,among){among=(among||range(D.length)).filter(x=>x!==j);const rows=[];
+  for(let a=0;a<among.length;a++)for(let b=a+1;b<among.length;b++){const i=among[a],k=among[b];rows.push({i,k,v:(D[i][j]+D[j][k]-D[i][k])/2});}
+  return rows;}
+function limbLength(D,j,among){return Math.min(...limbRows(D,j,among).map(r=>r.v));}
+
+/* AdditivePhylogeny (BA7C). */
+function additivePhylogeny(D0){
+  const n=D0.length,t={n,N:n,edges:[]};
+  function rec(D,m){
+    if(m===2){t.edges.push({a:0,b:1,w:D[0][1]});return;}
+    const j=m-1,L=limbLength(D,j,range(m)),Db=D.map(r=>r.slice());
+    for(let i=0;i<j;i++){Db[i][j]-=L;Db[j][i]-=L;}
+    let I=-1,K=-1;
+    outer:for(let i=0;i<j;i++)for(let k=0;k<j;k++)if(i!==k&&near(Db[i][k],Db[i][j]+Db[j][k])){I=i;K=k;break outer;}
+    if(I<0)throw new Error('not additive');
+    const x=Db[I][j];rec(Db.slice(0,j).map(r=>r.slice(0,j)),m-1);
+    const p=pathNodes(t,I,K);let acc=0,v=-1;
+    for(let s=0;s<p.length-1;s++){const ei=edgeIndex(t,p[s],p[s+1]),w=t.edges[ei].w;
+      if(near(acc,x)){v=p[s];break;}
+      if(acc+w>x+1e-9){v=splitEdge(t,ei,x-acc,p[s]);break;}
+      acc+=w;}
+    if(v<0)v=p[p.length-1];
+    t.edges.push({a:v,b:j,w:L});
+  }
+  rec(D0.map(r=>r.slice()),n);return t;
+}
+
+/* UPGMA (BA7D): join the two closest clusters under a junction at half their distance, average their rows. */
+function upgma(D0){
+  const n=D0.length,key=(a,b)=>a<b?a+','+b:b+','+a,dist=new Map();
+  for(let i=0;i<n;i++)for(let j=i+1;j<n;j++)dist.set(key(i,j),D0[i][j]);
+  let cl=range(n).map(i=>({id:i,size:1,h:0,members:[i]}));
+  const t={n,N:n,edges:[],root:-1,H:Array(n).fill(0)},joins=[];let ties=false;
+  while(cl.length>1){
+    let best=Infinity,bi=-1,bj=-1,cnt=0;
+    for(let a=0;a<cl.length;a++)for(let b=a+1;b<cl.length;b++){const d=dist.get(key(cl[a].id,cl[b].id));
+      if(d<best-1e-9){best=d;bi=a;bj=b;cnt=1;}else if(near(d,best))cnt++;}
+    if(cnt>1)ties=true;
+    const A=cl[bi],B=cl[bj],m=t.N++,h=best/2;t.H[m]=h;
+    t.edges.push({a:m,b:A.id,w:h-A.h},{a:m,b:B.id,w:h-B.h});
+    const C={id:m,size:A.size+B.size,h,members:A.members.concat(B.members)},rest=cl.filter((_,i)=>i!==bi&&i!==bj),row={};
+    rest.forEach(c=>{const v=(A.size*dist.get(key(A.id,c.id))+B.size*dist.get(key(B.id,c.id)))/C.size;dist.set(key(m,c.id),v);row[c.id]=v;});
+    joins.push({a:A.id,b:B.id,node:m,d:best,h,row,members:C.members.slice(),rest:rest.map(c=>c.id)});
+    cl=rest.concat([C]);
+  }
+  t.root=cl[0].id;return {tree:t,joins,ties};
+}
+
+/* Neighbor joining (BA7E). Each round is kept so the game can show it. */
+function nj(D0){
+  const n=D0.length,t={n,N:n,edges:[]},rounds=[];let labels=range(n),D=D0.map(r=>r.slice()),ties=false;
+  while(labels.length>2){
+    const m=labels.length,total=D.map(r=>r.reduce((s,x)=>s+x,0));
+    const Ds=D.map((r,i)=>r.map((x,j)=>i===j?0:(m-2)*x-total[i]-total[j]));
+    let best=Infinity,bi=-1,bj=-1,mins=[];
+    for(let i=0;i<m;i++)for(let j=i+1;j<m;j++){if(Ds[i][j]<best-1e-9){best=Ds[i][j];bi=i;bj=j;mins=[[i,j]];}else if(near(Ds[i][j],best))mins.push([i,j]);}
+    /* With four entrances D*(i,j) = D*(k,l) always, so the smallest value sits on two complementary pairs, both neighbors.
+       With three, every entry is equal. A tie is anything else. */
+    const comp=mins.length===2&&!mins[1].some(x=>mins[0].includes(x)),tie=m>=5?mins.length>1:m===4?!comp:false;
+    if(tie)ties=true;
+    const delta=(total[bi]-total[bj])/(m-2),li=(D[bi][bj]+delta)/2,lj=(D[bi][bj]-delta)/2,node=t.N++;
+    t.edges.push({a:node,b:labels[bi],w:li},{a:node,b:labels[bj],w:lj});
+    const keep=range(m).filter(k=>k!==bi&&k!==bj),merged=keep.map(k=>(D[k][bi]+D[k][bj]-D[bi][bj])/2);
+    rounds.push({labels:labels.slice(),D:D.map(r=>r.slice()),total,Dstar:Ds,i:bi,j:bj,a:labels[bi],b:labels[bj],delta,li,lj,node,
+      keep:keep.map(k=>labels[k]),merged,ties:tie,mins:mins.map(p=>[labels[p[0]],labels[p[1]]])});
+    const ND=keep.map((k,x)=>keep.map(k2=>D[k][k2]).concat([merged[x]]));ND.push(merged.concat([0]));
+    D=ND;labels=keep.map(k=>labels[k]).concat([node]);
+  }
+  t.edges.push({a:labels[0],b:labels[1],w:D[0][1]});
+  return {tree:t,rounds,ties};
+}
+
+/* Shape: remove the root chamber (a junction with two tunnels) and any other two-tunnel junction. */
+function unroot(t0){const u=cloneT(t0);delete u.root;delete u.H;
+  for(let changed=true;changed;){changed=false;const A=adjOf(u);
+    for(let v=u.n;v<u.N;v++)if(A[v].length===2){const [x,y]=A[v];u.edges=u.edges.filter((_,i)=>i!==x.i&&i!==y.i);u.edges.push({a:x.v,b:y.v,w:x.w+y.w});changed=true;break;}}
+  return compact(u);}
+/* The cave with only the entrances in `keep`: other entrances and their dead ends are filled in. */
+function induced(t0,keep){const u=cloneT(t0);delete u.root;delete u.H;const K=new Set(keep);
+  u.edges=u.edges.filter(e=>!((e.a<u.n&&!K.has(e.a))||(e.b<u.n&&!K.has(e.b))));
+  for(let changed=true;changed;){changed=false;const A=adjOf(u);
+    for(let v=u.n;v<u.N;v++){if(A[v].length===1){u.edges.splice(A[v][0].i,1);changed=true;break;}
+      if(A[v].length===2){const [x,y]=A[v];u.edges=u.edges.filter((_,i)=>i!==x.i&&i!==y.i);u.edges.push({a:x.v,b:y.v,w:x.w+y.w});changed=true;break;}}}
+  return compact(u);}
+function splitsOf(t){const A=adjOf(t),out=new Set(),leaves=presentLeaves(t);
+  t.edges.forEach(e=>{if(e.a<t.n||e.b<t.n)return;const seen=new Set([e.a,e.b]),st=[e.b],S=[];
+    while(st.length){const u=st.pop();if(u<t.n)S.push(u);for(const y of A[u])if(!seen.has(y.v)){seen.add(y.v);st.push(y.v);}}
+    const side=S.includes(leaves[0])?leaves.filter(x=>!S.includes(x)):S;out.add(side.sort((a,b)=>a-b).join(','));});
+  return out;}
+function sameShape(a,b){const A=splitsOf(unroot(a)),B=splitsOf(unroot(b));return A.size===B.size&&[...A].every(s=>B.has(s));}
+
+/* Foursomes. Pairing 0 = ab|cd, 1 = ac|bd, 2 = ad|bc. */
+function quads(n){const q=[];for(let a=0;a<n;a++)for(let b=a+1;b<n;b++)for(let c=b+1;c<n;c++)for(let d=c+1;d<n;d++)q.push([a,b,c,d]);return q;}
+function fourSums(D,q){const [a,b,c,d]=q;return [D[a][b]+D[c][d],D[a][c]+D[b][d],D[a][d]+D[b][c]];}
+/* four-point condition: the two largest of the three sums are equal. gap = largest - second largest. */
+function fourPointGap(D,q){const s=fourSums(D,q).sort((x,y)=>y-x);return s[0]-s[1];}
+function chartPairing(D,q){const s=fourSums(D,q),mn=Math.min(...s);return s.filter(x=>near(x,mn)).length===1?s.indexOf(mn):-1;}
+function shapePairing(splits,q){const [a,b,c,d]=q;
+  for(const s of splits){const S=new Set(s.split(',').map(Number)),inq=q.filter(x=>S.has(x));if(inq.length!==2)continue;
+    const p=inq.includes(a)?inq:q.filter(x=>!S.has(x));const o=p.find(x=>x!==a);return o===b?0:o===c?1:2;}
+  return -1;}
+function quartetScore(t,D){const sp=splitsOf(unroot(t));return quads(D.length).filter(q=>{const c=chartPairing(D,q);return c>=0&&shapePairing(sp,q)===c;}).length;}
+/* Nearest neighbor interchange: for each inner tunnel (u,v), swap one sub-cave of u with each sub-cave of v. */
+function nniOptions(t){const A=adjOf(t),res=[];
+  t.edges.forEach((e,ei)=>{if(e.a<t.n||e.b<t.n)return;const u=e.a,v=e.b,nu=A[u].filter(x=>x.v!==v),nv=A[v].filter(x=>x.v!==u);
+    nv.forEach((Y,k)=>{const X=nu[1],c=cloneT(t),ex=c.edges[X.i],ey=c.edges[Y.i];
+      if(ex.a===u)ex.a=v;else ex.b=v;if(ey.a===v)ey.a=u;else ey.b=u;
+      res.push({edge:ei,k,tree:c,moved:[X.v,Y.v],stay:[nu[0].v,nv[1-k].v]});});});
+  return res;}
+function subLeaves(t,from,avoid){const A=adjOf(t),seen=new Set([avoid,from]),st=[from],S=[];
+  while(st.length){const u=st.pop();if(u<t.n)S.push(u);for(const y of A[u])if(!seen.has(y.v)){seen.add(y.v);st.push(y.v);}}return S.sort((a,b)=>a-b);}
+function sameMatrix(A,B){return A.length===B.length&&A.every((r,i)=>r.every((x,j)=>near(x,B[i][j])));}
+function adjacencyList(t,dp){const A=adjOf(t),out=[];const f=x=>dp===undefined?String(x):x.toFixed(dp);
+  for(let v=0;v<t.N;v++)A[v].forEach(y=>out.push(v+'->'+y.v+':'+f(y.w)));return out;}
+function parseAdjacency(lines,n){const edges=[],seen=new Set();let N=n;
+  lines.forEach(l=>{const m=l.trim().match(/^(\d+)->(\d+):([\d.]+)$/);if(!m)return;const a=+m[1],b=+m[2];N=Math.max(N,a+1,b+1);
+    const k=Math.min(a,b)+','+Math.max(a,b);if(!seen.has(k)){seen.add(k);edges.push({a,b,w:+m[3]});}});return {n,N,edges};}
+
+/* ---------- generators ---------- */
+function randomTree(rand,n,lo,hi){const t={n,N:n+1,edges:[{a:0,b:n,w:0},{a:1,b:n,w:0},{a:2,b:n,w:0}]};
+  for(let k=3;k<n;k++){const ei=Math.floor(rand()*t.edges.length),e=t.edges[ei],m=t.N++;
+    t.edges.splice(ei,1,{a:e.a,b:m,w:0},{a:m,b:e.b,w:0});t.edges.push({a:m,b:k,w:0});}
+  t.edges.forEach(e=>e.w=ri(rand,lo,hi));return t;}
+function minPair(D){let best=Infinity,p=null,cnt=0;
+  for(let i=0;i<D.length;i++)for(let j=i+1;j<D.length;j++){if(D[i][j]<best-1e-9){best=D[i][j];p=[i,j];cnt=1;}else if(near(D[i][j],best))cnt++;}
+  return {pair:p,d:best,unique:cnt===1};}
+function isCherry(t,i,j){const A=adjOf(t);return A[i][0].v===A[j][0].v;}
+/* Where the formula says a new entrance hangs in the cave t: the smallest row (i,k), x = d(new,i) - L from i. */
+function attachPoint(t,D,j){const among=presentLeaves(t),rows=limbRows(D,j,among),L=Math.min(...rows.map(r=>r.v)),r=rows.find(r=>near(r.v,L));
+  const x=D[r.i][j]-L,p=pathNodes(t,r.i,r.k);let acc=0;
+  for(let s=0;s<p.length-1;s++){const ei=edgeIndex(t,p[s],p[s+1]),w=t.edges[ei].w;
+    if(near(acc,x))return {L,i:r.i,k:r.k,x,onNode:p[s]};
+    if(acc+w>x+1e-9)return {L,i:r.i,k:r.k,x,ei,from:p[s],off:x-acc};acc+=w;}
+  return {L,i:r.i,k:r.k,x,onNode:p[p.length-1]};}
+
+/* Levels 1 and 6: four viruses. Columns 0-11 (level 1) change once each along one tunnel of a hidden cave
+   ((s0,s1),(s2,s3)); columns 12-19 (level 6) add changes, one or two of them made twice, independently, in s0 and s2. */
+function makeViruses(key){const rand=rng(hashStr(key+'|virus'));
+  for(let t=0;t<20000;t++){
+    const s=shuffled(4,rand),root=range(20).map(()=>'ACGT'[ri(rand,0,3)]),seq=range(4).map(()=>root.slice());
+    const alt=p=>{let c;do c='ACGT'[ri(rand,0,3)];while(c===root[p]);return c;};
+    const groups=[[s[0]],[s[1]],[s[2]],[s[3]],[s[2],s[3]]],cnt=[ri(rand,1,2),ri(rand,1,2),ri(rand,1,2),ri(rand,1,2),ri(rand,3,5)];
+    if(cnt.reduce((a,b)=>a+b,0)>12)continue;
+    const cols=shuffled(12,rand);let ci=0;
+    groups.forEach((g,gi)=>{for(let c=0;c<cnt[gi];c++){const p=cols[ci++],a=alt(p);g.forEach(v=>seq[v][p]=a);}});
+    const extra=shuffled(8,rand).map(x=>x+12),twice=ri(rand,1,2);let ei=0;
+    for(let h=0;h<twice;h++){const p=extra[ei++],a=alt(p);seq[s[0]][p]=a;seq[s[2]][p]=a;}
+    const more=ri(rand,2,4);for(let h=0;h<more;h++){const p=extra[ei++],g=groups[ri(rand,0,4)],a=alt(p);g.forEach(v=>seq[v][p]=a);}
+    const seqs=seq.map(x=>x.join('')),ham=(a,b,len)=>{let d=0;for(let i=0;i<len;i++)if(a[i]!==b[i])d++;return d;};
+    const D1=range(4).map(i=>range(4).map(j=>ham(seqs[i],seqs[j],12))),D6=range(4).map(i=>range(4).map(j=>ham(seqs[i],seqs[j],20)));
+    if(fourPointGap(D6,[0,1,2,3])<2)continue;
+    const Y=additivePhylogeny(D6.slice(0,3).map(r=>r.slice(0,3)));
+    if(Y.edges.some(e=>e.w<1))continue;
+    const cave={n:4,N:Y.N+1,edges:Y.edges.map(e=>({a:e.a>=3?e.a+1:e.a,b:e.b>=3?e.b+1:e.b,w:e.w}))},at=attachPoint(cave,D6,3);
+    if(at.onNode!==undefined||at.L<1||!whole(at.L)||!whole(at.x))continue;
+    const sisters=[s[0],s[1]].sort(),across=[s[0],s[2]].sort();
+    return {seqs,short:seqs.map(x=>x.slice(0,12)),D1,D6,pairs:[sisters,[s[2],s[3]].sort()],hand:[sisters,across],Y:cave,attach:at};
+  }
+  throw new Error('virus generator failed');}
+
+function makeLit(key){const rand=rng(hashStr(key+'|lit'));const t=randomTree(rand,4,1,9),D=leafDist(t);
+  const A=adjOf(t),a=0,sis=range(4).find(j=>j!==0&&isCherry(t,0,j)),other=range(4).find(j=>j!==0&&j!==sis);
+  return {tree:t,D,hand:[[0,sis],[0,other]]};}
+function makeStar(key){const rand=rng(hashStr(key+'|star'));const t=randomTree(rand,3,1,9);return {tree:t,D:leafDist(t)};}
+function makeGrow(key,n){const rand=rng(hashStr(key+'|grow'+n));
+  for(let k=0;k<5000;k++){const t=randomTree(rand,n,1,9),D=leafDist(t),start=n===4?induced(t,[0,1,2]):induced(t,[0,1]);
+    let ok=true,cave=start;
+    for(let j=presentLeaves(start).length;j<n;j++){const at=attachPoint(cave,D,j);
+      if(at.onNode!==undefined||!whole(at.L)||!whole(at.x)||at.L<1){ok=false;break;}
+      cave=hang(cave,at.ei,at.off,at.from,j,at.L);}
+    if(!ok||!sameMatrix(leafDist(cave),D))continue;
+    return {tree:t,D,start};}
+  throw new Error('grow generator failed');}
+function makeClock(key){const rand=rng(hashStr(key+'|clock'));
+  for(let k=0;k<20000;k++){let cl=range(4).map(i=>({id:i,h:0})),h=0,ok=true;const t={n:4,N:4,edges:[],root:-1,H:[0,0,0,0]};
+    while(cl.length>1){const i=ri(rand,0,cl.length-1);let j;do j=ri(rand,0,cl.length-1);while(j===i);
+      h+=ri(rand,1,4);const A=cl[i],B=cl[j],m=t.N++;t.H[m]=h;
+      if(h-A.h>9||h-B.h>9)ok=false;
+      t.edges.push({a:m,b:A.id,w:h-A.h},{a:m,b:B.id,w:h-B.h});cl=cl.filter((_,x)=>x!==i&&x!==j).concat([{id:m,h}]);}
+    if(!ok)continue;t.root=cl[0].id;const D=leafDist(t),u=upgma(D);
+    if(u.ties||!sameMatrix(leafDist(u.tree),D))continue;
+    if(u.joins.some(J=>Object.values(J.row).some(v=>!whole(v)))||u.joins.some(J=>!whole(J.h)))continue;
+    return {tree:t,D,up:u};}
+  throw new Error('clock generator failed');}
+function makeFast(key){const rand=rng(hashStr(key+'|fast'));
+  for(let k=0;k<50000;k++){const t=randomTree(rand,4,1,9),D=leafDist(t),mp=minPair(D);
+    if(!mp.unique||isCherry(t,mp.pair[0],mp.pair[1]))continue;
+    const u=upgma(D);if(u.ties||sameShape(u.tree,t))continue;
+    const r=nj(D),r0=r.rounds[0];
+    if(r.ties||r0.mins.some(p=>p[0]===mp.pair[0]&&p[1]===mp.pair[1]))continue;
+    if(!sameMatrix(leafDist(r.tree),D))continue;
+    return {tree:t,D,up:u,nj:r,closest:mp.pair};}
+  throw new Error('fast generator failed');}
+function makeJoin5(key){const rand=rng(hashStr(key+'|nj5'));
+  for(let k=0;k<50000;k++){const t=randomTree(rand,5,1,9),D=leafDist(t),r=nj(D);
+    if(r.ties||!sameMatrix(leafDist(r.tree),D))continue;
+    const r0=r.rounds[0];if(!whole(r0.li)||!whole(r0.lj)||r0.merged.some(x=>!whole(x)))continue;
+    return {tree:t,D,nj:r};}
+  throw new Error('nj5 generator failed');}
+function makeSwap(key){const rand=rng(hashStr(key+'|swap'));
+  for(let k=0;k<100000;k++){const t=randomTree(rand,6,1,9),D=leafDist(t),u=upgma(D);
+    if(u.ties)continue;const start=unroot(u.tree);if(sameShape(start,t))continue;
+    const max=quads(6).length,opts=nniOptions(start),best=opts.filter(o=>quartetScore(o.tree,D)===max);
+    if(best.length!==1||!sameShape(best[0].tree,t))continue;
+    return {tree:t,D,start,max,score:quartetScore(start,D)};}
+  throw new Error('swap generator failed');}
+
+/* Level 11: an illustrative chart (not measured data) with the shape reported by Guan 2003 and Li 2005. */
+const SARS={names:['Human, Guangzhou','Human, Hong Kong','Civet, Guangdong','Bat, Hong Kong','Bat, Hubei','Bat, Guangxi'],
+  short:['Human G','Human H','Civet','Bat HK','Bat Hb','Bat Gx'],
+  tree:{n:6,N:10,edges:[{a:0,b:6,w:1},{a:1,b:6,w:2},{a:6,b:7,w:2},{a:2,b:7,w:3},{a:7,b:8,w:6},{a:3,b:8,w:5},{a:8,b:9,w:4},{a:4,b:9,w:7},{a:5,b:9,w:6}]}};
+SARS.D=leafDist(SARS.tree);
+
+function parseChart(text){const lines=String(text).split(/\n/).map(l=>l.trim()).filter(Boolean),names=[],rows=[];
+  for(const l of lines){const parts=l.split(/[\s,;]+/).filter(Boolean);if(!parts.length)continue;
+    if(/^-?[\d.]+$/.test(parts[0])){names.push(String.fromCharCode(65+names.length));rows.push(parts.map(Number));}
+    else{names.push(parts[0]);rows.push(parts.slice(1).map(Number));}}
+  const n=rows.length;
+  if(n<3)return {error:'Paste at least three rows.'};
+  if(rows.some(r=>r.length!==n||r.some(x=>!isFinite(x))))return {error:'Every row needs '+n+' numbers.'};
+  if(rows.some((r,i)=>r[i]!==0||r.some((x,j)=>x!==rows[j][i]||x<0)))return {error:'The chart must be symmetric, with zeros on the diagonal and no negative entries.'};
+  return {names,D:rows};}
+function additiveCheck(D){return quads(D.length).every(q=>near(fourPointGap(D,q),0));}
+
+if(typeof module!=='undefined')module.exports={hashStr,rng,shuffled,range,cloneT,adjOf,leafDist,presentLeaves,pathNodes,pathEdges,edgeIndex,
+  splitEdge,canHang,hang,limbRows,limbLength,additivePhylogeny,upgma,nj,unroot,induced,splitsOf,sameShape,quads,fourSums,fourPointGap,
+  chartPairing,shapePairing,quartetScore,nniOptions,subLeaves,sameMatrix,adjacencyList,parseAdjacency,randomTree,minPair,isCherry,attachPoint,
+  makeViruses,makeLit,makeStar,makeGrow,makeClock,makeFast,makeJoin5,makeSwap,SARS,parseChart,additiveCheck,compact};
+</script>
+<script id="ui">
+(function(){
+const KEY='hollowmountain:v1',W=760,H=460;
+const $=s=>document.querySelector(s);
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const plural=(n,w)=>n+' '+w+(n===1?'':'s');
+const f1=x=>(Math.round(x*10)/10).toFixed(1);
+const fmt=x=>x===null||x===undefined?'':Number.isInteger(x)?String(x):(Math.round(x*100)/100).toString();
+const LET='ABCDEF';
+const reduced=()=>{try{return matchMedia('(prefers-reduced-motion: reduce)').matches;}catch(e){return true;}};
+
+const LEVELS=[
+  {id:1,mode:'count',title:'Who caught it from whom?',
+   brief:'Four patients fell ill with the same new virus, and a short stretch of each patient’s virus has been read, letter by letter. A virus copies itself with the odd mistake, so viruses passed from one person to the next differ in few letters. Compare two pairs: click every column where the two rows differ.'},
+  {id:2,mode:'lit',title:'The mountain, lights on',
+   brief:'Inside Hollow Mountain, tunnels meet at junctions, and there is exactly one way through between any two entrances. Today the lamps are lit. The surveyor’s one instrument is a rope: click an entrance, then another, and the rope is stretched along the only way through.'},
+  {id:3,mode:'y',title:'Lights out',
+   brief:'The lamps are out. Three entrances, and the rope readings between them. With three entrances and no loops, the inside can only be one internal node with a tunnel to each leaf. How long is each tunnel? Type your three lengths, then walk the map to compare it with the ropes.'},
+  {id:4,mode:'grow',n:4,title:'A fourth entrance',
+   brief:'A three-leaf map, already checked. A fourth leaf, D, has been found, and the surveyor has roped it to the other three. D’s limb branches off a tunnel the map already has. Work out its length and where it branches off, then dig it in: click the tunnel it leaves from.'},
+  {id:5,mode:'grow',n:5,title:'Rebuild the mountain',
+   brief:'Five leaves and only the chart. Start from the single tunnel between A and B, and dig in C, D and E one at a time with the same move. A limb calculator now does the arithmetic you did by hand.'},
+  {id:6,mode:'lie',title:'A rope that lies',
+   brief:'Level 1’s four patients, read further along: twenty letters each. The surveyor counted the differences and made a chart. Map it the way you did in level 4.'},
+  {id:7,mode:'clock',title:'Dug at a steady rate',
+   brief:'The miners’ story: the first miners dug outward from one chamber, all at the same steady rate, splitting into two crews at each junction, until every crew broke through to the surface. So every leaf is the same distance from that first chamber. Rebuild this mountain from the story: click the pair of leaves whose crews split last.'},
+  {id:8,mode:'fast',title:'The fast tunnel',
+   brief:'A chart from a mountain where one crew dug much faster than the others. Try the level 7 method on it first.'},
+  {id:9,mode:'join5',title:'Join and repeat',
+   brief:'Five leaves. The first round of neighbor joining is yours, with a calculator for the row totals; the game does the later rounds.'},
+  {id:10,mode:'swap',title:'One swap',
+   brief:'Closest-pair joining built this map for a chart with a fast lineage. It is close, and wrong. The score counts the foursomes of leaves that the map pairs the way the chart’s four-point test pairs them. Click an inner tunnel (internal nodes at both ends) to see the four groups hanging off it, and the two other ways to hang them.'},
+  {id:11,mode:'final',title:'Whose virus?',
+   brief:'Coronaviruses related to the SARS virus, from people, from palm civets sold at a market in southern China, and from bats. Rebuild their tree with neighbor joining: in each round, click the smallest entry of the discounted chart.'}
+];
+
+/* Primary sources. Each line was written from the record that was opened (see the report). */
+const SRC={
+  zuck:{cite:'Zuckerkandl & Pauling, 1965',title:'Evolutionary divergence and convergence in proteins',where:'In Evolving Genes and Proteins (Academic Press), 97–166',
+    url:'https://doi.org/10.1016/B978-1-4832-2734-4.50017-6',
+    look:'A long chapter in a 1965 symposium volume on how proteins drift apart, and sometimes together, as lineages evolve. Read it against the steady-digging story: what would have to be true of the rate for the story to hold?'},
+  buneman:{cite:'Buneman, 1974',title:'A note on the metric properties of trees',where:'Journal of Combinatorial Theory, Series B 17, 48–50',
+    url:'https://doi.org/10.1016/0095-8956(74)90047-1',
+    look:'A three-page note on which tables of distances a tree can produce. Look for a test that needs only four points at a time.'},
+  saitou:{cite:'Saitou & Nei, 1987',title:'The neighbor-joining method: a new method for reconstructing phylogenetic trees',where:'Molecular Biology and Evolution 4, 406–425',
+    url:'https://doi.org/10.1093/oxfordjournals.molbev.a040454',
+    look:'The abstract describes starting from a star and joining, at each stage, the pair of neighbors that keeps the total branch length smallest, and reports simulations in which it found the right tree more often than UPGMA and four other methods. The paper argues for the method; the proof that it always finds neighbors came later.'},
+  guan:{cite:'Guan et al., 2003',title:'Isolation and characterization of viruses related to the SARS coronavirus from animals in southern China',where:'Science 302, 276–278',
+    url:'https://doi.org/10.1126/science.1087139',
+    look:'Viruses very like the human SARS virus were isolated from Himalayan palm civets at a live-animal market in Guangdong, and people working at the market showed signs of infection. The authors leave the natural reservoir open.'},
+  li:{cite:'Li et al., 2005',title:'Bats are natural reservoirs of SARS-like coronaviruses',where:'Science 310, 676–679',
+    url:'https://doi.org/10.1126/science.1118391',
+    look:'Bats carry SARS-like coronaviruses that are more varied than the human and civet viruses, and the human and civet viruses fall inside the bat viruses’ tree.'}
+};
+
+/* Vocabulary in the order it is earned. */
+const VOCAB=[
+  {id:'dmat',name:'Distance matrix',code:'BA7A',def:'An n × n table D in which D(i, j) is the distance between objects i and j. It is symmetric, has zeros on the diagonal, has no negative entries, and obeys the triangle inequality D(i, j) + D(j, k) ≥ D(i, k).'},
+  {id:'tree',name:'Tree',def:'A connected graph with no cycles. There is exactly one path between any two nodes, and a tree with N nodes has N − 1 edges.'},
+  {id:'leaf',name:'Leaf',def:'A node of degree 1 in a tree. In an evolutionary tree the leaves are the present-day species or sequences.'},
+  {id:'inode',name:'Internal node',def:'A node of degree greater than 1 in a tree. In an evolutionary tree the internal nodes are ancestors that were never sampled.'},
+  {id:'blen',name:'Branch length',code:'BA7A',def:'The weight of an edge of a tree, measuring the amount of change along that lineage. The distance between two leaves is the sum of the branch lengths on the path between them.'},
+  {id:'limb',name:'Limb length',code:'BA7B',def:'The length of the edge from a leaf j to its parent. For an additive matrix it is the smallest value of (D(i, j) + D(j, k) − D(i, k)) / 2 over all pairs of other leaves i and k (the Limb Length Theorem).'},
+  {id:'additive',name:'Additive matrix',def:'A distance matrix that some weighted tree fits exactly: the length of the path between every pair of leaves equals their entry in the matrix.'},
+  {id:'addphylo',name:'Additive phylogeny',code:'BA7C',def:'AdditivePhylogeny builds the tree of an additive matrix one leaf at a time: compute the leaf’s limb length, find the point on the path from i to k where its limb attaches, split the edge there and hang the limb.'},
+  {id:'fourpoint',name:'Four-point condition',src:'buneman',def:'For any four leaves i, j, k, l, of the three sums D(i,j)+D(k,l), D(i,k)+D(j,l) and D(i,l)+D(j,k), the two largest are equal. A distance matrix is additive exactly when every foursome meets it.'},
+  {id:'rooted',name:'Rooted tree',def:'A tree with one node, the root, singled out as the common ancestor of every leaf. Its edges are read as pointing away from the root, forward in time.'},
+  {id:'clock',name:'Molecular clock',src:'zuck',def:'The hypothesis that sequences change at a constant rate, so every leaf is the same distance from the root. A tree with that property is called ultrametric.'},
+  {id:'upgma',name:'UPGMA',code:'BA7D',def:'Unweighted Pair Group Method with Arithmetic Mean: join the two closest clusters under a new node at half their distance, set the new cluster’s distance to every other cluster to the average over their members, and repeat. It builds a rooted, ultrametric tree.'},
+  {id:'unrooted',name:'Unrooted tree',def:'A tree with no root. It shows how lineages are related, but not where their common ancestor lies or which way time runs.'},
+  {id:'neighbors',name:'Neighbors',def:'Two leaves that share the same parent node.'},
+  {id:'njm',name:'Neighbor-joining matrix',def:'D*(i, j) = (n − 2) · D(i, j) − TotalDistance(i) − TotalDistance(j) for i ≠ j, and 0 on the diagonal, where TotalDistance(i) is the sum of row i of D. For an additive matrix, its smallest entry is a pair of neighbors.'},
+  {id:'nj',name:'Neighbor joining',src:'saitou',code:'BA7E',def:'Find the smallest entry D*(i, j); join i and j under a new node m with limb lengths (D(i, j) + Δ)/2 and (D(i, j) − Δ)/2, where Δ = (TotalDistance(i) − TotalDistance(j)) / (n − 2); replace i and j by m with D(k, m) = (D(k, i) + D(k, j) − D(i, j)) / 2; repeat. It rebuilds the tree of an additive matrix exactly.'},
+  {id:'nni',name:'Nearest neighbor interchange',def:'Removing an internal edge leaves four subtrees W, X, Y and Z. The tree WX|YZ has two nearest neighbors for that edge, WY|XZ and WZ|XY; a nearest neighbor interchange replaces the tree by one of them.'}
+];
+const DEF={};VOCAB.forEach(v=>DEF[v.id]=v);
+function term(id,label){return '<span class="term" tabindex="0">'+label+'<span class="tip" role="tooltip"><b>'+DEF[id].name+'</b>'+DEF[id].def+'</span></span>';}
+/* The translate table, shown in the field guide row by row as its terms are earned. */
+const TRANSLATE=[
+  ['an entrance','leaf','a present-day species or virus',['leaf']],
+  ['a junction inside','internal node','an ancestor',['inode']],
+  ['a tunnel and its length','edge (branch) and its weight','the amount of change along a lineage',['blen']],
+  ['the whole cave','tree','an evolutionary tree (phylogeny)',['tree']],
+  ['the rope’s reading; the chart','distance; distance matrix','how different two sequences are',['dmat']],
+  ['the dead-end tunnel from an entrance to its first junction','limb; limb length','—',['limb']],
+  ['a chart that some cave fits exactly','additive matrix','—',['additive']],
+  ['split a tunnel and hang an entrance','the step of AdditivePhylogeny','—',['addphylo']],
+  ['the first chamber; steady digging','root; molecular clock','the common ancestor; a constant rate of change',['rooted','clock']],
+  ['join the two closest and average','UPGMA','—',['upgma']],
+  ['an entrance’s total distance to all the others','TotalDistance','—',['njm']],
+  ['the discounted chart','neighbor-joining matrix D*','—',['njm']],
+  ['two entrances that share a junction','neighbors','sister lineages',['neighbors']],
+  ['re-hanging two sub-caves across one tunnel','nearest neighbor interchange','—',['nni']]
+];
+
+/* ---------- saved state ---------- */
+const params=new URLSearchParams(location.search),urlSeed=params.get('seed');
+const requestedLevel=Number(params.get('level'));
+const previewLevel=Number.isInteger(requestedLevel)&&requestedLevel>=1&&requestedLevel<=LEVELS.length?requestedLevel:0;
+const BENCH=params.get('bench')==='1';
+function load(){try{return JSON.parse(localStorage.getItem(KEY))||{};}catch(e){return {};}}
+function save(){if(previewLevel||BENCH)return;try{localStorage.setItem(KEY,JSON.stringify(S));}catch(e){}}
+function freshState(seed){return {seed,unlocked:1,badges:[],earnedAt:{},variants:{},log:[]};}
+function randomCode(){const c='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';let s='';for(let i=0;i<6;i++)s+=c[Math.floor(Math.random()*c.length)];return s;}
+let S=previewLevel||BENCH?freshState(urlSeed||randomCode()):load();
+if(urlSeed&&urlSeed!==S.seed)S=freshState(urlSeed);
+if(!S.seed)S=freshState(randomCode());
+save();
+
+let cur=null;
+function log(ev,data){
+  S.log.push(Object.assign({t:Date.now(),lvl:cur?cur.L.id:0,variant:cur?cur.variant:0,ev},data||{}));
+  if(S.log.length>8000)S.log.splice(0,S.log.length-8000);
+  save();
+}
+function say(text,kind){cur.msg={text,kind:kind||''};}
+const knows=id=>S.badges.includes(id);
+const keyFor=id=>S.seed+'|'+id+'|'+(S.variants[id]||0);
+
+/* ---------- the mountain: drawn once ---------- */
+const O={x:380,y:478},RS=372;
+function polar(r,a){const t=a*Math.PI/180;return {x:O.x+r*Math.cos(t),y:O.y-r*Math.sin(t)};}
+const P=p=>f1(p.x)+','+f1(p.y);
+(function drawMountain(){
+  const rand=rng(7),pts=[];
+  for(let a=184;a>=-4;a-=4){const bump=a>70&&a<112?34*Math.cos((a-92)*Math.PI/44):0,jag=(a%8?10:-4)+rand()*10;
+    pts.push(polar(RS+16+jag+bump,a));}
+  const d='M-10,470 L'+pts.map(P).join(' L')+' L770,470 Z';
+  $('#mtn').setAttribute('d',d);$('#mtnClip').setAttribute('d',d);
+  const snow=pts.filter((_,i)=>{const a=184-4*i;return a>=84&&a<=100;});
+  const low=snow.slice().reverse().map((q,i,arr)=>{const a=84+4*i,r=Math.hypot(q.x-O.x,q.y-O.y)-(i===0||i===arr.length-1?2:i%2?16:30);return polar(r,a);});
+  $('#snow').setAttribute('d','M'+snow.map(P).join(' L')+' L'+low.map(P).join(' L')+'Z');
+  let st='';[300,228,156].forEach((r,i)=>{st+='<path class="m-strata" d="M'+P(polar(r,190))+' A'+r+','+r+' 0 0 1 '+P(polar(r,-10))+'" stroke-dasharray="'+(18+i*6)+' '+(10+i*4)+'"/>';});
+  $('#strata').innerHTML=st;
+  let sky='';for(let i=0;i<34;i++){const x=rand()*W,y=rand()*150,inside=Math.hypot(x-O.x,y-O.y)<RS+60;if(!inside)sky+='<circle class="star" cx="'+f1(x)+'" cy="'+f1(y)+'" r="'+f1(.6+rand()*1.3)+'"/>';}
+  sky+='<circle cx="690" cy="58" r="18" fill="#f6efd6"/><circle cx="698" cy="52" r="16" fill="#2b3557"/>';
+  $('#sky').innerHTML=sky;
+  let pine='';[[18,444],[44,446],[716,445],[742,443]].forEach(([x,y])=>{pine+='<path class="m-pine" d="M'+x+','+(y-30)+' l12,22 h-6 l10,12 h-32 l10,-12 h-6z"/>';});
+  $('#pines').innerHTML=pine;
+})();
+
+/* ---------- laying out a cave ----------
+   Leaves sit on the mountain's surface in the order a walk around the cave meets them; internal nodes sit inside,
+   under the leaves they lead to. opt.root: a rooted cave, internal nodes placed by depth (opt.H). opt.order: fixed leaf order. */
+function caveLayout(t,opt){
+  opt=opt||{};const A=adjOf(t),leaves=presentLeaves(t),pos=Array(t.N).fill(null);
+  const lo=32,hi=148,ang=(i,k)=>k===1?90:hi-i*(hi-lo)/(k-1);
+  const internal=range(t.N).filter(v=>v>=t.n&&A[v].length);
+  if(!internal.length){leaves.forEach((v,i)=>pos[v]=polar(RS,ang(i,leaves.length)));pos.angles={};leaves.forEach((v,i)=>pos.angles[v]=ang(i,leaves.length));return pos;}
+  let c=opt.root;
+  if(c===undefined){let best=Infinity;internal.forEach(v=>{const d=hopDepth(A,v),m=Math.max(...leaves.map(l=>d[l]));if(m<best-1e-9||(m===best&&v<c)){best=m;c=v;}});}
+  const order=[],par={},depth={};
+  (function dfs(v,p,d){par[v]=p;depth[v]=d;const kids=A[v].filter(x=>x.v!==p).map(x=>x.v);
+    if(v<t.n){order.push(v);return;}
+    const rank=x=>opt.order?Math.min(...subLeaves(t,x,v).map(l=>opt.order.indexOf(l))):x;
+    kids.sort((a,b)=>rank(a)-rank(b)).forEach(k=>dfs(k,v,d+1));})(c,-1,0);
+  const angle={};order.forEach((v,i)=>angle[v]=ang(i,order.length));
+  (function fill(v){if(v<t.n)return angle[v];const kids=A[v].filter(x=>x.v!==par[v]).map(x=>fill(x.v));angle[v]=v===c&&opt.root===undefined?90:kids.reduce((a,b)=>a+b,0)/kids.length;return angle[v];})(c);
+  const maxD=Math.max(...internal.map(v=>depth[v]));
+  range(t.N).forEach(v=>{if(!(v in depth))return;
+    let r;if(v<t.n)r=RS;else if(opt.root!==undefined)r=RS-(RS-72)*(opt.H[v]/opt.H[c]);else r=120+(RS-150)*depth[v]/(maxD+1);
+    pos[v]=polar(r,angle[v]);});
+  pos.angles=angle;return pos;
+}
+function hopDepth(A,s){const d={};d[s]=0;const q=[s];while(q.length){const u=q.shift();A[u].forEach(x=>{if(!(x.v in d)){d[x.v]=d[u]+1;q.push(x.v);}});}return d;}
+
+/* ---------- drawing a cave ----------
+   o: {style:'lit'|'chalk', names, lengths (bool), hidden (lengths shown as ?), pick (tunnels clickable), sel (edge index),
+       click (entrances clickable), hot (set of leaves), ropes: [{path:[nodes], cls}], root, subs: {edgeIdx:class}, jlabels} */
+function caveSVG(t,pos,o){
+  o=o||{};const names=o.names||LET,A=adjOf(t);let h='';
+  t.edges.forEach((e,i)=>{const a=pos[e.a],b=pos[e.b];if(!a||!b)return;const d='M'+P(a)+' L'+P(b);
+    if(o.sel===i)h+='<path class="tn-sel" d="'+d+'"/>';
+    if(o.style==='lit')h+='<path class="tn-rock" d="'+d+'"/><path class="tn-lit'+(o.subs&&o.subs[i]?' '+o.subs[i]:'')+'" d="'+d+'"/>';
+    else h+='<path class="tn-chalk'+(o.subs&&o.subs[i]?' '+o.subs[i]:'')+'" d="'+d+'"'+(o.subs&&o.subs[i]?' style="stroke-dasharray:none;stroke-width:5"':'')+'/>';
+  });
+  (o.ropes||[]).forEach(r=>{const pts=r.path.map(v=>pos[v]);let len=0;for(let i=1;i<pts.length;i++)len+=Math.hypot(pts[i].x-pts[i-1].x,pts[i].y-pts[i-1].y);
+    h+='<path class="rope'+(r.cls?' '+r.cls:'')+(r.draw&&!reduced()?' draw':'')+'" style="--len:'+Math.ceil(len)+'" d="M'+pts.map(p=>P({x:p.x+(r.off||0),y:p.y+(r.off||0)})).join(' L')+'"/>';});
+  if(o.lengths!==false)t.edges.forEach((e,i)=>{const a=pos[e.a],b=pos[e.b];if(!a||!b)return;
+    const m={x:(a.x+b.x)/2,y:(a.y+b.y)/2},txt=o.hidden&&o.hidden.has(i)?'?':o.edgeText?o.edgeText(i):fmt(e.w);if(txt==='')return;
+    const wd=Math.max(34,15*String(txt).length+14);
+    h+='<rect class="lenbg" x="'+f1(m.x-wd/2)+'" y="'+f1(m.y-16)+'" width="'+wd+'" height="32" rx="6"/><text class="len" x="'+f1(m.x)+'" y="'+f1(m.y+1)+'">'+esc(txt)+'</text>';});
+  if(o.pick)t.edges.forEach((e,i)=>{const a=pos[e.a],b=pos[e.b];if(!a||!b||(o.pickable&&!o.pickable(i)))return;
+    h+='<path class="tn-hit" data-e="'+i+'" d="M'+P(a)+' L'+P(b)+'"><title>'+esc(edgeName(t,i,names))+'</title></path>';});
+  let jn=0;
+  range(t.N).forEach(v=>{const p=pos[v];if(!p||v<t.n||!A[v].length)return;jn++;
+    const root=o.root===v;h+='<circle class="jn'+(o.style==='lit'?' lit':'')+(root?' root':'')+'" cx="'+f1(p.x)+'" cy="'+f1(p.y)+'" r="'+(root?15:10)+'"/>';
+    if(o.jlabels)h+='<text class="jlab" x="'+f1(p.x)+'" y="'+f1(p.y+(root?30:24))+'">'+esc(jName(t,v))+'</text>';});
+  presentLeaves(t).forEach(v=>h+=entranceSVG(v,pos,names,o));
+  (o.extraLeaves||[]).forEach(v=>h+=entranceSVG(v,pos,names,o));
+  return h;
+}
+function entranceSVG(v,pos,names,o){const p=pos[v];if(!p)return '';const ang=pos.angles?pos.angles[v]:90,rot=90-ang,lab=polar(RS+38,ang);
+  const cls='ent'+(o.click?' click':'')+(o.hot&&o.hot.has(v)?' hot':'')+(o.selLeaf===v?' sel':'');
+  const hc=polar(RS+18,ang);
+  return '<g class="'+cls+'" data-n="'+v+'"'+(o.click?' tabindex="0" role="button" aria-label="Entrance '+esc(names[v])+'"':'')+'>'+
+    (o.click?'<circle cx="'+f1(hc.x)+'" cy="'+f1(hc.y)+'" r="38" fill="transparent"/>':'')+
+    '<g transform="translate('+P(p)+') rotate('+f1(rot)+')"><circle class="ring" r="19"/><path class="door" d="M-11,9 v-9 a11,11 0 0 1 22,0 v9 z"/></g>'+
+    labelSVG(names[v],lab)+'</g>';}
+/* An entrance's name on a dark plate, kept wholly inside the picture. */
+function labelSVG(name,at){const s=String(name),fs=s.length>2?22:28,w=Math.ceil(s.length*fs*0.62+16),h=fs+12;
+  const x=Math.min(W-4-w/2,Math.max(4+w/2,at.x)),y=Math.min(H-24-h/2,Math.max(4+h/2,at.y));
+  return '<rect class="labbg" x="'+f1(x-w/2)+'" y="'+f1(y-h/2)+'" width="'+w+'" height="'+h+'" rx="7"/>'+
+    '<text class="lab" x="'+f1(x)+'" y="'+f1(y+1)+'" style="font-size:'+fs+'px">'+esc(s)+'</text>';}
+function jName(t,v){return 'J'+(v-t.n+1);}
+function nodeName(t,v,names){return v<t.n?(names||LET)[v]:jName(t,v);}
+function edgeName(t,i,names){const e=t.edges[i];return nodeName(t,e.a,names)+'–'+nodeName(t,e.b,names);}
+function setSurveyor(p,ang){const g=$('#surveyor');if(!p){g.setAttribute('visibility','hidden');return;}
+  /* The surveyor waits on the ground at the mountain's foot, on the side of the entrance in use, clear of every label. */
+  const right=Math.cos((ang===undefined?90:ang)*Math.PI/180)<-0.01?false:Math.cos((ang===undefined?90:ang)*Math.PI/180)>0.01;
+  g.setAttribute('visibility','visible');g.setAttribute('transform','translate('+(right?684:76)+',441) scale('+(right?'-1.3,1.3':'1.3')+')');}
+function shade(kind){$('#shade').setAttribute('class',kind==='lit'?'m-lit':'m-dark');}
+/* A small, self-contained cave picture (for side-by-side views). */
+function miniSVG(t,pos,o){return '<svg viewBox="0 30 760 440" role="img" aria-label="'+esc(o.label||'cave')+'"><rect width="760" height="500" fill="#26314f"/>'+
+  '<path class="m-rock" d="'+$('#mtn').getAttribute('d')+'"/><path class="'+(o.style==='lit'?'m-lit':'m-dark')+'" d="'+$('#mtn').getAttribute('d')+'"/>'+caveSVG(t,pos,o)+'</svg>';}
+
+/* ---------- charts and hand-filled cells ---------- */
+function chartHTML(D,names,o){o=o||{};const n=names.length;
+  let h='<div class="chartwrap"><table class="chart"'+(o.label?' aria-label="'+esc(o.label)+'"':'')+'><tr><th>'+(o.corner||'')+'</th>'+names.map(x=>'<th>'+esc(x)+'</th>').join('')+(o.extraHead||'')+'</tr>';
+  for(let i=0;i<n;i++){h+='<tr><th>'+esc(names[i])+'</th>';
+    for(let j=0;j<n;j++){let c=o.cell?o.cell(i,j):null;
+      if(!c)c=i===j?{html:'0',cls:'diag'}:{html:D&&D[i]&&D[i][j]!==null&&D[i][j]!==undefined?fmt(D[i][j]):''};
+      const hot=cur&&cur.hotCells&&cur.hotCells.some(x=>(x[0]===i&&x[1]===j)||(x[0]===j&&x[1]===i));
+      h+='<td class="'+(c.cls||'')+(hot?' hot':'')+'"'+(c.attr||'')+'>'+c.html+'</td>';}
+    h+=(o.extraCol?o.extraCol(i):'')+'</tr>';}
+  return h+'</table></div>';}
+function setHand(id,want,ops,label){if(!cur.hand[id])cur.hand[id]={want,ok:false,tries:0,val:'',ops:ops||[],label:label||id};}
+function handCell(id){const c=cur.hand[id];if(!c)return '';if(c.ok)return '<span class="fixed">'+fmt(c.want)+'</span>';
+  return '<input class="num'+(c.bad?' bad':'')+'" data-in="'+id+'" inputmode="numeric" autocomplete="off" aria-label="'+esc(c.label)+'" value="'+esc(c.val)+'">';}
+const handOK=ids=>ids.every(id=>cur.hand[id]&&cur.hand[id].ok);
+function firstOpen(ids){return ids.find(id=>cur.hand[id]&&!cur.hand[id].ok);}
+
+/* ---------- what the game says when vocabulary is earned ---------- */
+const BLOCKS={
+  dmat:{html:()=>'Your chart of counts is a '+term('dmat','distance matrix')+': zero down the diagonal, the same read across as read down, and never negative. Fewer differences means a closer relative. But a chart is only a list of pairs, and the question was a history: who passed it to whom, and through whom.'},
+  tree:{html:()=>'In biology this cave is a '+term('tree','tree')+'. Its entrances are '+term('leaf','leaves')+' (the viruses we sampled), its junctions are '+term('inode','internal nodes')+' (ancestors nobody sampled), and the number on each tunnel is its '+term('blen','branch length')+'. You counted '+cur.lit.nodes+' nodes and '+cur.lit.edges+' tunnels: one fewer tunnel than nodes. A loop would need one more, and there are no loops. <b>We will use these words from now on.</b>'},
+  limb:{html:()=>{const d=cur.D,f=(i,j)=>d[i][j];return 'The tunnel from a leaf to its internal node is the leaf’s limb, and you found all three '+term('limb','limb lengths')+'. For A: the ropes from A to B and from A to C both run along A’s limb, and the rope from B to C runs along neither, so A’s limb is ('+f(0,1)+' + '+f(0,2)+' − '+f(1,2)+') / 2 = '+fmt((f(0,1)+f(0,2)-f(1,2))/2)+'.';}},
+  additive:{html:()=>'Your four-leaf map reproduces every rope reading. A chart that some tree fits exactly is an '+term('additive','additive matrix')+'. Of the three values you worked out, the smallest was D’s limb. For a pair whose path D does not branch off, both ropes from D take a detour along that path before coming back, so the value can only come out larger.'},
+  addphylo:{html:()=>'Splitting a tunnel and hanging one leaf at a time, until the map reproduces the chart, is '+term('addphylo','additive phylogeny')+' (AdditivePhylogeny). The textbook writes it the other way round: trim the last leaf’s limb off the chart, solve the smaller chart, then hang the leaf back where it belongs.'},
+  fourpoint:{src:['buneman'],html:()=>'In a real tree, of the three ways to pair four leaves, two pairings send both of their ropes along the middle tunnel, so those two sums are equal and the largest. That is the '+term('fourpoint','four-point condition')+', and a chart is additive exactly when every foursome meets it. In this chart the two largest sums differ by '+cur.gap+'. Look back at the new letters: the same change turns up in two viruses that are not each other’s closest relatives. It happened twice, independently, and a count of differences cannot tell that from shared descent.'},
+  clock:{src:['zuck'],html:()=>'Steady digging is the '+term('clock','molecular clock')+': if a sequence changes at a constant rate, every present-day leaf is equally far from the common ancestor. That first chamber is the root, and a tree with one is a '+term('rooted','rooted tree')+'. Joining the closest pair under a node at half their distance, and averaging their rows, is '+term('upgma','UPGMA')+'. Its map reproduces this chart exactly.'},
+  nj:{src:['saitou'],html:()=>'The real mountain has no first chamber to start from: it is an '+term('unrooted','unrooted tree')+'. Two leaves that share an internal node are '+term('neighbors','neighbors')+'. The closest pair here were not neighbors; the smallest entry of the discounted chart, the '+term('njm','neighbor-joining matrix')+', was. Joining that pair, replacing it by its internal node, and repeating is '+term('nj','neighbor joining')+'. The game did not prove the guarantee, and neither did the 1987 paper; the proof came later.'},
+  join5:{html:()=>'On an exact chart, neighbor joining rebuilt the mountain. On level 6’s chart, where no tree fits, it still returned a tree: its best compromise, with ropes that do not all agree. Real data are like level 6, which is why neighbor joining, and not additive phylogeny, is the method in use.'},
+  nni:{html:()=>'Re-hanging two of the four groups across one inner tunnel is a '+term('nni','nearest neighbor interchange')+'. Each inner tunnel gives a tree two nearest neighbors. The textbook uses interchanges to search for trees with a low parsimony score; this level scored trees with the chart alone.'},
+  finale:{src:['guan','li'],html:()=>'In this illustrative chart, the human viruses’ closest relative is the civet virus, and the bat viruses branch off further in. That is the shape of the real finding: in 2003 viruses almost identical to the human SARS virus were found in palm civets at a market in Guangdong, and in 2005 bats were shown to carry a wider family of related viruses, with the human and civet viruses nested inside it. The civet was the go-between; bats were the reservoir.'}
+};
+
+/* ---------- shared pieces ---------- */
+function seqRows(seqs,names,o){o=o||{};
+  return '<div class="seqscroll">'+seqs.map((s,i)=>'<div class="seqrow"><span class="seqname">'+esc(names[i])+'</span><span class="seq">'+
+    [...s].map((ch,c)=>{const cls='b '+ch+(o.newFrom!==undefined&&c>=o.newFrom?' new':'')+(o.mark&&o.mark(i,c)?' mark':'')+(o.nod===c&&o.rows&&o.rows.includes(i)?' same':'');
+      return o.click&&o.rows.includes(i)?'<button class="'+cls+'" data-col="'+c+'" aria-label="Column '+(c+1)+'">'+ch+'</button>':'<span class="'+cls+'">'+ch+'</span>';}).join('')+
+    '</span></div>').join('')+'</div>';}
+const cross=(i,j)=>[i,j];
+/* compare a built map with the chart among the leaves it holds */
+function walkCompare(t,D){const B=leafDist(t),pl=presentLeaves(t),bad=[];
+  pl.forEach(i=>pl.forEach(j=>{if(i<j&&!near(B[i][j],D[i][j]))bad.push([i,j]);}));return {B,bad,ok:!bad.length,leaves:pl};}
+function walkChart(c,names){const r=c.walkRes,n=c.D.length;
+  return chartHTML(c.D,names.slice(0,n),{label:'Walk result',cell:(i,j)=>{if(i===j)return null;
+    if(!r||!r.leaves.includes(i)||!r.leaves.includes(j))return null;
+    const bad=r.bad.some(x=>(x[0]===i&&x[1]===j)||(x[0]===j&&x[1]===i));
+    return {html:fmt(c.D[i][j])+(bad?'<small>map '+fmt(r.B[i][j])+'</small>':''),cls:bad?'bad':'ok'};}});}
+function walkSay(c,r){if(r.ok)return;const [i,j]=r.bad[0];
+  say('The surveyor walked the map: '+plural(r.bad.length,'rope')+' disagree'+(r.bad.length===1?'s':'')+'. Between '+LET[i]+' and '+LET[j]+' the map says '+fmt(r.B[i][j])+' and the rope reads '+fmt(c.D[i][j])+'.'+(c.walkLeft?'':' The lamp oil is spent: Restart to try again.'),'warn');}
+function names4(n){return LET.slice(0,n).split('');}
+
+/* ---------- level 1: count the differences ---------- */
+const HANDLERS={};
+HANDLERS.count={
+  init(c){c.v=makeViruses(keyFor(1));c.stage=0;c.marks=[new Set(),new Set()];c.D=range(4).map(i=>range(4).map(j=>i===j?0:null));c.nod=null;
+    say('Patients '+LET[c.v.hand[0][0]]+' and '+LET[c.v.hand[0][1]]+' first. Click each column where their letters differ.');},
+  rule:()=>'Count the letters that differ',
+  scene:()=>({hide:true}),
+  diffs(c,k){const [a,b]=c.v.hand[k];return range(12).filter(x=>c.v.short[a][x]!==c.v.short[b][x]);},
+  work(c){const v=c.v,names=['Patient A','Patient B','Patient C','Patient D'];let h='';
+    if(c.stage<2){const [a,b]=v.hand[c.stage],m=c.marks[c.stage];
+      h+='<div class="sub">All four viruses</div>'+seqRows(v.short,names)+
+        '<div class="sub">Compare '+LET[a]+' and '+LET[b]+': '+plural(m.size,'difference')+' found</div>'+
+        seqRows([v.short[a],v.short[b]],[names[a],names[b]],{click:true,rows:[0,1],mark:(i,col)=>m.has(col),nod:c.nod});}
+    else h+='<div class="sub">All four viruses</div>'+seqRows(v.short,names);
+    h+='<div class="sub">Differences between each pair</div>'+chartHTML(c.D,names4(4),{label:'Differences chart'});
+    if(c.stage===2)h+='<p>Who caught it from whom? Pair the four patients up.</p><div class="choice">'+[1,2,3].map(p=>{const o=[1,2,3].filter(x=>x!==p);
+      return '<button data-act="pick" data-v="'+p+'">A with '+LET[p]+', '+LET[o[0]]+' with '+LET[o[1]]+'</button>';}).join('')+'</div>';
+    return h;},
+  act(c,type,d){
+    if(type==='col'&&c.stage<2){const [a,b]=c.v.hand[c.stage],col=d.c;
+      if(c.v.short[a][col]===c.v.short[b][col]){c.nod=col;say('Column '+(col+1)+': both read '+c.v.short[a][col]+'.');log('same_col',{col});return;}
+      c.nod=null;if(c.marks[c.stage].has(col))return;c.marks[c.stage].add(col);log('diff_col',{col});
+      const all=this.diffs(c,c.stage);
+      if(c.marks[c.stage].size===all.length){c.D[a][b]=c.D[b][a]=all.length;
+        if(c.stage===0){c.stage=1;const [x,y]=c.v.hand[1];say(LET[a]+' and '+LET[b]+' differ in '+plural(all.length,'letter')+'. Now '+LET[x]+' and '+LET[y]+'.');}
+        else{c.stage=2;c.D=c.v.D1.map(r=>r.slice());say(LET[a]+' and '+LET[b]+' differ in '+plural(all.length,'letter')+'. The surveyor counted the other four pairs the same way.');}}
+      else say(plural(c.marks[c.stage].size,'difference')+' so far.');return;}
+    if(type==='pick'&&c.stage===2){const p=+d.v,want=c.v.pairs.find(x=>x[0]===0)[1],o=[1,2,3].filter(x=>x!==p);log('pair_guess',{with:LET[p],ok:p===want});
+      if(p!==want){c.wrong++;const D=c.D;say('A and '+LET[p]+' differ in '+D[0][p]+' letters, '+LET[o[0]]+' and '+LET[o[1]]+' in '+D[o[0]][o[1]]+'. Another pairing needs fewer changes in all.','warn');return;}
+      const q=[1,2,3].filter(x=>x!==p);complete(['dmat'],'dmat','A and '+LET[p]+' are close, and so are '+LET[q[0]]+' and '+LET[q[1]]+'.');return;}
+    return false;}
+};
+
+/* ---------- level 2: the mountain, lights on ---------- */
+HANDLERS.lit={
+  init(c){const L=makeLit(keyFor(2));c.t=L.tree;c.D=range(4).map(i=>range(4).map(j=>i===j?0:null));c.true=L.D;c.pos=caveLayout(c.t);
+    c.sel=null;c.byHand=0;c.pending=null;c.stage='rope';c.lit={nodes:c.t.N,edges:c.t.edges.length};
+    say('Click an entrance to tie the rope there.');},
+  rule:()=>'Lamps lit · the rope runs the only way through',
+  scene(c){const ropes=c.rope?[{path:pathNodes(c.t,c.rope[0],c.rope[1]),draw:true}]:[];
+    return {lit:true,svg:caveSVG(c.t,c.pos,{style:'lit',click:c.stage==='rope',ropes,selLeaf:c.sel,hot:new Set(c.rope||[])}),
+      surveyor:c.sel!==null?c.pos.angles[c.sel]:c.rope?c.pos.angles[c.rope[0]]:c.pos.angles[0],label:'The mountain with the lamps lit'};},
+  work(c){let h='<div class="sub">Rope readings</div>'+chartHTML(c.D,names4(4),{label:'Rope chart',cell:(i,j)=>{
+      const p=c.pending;if(p&&((p[0]===i&&p[1]===j)||(p[0]===j&&p[1]===i)))return {html:handCell('r'),cls:'newrow'};return null;}});
+    if(c.pending)h+='<p>The rope ran from '+LET[c.pending[0]]+' to '+LET[c.pending[1]]+'. Add up the tunnels it ran along and type the reading.</p>';
+    if(c.stage==='count')h+='<div class="rows"><div class="rowline"><span class="lab">Entrances and junctions, in all:</span>'+handCell('nodes')+'</div>'+
+      '<div class="rowline"><span class="lab">Tunnels:</span>'+handCell('tunnels')+'</div></div>';
+    return h;},
+  act(c,type,d){
+    if(type!=='node'||c.stage!=='rope')return false;const v=d.v;
+    if(c.pending){say('Type the reading for '+LET[c.pending[0]]+' to '+LET[c.pending[1]]+' first.','warn');return;}
+    if(c.sel===null){c.sel=v;c.rope=null;say('Rope tied at '+LET[v]+'. Click the entrance to stretch it to.');return;}
+    if(v===c.sel){c.sel=null;say('Rope untied. Click an entrance to tie it there.');return;}
+    const a=Math.min(v,c.sel),b=Math.max(v,c.sel);c.sel=null;c.rope=[a,b];log('rope',{a:LET[a],b:LET[b]});
+    if(c.D[a][b]!==null){say('The rope already read '+c.D[a][b]+' between '+LET[a]+' and '+LET[b]+'.');return;}
+    if(c.byHand<2){c.pending=[a,b];delete c.hand.r;setHand('r',c.true[a][b],[],'Rope reading '+LET[a]+' to '+LET[b]);c.focus='r';
+      say('Add the tunnel lengths along the rope.');return;}
+    c.D[a][b]=c.D[b][a]=c.true[a][b];say('The rope reads '+c.true[a][b]+'.');this.check(c);},
+  onWrong(c,id){if(id==='r')say('Not quite. Follow the orange rope and add the number on every tunnel it runs along.','warn');
+    else say('Count again: every entrance and every junction is one; every tunnel between two of them is one.','warn');},
+  onHand(c,id){if(id==='r'){const [a,b]=c.pending;c.D[a][b]=c.D[b][a]=c.true[a][b];c.pending=null;c.byHand++;
+      say(c.byHand<2?'Right. One more by hand.':'Right. From now on the rope reads itself.','good');this.check(c);}
+    else if(handOK(['nodes','tunnels']))complete(['tree','leaf','inode','blen'],'tree',c.t.N+' places, '+c.t.edges.length+' tunnels.');
+    else c.focus=firstOpen(['nodes','tunnels']);},
+  check(c){if(c.D.every((r,i)=>r.every(x=>x!==null))){c.stage='count';setHand('nodes',c.t.N,[],'Entrances and junctions');setHand('tunnels',c.t.edges.length,[],'Tunnels');
+    c.focus='nodes';say('The chart is full. Now count the inside of the mountain.');}}
+};
+
+/* ---------- level 3: lights out, three leaves ---------- */
+HANDLERS.y={
+  init(c){const s=makeStar(keyFor(3));c.D=s.D;c.vals=['','',''];c.walkRes=null;c.walkLeft=3;
+    c.map={n:3,N:4,edges:[0,1,2].map(i=>({a:i,b:3,w:0}))};c.pos=caveLayout(c.map);
+    say('Type a length for each tunnel, then walk the map.');},
+  rule:()=>'Lamps out · the rope is the only instrument · no loops',
+  scene(c){const hidden=new Set([0,1,2].filter(i=>!(+c.vals[i]>0)));
+    return {svg:caveSVG(c.map,c.pos,{style:'chalk',hidden,edgeText:i=>c.vals[i]}),surveyor:c.pos.angles[0],label:'Your map of three tunnels'};},
+  work(c){return '<div class="sub">Rope readings</div>'+(c.walkRes?walkChart(c,names4(3)):chartHTML(c.D,names4(3),{label:'Rope chart'}))+
+    '<div class="rows">'+[0,1,2].map(i=>'<div class="rowline"><span class="lab">Tunnel to '+LET[i]+':</span><input class="num" data-in="y'+i+'" inputmode="numeric" autocomplete="off" aria-label="Tunnel to '+LET[i]+'" value="'+esc(c.vals[i])+'"></div>').join('')+'</div>';},
+  input(c,d){const k=+d.id.slice(1);c.vals[k]=String(d.value).trim();c.walkRes=null;log('y_len',{leaf:LET[k],value:c.vals[k]});
+    const nxt=[0,1,2].find(i=>c.vals[i]==='');c.focus=nxt===undefined?null:'y'+nxt;
+    say(nxt===undefined?'Three lengths typed. Walk the map to compare it with the ropes.':'Tunnel to '+LET[k]+': '+c.vals[k]+'.');},
+  walk:true,canWalk:c=>c.vals.every(v=>v!==''&&isFinite(+v)),
+  walk(c){c.map.edges.forEach((e,i)=>e.w=+c.vals[i]);const r=walkCompare(c.map,c.D);c.walkRes=r;log('walk',{ok:r.ok,bad:r.bad.length});
+    if(r.ok)complete(['limb'],'limb','Every rope agrees with your map.');else walkSay(c,r);}
+};
+
+/* ---------- levels 4 and 5: the one building move ---------- */
+function digForm(c){const t=c.cave,e=t.edges[c.sel];if(!e)return '';
+  const dr=c.draft||{},nm=v=>nodeName(t,v),opt=v=>'<option value="'+v+'"'+(String(dr.from)===String(v)?' selected':'')+'>'+nm(v)+'</option>';
+  return '<div class="dig" role="group" aria-label="Building move"><b>Tunnel '+esc(edgeName(t,c.sel))+'</b> <span>(length '+fmt(e.w)+')</span>'+
+    '<label>Split it <input class="num" id="digX" inputmode="numeric" autocomplete="off" aria-label="Distance along the tunnel" value="'+esc(dr.x||'')+'"></label>'+
+    '<label>from <select id="digFrom" aria-label="Measured from">'+opt(e.a)+opt(e.b)+'</select>,</label>'+
+    '<label>and hang '+LET[c.next]+' on a limb of <input class="num" id="digL" inputmode="numeric" autocomplete="off" aria-label="Limb length" value="'+esc(dr.L||'')+'"></label>'+
+    '<button class="primary" data-act="dig">Dig</button></div>';}
+function growRows(c){if(c.next>=c.n)return '';const j=c.next,nj=LET[j];
+  if(!c.calc)return '<div class="sub">'+nj+'’s limb, three ways</div><p>Pretend only '+nj+' and two of the others exist: then the map is a Y, as in level 3. What would '+nj+'’s limb be?</p><div class="rows">'+
+    c.rowList.map(r=>'<div class="rowline"><span class="lab">'+nj+' with '+LET[r.i]+' and '+LET[r.k]+':</span>'+handCell('h'+r.i+r.k)+'</div>').join('')+'</div>';
+  return '<div class="sub">Limb calculator for '+nj+'</div><div class="rows">'+c.rowList.map(r=>'<div class="rowline"><span class="lab">'+nj+' with '+LET[r.i]+' and '+LET[r.k]+':</span><b>'+fmt(r.v)+'</b></div>').join('')+'</div>';}
+HANDLERS.grow={
+  init(c){const n=c.L.n,g=makeGrow(keyFor(c.L.id),n);c.n=n;c.D=g.D;c.cave=cloneT(g.start);this.common(c,n===4?3:4,n>4);
+    say(n===4?'Work out D’s limb three ways first.':'Click the tunnel C’s limb branches off.');},
+  common(c,walks,calc){c.next=presentLeaves(c.cave).length;c.hist=[];c.sel=null;c.walkRes=null;c.walkLeft=walks;c.calc=calc;HANDLERS.grow.rows(c);},
+  rows(c){if(c.next>=c.n)return;const j=c.next;c.rowList=limbRows(c.D,j,presentLeaves(c.cave));
+    if(!c.calc)c.rowList.forEach(r=>setHand('h'+r.i+r.k,r.v,[[j,r.i],[j,r.k],[r.i,r.k]],LET[j]+' with '+LET[r.i]+' and '+LET[r.k]));
+    if(!c.calc)c.focus=firstOpen(c.rowList.map(r=>'h'+r.i+r.k));},
+  rule:()=>'Lamps out · one move: split a tunnel, hang a limb',
+  scene(c){const pos=caveLayout(c.cave);
+    return {svg:caveSVG(c.cave,pos,{style:'chalk',pick:!c.done&&c.next<c.n,sel:c.sel,jlabels:true}),surveyor:pos.angles[0],label:'Your map'};},
+  chartView(c){const pl=presentLeaves(c.cave),n=c.D.length;
+    if(c.walkRes)return walkChart(c,names4(n));
+    return chartHTML(c.D,names4(n),{label:'Rope chart',cell:(i,j)=>{const inMap=x=>pl.includes(x),row=x=>x===c.next;
+      if(i===j)return null;if((inMap(i)||row(i))&&(inMap(j)||row(j)))return row(i)||row(j)?{html:fmt(c.D[i][j]),cls:'newrow'}:null;return {html:'·',cls:'diag'};}});},
+  work(c){let h=this.chartView(c);h+=growRows(c);
+    if(c.sel!==null&&!c.done)h+=digForm(c);
+    else if(c.next<c.n&&(c.calc||handOK(c.rowList.map(r=>'h'+r.i+r.k))))h+='<p>Click the tunnel '+LET[c.next]+'’s limb branches off.</p>';
+    return h;},
+  onHand(c){const ids=c.rowList.map(r=>'h'+r.i+r.k);c.focus=firstOpen(ids);
+    if(handOK(ids))say('Three values. Which one is '+LET[c.next]+'’s limb? Click the tunnel it branches off, and dig it in.','good');},
+  onWrong(c){say('Not what level 3’s Y gives for those three. The ropes it comes from are lit.','warn');},
+  act(c,type,d){
+    if(type==='tunnel'){if(c.next>=c.n){say('Every leaf is in. Walk the map.');return;}
+      if(!c.calc&&!handOK(c.rowList.map(r=>'h'+r.i+r.k))){say('Work out the three values first.','warn');return;}
+      c.sel=c.sel===d.e?null:d.e;c.draft=null;if(c.sel!==null)say('Where along '+edgeName(c.cave,c.sel)+' does '+LET[c.next]+' branch off, and how long is its limb?');return;}
+    if(type==='dig'){const t=c.cave,e=t.edges[d.e];if(!e)return;c.draft={x:d.x,from:d.from,L:d.L};const x=Number(d.x),from=Number(d.from),L=Number(d.L);
+      if(String(d.x).trim()===''||String(d.L).trim()===''){say('Type both lengths.','warn');return;}
+      if(!whole(x)||!whole(L)||x<0||L<0){say('The rope is marked in whole lengths: type whole numbers.','warn');return;}
+      if(x>=e.w||x===0){say('This tunnel is '+fmt(e.w)+' long. A split '+x+' from '+nodeName(t,from)+' is '+(x===0?'at its very end':'past its far end')+', not inside it.','warn');log('dig_reject',{x,w:e.w});return;}
+      if(L===0){say('A limb of length 0 would put '+LET[c.next]+' inside the mountain.','warn');return;}
+      c.hist.push({cave:cloneT(c.cave),next:c.next});
+      c.cave=hang(t,d.e,x,from,c.next,L);c.draft=null;log('dig',{leaf:LET[c.next],tunnel:edgeName(t,d.e),x,from:nodeName(t,from),L});
+      const j=c.next;c.next++;c.sel=null;c.walkRes=null;HANDLERS.grow.rows(c);
+      say(LET[j]+' is dug in.'+(c.next<c.n?' Next: '+LET[c.next]+'.':' Walk the map to check it.'));return;}
+    return false;},
+  undo(c){const h=c.hist.pop();c.cave=h.cave;c.next=h.next;c.sel=null;c.walkRes=null;HANDLERS.grow.rows(c);say('Undone.');},
+  canUndo:c=>c.hist&&c.hist.length>0,
+  walk:true,
+  walk(c){const r=walkCompare(c.cave,c.D);c.walkRes=r;log('walk',{ok:r.ok,bad:r.bad.length,leaves:r.leaves.length});
+    if(r.ok&&c.next>=c.n)return complete(c.n===4?['additive']:['addphylo'],c.n===4?'additive':'addphylo','Every rope agrees with your map.');
+    if(r.ok){say('Every rope so far agrees with the map. Next: '+LET[c.next]+'.','good');return;}
+    walkSay(c,r);}
+};
+
+/* ---------- level 6: a chart no map fits ---------- */
+HANDLERS.lie=Object.assign({},HANDLERS.grow,{
+  init(c){const v=makeViruses(keyFor(1));c.v=v;c.n=4;c.D=v.D6;c.cave=cloneT(v.Y);HANDLERS.grow.common(c,2,true);c.stage='build';
+    c.gap=fourPointGap(v.D6,[0,1,2,3]);c.failed=false;say('The Y for A, B and C is already on the map. Dig in D.');},
+  rule:c=>c.stage==='sums'?'Three ways to pair four leaves':'Lamps out · one move: split a tunnel, hang a limb',
+  canWalk:c=>c.stage==='build'&&c.next>=c.n,
+  walk(c){const r=walkCompare(c.cave,c.D);c.walkRes=r;log('walk',{ok:r.ok,bad:r.bad.length});if(!r.ok)c.failed=true;walkSay(c,r);},
+  skip:c=>c.stage==='build'&&c.failed&&!c.done?'Is there any map these ropes fit? →':null,
+  skipAct(c){c.stage='sums';c.lit=makeLit(keyFor(2));c.walkRes=null;c.sel=null;
+    const s=fourSums(c.lit.D,[0,1,2,3]),l=fourSums(c.D,[0,1,2,3]),P4=[[[0,1],[2,3]],[[0,2],[1,3]],[[0,3],[1,2]]];
+    P4.forEach((p,k)=>{setHand('s'+k,s[k],[],'Level 2, pairing '+(k+1));setHand('l'+k,l[k],[p[0],p[1]],'This chart, pairing '+(k+1));});
+    c.focus='s0';log('sums_open');say('Back to level 2’s mountain, where every rope came from a real cave. For each way of pairing its four leaves, add the two rope readings.');},
+  scene(c){if(c.stage!=='sums')return HANDLERS.grow.scene(c);const pos=caveLayout(c.lit.tree);
+    return {lit:true,svg:caveSVG(c.lit.tree,pos,{style:'lit'}),label:'Level 2’s mountain, lamps lit'};},
+  work(c){const names=['Patient A','Patient B','Patient C','Patient D'];
+    let h='<div class="sub">The four viruses, 20 letters (the last 8 are new)</div>'+seqRows(c.v.seqs,names,{newFrom:12});
+    if(c.stage!=='sums')return h+HANDLERS.grow.work.call(HANDLERS.grow,c);
+    const P4=[[[0,1],[2,3]],[[0,2],[1,3]],[[0,3],[1,2]]],t=c.lit.tree,pos=caveLayout(t),pn=p=>LET[p[0]]+LET[p[1]];
+    h+='<div class="sub">Level 2’s mountain: '+chartHTML(c.lit.D,names4(4),{label:'Level 2 chart'}).replace('<div class="chartwrap">','<div class="chartwrap" style="display:inline-block;vertical-align:top">')+'</div>';
+    h+='<div class="pairings">'+P4.map((p,k)=>'<div class="pairing">'+miniSVG(t,pos,{style:'lit',label:pn(p[0])+' and '+pn(p[1]),
+      ropes:[{path:pathNodes(t,p[0][0],p[0][1])},{path:pathNodes(t,p[1][0],p[1][1]),cls:'b',off:5}]})+
+      '<div class="rowline">d('+pn(p[0])+') + d('+pn(p[1])+') = '+handCell('s'+k)+'</div></div>').join('')+'</div>';
+    if(handOK(['s0','s1','s2'])){const sorted=fourSums(c.lit.D,[0,1,2,3]).slice().sort((a,b)=>b-a);
+      h+='<p>Two of the three sums are equal, and they are the two largest ('+sorted[0]+' and '+sorted[1]+'). Now the patients’ chart:</p>'+
+        chartHTML(c.D,names4(4),{label:'Patients chart'})+'<div class="rows">'+P4.map((p,k)=>'<div class="rowline">d('+pn(p[0])+') + d('+pn(p[1])+') = '+handCell('l'+k)+'</div>').join('')+'</div>';}
+    return h;},
+  onHand(c,id){if(c.stage!=='sums')return HANDLERS.grow.onHand(c,id);
+    const S3=['s0','s1','s2'],L3=['l0','l1','l2'];c.focus=firstOpen(S3)||firstOpen(L3);
+    if(handOK(S3)&&handOK(L3)){const l=fourSums(c.D,[0,1,2,3]).slice().sort((a,b)=>b-a);
+      complete(['fourpoint'],'fourpoint','The two largest sums are '+l[0]+' and '+l[1]+'. No cave gives ropes like these.');}
+    else if(handOK(S3)&&id[0]==='s')say('Look at the pictures: in two of the pairings both ropes run along the middle tunnel.','good');},
+  onWrong(c,id){if(c.stage!=='sums')return HANDLERS.grow.onWrong(c,id);say(id[0]==='s'?'Add the two readings: the orange rope and the blue rope.':'Add the two chart entries that are lit.','warn');}
+});
+
+/* ---------- level 7: the steady-digging story ---------- */
+function leafOrderOf(t,root){const A=adjOf(t),out=[];(function d(v,p){if(v<t.n){out.push(v);return;}A[v].filter(x=>x.v!==p).map(x=>x.v).sort((a,b)=>a-b).forEach(x=>d(x,v));})(root,-1);return out;}
+HANDLERS.clock={
+  init(c){const k=makeClock(keyFor(7));c.k=k;c.D=k.D;c.up=k.up;c.j=0;c.stage='pick';c.picked=null;
+    c.cl=range(4).map(i=>({id:i,name:LET[i],members:[i],h:0}));c.forest={n:4,N:4,edges:[],H:[0,0,0,0]};
+    c.order=leafOrderOf(k.tree,k.tree.root);c.Hroot=k.tree.H[k.tree.root];c.dist={};
+    for(let i=0;i<4;i++)for(let j=0;j<4;j++)c.dist[i+','+j]=k.D[i][j];
+    say('Click the chart entry for the two leaves whose crews split last.');},
+  rule:()=>'Steady digging · every leaf equally far from the first chamber',
+  dd(c,a,b){return a===b?0:c.dist[a+','+b];},
+  pos(c){const pos=Array(c.forest.N).fill(null),ang={};c.order.forEach((v,i)=>{ang[v]=148-i*116/3;pos[v]=polar(RS,ang[v]);});
+    for(let m=4;m<c.forest.N;m++){const kids=c.forest.edges.filter(e=>e.a===m).map(e=>e.b);ang[m]=kids.reduce((s,x)=>s+ang[x],0)/kids.length;
+      pos[m]=polar(RS-(RS-72)*(c.forest.H[m]/c.Hroot),ang[m]);}
+    pos.angles=ang;return pos;},
+  scene(c){const pos=this.pos(c);let ghost='';
+    if(c.ghost){const g=c.ghost,ang=(pos.angles[g.a]+pos.angles[g.b])/2,q=polar(RS-(RS-72)*(g.h/c.Hroot),ang);
+      [g.a,g.b].forEach(v=>{ghost+='<path d="M'+P(pos[v])+' L'+P(q)+'" fill="none" stroke="#ff6b6b" stroke-width="4" stroke-dasharray="6 6"/>';});
+      ghost+='<circle cx="'+f1(q.x)+'" cy="'+f1(q.y)+'" r="11" fill="#2a1d12" stroke="#ff6b6b" stroke-width="3"/><text class="capsvg" x="'+f1(q.x+16)+'" y="'+f1(q.y+6)+'">'+fmt(g.h)+' deep?</text>';
+      if(g.x!==undefined)ghost+='<path class="rope" d="M'+P(pos[g.x])+' L'+P(q)+' L'+P(pos[g.z])+'"/>';}
+    return {svg:ghost+caveSVG(c.forest,pos,{style:'chalk',extraLeaves:range(4).filter(v=>!presentLeaves(c.forest).includes(v)),root:c.done?c.forest.N-1:undefined,
+      edgeText:i=>fmt(c.forest.edges[i].w)}),surveyor:pos.angles[c.order[0]],label:'Your map, dug from the first chamber'};},
+  work(c){if(c.done)return '<div class="sub">Rope readings</div>'+chartHTML(c.D,names4(4),{label:'Rope chart'});const names=c.cl.map(x=>x.name);
+    let h='<div class="sub">'+(c.j?'The chart, with joined groups':'Rope readings')+'</div>'+chartHTML(null,names,{label:'Current chart',cell:(i,j)=>{
+      if(i===j)return null;const pk=c.picked&&((c.picked[0]===i&&c.picked[1]===j)||(c.picked[0]===j&&c.picked[1]===i));
+      return {html:fmt(this.dd(c,c.cl[i].id,c.cl[j].id)),cls:(c.stage==='pick'&&!c.done?'pick':'')+(pk?' chosen':''),attr:c.stage==='pick'&&!c.done?' data-cell="'+i+','+j+'"':''};}});
+    if(c.stage==='fill'){const [i,j]=c.picked,A=c.cl[i],B=c.cl[j],rest=c.cl.filter((_,x)=>x!==i&&x!==j);
+      h+='<div class="rows"><div class="rowline"><span class="lab">Depth of the junction where '+A.name+' and '+B.name+' split:</span>'+handCell('h')+'</div>'+
+        rest.map(r=>'<div class="rowline"><span class="lab">'+A.name+'·'+B.name+' to '+r.name+(A.members.length+B.members.length>2?' (average over the leaves)':' (average)')+':</span>'+handCell('a'+r.id)+'</div>').join('')+'</div>';}
+    return h;},
+  act(c,type,d){if(type!=='cell'||c.stage!=='pick')return false;
+    const A=c.cl[d.i],B=c.cl[d.j],J=c.up.joins[c.j],ok=(J.a===A.id&&J.b===B.id)||(J.a===B.id&&J.b===A.id),dAB=this.dd(c,A.id,B.id);
+    log('join_pick',{a:A.name,b:B.name,ok});
+    if(!ok){c.wrong++;
+      const closer=[];[A,B].forEach(X=>c.cl.forEach(Z=>{if(Z!==A&&Z!==B&&this.dd(c,X.id,Z.id)<dAB)closer.push([X,Z]);}));
+      c.ghost={a:A.id,b:B.id,h:dAB/2};
+      if(closer.length){const [X,Z]=closer[0];if(X.members.length===1&&Z.members.length===1){c.ghost.x=X.id;c.ghost.z=Z.id;}say('If the crews to '+A.name+' and '+B.name+' were the last to split, at a junction '+fmt(dAB/2)+' deep, every other rope from '+X.name+' would climb at least that deep and back: '+fmt(dAB)+' or more. The rope from '+X.name+' to '+Z.name+' reads '+fmt(this.dd(c,X.id,Z.id))+'.','warn');}
+      else{const Ja=c.cl.find(x=>x.id===J.a),Jb=c.cl.find(x=>x.id===J.b);say(A.name+' and '+B.name+' split '+fmt(dAB/2)+' deep, but the crews to '+Ja.name+' and '+Jb.name+' split only '+fmt(J.d/2)+' deep: later.','warn');}
+      return;}
+    c.ghost=null;c.picked=[d.i,d.j];c.stage='fill';c.hotCells=[];
+    setHand('h',J.h,[[d.i,d.j]],'Depth of the junction');
+    c.cl.forEach((r,x)=>{if(x!==d.i&&x!==d.j)setHand('a'+r.id,J.row[r.id],[[d.i,x],[d.j,x]],'Distance to '+r.name);});
+    c.focus='h';say('Both crews dug at the same rate from that junction to the surface. How deep is it?');},
+  onWrong(c,id){say(id==='h'?'The rope from one leaf to the other runs up one crew’s tunnel and down the other’s, and the two are the same length.':'Average the lit readings.','warn');},
+  onHand(c,id){const ids=Object.keys(c.hand);c.focus=firstOpen(ids);if(!handOK(ids))return;this.join(c);
+    if(c.j===2){this.join(c);complete(['rooted','clock','upgma'],'clock','The last two groups meet in the first chamber, '+fmt(c.forest.H[c.forest.N-1])+' deep. Walked, the map reproduces every rope.');}
+    else say('Joined. Now the next pair whose crews split last.','good');},
+  join(c){const J=c.up.joins[c.j],A=c.cl.find(x=>x.id===J.a),B=c.cl.find(x=>x.id===J.b),m=c.forest.N++;c.forest.H[m]=J.h;
+    c.forest.edges.push({a:m,b:A.id,w:J.h-A.h},{a:m,b:B.id,w:J.h-B.h});
+    const C={id:m,name:A.name+'·'+B.name,members:A.members.concat(B.members),h:J.h};
+    J.rest.forEach(r=>{c.dist[m+','+r]=c.dist[r+','+m]=J.row[r];});
+    c.cl=c.cl.filter(x=>x!==A&&x!==B).concat([C]);c.j++;c.hand={};c.picked=null;c.stage='pick';log('join',{a:A.name,b:B.name,h:J.h});}
+};
+
+/* ---------- neighbor joining, by hand ---------- */
+function labelName(t,v,names){return v<t.n?(names||LET)[v]:'J'+(v-t.n+1);}
+function totalsCol(R,names,hand){return i=>'<td class="'+(hand?'':'diag')+'">'+(hand?handCell('t'+i):fmt(R.total[i]))+'</td>';}
+function dstarChart(c,R,names,o){o=o||{};const m=R.labels.length;
+  return chartHTML(null,names,{label:'Discounted chart',corner:'D*',cell:(i,j)=>{
+    if(i===j)return {html:'0',cls:'diag'};
+    const chosen=c.chosen&&((c.chosen[0]===i&&c.chosen[1]===j)||(c.chosen[0]===j&&c.chosen[1]===i));
+    if(o.hand&&i<j)return {html:handCell('d'+i+'_'+j),cls:''};
+    if(o.hand&&i>j){const h=c.hand['d'+j+'_'+i];return {html:h&&h.ok?fmt(h.want):'',cls:'diag'};}
+    return {html:fmt(R.Dstar[i][j]),cls:(o.pick?'pick':'')+(chosen?' chosen':''),attr:o.pick?' data-cell="'+i+','+j+'"':''};}});}
+function njLimbs(R,i,j){const m=R.labels.length,delta=(R.total[i]-R.total[j])/(m-2);return [(R.D[i][j]+delta)/2,(R.D[i][j]-delta)/2];}
+const HAND_TOT='<p><b>Handed over</b> (Saitou and Nei, 1987): do not trust the smallest entry of the chart. Discount every entry by how far its two leaves are from everybody else. First each leaf’s <b>TotalDistance</b>, the sum of its row.</p>';
+const HAND_DS=n=>'<p>Then the discounted chart, <span class="formula">D*(i, j) = (n − 2) · D(i, j) − TotalDistance(i) − TotalDistance(j)</span>, with n = '+n+'.</p>';
+const HAND_PICK='<p>The guarantee: when a chart fits a tree exactly, the smallest entry of D* is always two leaves that share an internal node. (It was proved after 1987; this game does not prove it.) Click the smallest entry.</p>';
+const HAND_LIMB='<p>Their limbs: <span class="formula">Δ = (TotalDistance(i) − TotalDistance(j)) / (n − 2)</span>, <span class="formula">limb(i) = (D(i, j) + Δ) / 2</span>, <span class="formula">limb(j) = (D(i, j) − Δ) / 2</span>.</p>';
+const HAND_MERGE='<p>Then the pair is replaced by their internal node m, with <span class="formula">D(k, m) = (D(k, i) + D(k, j) − D(i, j)) / 2</span> for every other leaf k, and the same steps repeat on the smaller chart.</p>';
+function setTotals(c,R){R.labels.forEach((_,i)=>setHand('t'+i,R.total[i],R.labels.map((_,j)=>[i,j]),'Row total '+(i+1)));}
+function setDstar(c,R){const m=R.labels.length;for(let i=0;i<m;i++)for(let j=i+1;j<m;j++)setHand('d'+i+'_'+j,R.Dstar[i][j],[[i,j]],'D* '+(i+1)+','+(j+1));}
+function dsIds(R){const m=R.labels.length,o=[];for(let i=0;i<m;i++)for(let j=i+1;j<m;j++)o.push('d'+i+'_'+j);return o;}
+function isMinPair(R,i,j){const a=R.labels[i],b=R.labels[j];return R.mins.some(p=>(p[0]===a&&p[1]===b)||(p[0]===b&&p[1]===a));}
+
+HANDLERS.fast={
+  init(c){const f=makeFast(keyFor(8));c.f=f;c.D=f.D;c.R=f.nj.rounds[0];c.stage='try';c.walkLeft=1;c.chosen=null;
+    say('Try the level 7 method first.');},
+  rule:c=>c.stage==='try'||c.stage==='upgma'?'Lamps out · closest pair first?':'Lamps out · discount, then join',
+  skip:c=>c.stage==='try'?'Join the closest pairs, as in level 7':null,
+  skipAct(c){c.stage='upgma';log('upgma_run');say('Closest-pair joining built this map. Walk it.');},
+  canWalk:c=>c.stage==='upgma',walk:true,
+  walk(c){const r=walkCompare(unroot(c.f.up.tree),c.D);c.walkRes=r;log('walk',{ok:r.ok,bad:r.bad.length});
+    c.stage='totals';setTotals(c,c.R);c.focus='t0';
+    const fast=this.fastLeaf(c);say('The map fails: '+plural(r.bad.length,'rope')+' disagree. With the lamps lit, the real mountain shows why: the crew to '+LET[fast]+' dug fast, so '+LET[fast]+' looks far from everyone.','warn');},
+  fastLeaf(c){const t=c.f.tree;let best=-1,leaf=0;t.edges.forEach(e=>{const l=e.a<4?e.a:e.b<4?e.b:-1;if(l>=0&&e.w>best){best=e.w;leaf=l;}});return leaf;},
+  scene(c){const f=c.f;
+    if(c.stage==='try')return {svg:caveSVG({n:4,N:4,edges:[]},caveLayout(f.tree),{extraLeaves:[0,1,2,3]}),surveyor:90,label:'Four leaves, lamps out'};
+    if(c.stage==='upgma'){const u=f.up.tree,pos=caveLayout(u,{root:u.root,H:u.H});return {svg:caveSVG(u,pos,{style:'chalk',root:u.root,jlabels:false}),surveyor:pos.angles[0],label:'Closest-pair map'};}
+    if(c.done){const t=f.nj.tree,pos=caveLayout(t);return {svg:caveSVG(t,pos,{style:'chalk'}),surveyor:pos.angles[0],label:'Neighbor-joining map'};}
+    const pos=caveLayout(f.tree);return {lit:true,svg:caveSVG(f.tree,pos,{style:'lit'}),label:'The real mountain, lamps lit'};},
+  work(c){const R=c.R,names=names4(4);let h='';
+    if(c.stage==='try'||c.stage==='upgma')return '<div class="sub">Rope readings</div>'+chartHTML(c.D,names,{label:'Rope chart'});
+    const u=c.f.up.tree,up=unroot(u);
+    h+='<div class="side"><div>'+miniSVG(u,caveLayout(u,{root:u.root,H:u.H}),{style:'chalk',root:u.root,label:'Closest-pair map'})+'<div class="cap">Closest-pair map: fails the walk</div></div>'+
+      '<div><div class="sub">Walk of the closest-pair map</div>'+walkChart(c,names)+'</div></div>';
+    h+='<div class="handover">'+HAND_TOT;
+    h+=chartHTML(c.D,names,{label:'Rope chart with totals',extraHead:'<th>Total</th>',extraCol:totalsCol(R,names,true)});
+    if(['dstar','pick','limbs'].includes(c.stage)||c.done){h+=HAND_DS(4)+dstarChart(c,R,names,{hand:c.stage==='dstar',pick:c.stage==='pick'});}
+    if(c.stage==='pick'||c.stage==='limbs'||c.done)h+=HAND_PICK;
+    if(c.stage==='limbs'||c.done){const [i,j]=c.chosen;h+=HAND_LIMB+'<div class="rows"><div class="rowline"><span class="lab">limb('+names[i]+'):</span>'+handCell('li')+'</div>'+
+      '<div class="rowline"><span class="lab">limb('+names[j]+'):</span>'+handCell('lj')+'</div></div>';}
+    if(c.done)h+=HAND_MERGE;
+    return h+'</div>';},
+  onHand(c){const R=c.R;
+    if(c.stage==='totals'){const ids=R.labels.map((_,i)=>'t'+i);c.focus=firstOpen(ids);if(handOK(ids)){c.stage='dstar';setDstar(c,R);c.focus='d0_1';say('Totals done. Now the discounted chart.','good');}return;}
+    if(c.stage==='dstar'){const ids=dsIds(R);c.focus=firstOpen(ids);if(handOK(ids)){c.stage='pick';say('Click the smallest entry of D*.','good');}return;}
+    if(c.stage==='limbs'&&handOK(['li','lj'])){log('nj_done');complete(['unrooted','neighbors','njm','nj'],'nj','The rest of the joins follow the same steps. The finished map reproduces every rope.');}
+    else c.focus=firstOpen(['li','lj']);},
+  onWrong(c,id){say(id[0]==='t'?'Add up the whole lit row.':id[0]==='d'?'(n − 2) times the chart entry, minus both totals. The entry is lit.':'Work out Δ first, then halve D(i, j) plus or minus it.','warn');},
+  act(c,type,d){if(type!=='cell'||c.stage!=='pick')return false;const R=c.R;log('dstar_pick',{i:d.i,j:d.j,ok:isMinPair(R,d.i,d.j)});
+    if(!isMinPair(R,d.i,d.j)){c.wrong++;say('D* has a smaller entry than '+fmt(R.Dstar[d.i][d.j])+'.','warn');return;}
+    c.chosen=[Math.min(d.i,d.j),Math.max(d.i,d.j)];const [li,lj]=njLimbs(R,c.chosen[0],c.chosen[1]);c.stage='limbs';
+    setHand('li',li,[[c.chosen[0],c.chosen[1]]],'limb '+LET[c.chosen[0]]);setHand('lj',lj,[[c.chosen[0],c.chosen[1]]],'limb '+LET[c.chosen[1]]);c.focus='li';
+    say(LET[c.chosen[0]]+' and '+LET[c.chosen[1]]+'. Now their limbs.');}
+};
+
+HANDLERS.join5={
+  init(c){const j=makeJoin5(keyFor(9));c.j5=j;c.D=j.D;c.R=j.nj.rounds[0];c.stage='dstar';c.chosen=null;setDstar(c,c.R);c.focus='d0_1';
+    say('The row totals are calculated. Fill in the discounted chart.');},
+  rule:c=>c.stage==='lie'?'A chart no tree fits':'Discount, join, repeat',
+  names:()=>names4(5),
+  scene(c){const t=c.j5.nj.tree,pos=caveLayout(t);
+    if(c.stage==='lie'){const L=c.lie,p=caveLayout(L);return {svg:caveSVG(L,p,{style:'chalk'}),surveyor:p.angles[0],label:'Neighbor joining on level 6’s chart'};}
+    if(c.stage==='built')return {svg:caveSVG(t,pos,{style:'chalk'}),surveyor:pos.angles[0],label:'Neighbor-joining map'};
+    let part={n:5,N:t.N,edges:[]};if(c.stage==='merge'){const R=c.R;part.edges=t.edges.slice(0,2);}
+    return {svg:caveSVG(part,pos,{style:'chalk',extraLeaves:range(5).filter(v=>!presentLeaves(part).includes(v))}),surveyor:90,label:'Your map so far'};},
+  work(c){const R=c.R,names=names4(5);let h='';
+    if(c.stage==='lie'){return '<div class="sub">Level 6’s patients: the walk of the neighbor-joining map</div>'+walkChart(c,names4(4));}
+    h+=chartHTML(c.D,names,{label:'Rope chart with totals',extraHead:'<th>Total</th>',extraCol:totalsCol(R,names,false)});
+    h+=dstarChart(c,R,names,{hand:c.stage==='dstar',pick:c.stage==='pick'});
+    if(c.chosen){const [i,j]=c.chosen;h+='<div class="rows"><div class="rowline"><span class="lab">limb('+names[i]+'):</span>'+handCell('li')+'</div><div class="rowline"><span class="lab">limb('+names[j]+'):</span>'+handCell('lj')+'</div></div>';}
+    if(c.stage==='merge'||c.stage==='built'){const [i,j]=c.chosen;h+='<div class="sub">The merged row: distances from their internal node m</div><div class="rows">'+
+      range(5).filter(k=>k!==i&&k!==j).map(k=>'<div class="rowline"><span class="lab">D('+names[k]+', m):</span>'+handCell('m'+k)+'</div>').join('')+'</div>';}
+    if(c.stage==='built')h+='<div class="sub">Walk of the finished map</div>'+walkChart(c,names);
+    return h;},
+  onWrong(c,id){say(id[0]==='d'?'(n − 2) times the chart entry, minus both totals. n = 5.':id[0]==='m'?'(D(k, i) + D(k, j) − D(i, j)) / 2. The entries are lit.':'Δ = (TotalDistance(i) − TotalDistance(j)) / (n − 2), then halve D(i, j) plus or minus Δ.','warn');},
+  onHand(c){const R=c.R;
+    if(c.stage==='dstar'){const ids=dsIds(R);c.focus=firstOpen(ids);if(handOK(ids)){c.stage='pick';say('Click the smallest entry of D*.','good');}return;}
+    if(c.stage==='limbs'){c.focus=firstOpen(['li','lj']);if(handOK(['li','lj'])){c.stage='merge';const [i,j]=c.chosen;
+      range(5).filter(k=>k!==i&&k!==j).forEach(k=>setHand('m'+k,(R.D[k][i]+R.D[k][j]-R.D[i][j])/2,[[k,i],[k,j],[i,j]],'D('+LET[k]+', m)'));c.focus=firstOpen(Object.keys(c.hand).filter(x=>x[0]==='m'));
+      say('Now the merged row.','good');}return;}
+    if(c.stage==='merge'){const ids=Object.keys(c.hand).filter(x=>x[0]==='m');c.focus=firstOpen(ids);
+      if(handOK(ids)){c.stage='built';c.walkRes=walkCompare(c.j5.nj.tree,c.D);log('nj_done');say('The game ran the later rounds the same way. Walked, the map reproduces every rope.','good');}}},
+  skip:c=>c.stage==='built'&&!c.done?'Now try it on level 6’s chart →':null,
+  skipAct(c){const v=makeViruses(keyFor(1));c.lie=nj(v.D6).tree;c.D=v.D6;c.walkRes=walkCompare(c.lie,v.D6);c.stage='lie';log('nj_lie');
+    complete([],'join5','Neighbor joining still returns a tree, with '+plural(c.walkRes.bad.length,'rope')+' that disagree.');},
+  act(c,type,d){if(type!=='cell'||c.stage!=='pick')return false;const R=c.R;log('dstar_pick',{i:d.i,j:d.j,ok:isMinPair(R,d.i,d.j)});
+    if(!isMinPair(R,d.i,d.j)){c.wrong++;say('D* has a smaller entry than '+fmt(R.Dstar[d.i][d.j])+'.','warn');return;}
+    c.chosen=[R.i,R.j];c.stage='limbs';setHand('li',R.li,[[R.i,R.j]],'limb '+LET[R.i]);setHand('lj',R.lj,[[R.i,R.j]],'limb '+LET[R.j]);c.focus='li';
+    say(LET[R.i]+' and '+LET[R.j]+' are joined first. Their limbs?');}
+};
+
+/* ---------- level 10: one swap ---------- */
+function subEdges(t,from,avoid){const A=adjOf(t),out=[],seen=new Set([avoid,from]),st=[from];
+  out.push(edgeIndex(t,avoid,from));while(st.length){const u=st.pop();A[u].forEach(y=>{if(!seen.has(y.v)){seen.add(y.v);out.push(y.i);st.push(y.v);}});}return out;}
+HANDLERS.swap={
+  init(c){const w=makeSwap(keyFor(10));c.w=w;c.D=w.D;c.t=cloneT(w.start);c.hist=[];c.selE=null;say('Click an inner tunnel.');},
+  rule:()=>'Score: foursomes the map pairs the way the chart does',
+  score:c=>quartetScore(c.t,c.D),
+  groups(c){if(c.selE===null)return null;const t=c.t,e=t.edges[c.selE],A=adjOf(t),u=e.a,v=e.b;
+    const nu=A[u].filter(x=>x.v!==v).map(x=>x.v),nv=A[v].filter(x=>x.v!==u).map(x=>x.v);
+    return [[nu[0],u],[nu[1],u],[nv[0],v],[nv[1],v]].map(([r,p])=>({root:r,parent:p,leaves:subLeaves(t,r,p),edges:subEdges(t,r,p)}));},
+  scene(c){const t=c.t,pos=caveLayout(t,{order:range(6)}),g=this.groups(c),subs={};
+    if(g)g.forEach((x,k)=>x.edges.forEach(i=>subs[i]='tn-sub'+k));
+    return {svg:caveSVG(t,pos,{style:'chalk',lengths:false,pick:!c.done,sel:c.selE,subs,pickable:i=>t.edges[i].a>=t.n&&t.edges[i].b>=t.n}),surveyor:pos.angles[0],label:'The map to repair'};},
+  work(c){const s=this.score(c),qs=quads(6),sp=splitsOf(c.t),pr=(q,k)=>k<0?'?':k===0?LET[q[0]]+LET[q[1]]+'|'+LET[q[2]]+LET[q[3]]:k===1?LET[q[0]]+LET[q[2]]+'|'+LET[q[1]]+LET[q[3]]:LET[q[0]]+LET[q[3]]+'|'+LET[q[1]]+LET[q[2]];
+    let h='<p><b>Score: '+s+' of '+c.w.max+'</b> foursomes.</p>';
+    const g=this.groups(c);
+    if(g&&!c.done){const nm=x=>'{'+x.leaves.map(l=>LET[l]).join(' ')+'}';
+      h+='<p>Off this tunnel hang four groups: <span style="color:#d6336c">'+nm(g[0])+'</span>, <span style="color:#1c7ed6">'+nm(g[1])+'</span> on one side; <span style="color:#5c940d">'+nm(g[2])+'</span>, <span style="color:#b08900">'+nm(g[3])+'</span> on the other. The two other ways to hang them:</p>'+
+        '<div class="choice"><button data-act="swap" data-k="0">Swap '+nm(g[1])+' and '+nm(g[2])+'</button><button data-act="swap" data-k="1">Swap '+nm(g[1])+' and '+nm(g[3])+'</button></div>';}
+    h+='<div class="sub">The fifteen foursomes</div><div class="quads">'+qs.map(q=>{const ch=chartPairing(c.D,q),mp=shapePairing(sp,q),ok=ch===mp;
+      return '<span class="'+(ok?'ok':'no')+'">'+(ok?'✓ ':'✗ ')+'chart '+pr(q,ch)+(ok?'':' · map '+pr(q,mp))+'</span>';}).join('')+'</div>';
+    h+=chartHTML(c.D,names4(6),{label:'Rope chart'});
+    return h;},
+  act(c,type,d){const t=c.t;
+    if(type==='tunnel'){const e=t.edges[d.e];if(!e||e.a<t.n||e.b<t.n){say('That tunnel ends at a leaf: there is nothing to swap across it.','warn');return;}
+      c.selE=c.selE===d.e?null:d.e;say(c.selE===null?'Click an inner tunnel.':'Choose a swap, or click another inner tunnel.');return;}
+    if(type==='swap'&&c.selE!==null){const o=nniOptions(t).filter(x=>x.edge===c.selE)[+d.k];if(!o)return;const before=this.score(c);
+      c.hist.push(cloneT(t));c.t=o.tree;c.selE=null;const s=this.score(c);log('swap',{edge:c.selE,k:+d.k,score:s});
+      if(s===c.w.max)return complete(['nni'],'nni','Score '+s+' of '+c.w.max+': every foursome agrees with the chart.');
+      say('Score '+before+' → '+s+'.'+(s<=before?' Undo, and try another swap.':''),s>before?'good':'warn');return;}
+    return false;},
+  undo(c){c.t=c.hist.pop();c.selE=null;say('Undone. Score '+this.score(c)+'.');},canUndo:c=>c.hist.length>0
+};
+
+/* ---------- level 11: whose virus? ---------- */
+HANDLERS.final={
+  init(c){c.D=SARS.D;c.r=nj(SARS.D);c.round=0;c.stage='join';c.names=SARS.short;c.pos=caveLayout(c.r.tree);
+    say('Round 1: click the smallest entry of the discounted chart.');},
+  rule:c=>c.stage==='ask'?'Find the human viruses’ closest relative':'Neighbor joining · the calculator does the arithmetic',
+  scene(c){const t=c.r.tree,n=Math.min(c.round,c.r.rounds.length),part={n:6,N:t.N,edges:c.stage==='join'?t.edges.slice(0,2*n):t.edges};
+    return {svg:caveSVG(part,c.pos,{style:'chalk',names:c.names,click:c.stage==='ask'&&!c.done,extraLeaves:range(6).filter(v=>!presentLeaves(part).includes(v)),hot:new Set(c.stage==='ask'?[0,1]:[])}),
+      surveyor:c.pos.angles[0],label:'The coronavirus tree'};},
+  work(c){const lab='<p><span class="illus">Illustrative</span> These distances were made up to have the shape of the published trees; they are not measurements.</p>';
+    if(c.stage==='ask'||c.done){return lab+'<p>Which virus shares an internal node with the two human viruses? Click its entrance.</p>'+chartHTML(c.D,c.names,{label:'Chart'});}
+    const R=c.r.rounds[c.round],nm=R.labels.map(v=>labelName(c.r.tree,v,c.names));
+    return lab+'<div class="sub">Round '+(c.round+1)+': the chart</div>'+chartHTML(R.D,nm,{label:'Chart',extraHead:'<th>Total</th>',extraCol:totalsCol(R,nm,false)})+
+      '<div class="sub">The discounted chart</div>'+dstarChart(c,R,nm,{pick:true});},
+  act(c,type,d){
+    if(type==='cell'&&c.stage==='join'){const R=c.r.rounds[c.round];log('dstar_pick',{i:d.i,j:d.j,ok:isMinPair(R,d.i,d.j)});
+      if(!isMinPair(R,d.i,d.j)){c.wrong++;say('D* has a smaller entry than '+fmt(R.Dstar[d.i][d.j])+'.','warn');return;}
+      c.round++;const nm=v=>labelName(c.r.tree,v,c.names);
+      if(c.r.rounds[c.round]&&c.r.rounds[c.round].labels.length===3){c.round=c.r.rounds.length;c.stage='ask';
+        say('Joined '+nm(R.labels[d.i])+' and '+nm(R.labels[d.j])+'. The last three are joined at one internal node. The tree is built.','good');}
+      else say('Joined '+nm(R.labels[d.i])+' and '+nm(R.labels[d.j])+'. Round '+(c.round+1)+'.','good');return;}
+    if(type==='node'&&c.stage==='ask'){log('answer',{leaf:c.names[d.v]});
+      if(d.v===2){const missing=VOCAB.filter(x=>!knows(x.id)).map(x=>x.id);return complete(missing,'finale','The civet virus hangs from the internal node next to the human pair.');}
+      if(d.v<2){say('That is one of the human viruses. Which other leaf hangs nearest to them?','warn');return;}
+      c.wrong++;say(c.names[d.v]+' branches off further in: follow the tunnels from the human pair’s internal node.','warn');return;}
+    return false;}
+};
+
+/* ---------- the workbench (?bench=1) ---------- */
+function bench(){
+  document.title='Hollow Mountain workbench';
+  const ex='A 0 11 10 9\nB 11 0 3 8\nC 10 3 0 7\nD 9 8 7 0';
+  $('#app').innerHTML='<div class="bench"><h1>Hollow Mountain workbench</h1><p>Paste a distance chart, one row per line: a name, then its distances. Two methods run on it side by side.</p>'+
+    '<textarea id="bIn" aria-label="Distance chart" spellcheck="false">'+ex+'</textarea><p><button class="primary" id="bRun">Run both methods</button> <a href="./">Back to the game</a></p><div id="bOut"></div></div>';
+  const run=()=>{const p=parseChart($('#bIn').value||ex),out=$('#bOut');if(p.error){out.innerHTML='<p class="status warn">'+esc(p.error)+'</p>';return;}
+    const {names,D}=p,nmOf=(t,v)=>v<t.n?names[v]:'J'+(v-t.n+1),total=quads(D.length).length;
+    const show=(title,t)=>{const fits=sameMatrix(leafDist(t),D);
+      return '<div><h2>'+title+'</h2><pre>'+t.edges.map(e=>nmOf(t,e.a)+' – '+nmOf(t,e.b)+': '+fmt(e.w)).join('\n')+'</pre><p>Reproduces the chart: <b>'+(fits?'yes':'no')+'</b><br>Foursome score: <b>'+quartetScore(t,D)+' of '+total+'</b></p></div>';};
+    let h='<div class="side">'+show('Closest-pair joining (UPGMA)',upgma(D).tree)+show('Neighbor joining',nj(D).tree)+'</div>';
+    h+=additiveCheck(D)?show('Additive phylogeny (the chart fits a tree exactly)',additivePhylogeny(D)):'<p>No tree fits this chart exactly: some foursome breaks the four-point condition, so there is no additive phylogeny.</p>';
+    out.innerHTML=h;};
+  $('#bRun').onclick=run;run();
+}
+
+
+/* ---------- level loading, completion ---------- */
+function loadLevel(id){
+  const L=LEVELS[id-1],variant=S.variants[id]||0;
+  cur={L,variant,key:S.seed+'|'+id+'|'+variant,mode:L.mode,done:false,blocks:[],hand:{},hotCells:[],msg:{text:'',kind:''},t0:Date.now(),
+       walkLeft:3,walks:0,wrong:0,rope:null,focus:null};
+  HANDLERS[L.mode].init(cur);
+  log('load',{mode:L.mode});
+  render();
+}
+function grant(ids){let fresh=false;ids.forEach(id=>{if(!S.badges.includes(id)){S.badges.push(id);S.earnedAt[id]=cur.L.id;fresh=true;}});return fresh;}
+function complete(ids,block,text){
+  cur.done=true;cur.focus=null;
+  if(ids&&ids.length)grant(ids);
+  if(block)cur.blocks.push(block);
+  if(cur.L.id<LEVELS.length)S.unlocked=Math.max(S.unlocked,cur.L.id+1);
+  say(text||'Level complete.','good');
+  log('complete',{ms:Date.now()-cur.t0,wrong:cur.wrong,walks:cur.walks,earned:ids||[]});
+}
+function srcCard(id){const s=SRC[id];
+  return '<div class="src"><span class="tag">Primary source</span><a href="'+s.url+'" target="_blank" rel="noopener">'+s.cite+': “'+s.title+'”</a> <span class="gmeta">'+s.where+'.</span><br>'+s.look+'</div>';}
+function renderPanel(){
+  if(!cur.done){$('#panel').innerHTML='';return;}
+  let h='<div class="reveal"><h3>Level '+cur.L.id+' complete</h3>';
+  cur.blocks.forEach(id=>{const B=BLOCKS[id];h+='<div class="called"><p>'+(typeof B.html==='function'?B.html():B.html)+'</p></div>';(B.src||[]).forEach(s=>h+=srcCard(s));});
+  const missing=VOCAB.filter(x=>!knows(x.id)).length;
+  if(cur.L.id<LEVELS.length)h+='<button class="primary advance" id="next">Next level →</button>';
+  else h+='<p>'+(missing?plural(missing,'vocabulary term')+' still hidden: replay the levels whose dots are open.':'You have earned the whole vocabulary. Your field guide, below, lists every term with its source.')+'</p>';
+  $('#panel').innerHTML=h+'</div>';
+}
+function renderHeader(){
+  $('#pips').innerHTML=LEVELS.map(l=>'<button data-lvl="'+l.id+'"'+(!previewLevel&&l.id>S.unlocked?' disabled':'')+
+    (l.id===cur.L.id?' class="on" aria-current="true"':'')+' aria-label="Level '+l.id+'">'+l.id+'</button>').join('');
+  $('#badges').innerHTML=VOCAB.map(x=>knows(x.id)
+    ?'<span class="badge got term" tabindex="0">'+x.name+'<span class="tip" role="tooltip"><b>'+x.name+'</b>'+x.def+'</span></span>'
+    :'<span class="badge">? ? ?</span>').join('');
+}
+function renderGuide(){
+  const got=VOCAB.filter(v=>knows(v.id));
+  $('#gcount').textContent=got.length+' of '+VOCAB.length+' terms';
+  const rows=TRANSLATE.filter(r=>r[3].every(knows));
+  $('#guideBody').innerHTML='<p class="gmeta">Hollow Mountain field guide · puzzle code '+esc(S.seed)+' · '+got.length+' of '+VOCAB.length+' terms earned</p>'+
+    (rows.length?'<table class="tt"><tr><th>In the game</th><th>Technical term</th><th>In biology</th></tr>'+rows.map(r=>'<tr><td>'+r[0]+'</td><td>'+r[1]+'</td><td>'+r[2]+'</td></tr>').join('')+'</table>':'')+
+    got.map(v=>{const s=v.src&&SRC[v.src];
+      return '<div class="gentry"><h4>'+v.name+'</h4><p>'+v.def+'</p><p class="gmeta">Met in level '+(S.earnedAt[v.id]||'?')+
+        (s?' · Source: <a href="'+s.url+'" target="_blank" rel="noopener">'+s.cite+', “'+s.title+'”</a>':'')+
+        (v.code?' · Code it: <a href="https://rosalind.info/problems/'+v.code.toLowerCase()+'/" target="_blank" rel="noopener">Rosalind '+v.code+'</a>':'')+'</p></div>';}).join('')+
+    (got.length?'<p style="margin-top:10px"><button id="printGuide">Print field guide</button></p>':'<p class="gmeta">Nothing yet. Finish level 1.</p>');
+}
+function renderControls(){
+  const Hd=HANDLERS[cur.mode],sk=Hd.skip?Hd.skip(cur):null,b=$('#skip');
+  b.hidden=!sk;b.textContent=sk?sk:'';
+  const w=$('#walk');w.hidden=!Hd.walk||cur.done||!(Hd.canWalk?Hd.canWalk(cur):true);
+  w.textContent='Walk it ('+cur.walkLeft+' left)';w.disabled=cur.walkLeft<=0;
+  $('#undo').hidden=!Hd.undo;$('#undo').disabled=cur.done||!(Hd.canUndo&&Hd.canUndo(cur));
+  $('#restart').disabled=false;
+}
+function render(){
+  renderHeader();
+  $('#title').textContent='Level '+cur.L.id+': '+cur.L.title;
+  $('#brief').textContent=typeof cur.L.brief==='function'?cur.L.brief():cur.L.brief;
+  const Hd=HANDLERS[cur.mode];
+  $('#rule').textContent=Hd.rule(cur);
+  const sc=Hd.scene(cur);$('#cave').style.display=sc.hide?'none':'';shade(sc.lit?'lit':'dark');$('#scene').innerHTML=sc.svg||'';
+  if(sc.surveyor!==undefined&&sc.surveyor!==null)setSurveyor(true,sc.surveyor);else setSurveyor(null);
+  $('#cave').setAttribute('aria-label',sc.label||'The mountain');
+  $('#work').innerHTML=Hd.work(cur)||'';
+  $('#status').textContent=cur.msg.text;$('#status').className='status '+cur.msg.kind;
+  renderControls();renderPanel();renderGuide();
+  if(cur.focus){const el=document.querySelector('[data-in="'+cur.focus+'"]');if(el&&el.focus)el.focus();}
+}
+
+/* ---------- one entry point for every move ---------- */
+function act(type,d){
+  d=d||{};
+  if(type==='level')return loadLevel(d.id);
+  if(type==='next')return loadLevel(Math.min(LEVELS.length,cur.L.id+1));
+  if(type==='restart'){log('restart');return loadLevel(cur.L.id);}
+  if(type==='fresh'){S.variants[cur.L.id]=(S.variants[cur.L.id]||0)+1;log('new_puzzle');save();return loadLevel(cur.L.id);}
+  const Hd=HANDLERS[cur.mode];
+  if(cur.done&&type!=='hover')return;
+  if(type==='in'){
+    if(Hd.input&&!cur.hand[d.id]){Hd.input(cur,d);return render();}
+    const c=cur.hand[d.id];if(!c||c.ok)return;
+    const raw=String(d.value).trim().replace(',','.');c.val=raw;if(raw==='')return render();
+    const v=Number(raw);
+    if(isFinite(v)&&near(v,c.want)){c.ok=true;c.bad=false;cur.hotCells=[];log('hand',{id:d.id,value:v,ok:true});
+      if(Hd.onHand)Hd.onHand(cur,d.id);}
+    else{c.bad=true;c.tries++;cur.wrong++;cur.hotCells=c.ops;log('hand',{id:d.id,value:raw,ok:false});
+      if(Hd.onWrong)Hd.onWrong(cur,d.id,v);else say('That number does not come out of the chart. The cells it comes from are lit.','warn');
+      cur.focus=d.id;}
+    return render();
+  }
+  if(type==='walk'){if(!Hd.walk||cur.walkLeft<=0)return;cur.walkLeft--;cur.walks++;Hd.walk(cur);return render();}
+  if(type==='undo'){if(Hd.undo&&Hd.canUndo&&Hd.canUndo(cur)){Hd.undo(cur);log('undo');}return render();}
+  if(type==='skip'){if(Hd.skipAct)Hd.skipAct(cur);return render();}
+  if(Hd.act&&Hd.act(cur,type,d)!==false)render();
+}
+
+document.addEventListener('click',ev=>{
+  const t=ev.target.closest&&ev.target.closest('[data-act],[data-n],[data-e],[data-lvl],[data-cell],[data-col],#next,#printGuide');
+  if(!t)return;const d=t.dataset;
+  if(d.act==='dig')act('dig',{e:cur.sel,x:$('#digX').value,from:$('#digFrom').value,L:$('#digL').value});
+  else if(d.act)act(d.act,Object.assign({},d));
+  else if(d.lvl!==undefined)act('level',{id:+d.lvl});
+  else if(d.cell!==undefined){const [i,j]=d.cell.split(',').map(Number);act('cell',{i,j});}
+  else if(d.col!==undefined)act('col',{c:+d.col});
+  else if(d.e!==undefined)act('tunnel',{e:+d.e});
+  else if(d.n!==undefined)act('node',{v:+d.n});
+  else if(t.id==='next')act('next');
+  else if(t.id==='printGuide'){$('#guide').open=true;window.print();}
+});
+document.addEventListener('change',ev=>{const t=ev.target;if(t&&t.dataset&&t.dataset.in!==undefined)act('in',{id:t.dataset.in,value:t.value});});
+document.addEventListener('keydown',ev=>{
+  const t=ev.target;
+  if(t&&t.dataset&&t.dataset.in!==undefined&&ev.key==='Enter'){ev.preventDefault();act('in',{id:t.dataset.in,value:t.value});return;}
+  if(t&&t.id==='digX'&&ev.key==='Enter'){ev.preventDefault();$('#digL').focus();return;}
+  if(t&&t.id==='digL'&&ev.key==='Enter'){ev.preventDefault();act('dig',{e:cur.sel,x:$('#digX').value,from:$('#digFrom').value,L:$('#digL').value});return;}
+  const g=t&&t.closest&&t.closest('g[data-n]');
+  if(g&&(ev.key==='Enter'||ev.key===' ')){ev.preventDefault();act('node',{v:+g.dataset.n});}
+});
+$('#undo').onclick=()=>act('undo');
+$('#restart').onclick=()=>act('restart');
+$('#fresh').onclick=()=>act('fresh');
+$('#walk').onclick=()=>act('walk');
+$('#skip').onclick=()=>act('skip');
+$('#seed').value=S.seed;
+$('#setSeed').onclick=()=>{const v=$('#seed').value.trim();if(!v||v===S.seed)return;S=freshState(v);save();cur=null;loadLevel(previewLevel||1);};
+$('#dl').onclick=()=>{
+  const blob=new Blob([JSON.stringify({game:'hollow-mountain',version:1,seed:S.seed,exported:new Date().toISOString(),
+    unlocked:S.unlocked,vocabulary:S.badges,earnedAt:S.earnedAt,events:S.log},null,1)],{type:'application/json'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='hollow-mountain-'+S.seed.replace(/[^\w-]/g,'_')+'.json';
+  document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),1000);
+};
+
+if(BENCH)bench();else loadLevel(previewLevel||Math.min(S.unlocked,LEVELS.length));
+/* Test handle, only with ?debug=1 in the address. */
+if(params.get('debug'))window.__hm={state:()=>cur,saved:()=>S,loadLevel,act,levels:()=>LEVELS.map(l=>({id:l.id,title:l.title})),
+  vocab:()=>VOCAB.map(v=>({id:v.id,name:v.name})),earned:()=>S.badges.slice(),log:()=>S.log.slice(),render};
+})();
+</script>
+</body>
+</html>

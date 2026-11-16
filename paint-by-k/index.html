@@ -1,0 +1,1293 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Paint by k</title>
+<style>
+:root{
+  --bg:#f6f4ee; --panel:#fffdf8; --ink:#1f2328; --muted:#6b7078; --line:#d9d4c7;
+  --accent:#c2410c; --accent-ink:#ffffff; --good:#2e7d4f; --warn:#b4541a; --chip:#e3f0f3;
+  /* the shop is an illustration: one palette in both themes */
+  --paper:#fbf8f1; --paper-edge:#d8cfbb; --wood:#8a5a32; --wood2:#c08a55; --steel:#5d6670; --gold:#f2a900;
+}
+@media (prefers-color-scheme:dark){
+  :root{--bg:#15181c; --panel:#1d2126; --ink:#e8e6e1; --muted:#9aa0a8; --line:#343a42;
+    --accent:#ff9b5e; --accent-ink:#2b1200; --good:#6fcf97; --warn:#f0a36b; --chip:#1d3a44;}
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 system-ui,-apple-system,"Segoe UI",sans-serif}
+.wrap{max-width:960px;margin:0 auto;padding:20px 16px 40px}
+header{display:flex;flex-wrap:wrap;align-items:center;gap:10px 18px;margin-bottom:8px}
+h1{font-size:1.35rem;margin:0;display:flex;align-items:center;gap:8px}
+h1 svg{width:40px;height:40px}
+h1 a{color:inherit;text-decoration:none}
+.count{font-size:.9rem;color:var(--muted);margin-left:auto}
+.count b{color:var(--ink)}
+h2{font-size:1.1rem;margin:18px 0 4px}
+h3{font-size:1rem;margin:10px 0 4px}
+p{margin:4px 0 12px}
+.mono,svg text{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+button{font:inherit;color:var(--ink);background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:6px 12px;cursor:pointer}
+button:hover:not(:disabled){border-color:var(--accent)}
+button:disabled{opacity:.45;cursor:default}
+button.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent);font-weight:600}
+button.advance{display:block;width:fit-content;max-width:100%;min-height:44px;margin-top:14px;padding:10px 18px;text-align:left}
+a{color:var(--accent)}
+input[type=number]{font:inherit;width:4.6em;padding:4px 6px;border:1px solid var(--line);border-radius:6px;background:var(--panel);color:var(--ink)}
+input.ok{border-color:var(--good);background:#e4f4ea;color:#14532d}
+input.bad{border-color:var(--warn)}
+.pips{display:flex;flex-wrap:wrap;gap:6px}
+.pips button{width:32px;height:32px;padding:0;border-radius:50%}
+.pips button.on{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.vocabhead{font-size:.75rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-top:8px}
+.badges{display:flex;flex-wrap:wrap;gap:6px;margin:4px 0;position:relative}
+.badge{font-size:.8rem;border:1px dashed var(--line);color:var(--muted);border-radius:999px;padding:2px 10px}
+.badge.got{border:1px solid var(--good);color:var(--good);font-weight:600}
+.term{cursor:help;position:relative}
+span.term:not(.badge){border-bottom:1px dotted currentColor;font-weight:600}
+.tip{display:none;position:absolute;left:0;top:calc(100% + 6px);z-index:20;width:min(360px,84vw);padding:9px 11px;border-radius:8px;
+  background:var(--ink);color:var(--bg);font:400 .82rem/1.45 system-ui,sans-serif;letter-spacing:0;text-transform:none;text-align:left;box-shadow:0 4px 14px rgba(0,0,0,.25)}
+.tip b{display:block;margin-bottom:2px;color:inherit}
+.term:hover>.tip,.term:focus>.tip{display:block}
+.badges .term{position:static}
+.rule{display:inline-flex;align-items:center;gap:8px;font-size:.9rem;font-weight:600;padding:3px 12px;border-radius:999px;background:var(--chip);margin-bottom:8px}
+.stage{border:1px solid var(--line);border-radius:12px;background:var(--panel);padding:12px}
+.row{display:flex;flex-wrap:wrap;gap:14px;align-items:flex-start}
+.fig{flex:1 1 200px;min-width:0;max-width:320px}
+.fig.map{flex:1 1 260px;max-width:360px}
+.fig svg{width:100%;height:auto;display:block;touch-action:manipulation}
+.cap{font-size:.75rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin:0 0 3px}
+.hoverinfo{font-size:.85rem;color:var(--muted);min-height:1.4em;margin-top:6px}
+.meter{display:flex;flex-wrap:wrap;gap:8px 16px;align-items:center;margin:10px 0 0;font-weight:600}
+.gauge{flex:1 1 220px;max-width:420px;color:var(--ink)}
+.gauge svg{width:100%;height:auto;display:block}
+.status{min-height:1.6em;margin:10px 2px 0;font-weight:500}
+.status.warn{color:var(--warn)} .status.good{color:var(--good)}
+.controls{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:12px}
+#go:not([hidden]) + .controls{margin-top:20px;padding-top:14px;border-top:1px solid var(--line)}
+.work{margin-top:12px;padding-top:10px;border-top:1px solid var(--line)}
+.work table{border-collapse:collapse;font-size:.92rem}
+.work td,.work th{padding:3px 7px;text-align:center;border-bottom:1px solid var(--line)}
+.work th{font-weight:600;color:var(--muted);font-size:.8rem}
+.scroll{overflow-x:auto;max-width:100%}
+.swatch{display:inline-block;width:1.1em;height:1.1em;border-radius:3px;vertical-align:-3px;border:1px solid rgba(0,0,0,.25)}
+.rowbtns{display:grid;grid-template-columns:repeat(12,1fr);gap:2px;margin-top:6px}
+.rowbtns button{height:44px;padding:0;border-radius:4px;border:1px solid #8b8475;min-width:0}
+.btnrow{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+/* cards */
+.deck{display:grid;grid-template-columns:repeat(auto-fill,minmax(112px,1fr));gap:8px}
+.gcard{padding:4px 4px 2px;border:2px solid var(--paper-edge);border-radius:8px;background:var(--paper);cursor:pointer;color:#2a2416;text-align:left}
+.gcard svg{width:100%;height:auto;display:block}
+.gcard .nm{font-size:.75rem;font-weight:700;color:#5b5240}
+.gcard.sel{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent)}
+.gcard.ctr{border-style:double;border-width:4px}
+.piles{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-top:10px}
+.pile{border:2px dashed var(--line);border-radius:10px;padding:6px;min-height:90px;background:transparent;text-align:left;cursor:pointer}
+.pile h4{margin:0 0 4px;font-size:.85rem}
+.pile .deck{grid-template-columns:repeat(auto-fill,minmax(70px,1fr));gap:4px}
+.compare{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px}
+.matrix button{min-width:2.6em;padding:3px 6px;font-family:ui-monospace,Menlo,monospace}
+.matrix button.min{outline:3px solid var(--gold)}
+.matrix th{font-family:ui-monospace,Menlo,monospace}
+/* reveals, sources, field guide */
+.reveal{border:1px solid var(--good);border-radius:12px;padding:14px 16px;margin-top:14px;background:var(--panel)}
+.reveal h3{margin:0 0 8px;font-size:1.05rem}
+.called{margin:10px 0 4px;padding-left:12px;border-left:3px solid var(--good)}
+.called p{margin:0}
+.src{margin:4px 0 10px 15px;padding:8px 12px;border-radius:8px;background:var(--chip);font-size:.9rem}
+.src .tag{display:block;font-size:.7rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted)}
+.src a{font-weight:600}
+.illus{display:inline-block;font-size:.72rem;text-transform:uppercase;letter-spacing:.08em;border:1px solid var(--warn);color:var(--warn);border-radius:4px;padding:0 6px;margin-left:6px}
+.guide{margin-top:22px;border:1px solid var(--line);border-radius:12px;padding:10px 14px;background:var(--panel)}
+.guide summary{cursor:pointer;font-weight:600}
+.gentry{padding:8px 0;border-top:1px solid var(--line)}
+.gentry h4{margin:0;font-size:1rem}
+.gentry p{margin:2px 0;font-size:.92rem}
+.gmeta{color:var(--muted);font-size:.9rem}
+footer{margin-top:26px;padding-top:12px;border-top:1px solid var(--line);display:flex;flex-wrap:wrap;gap:10px;align-items:center;font-size:.9rem;color:var(--muted)}
+footer input{font:inherit;width:9em;padding:5px 8px;border:1px solid var(--line);border-radius:8px;background:var(--panel);color:var(--ink)}
+/* artwork */
+.px{shape-rendering:crispEdges}
+.px.hand{cursor:pointer}
+.sheet{fill:var(--paper);stroke:var(--paper-edge);stroke-width:2}
+.pin{fill:#b83a4b;stroke:#6e1f2a;stroke-width:.8}
+.grid{stroke:#e6e0d2;stroke-width:1}
+.axis{stroke:#8b8475;stroke-width:1.4}
+.axl{font-size:10px;fill:#6b6455}
+.dot{stroke:#2a2416;stroke-width:.8;cursor:pointer}
+.spot{fill:transparent;cursor:crosshair}
+.spot:hover{fill:rgba(0,0,0,.06)}
+.pot{cursor:pointer}
+.pot .can{fill:#c9ced4;stroke:#3d444c;stroke-width:1.2}
+.pot .band{fill:#9aa3ad}
+.pot .lid{stroke:#3d444c;stroke-width:1.2}
+.pot .num{font-size:10px;font-weight:700;fill:#1f2328;text-anchor:middle}
+.pot.sel .can{stroke:var(--accent);stroke-width:2.6}
+.pot.locked{cursor:default}
+.ruler{stroke:#2a2416;stroke-width:2.2;stroke-dasharray:5 3}
+.ruler.best{stroke:#2e7d4f;stroke-width:3;stroke-dasharray:none}
+.rlab{font-size:11px;font-weight:700;fill:#2a2416;paint-order:stroke;stroke:#fbf8f1;stroke-width:4px;text-anchor:middle}
+.worst{fill:none;stroke:var(--gold);stroke-width:3;animation:glow 1.1s ease-in-out infinite}
+.mark{fill:none;stroke:#1f2328;stroke-width:2}
+.stripbox{fill:none;stroke:#1f2328;stroke-width:2;stroke-dasharray:4 3}
+.curpx{fill:none;stroke:var(--accent);stroke-width:3}
+@keyframes glow{50%{stroke-opacity:.2}}
+.try{fill:none;stroke:#6b6455;stroke-width:1.2;stroke-dasharray:2 2}
+.tlab{font-size:9px;fill:#6b6455}
+.cline{fill:none;stroke-width:2.2;stroke-linejoin:round;stroke-linecap:round}
+.chart-axis{stroke:#cfc6b0;stroke-width:1}
+.press{animation:press .5s ease-out}
+@keyframes press{from{opacity:.2;transform:translateY(-4px)}to{opacity:1;transform:none}}
+[hidden]{display:none!important}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+@media (max-width:600px){
+  .fig,.fig.map{flex:1 1 100%;max-width:none}
+  .row.two .fig{flex:1 1 calc(50% - 7px)}
+  .row.two .fig.map{flex:1 1 100%}
+  .row.two .fig.act{flex:1 1 100%}
+  .deck{grid-template-columns:repeat(auto-fill,minmax(96px,1fr))}
+  .piles{grid-template-columns:1fr}
+}
+@media print{
+  body{background:#fff;color:#000}
+  .wrap>*:not(#guide){display:none!important}
+  .guide{border:0;padding:0;margin:0}
+  .guide summary,#printGuide{display:none}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1><svg viewBox="0 0 40 40" aria-hidden="true"><rect x="3" y="3" width="34" height="34" rx="7" fill="#fbf8f1" stroke="#d8cfbb" stroke-width="2"/>
+      <rect x="9" y="9" width="7" height="7" fill="rgb(218,104,85)"/><rect x="16" y="9" width="7" height="7" fill="rgb(85,118,213)"/><rect x="23" y="9" width="7" height="7" fill="rgb(218,104,85)"/>
+      <rect x="9" y="16" width="7" height="7" fill="rgb(117,63,117)"/><rect x="16" y="16" width="7" height="7" fill="rgb(218,104,85)"/><rect x="23" y="16" width="7" height="7" fill="rgb(85,118,213)"/>
+      <rect x="9" y="23" width="7" height="7" fill="rgb(85,118,213)"/><rect x="16" y="23" width="7" height="7" fill="rgb(117,63,117)"/><rect x="23" y="23" width="7" height="7" fill="rgb(218,104,85)"/></svg>Paint by k</h1>
+    <div class="pips" id="pips" aria-label="Levels"></div>
+    <div class="count" id="count"></div>
+  </header>
+  <div id="game">
+  <div class="vocabhead">Vocabulary you have earned <span style="text-transform:none;letter-spacing:0">(hover for the definition)</span></div>
+  <div class="badges" id="badges"></div>
+  <h2 id="title"></h2>
+  <p id="brief"></p>
+  <div class="rule" id="rule"></div>
+  <div class="stage" id="stage"></div>
+  <div class="status" id="status" role="status"></div>
+  <button id="go" class="primary advance" hidden></button>
+  <div class="controls">
+    <button id="undo">Undo</button>
+    <button id="restart">Restart level</button>
+    <button id="fresh">New puzzle</button>
+  </div>
+  <div id="panel"></div>
+  <details class="guide" id="guide">
+    <summary>Field guide: your glossary and sources (<span id="gcount"></span>)</summary>
+    <div id="guideBody"></div>
+  </details>
+  </div>
+  <div id="bench" hidden></div>
+  <footer>
+    <a href="../">All games</a>
+    <label for="seed">Puzzle code</label>
+    <input id="seed" autocomplete="off" spellcheck="false">
+    <button id="setSeed">Use code (resets progress)</button>
+    <button id="dl">Download move log</button>
+  </footer>
+</div>
+<style id="hov"></style>
+<script id="engine">
+/* Pure puzzle logic: no DOM. Every puzzle is a function of (puzzle code, level). */
+function hashStr(s){let h=2166136261>>>0;for(let i=0;i<s.length;i++){h^=s.charCodeAt(i);h=Math.imul(h,16777619);}return h>>>0;}
+function rng(seed){let a=seed>>>0;return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
+function shuffled(n,rand){const a=[...Array(n).keys()];for(let i=n-1;i>0;i--){const j=Math.floor(rand()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+const clampInk=x=>Math.max(0,Math.min(10,x));
+
+/* ---------- geometry of points in any number of dimensions ---------- */
+function dist2(a,b){let s=0;for(let i=0;i<a.length;i++){const d=a[i]-b[i];s+=d*d;}return s;}
+function dist(a,b){return Math.sqrt(dist2(a,b));}
+/* index of the nearest center; ties go to the lowest index */
+function nearest(p,centers){let best=0,bd=Infinity;centers.forEach((c,j)=>{const d=dist2(p,c);if(d<bd-1e-12){bd=d;best=j;}});return best;}
+function assign(data,centers){return data.map(p=>nearest(p,centers));}
+function maxDistance(data,centers){let m=0;data.forEach(p=>{m=Math.max(m,dist(p,centers[nearest(p,centers)]));});return m;}
+function worstIndex(data,centers){let w=0,m=-1;data.forEach((p,i)=>{const d=dist2(p,centers[nearest(p,centers)]);if(d>m+1e-12){m=d;w=i;}});return w;}
+/* Squared error distortion: the mean squared distance from each point to its nearest center. */
+function distortion(data,centers){let s=0;data.forEach(p=>{s+=dist2(p,centers[nearest(p,centers)]);});return s/data.length;}
+/* The same mean, but with each point charged to the center it is assigned to (between Lloyd's half-steps). */
+function labelError(data,centers,labels){let s=0;data.forEach((p,i)=>{s+=dist2(p,centers[labels[i]]);});return s/data.length;}
+function centroid(points){const m=points[0].length,c=Array(m).fill(0);points.forEach(p=>{for(let i=0;i<m;i++)c[i]+=p[i];});return c.map(x=>x/points.length);}
+/* Farthest-first traversal (Gonzalez 1985): start from data[first]; each new center is the point farthest from all centers so far. */
+function farthestFirst(data,k,first){
+  const idx=[first||0];
+  while(idx.length<k){const cs=idx.map(i=>data[i]);idx.push(worstIndex(data,cs));}
+  return {idx,centers:idx.map(i=>data[i].slice())};
+}
+/* One Lloyd half-step each way. A center with no points stays where it is. */
+function moveCenters(data,centers,labels){
+  return centers.map((c,j)=>{const mine=data.filter((_,i)=>labels[i]===j);return mine.length?centroid(mine):c.slice();});
+}
+/* The Lloyd algorithm (Lloyd 1982). Returns every half-step so a screen or a test can replay it.
+   A round = repaint (assign) then re-average (move). It has converged when a repaint changes nothing. */
+function lloyd(data,start,maxRounds){
+  maxRounds=maxRounds||100;
+  let centers=start.map(c=>c.slice()),labels=null;const steps=[];let rounds=0;
+  while(rounds<maxRounds){
+    const nl=assign(data,centers);
+    const changed=!labels||nl.some((l,i)=>l!==labels[i]);
+    if(!changed){steps.push({kind:'assign',labels:nl,centers,err:labelError(data,centers,nl),changed:false});break;}
+    labels=nl;steps.push({kind:'assign',labels,centers,err:labelError(data,centers,labels),changed:true});
+    centers=moveCenters(data,centers,labels);
+    steps.push({kind:'move',labels,centers,err:labelError(data,centers,labels),changed:true});
+    rounds++;
+  }
+  return {centers,labels,steps,rounds,err:labelError(data,centers,labels)};
+}
+/* Hierarchical clustering with the average distance between groups, D_avg.
+   Hollow Mountain (the tree unit) builds UPGMA the same way; this is its own copy of that merge-the-closest loop,
+   because each game is one self-contained file. Returns merges in order: {a,b (member lists), d, members}. */
+function groupDist(D,A,B){let s=0;A.forEach(i=>B.forEach(j=>{s+=D[i][j];}));return s/(A.length*B.length);}
+function hierarchical(D){
+  let groups=D.map((_,i)=>[i]);const merges=[];
+  while(groups.length>1){
+    let bi=0,bj=1,bd=Infinity,second=Infinity;
+    for(let i=0;i<groups.length;i++)for(let j=i+1;j<groups.length;j++){
+      const d=groupDist(D,groups[i],groups[j]);
+      if(d<bd-1e-9){second=bd;bd=d;bi=i;bj=j;}else if(d<second)second=d;
+    }
+    const merged=groups[bi].concat(groups[bj]);
+    merges.push({a:groups[bi],b:groups[bj],d:bd,gap:second-bd,members:merged});
+    groups=groups.filter((_,i)=>i!==bi&&i!==bj).concat([merged]);
+  }
+  return merges;
+}
+/* Cut the tree of merges to leave k groups. */
+function cutTree(n,merges,k){let groups=Array.from({length:n},(_,i)=>[i]);for(const m of merges.slice(0,n-k)){groups=groups.filter(g=>!m.members.includes(g[0]));groups.push(m.members.slice());}return groups;}
+
+/* ---------- the ink of a pixel, as a screen colour ----------
+   Red ink absorbs green and blue light; blue ink absorbs red and green. Paper is white. */
+function inkRGB(r,b){
+  const c=x=>Math.max(18,Math.min(255,Math.round(x)));
+  return 'rgb('+c(255-19*b-2*r)+','+c(255-21*r-18*b)+','+c(255-19*r-3*b)+')';
+}
+
+/* ---------- pictures: designed 12 x 12 pixel art, three ink regions, seeded jitter ---------- */
+const PICTURES={
+  tulip:{name:'tulip',base:{a:[8,1],b:[6,6],c:[1,1]},rows:[
+    'cccccccccccc','ccccaccacccc','cccaacaaaccc','cccaaaaaaccc','cccaaaaaaccc','ccccaaaacccc',
+    'cccccbbccccc','ccbccbbccccc','ccbbcbbccbcc','cccbbbbcbbcc','cccccbbbbccc','cccccbbccccc']},
+  fish:{name:'fish',base:{a:[9,1],b:[6,7],c:[1,5]},rows:[
+    'cccccccccccc','cccccccccccc','ccccbbbccccc','cccaaaaaccbc','ccaaaaaaacbb','caacaaaaabbb',
+    'caaaaaaaabbb','ccaaaaaaacbb','cccaaaaaccbc','ccccbbcccccc','cccccccccccc','cccccccccccc']},
+  mushroom:{name:'mushroom',base:{a:[9,1],b:[1,1],c:[2,8]},stray:[1,10],strayInk:[10,10],rows:[
+    'cccccccccccc','ccccaaaacccc','ccaaaaaaaacc','caaaaaaaaaac','caaaaaaaaaac','cccbbbbbbccc',
+    'ccccbbbbcccc','ccccbbbbcccc','ccccbbbbcccc','ccccbbbbcccc','cccbbbbbbccc','cccccccccccc']},
+  heart:{name:'heart',base:{a:[8,2],b:[1,1],c:[2,7]},rows:[
+    'cccccccccccc','ccaaccccaacc','caaaaccaaaac','aabaaaaaaaaa','abbaaaaaaaaa','aabaaaaaaaaa',
+    'caaaaaaaaaac','ccaaaaaaaacc','cccaaaaaaccc','ccccaaaacccc','cccccaaccccc','cccccccccccc']},
+  boat:{name:'sailboat',base:{a:[8,2],b:[1,1],c:[2,8]},rows:[
+    'cccccccccccc','cccccbcccccc','ccccbbcccccc','cccbbbcccccc','ccbbbbbccccc','cbbbbbbbcccc',
+    'cccccacccccc','caaaaaaaaaac','ccaaaaaaaacc','cccaaaaaaccc','cccccccccccc','cccccccccccc']},
+  house:{name:'house',base:{a:[9,2],b:[1,1],c:[2,8]},rows:[
+    'cccccccccccc','cccccaaccccc','ccccaaaacccc','cccaaaaaaccc','ccaaaaaaaacc','caaaaaaaaaac',
+    'ccbbbbbbbbcc','ccbbcbbbbbcc','ccbbcbbccbcc','ccbbbbbccbcc','ccbbbbbbbbcc','cccccccccccc']}
+};
+function makePicture(key,name){
+  const P=PICTURES[name],rand=rng(hashStr(key+'|pic|'+name)),W=12,H=12,px=[],region=[];
+  const j=()=>rand()<.5?0:rand()<.5?-1:1;   // half the inks are exact, the rest one unit off
+  for(let y=0;y<H;y++)for(let x=0;x<W;x++){
+    const r=P.rows[y][x];region.push(r);const b=P.base[r];
+    px.push([clampInk(b[0]+j()),clampInk(b[1]+j())]);
+  }
+  if(P.stray){const i=P.stray[0]*W+P.stray[1];px[i]=P.strayInk.slice();region[i]='x';}
+  return {name:P.name,design:name,W,H,px,region,base:P.base};
+}
+/* Nudge the jitter of the listed pixels, one unit at a time and never beyond base +- 1 or 0..10,
+   so that their average comes out a whole number in both inks. */
+function fixMean(pic,ids){
+  for(let ch=0;ch<2;ch++){
+    const n=ids.length,s=ids.reduce((t,i)=>t+pic.px[i][ch],0);
+    let diff=Math.round(s/n)*n-s;
+    for(const i of ids){
+      if(!diff)break;
+      const base=pic.base[pic.region[i]][ch],v=pic.px[i][ch],step=Math.sign(diff),nv=v+step;
+      if(nv>=0&&nv<=10&&Math.abs(nv-base)<=1){pic.px[i][ch]=nv;diff-=step;}
+    }
+    if(diff)return false;
+  }
+  return true;
+}
+const regionIds=(pic,r)=>pic.region.map((x,i)=>x===r?i:-1).filter(i=>i>=0);
+
+/* ---------- expression cards: seven whole-number heights 0..10 ---------- */
+const PATTERNS={rise:[5,5,5,6,7,9,10],fall:[5,5,5,4,3,1,0],pulse:[2,4,7,9,7,4,2],flat:[5,5,5,5,5,5,5],
+  on:[4,4,4,5,7,9,10],off:[6,6,6,5,3,1,0]};
+function noisy(base,rand){return base.map(v=>clampInk(v+Math.floor(rand()*3)-1));}
+
+/* ---------- level instances ---------- */
+const GEN={};
+/* Level 1 and 8: twelve cards, four of each of three patterns, two of them hybrids of two patterns. */
+GEN.cards=function(key){
+  const names=['rise','fall','pulse'];
+  for(let t=0;t<500;t++){
+    const rand=rng(hashStr(key+'|cards|'+t)),cards=[];
+    names.forEach((nm,g)=>{for(let i=0;i<4;i++)cards.push({v:noisy(PATTERNS[nm],rand),group:g,hybrid:null});});
+    // two hybrids: the last card of two groups is pulled halfway toward another pattern
+    [[0,2],[1,2]].forEach(([g,h])=>{const c=cards[g*4+3];const mix=PATTERNS[names[g]].map((v,i)=>Math.round((v+PATTERNS[names[h]][i])/2));c.v=noisy(mix,rand);c.hybrid=h;});
+    const order=shuffled(12,rand),deck=order.map(i=>cards[i]);
+    const data=deck.map(c=>c.v);
+    // start centers: one pure card from each group
+    const start=[0,1,2].map(g=>deck.findIndex(c=>c.group===g&&c.hybrid===null));
+    const L=lloyd(data,start.map(i=>data[i]));
+    if(L.rounds>5)continue;
+    // three groups: every pure card ends with all the pure cards of its own pattern, and no two patterns share a pile
+    const pileOf=g=>new Set(deck.map((c,i)=>c.group===g&&c.hybrid===null?L.labels[i]:-1).filter(x=>x>=0));
+    const piles=[0,1,2].map(pileOf);
+    if(piles.some(p=>p.size!==1)||new Set(piles.map(p=>[...p][0])).size!==3)continue;
+    // by hand: two cards (not centers) measured to the three centers; nearest unique
+    const others=deck.map((_,i)=>i).filter(i=>!start.includes(i));
+    const hand=[others[0],others[others.length-1]];
+    const C=start.map(i=>data[i]);
+    if(hand.some(i=>{const d=C.map(c=>dist2(data[i],c)).sort((a,b)=>a-b);return d[1]-d[0]<3;}))continue;
+    // one hour of one new center after the first repaint must come out whole
+    const lab=assign(data,C);let coord=null;
+    for(let j=0;j<3&&!coord;j++){const mine=data.filter((_,i)=>lab[i]===j);
+      for(let h=0;h<7;h++){const s=mine.reduce((t,p)=>t+p[h],0);if(mine.length>1&&s%mine.length===0){coord={center:j,hour:h,value:s/mine.length,count:mine.length};break;}}}
+    if(!coord)continue;
+    return {deck,data,start,hand,coord,lloyd:L};
+  }
+  throw new Error('cards');
+};
+/* The second sorting shown in level 1: the given piles with each hybrid moved to the pile of its other parent. */
+function otherSorting(deck,piles){
+  const p=piles.slice();
+  deck.forEach((c,i)=>{
+    if(c.hybrid===null)return;
+    const votes=[0,0,0];deck.forEach((d,j)=>{if(d.group===c.hybrid&&d.hybrid===null&&p[j]!=null)votes[p[j]]++;});
+    const to=votes.indexOf(Math.max(...votes));
+    if(to!==p[i])p[i]=to;else p[i]=(p[i]+1)%3;
+  });
+  return p;
+}
+/* The error of a sorting into piles: each card measured to its own pile's average. */
+function pileError(data,piles,k){
+  const C=[];for(let j=0;j<k;j++){const m=data.filter((_,i)=>piles[i]===j);C.push(m.length?centroid(m):data[0]);}
+  return labelError(data,C,piles);
+}
+/* Level 2: tulip, three pots on the region inks, a strip of eight pixels measured by hand. */
+GEN[2]=function(key){
+  const pic=makePicture(key,'tulip'),pots=['a','b','c'].map(r=>pic.base[r].slice());
+  // pots are nudged one unit so they are not exactly any region's ink
+  const rand=rng(hashStr(key+'|pots2'));pots.forEach(p=>{p[0]=clampInk(p[0]+(rand()<.5?1:-1));});
+  const row=8,strip=[];for(let x=2;x<10;x++)strip.push(row*12+x);
+  const pairs=strip.map(i=>{const d=pots.map((c,j)=>({j,d:dist2(pic.px[i],c)})).sort((a,b)=>a.d-b.d||a.j-b.j);return [d[0].j,d[1].j].sort((a,b)=>a-b);});
+  return {pic,pots,strip,pairs};
+};
+/* Level 3: fish. Pots are mixed to match pixels; the first is pixel 0. */
+GEN[3]=function(key){
+  for(let t=0;t<200;t++){
+    const pic=makePicture(key+'|'+t,'fish'),D=pic.px,ff=farthestFirst(D,3,0),best=maxDistance(D,ff.centers);
+    // decoy 1: the three commonest inks; decoy 2: the first pot and two pixels chosen at random
+    const cnt={};D.forEach(p=>{const s=p.join(',');cnt[s]=(cnt[s]||0)+1;});
+    const common=Object.keys(cnt).sort((a,b)=>cnt[b]-cnt[a]||(a<b?-1:1)).slice(0,3).map(s=>s.split(',').map(Number));
+    const rand=rng(hashStr(key+'|decoy|'+t));let r1,r2;do{r1=1+Math.floor(rand()*143);r2=1+Math.floor(rand()*143);}while(r1===r2);
+    const decoys=[{name:'the three commonest inks',centers:common},{name:'the first pot and two pixels picked at random',centers:[D[0],D[r1],D[r2]]}];
+    decoys.forEach(d=>d.max=maxDistance(D,d.centers));
+    if(decoys.every(d=>best<d.max-1e-9))return {pic,ff,best,decoys,k:3};
+  }
+  throw new Error('fish');
+};
+/* Level 4: mushroom with one stray pixel. */
+GEN[4]=function(key){
+  for(let t=0;t<200;t++){
+    const pic=makePicture(key+'|'+t,'mushroom'),D=pic.px,ff=farthestFirst(D,3,0);
+    const stray=pic.region.indexOf('x');
+    if(!ff.idx.includes(stray))continue;
+    const fftErr=distortion(D,ff.centers);
+    const good=lloyd(D,['a','b','c'].map(r=>D[regionIds(pic,r)[0]]));
+    if(fftErr<1.5*good.err)continue;
+    const rounded=good.centers.map(c=>c.map(Math.round)),roundErr=distortion(D,rounded);
+    const target=Math.ceil(Math.max(roundErr,good.err*1.2)*10)/10;
+    if(target>=fftErr*0.9)continue;
+    // six pixels for the hand calculation, one row across the cap and background plus the stem
+    const six=[3*12+0,3*12+5,5*12+2,6*12+5,9*12+6,11*12+11];
+    const sq=six.map(i=>dist2(D[i],ff.centers[nearest(D[i],ff.centers)]));
+    return {pic,ff,stray,fftErr,good,target,six,sq,k:3,fftMax:maxDistance(D,ff.centers)};
+  }
+  throw new Error('mushroom');
+};
+/* Level 5: heart. The red region's average and the four-pixel highlight's average are whole numbers. */
+GEN[5]=function(key){
+  for(let t=0;t<200;t++){
+    const pic=makePicture(key+'|'+t,'heart'),A=regionIds(pic,'a'),B=regionIds(pic,'b');
+    if(!fixMean(pic,A)||!fixMean(pic,B))continue;
+    const a=centroid(A.map(i=>pic.px[i])),b=centroid(B.map(i=>pic.px[i]));
+    if(B.length!==4)throw new Error('heart highlight must be four pixels');
+    // the four highlight pixels should not all be the same ink, or there is nothing to average
+    if(new Set(B.map(i=>pic.px[i].join())).size<3)continue;
+    return {pic,A,B,meanA:a,meanB:b};
+  }
+  throw new Error('heart');
+};
+/* Level 6: sailboat, scripted start. */
+GEN[6]=function(key){
+  for(let t=0;t<400;t++){
+    const pic=makePicture(key+'|'+t,'boat'),D=pic.px,rand=rng(hashStr(key+'|start6|'+t));
+    // scripted start: three pots a few units off, so the loop has work to do
+    const start=[[5+Math.floor(rand()*2),3],[3,5+Math.floor(rand()*2)],[1+Math.floor(rand()*2),9]];
+    // the hand re-average: the pot with the fewest pixels after the first repaint; its average is made whole
+    let lab=assign(D,start);const counts=[0,1,2].map(j=>lab.filter(l=>l===j).length);
+    const handPot=counts.indexOf(Math.min(...counts.filter(c=>c>=4)));
+    if(handPot<0||!fixMean(pic,lab.map((l,i)=>l===handPot?i:-1).filter(i=>i>=0)))continue;
+    if(assign(D,start).some((l,i)=>l!==lab[i]))continue;
+    const L=lloyd(D,start);
+    if(L.rounds>6||L.rounds<3||L.err>2)continue;
+    const errs=L.steps.filter(s=>s.changed).map(s=>s.err);
+    if(errs.some((e,i)=>i&&e>=errs[i-1]-1e-9))continue;
+    // the hand row: a row where the first repaint uses at least two pots
+    let row=-1;
+    for(const y of [7,5,4,8,6,3]){const s=new Set(lab.slice(y*12,y*12+12));if(s.size>=2){row=y;break;}}
+    if(row<0)continue;
+    return {pic,start,lloyd:L,row,handPot};
+  }
+  throw new Error('boat');
+};
+/* Level 7: house. A bad start (two pots almost the same colour) against the level 3 start. */
+GEN[7]=function(key){
+  for(let t=0;t<200;t++){
+    const pic=makePicture(key+'|'+t,'house'),D=pic.px,rand=rng(hashStr(key+'|bad|'+t));
+    const roof=pic.base.a,sky=pic.base.c;
+    // two pots on the roof, one between the sky and the wall: the wall never escapes to a pot of its own
+    const wall=pic.base.b,bad=[[roof[0],roof[1]],[roof[0]-1,roof[1]+Math.floor(rand()*2)],[sky[0],Math.round((sky[1]+wall[1])/2)+Math.floor(rand()*2)]];
+    const B=lloyd(D,bad),ff=farthestFirst(D,3,0),G=lloyd(D,ff.centers);
+    if(B.err<1.3*G.err)continue;
+    if(B.rounds>8||G.rounds>8)continue;
+    return {pic,bad,badRun:B,ff,goodRun:G};
+  }
+  throw new Error('house');
+};
+/* Level 8 uses GEN.cards with the same key as level 1. */
+/* Level 9: eight cards, a whole-number distance matrix, no tied merge. */
+GEN[9]=function(key){
+  for(let t=0;t<2000;t++){
+    const rand=rng(hashStr(key+'|tree|'+t)),groups=[0,0,0,1,1,1,2,2],names=['rise','fall','pulse'];
+    const order=shuffled(8,rand),cards=order.map(i=>({v:noisy(PATTERNS[names[groups[i]]],rand),group:groups[i]}));
+    const D=cards.map(a=>cards.map(b=>Math.round(dist(a.v,b.v))));
+    const M=hierarchical(D);
+    if(M.some(m=>m.gap<0.25))continue;           // no merge is tied, and none is a near-tie
+    const cut=cutTree(8,M,3);
+    // the three groups the cut leaves are the three patterns
+    const ok=cut.every(g=>new Set(g.map(i=>cards[i].group)).size===1);
+    if(!ok)continue;
+    // after the first merge, one average typed by hand: to the lowest-numbered card left out
+    const m0=M[0],other=[...Array(8).keys()].find(i=>!m0.members.includes(i));
+    return {cards,D,merges:M,cut,hand:{group:m0.members,other,value:(D[m0.a[0]][other]+D[m0.b[0]][other])/2}};
+  }
+  throw new Error('tree');
+};
+/* Level 10: illustrative yeast genes at seven times around the shift (hour 0). */
+GEN[10]=function(key){
+  for(let t=0;t<200;t++){
+    const rand=rng(hashStr(key+'|shift|'+t)),genes=[];
+    ['on','off','flat'].forEach((nm,g)=>{for(let i=0;i<8;i++)genes.push({v:noisy(PATTERNS[nm],rand),group:g});});
+    const order=shuffled(genes.length,rand),deck=order.map(i=>genes[i]),data=deck.map(g=>g.v);
+    const ff=farthestFirst(data,3,0),L=lloyd(data,ff.centers);
+    const ok=[0,1,2].every(g=>new Set(deck.map((c,i)=>c.group===g?L.labels[i]:-1).filter(x=>x>=0)).size===1);
+    if(!ok||L.rounds>6)continue;
+    return {deck,data,ff,lloyd:L};
+  }
+  throw new Error('shift');
+};
+function makeLevel(seed,n){
+  const key=seed+'|L'+n;
+  if(n===1||n===8)return GEN.cards(seed+'|cards');
+  return GEN[n](key);
+}
+
+/* ---------- workbench parsing ---------- */
+function parsePoints(text){
+  return text.split(/\n/).map(l=>l.trim()).filter(l=>l&&!/^-+$/.test(l)).map(l=>l.split(/[\s,]+/).filter(Boolean).map(Number)).filter(p=>p.length&&p.every(Number.isFinite));
+}
+function bench(points,k,start){
+  const ff=farthestFirst(points,k,0);
+  const st=start&&start.length===k?start:points.slice(0,k);
+  const L=lloyd(points,st);
+  return {ff:{centers:ff.centers,max:maxDistance(points,ff.centers),err:distortion(points,ff.centers)},
+    lloyd:{start:st,steps:L.steps,centers:L.centers,max:maxDistance(points,L.centers),err:distortion(points,L.centers),rounds:L.rounds}};
+}
+if(typeof module!=='undefined')module.exports={hashStr,rng,shuffled,dist,dist2,nearest,assign,maxDistance,worstIndex,distortion,labelError,centroid,
+  farthestFirst,moveCenters,lloyd,groupDist,hierarchical,cutTree,inkRGB,PICTURES,makePicture,fixMean,regionIds,PATTERNS,GEN,otherSorting,pileError,makeLevel,parsePoints,bench};
+</script>
+<script id="ui">
+(function(){
+const KEY='paintbyk:v1';
+const $=s=>document.querySelector(s);
+const f1=x=>(Math.round(x*10)/10).toFixed(1),f2=x=>(Math.round(x*100)/100).toFixed(2);
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const plural=(n,w)=>n+' '+w+(n===1?'':'s');
+const same=(a,b)=>a.length===b.length&&a.every((x,i)=>Math.abs(x-b[i])<1e-9);
+const POTNAME=['pot 1','pot 2','pot 3','pot 4','pot 5'];
+const CARDN='ABCDEFGHIJKLMNOPQRSTUVWX';
+const PILECOL=['#c2410c','#2b5fb3','#2e7d4f'];
+const reduced=()=>{try{return matchMedia('(prefers-reduced-motion: reduce)').matches;}catch(e){return true;}};
+
+/* ---------- levels ---------- */
+const LEVELS=[
+ {id:1,mode:'sort',title:'Which genes move together?',
+  brief:'Each card is one yeast gene. Its seven dots are how active the gene was at seven times, two hours apart, while the yeast ate through its sugar. Genes that rise and fall together probably work together. Sort the twelve cards into three piles of look-alikes: click a card, then a pile.'},
+ {id:2,mode:'ruler',title:'Two inks',
+  brief:'A print shop with two inks, red and blue. Every colour in this tulip is some amount of red and some amount of blue, each from 0 to 10, so each pixel has a spot on the ink map. The shop has three pots of mixed paint, and the press prints every pixel from the pot nearest to it on the map. Do the press’s job for the eight pixels in the dashed strip: click two pots to lay the ruler from the pixel to each, then click the pot to print it from.'},
+ {id:3,mode:'worst',title:'The worst pixel',
+  brief:'A fish, and three pots to mix. A pot is mixed to match a pixel: click any pixel, in the picture or on the map. Pot 1 is already mixed. The meter shows the worst-printed pixel: how far it sits from its nearest pot. Bring that number down to the shop’s mark. Click a pot to pour it out.'},
+ {id:4,mode:'stray',title:'One stray pixel',
+  brief:'A mushroom, and a fly that landed on the sheet. Mix three pots the way you found in level 3: each new pot matches the pixel the meter is pointing at.'},
+ {id:5,mode:'gravity',title:'Where should a pot sit?',
+  brief:'All the red pixels of this heart are printed from one pot, and that will not change. You choose the pot’s ink: type its red and blue amounts and watch the error of those pixels. Find the ink that makes it as small as it can be.'},
+ {id:6,mode:'loop',title:'Repaint, re-average',
+  brief:'A sailboat, three pots in poor places, and a blank sheet. Two jobs, done by hand once each: print the sheet, every pixel from its nearest pot; then move each pot to the average ink of the pixels it printed. Then keep alternating until nothing changes.'},
+ {id:7,mode:'bad',title:'A bad start',
+  brief:'A house. Two of the three pots start almost the same colour. Run the two buttons until nothing changes.'},
+ {id:8,mode:'cards',title:'Seven numbers a gene',
+  brief:'Your twelve cards from level 1. A card has seven heights, so it would need a map with seven directions. There is nothing to look at, only arithmetic. Three cards serve as the starting pots.'},
+ {id:9,mode:'tree',title:'Family tree',
+  brief:'Eight genes. The table gives the distance between every two of them. Join the two closest groups, again and again, until one group is left. When two groups join, the distance from the new group to any other is the average over all pairs of members.'},
+ {id:10,mode:'shift',title:'The shift',
+  brief:'Twenty-four yeast genes measured at seven times, from six hours before the sugar ran out to six hours after. Sort them with the two buttons, starting from pots chosen by the level 3 move.'}
+];
+
+/* Primary sources. Each DOI was checked in Crossref; look lines come from the abstracts (Gonzalez: title only). */
+const SRC={
+ derisi:{cite:'DeRisi, Iyer & Brown, 1997',title:'Exploring the metabolic and genetic control of gene expression on a genomic scale',where:'Science 278, 680–686',
+  url:'https://doi.org/10.1126/science.278.5338.680',look:'Its abstract describes microarrays carrying virtually every yeast gene, used to follow expression through the metabolic shift from fermentation to respiration: the diauxic shift. Look for which known metabolic genes changed, and for the many unknown genes whose patterns hinted at their jobs.'},
+ gonzalez:{cite:'Gonzalez, 1985',title:'Clustering to minimize the maximum intercluster distance',where:'Theoretical Computer Science 38, 293–306',
+  url:'https://doi.org/10.1016/0304-3975(85)90224-5',look:'The 1985 paper behind farthest-first traversal, on choosing clusters so that the largest distance is as small as possible: your worst-pixel meter.'},
+ lloyd:{cite:'Lloyd, 1982',title:'Least squares quantization in PCM',where:'IEEE Transactions on Information Theory 28, 129–137',
+  url:'https://doi.org/10.1109/TIT.1982.1056489',look:'Written about pulse-code modulation, not genes: where to put a fixed number of signal levels so that the average quantization noise power, a squared error, is least. Look for the necessary conditions that an optimal scheme must satisfy.'},
+ eisen:{cite:'Eisen, Spellman, Brown & Botstein, 1998',title:'Cluster analysis and display of genome-wide expression patterns',where:'PNAS 95, 14863–14868',
+  url:'https://doi.org/10.1073/pnas.95.25.14863',look:'Its abstract describes arranging genes by similarity in their pattern of expression with standard statistical algorithms, displayed so biologists can read it, and reports that yeast genes of known similar function end up together.'}
+};
+const VOCAB=[
+ {id:'expvec',name:'Expression vector',src:'derisi',def:'A gene’s expression levels measured at m times or under m conditions, written as m numbers (e1, …, em). It is one row of the gene expression matrix.'},
+ {id:'clustering',name:'Clustering',def:'Partitioning items into groups so that items in the same group are similar and items in different groups are not (the good clustering principle).'},
+ {id:'point',name:'Data point',def:'One item to be clustered, written as a point in m-dimensional space: here a pixel with its two ink amounts; for a gene, its expression vector.'},
+ {id:'center',name:'Center',def:'A point chosen to stand for a cluster. Each data point belongs to the cluster of its nearest center.'},
+ {id:'cluster',name:'Cluster',def:'The set of data points whose nearest center is the same center.'},
+ {id:'euclid',name:'Euclidean distance',def:'d(v, w) = √((v1 − w1)² + … + (vm − wm)²): the length of the straight segment between points v and w in m-dimensional space.'},
+ {id:'kcenter',name:'k-center clustering',def:'Given data points and k, find k centers minimizing MaxDistance(Data, Centers), the largest distance from any data point to its nearest center. The problem is NP-hard.'},
+ {id:'fft',name:'Farthest-first traversal',src:'gonzalez',code:'BA8A',def:'Choose any data point as the first center; then, until there are k, add the data point farthest from all centers chosen so far. Its MaxDistance is never more than twice the best possible.'},
+ {id:'distortion',name:'Squared error distortion',code:'BA8B',def:'Distortion(Data, Centers) = (1/n) · Σ d(DataPoint, Centers)²: the average, over the n data points, of the squared distance to the nearest center.'},
+ {id:'kmeans',name:'k-means clustering',def:'Given data points and k, find k centers, anywhere in space, minimizing the squared error distortion. The problem is NP-hard in general.'},
+ {id:'gravity',name:'Center of gravity',def:'The point whose i-th coordinate is the average of the i-th coordinates of a set of points. It is the one point that minimizes the sum of squared distances to them (the Center of Gravity Theorem).'},
+ {id:'lloyd',name:'Lloyd algorithm',src:'lloyd',code:'BA8C',def:'Start from k centers and repeat two steps until the clusters stop changing: assign every data point to its nearest center (centers to clusters); move every center to its cluster’s center of gravity (clusters to centers). The distortion never rises, but where it stops depends on the start.'},
+ {id:'hier',name:'Hierarchical clustering',src:'eisen',code:'BA8E',def:'Start with every data point as its own cluster; repeatedly merge the two closest clusters, here by D_avg, the average distance over all pairs of members, recording each merge as a node of a tree. Cutting the tree at some height gives clusters.'},
+ {id:'diauxic',name:'Diauxic shift',src:'derisi',def:'The change a yeast culture makes when its glucose runs out: it switches from fermenting sugar into ethanol to living on the ethanol, and the expression of many genes changes with it.'}
+];
+const DEF={};VOCAB.forEach(v=>DEF[v.id]=v);
+/* inside a sentence a term is lower case, unless it carries a proper name */
+const inline=id=>/^(Euclidean|Lloyd)/.test(DEF[id].name)?DEF[id].name:DEF[id].name[0].toLowerCase()+DEF[id].name.slice(1);
+function term(id,label){return '<span class="term" tabindex="0">'+(label||inline(id))+'<span class="tip" role="tooltip"><b>'+DEF[id].name+'</b>'+DEF[id].def+'</span></span>';}
+
+/* ---------- saved state ---------- */
+const params=new URLSearchParams(location.search),urlSeed=params.get('seed');
+const requestedLevel=Number(params.get('level'));
+const previewLevel=Number.isInteger(requestedLevel)&&requestedLevel>=1&&requestedLevel<=LEVELS.length?requestedLevel:0;
+function load(){try{return JSON.parse(localStorage.getItem(KEY))||{};}catch(e){return {};}}
+function save(){if(previewLevel)return;try{localStorage.setItem(KEY,JSON.stringify(S));}catch(e){}}
+function freshState(seed){return {seed,unlocked:1,badges:[],earnedAt:{},variants:{},piles1:null,log:[]};}
+function randomCode(){const c='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';let s='';for(let i=0;i<6;i++)s+=c[Math.floor(Math.random()*c.length)];return s;}
+let S=previewLevel?freshState(urlSeed||randomCode()):load();
+if(urlSeed&&urlSeed!==S.seed)S=freshState(urlSeed);
+if(!S.seed)S=freshState(randomCode());
+save();
+
+let cur=null;
+function log(ev,data){
+ S.log.push(Object.assign({t:Date.now(),lvl:cur?cur.L.id:0,ev},data||{}));
+ if(S.log.length>8000)S.log.splice(0,S.log.length-8000);
+ save();
+}
+function say(text,kind){cur.msg={text,kind:kind||''};}
+function grant(ids){let fresh=false;ids.forEach(id=>{if(!S.badges.includes(id)){S.badges.push(id);S.earnedAt[id]=cur.L.id;fresh=true;}});return fresh;}
+function complete(ids,block,extra){
+ cur.done=true;cur.newTerms=ids.filter(id=>!S.badges.includes(id));grant(ids);cur.block=block;
+ if(cur.L.id<LEVELS.length)S.unlocked=Math.max(S.unlocked,cur.L.id+1);
+ log('complete',Object.assign({ms:Date.now()-cur.t0,earned:ids},extra||{}));
+}
+
+/* ---------- artwork: the sheet, the ink map, pots, cards ---------- */
+const CELL=18,OFF=10;
+const inkOf=p=>inkRGB(p[0],p[1]);
+const kcls=p=>'k-'+p[0]+'-'+p[1];
+/* fill(i) gives a pixel's colour or null for blank paper; o: {act, outline:[ids], worst, curPx, mark:[ids], id} */
+function sheetSvg(pic,fill,o){
+ o=o||{};let h='<svg viewBox="0 0 236 236" role="img" aria-label="'+esc(o.label||pic.name)+'"'+(o.id?' id="'+o.id+'"':'')+'>'+
+  '<rect class="sheet" x="3" y="3" width="230" height="230" rx="3"/><circle class="pin" cx="118" cy="6" r="3.2"/>';
+ pic.px.forEach((p,i)=>{
+  const x=OFF+(i%12)*CELL,y=OFF+Math.floor(i/12)*CELL,c=fill(i);
+  h+='<rect class="px '+kcls(p)+(o.act?' hand':'')+'" x="'+x+'" y="'+y+'" width="'+CELL+'" height="'+CELL+'" fill="'+(c||'#fbf8f1')+'"'+
+   (c?'':' stroke="#ece5d6" stroke-width=".6"')+(o.anim&&c?' style="animation:press .4s ease-out '+(Math.floor(i/12)*45)+'ms both"':'')+' data-px="'+i+'" data-ink="'+p.join(',')+'"'+(o.act?' data-act="'+o.act+'" data-arg="'+i+'"':'')+'/>';
+ });
+ const box=(ids,cls)=>{ids.forEach(i=>{h+='<rect class="'+cls+'" x="'+(OFF+(i%12)*CELL+1.5)+'" y="'+(OFF+Math.floor(i/12)*CELL+1.5)+'" width="'+(CELL-3)+'" height="'+(CELL-3)+'" pointer-events="none"/>';});};
+ if(o.strip){const a=o.strip[0],b=o.strip[o.strip.length-1];h+='<rect class="stripbox" x="'+(OFF+(a%12)*CELL-2)+'" y="'+(OFF+Math.floor(a/12)*CELL-2)+'" width="'+((b-a+1)*CELL+4)+'" height="'+(CELL+4)+'" pointer-events="none"/>';}
+ if(o.mark)box(o.mark,'mark');
+ if(o.worst!==undefined&&o.worst!==null)box([o.worst],'worst');
+ if(o.curPx!==undefined&&o.curPx!==null)box([o.curPx],'curpx');
+ return h+'</svg>';
+}
+const MX=r=>36+r*24,MY=b=>264-b*24;
+function potSvg(p,j,o){
+ o=o||{};const x=MX(p[0]),y=MY(p[1]);
+ return '<g class="pot'+(o.sel?' sel':'')+(o.locked?' locked':'')+'"'+(o.act?' data-act="'+o.act+'" data-arg="'+j+'"':'')+' role="button" tabindex="0" aria-label="'+POTNAME[j]+', red '+f1(p[0])+', blue '+f1(p[1])+'">'+
+  '<path class="can" d="M'+(x-9)+','+(y-4)+'v12a9,3.2 0 0 0 18,0v-12"/><rect class="band" x="'+(x-9)+'" y="'+(y+2)+'" width="18" height="2.4"/>'+
+  '<ellipse class="lid" cx="'+x+'" cy="'+(y-4)+'" rx="9" ry="3.4" fill="'+inkOf(p)+'"/>'+
+  '<circle cx="'+x+'" cy="'+y+'" r="2" fill="#1f2328"/>'+
+  '<circle cx="'+x+'" cy="'+(y+3)+'" r="16" fill="transparent"/>'+
+  '<text class="num" x="'+x+'" y="'+(y+23)+'">'+(j+1)+'</text></g>';
+}
+/* o: {points:[[r,b]], pots:[{p,sel,locked}], potAct, dotAct, spots:act, rulers:[{a,b,best,label}], worst:[r,b], tries:[{p,label}], focus:[r,b]} */
+function mapSvg(o){
+ let h='<svg viewBox="0 0 300 300" role="group" aria-label="Ink map: red across, blue up"'+(o.id?' id="'+o.id+'"':'')+'>'+
+  '<rect x="0" y="0" width="300" height="300" rx="8" fill="#fbf8f1"/>';
+ for(let i=0;i<=10;i++)h+='<line class="grid" x1="'+MX(i)+'" y1="'+MY(0)+'" x2="'+MX(i)+'" y2="'+MY(10)+'"/><line class="grid" x1="'+MX(0)+'" y1="'+MY(i)+'" x2="'+MX(10)+'" y2="'+MY(i)+'"/>';
+ h+='<line class="axis" x1="'+MX(0)+'" y1="'+MY(0)+'" x2="'+MX(10)+'" y2="'+MY(0)+'"/><line class="axis" x1="'+MX(0)+'" y1="'+MY(0)+'" x2="'+MX(0)+'" y2="'+MY(10)+'"/>';
+ for(let i=0;i<=10;i+=2)h+='<text class="axl" x="'+MX(i)+'" y="282" text-anchor="middle">'+i+'</text><text class="axl" x="24" y="'+(MY(i)+3)+'" text-anchor="end">'+i+'</text>';
+ h+='<text class="axl" x="276" y="296" text-anchor="end" fill="#a3402e">red ink →</text><text class="axl" transform="translate(11,24) rotate(-90)" text-anchor="end" fill="#2b5fb3">blue ink →</text>';
+ if(o.spots)for(let r=0;r<=10;r++)for(let b=0;b<=10;b++)h+='<rect class="spot" x="'+(MX(r)-12)+'" y="'+(MY(b)-12)+'" width="24" height="24" data-act="'+o.spots+'" data-arg="'+r+','+b+'"/>';
+ (o.tries||[]).forEach(t=>{h+='<circle class="try" cx="'+MX(t.p[0])+'" cy="'+MY(t.p[1])+'" r="9"/><text class="tlab" x="'+(MX(t.p[0])+11)+'" y="'+(MY(t.p[1])-8)+'">'+t.label+'</text>';});
+ const cnt={};(o.points||[]).forEach(p=>{const k=p.join(',');cnt[k]=(cnt[k]||0)+1;});
+ Object.keys(cnt).forEach(k=>{const p=k.split(',').map(Number);
+  h+='<circle class="dot '+kcls(p)+'" cx="'+MX(p[0])+'" cy="'+MY(p[1])+'" r="'+f1(3.2+Math.sqrt(cnt[k])*1.5)+'" fill="'+inkOf(p)+'" data-ink="'+k+'"'+(o.dotAct||o.spots?' data-act="'+(o.dotAct||o.spots)+'" data-arg="'+k+'"':'')+'/>';});
+ if(o.worst)h+='<circle class="worst" cx="'+MX(o.worst[0])+'" cy="'+MY(o.worst[1])+'" r="12" pointer-events="none"/>';
+ if(o.focus)h+='<circle class="curpx" cx="'+MX(o.focus[0])+'" cy="'+MY(o.focus[1])+'" r="11" pointer-events="none"/>';
+ (o.rulers||[]).forEach(r=>{const x1=MX(r.a[0]),y1=MY(r.a[1]),x2=MX(r.b[0]),y2=MY(r.b[1]);
+  h+='<line class="ruler'+(r.best?' best':'')+'" x1="'+x1+'" y1="'+y1+'" x2="'+x2+'" y2="'+y2+'" pointer-events="none"/>'+
+   '<text class="rlab" x="'+((x1+x2)/2)+'" y="'+((y1+y2)/2-5)+'">'+(r.label||f1(dist(r.a,r.b)))+'</text>';});
+ (o.pots||[]).forEach((q,j)=>{h+=potSvg(q.p,j,{sel:q.sel,locked:q.locked,act:o.potAct});});
+ return h+'</svg>';
+}
+/* A gene card: seven heights 0..10 joined by a line. */
+function chartSvg(v,o){
+ o=o||{};const X=i=>8+i*14,Y=y=>52-y*4.4;
+ let h='<svg viewBox="0 0 100 58" aria-hidden="true">';
+ [0,5,10].forEach(y=>{h+='<line class="chart-axis" x1="4" x2="96" y1="'+Y(y)+'" y2="'+Y(y)+'"/>';});
+ if(o.zero)h+='<line x1="'+X(3)+'" x2="'+X(3)+'" y1="4" y2="54" stroke="#b4541a" stroke-dasharray="2 2"/>';
+ (o.extra||[]).forEach(e=>{h+='<polyline class="cline" stroke="'+e.color+'" stroke-dasharray="4 2" points="'+e.v.map((y,i)=>X(i)+','+f1(Y(y))).join(' ')+'"/>';});
+ h+='<polyline class="cline" stroke="'+(o.color||'#2a2416')+'"'+(o.dashed?' stroke-dasharray="4 2"':'')+' points="'+v.map((y,i)=>X(i)+','+f1(Y(y))).join(' ')+'"/>';
+ if(!o.nodots)v.forEach((y,i)=>{h+='<circle cx="'+X(i)+'" cy="'+f1(Y(y))+'" r="2.2" fill="'+(o.color||'#2a2416')+'"/>';});
+ return h+'</svg>';
+}
+function cardHtml(v,name,o){
+ o=o||{};
+ return '<'+(o.act?'button':'div')+' class="gcard'+(o.sel?' sel':'')+(o.ctr?' ctr':'')+'"'+(o.act?' data-act="'+o.act+'" data-arg="'+o.arg+'"':'')+
+  ' style="'+(o.border?'border-color:'+o.border:'')+'" aria-label="Card '+name+': '+v.map(f1).join(', ')+'">'+
+  '<span class="nm">'+name+(o.tag?' · '+o.tag:'')+'</span>'+chartSvg(v,{color:o.color,dashed:o.dashed})+'</'+(o.act?'button':'div')+'>';
+}
+/* a horizontal meter: value against a mark */
+function gaugeSvg(label,value,max,mark,good){
+ const W=400,x=v=>10+Math.min(1,v/max)*380;
+ return '<div class="gauge"><svg fill="currentColor" viewBox="0 0 400 46" role="img" aria-label="'+esc(label)+' '+f2(value)+'">'+
+  '<rect x="10" y="14" width="380" height="14" rx="7" fill="#e9e3d4"/>'+
+  '<rect x="10" y="14" width="'+f1(x(value)-10)+'" height="14" rx="7" fill="'+(good?'#2e7d4f':'#c2410c')+'"/>'+
+  (mark!=null?'<line x1="'+x(mark)+'" x2="'+x(mark)+'" y1="8" y2="34" stroke="#1f2328" stroke-width="2.5"/><text x="'+x(mark)+'" y="44" font-size="10" text-anchor="middle" fill="#6b7078">mark '+f2(mark)+'</text>':'')+
+  '<text x="10" y="10" font-size="11" fill="#6b7078">'+esc(label)+'</text><text x="390" y="10" font-size="11" text-anchor="end" font-weight="700">'+f2(value)+'</text></svg></div>';
+}
+/* the error after each half-step, as bars */
+function historySvg(errs){
+ if(!errs.length)return '';
+ const m=Math.max(...errs.map(e=>e.err)),W=Math.max(200,errs.length*34+20);
+ let h='<div class="scroll"><svg viewBox="0 0 '+W+' 90" style="width:'+W+'px;max-width:none;height:90px" role="img" aria-label="Error after each step"><rect width="'+W+'" height="90" rx="6" fill="#fbf8f1"/>';
+ errs.forEach((e,i)=>{const hh=Math.max(2,e.err/m*48),x=12+i*34;
+  h+='<rect x="'+x+'" y="'+(64-hh)+'" width="24" height="'+hh+'" fill="'+(e.kind==='assign'?'#2b5fb3':'#c2410c')+'"/><text x="'+(x+12)+'" y="'+(60-hh)+'" font-size="9" text-anchor="middle">'+f2(e.err)+'</text>'+
+   '<text x="'+(x+12)+'" y="78" font-size="9" text-anchor="middle" fill="#6b7078">'+(e.kind==='assign'?'print':'move')+'</text>';});
+ return h+'</svg></div>';
+}
+
+/* ---------- hover: a pixel and its dot light up together ---------- */
+let hoverKey=null;
+function setHover(k){
+ if(k===hoverKey)return;hoverKey=k;
+ const st=$('#hov');
+ if(!k){st.textContent='';const hi=$('#hoverinfo');if(hi)hi.textContent=hoverHint();return;}
+ const c='.k-'+k.replace(',','-');
+ st.textContent='rect'+c+'{stroke:#111;stroke-width:3px}circle.dot'+c+'{stroke:#111;stroke-width:3.5px}';
+ const hi=$('#hoverinfo');if(hi)hi.textContent=hoverText(k.split(',').map(Number));
+}
+function hoverHint(){return cur&&cur.pic?'Point at a pixel or a dot: the pixel and its spot on the map light up together.':'';}
+function hoverText(p){
+ const pic=cur.pic;if(!pic)return '';
+ const n=pic.px.filter(q=>q[0]===p[0]&&q[1]===p[1]).length;
+ let t='Red '+p[0]+', blue '+p[1]+' · '+plural(n,'pixel')+' of this ink';
+ const pots=cur.pots&&cur.pots.length?cur.pots:null;
+ if(pots&&cur.showNearest!==false){const j=nearest(p,pots);t+=' · nearest is '+POTNAME[j]+', '+f1(dist(p,pots[j]))+' away';}
+ return t;
+}
+/* "New puzzle" changes a level's variant; level 8 always uses level 1's cards */
+const lseed=n=>{const v=S.variants[n===8?1:n]||0;return S.seed+(v?'~'+v:'');};
+/* ---------- shared pieces for the picture levels ---------- */
+const potsOf=st=>st.pots.map((p,j)=>({p,sel:st.sel===j,locked:st.locked&&st.locked.includes(j)}));
+const printFill=(st)=>i=>st.lab&&st.lab[i]!=null?inkOf(st.pots[st.lab[i]]):null;
+function trio(orig,print,map,extra){
+ const big=s=>/data-act=/.test(s)?' act':'';
+ return '<div class="row two"><div class="fig'+big(orig)+'"><p class="cap">The picture</p>'+orig+'</div><div class="fig'+big(print)+'"><p class="cap">The print</p>'+print+(extra||'')+'</div>'+
+  '<div class="fig map"><p class="cap">Ink map</p><div id="mapfig">'+map+'</div></div></div><div class="hoverinfo" id="hoverinfo">'+hoverHint()+'</div>';
+}
+const own=pic=>i=>inkOf(pic.px[i]);
+function liveLab(){const st=cur.st;st.lab=assign(cur.pic.px,st.pots);}
+/* the Lloyd buttons, for the levels where the student has already done both by hand */
+function loopButtons(st,unit){
+ unit=unit||'pixel';
+ return '<div class="btnrow"><button data-act="repaint"'+(st.next!=='assign'?' disabled':'')+'>Print: every '+unit+' from its nearest pot</button>'+
+  '<button data-act="reavg"'+(st.next!=='move'?' disabled':'')+'>Move every pot to the average of its '+unit+'s</button></div>'+
+  '<div class="work"><p class="cap">Average squared error after each step</p>'+historySvg(st.hist)+'</div>';
+}
+function doRepaint(points,onSettle){
+ const st=cur.st,nl=assign(points,st.pots),changed=!st.lab||nl.some((l,i)=>l!==st.lab[i]);
+ st.lab=nl;st.next='move';cur.justPrinted=changed;
+ if(!changed){st.next='none';log('settled',{rounds:st.rounds});onSettle();return;}
+ st.hist.push({kind:'assign',err:labelError(points,st.pots,nl)});log('repaint',{err:st.hist[st.hist.length-1].err});
+ say('Printed. Error '+f2(st.hist[st.hist.length-1].err)+'.');
+}
+function doReavg(points){
+ const st=cur.st;st.pots=moveCenters(points,st.pots,st.lab);st.next='assign';st.rounds=(st.rounds||0)+1;
+ st.hist.push({kind:'move',err:labelError(points,st.pots,st.lab)});log('reaverage',{err:st.hist[st.hist.length-1].err});
+ say('Pots moved. Error '+f2(st.hist[st.hist.length-1].err)+' with the same print.');
+}
+
+const MODES={};
+/* ===== level 1: sort the cards ===== */
+MODES.sort={
+ init(c){c.inst=makeLevel(lseed(1),1);c.st={piles:Array(12).fill(null),sel:null,phase:'sort'};say('Click a card, then the pile it belongs in.');},
+ rule:()=>'Three piles · twelve genes',
+ stage(c){
+  const st=c.st,D=c.inst.data;
+  if(st.phase==='compare'){
+   const other=otherSorting(c.inst.deck,st.piles);c.other=other;
+   const show=(piles,title)=>'<div><h3>'+title+'</h3><div class="piles">'+[0,1,2].map(j=>'<div class="pile"><h4>Pile '+(j+1)+'</h4><div class="deck">'+
+     D.map((v,i)=>piles[i]===j?cardHtml(v,CARDN[i],{border:PILECOL[j]}):'').join('')+'</div></div>').join('')+'</div></div>';
+   return '<div class="compare">'+show(st.piles,'Your piles')+show(other,'Another student’s piles')+'</div>'+
+    (st.judged?'':'<p style="margin-top:12px"><b>Which sorting is better?</b></p><div class="btnrow"><button data-act="judge" data-arg="mine">Mine</button><button data-act="judge" data-arg="theirs">Theirs</button><button data-act="judge" data-arg="cant">I can’t say</button></div>');
+  }
+  const loose=D.map((v,i)=>st.piles[i]===null?cardHtml(v,CARDN[i],{act:'card',arg:i,sel:st.sel===i}):'').join('');
+  return '<p class="cap">Cards to sort</p><div class="deck">'+(loose||'<span class="gmeta">All twelve are in piles.</span>')+'</div>'+
+   '<div class="piles">'+[0,1,2].map(j=>'<div class="pile" data-act="pile" data-arg="'+j+'" role="button" tabindex="0" style="border-color:'+PILECOL[j]+'"><h4 style="color:'+PILECOL[j]+'">Pile '+(j+1)+'</h4><div class="deck">'+
+    D.map((v,i)=>st.piles[i]===j?cardHtml(v,CARDN[i],{act:'card',arg:i,sel:st.sel===i,border:PILECOL[j]}):'').join('')+'</div></div>').join('')+'</div>';
+ },
+ act:{
+  card(i){const st=cur.st;if(st.phase!=='sort')return;st.sel=st.sel===+i?null:+i;say(st.sel===null?'Click a card.':'Card '+CARDN[i]+' picked up. Click a pile.');},
+  pile(j){const st=cur.st;if(st.phase!=='sort')return;if(st.sel===null){say('Pick up a card first.','warn');return;}
+   st.piles[st.sel]=+j;log('pile',{card:CARDN[st.sel],pile:+j});st.sel=null;
+   const left=st.piles.filter(p=>p===null).length,empty=[0,1,2].filter(k=>!st.piles.includes(k)).length;
+   say(left?plural(left,'card')+' to go.':empty?'Every pile needs at least one card.':'All twelve sorted. Move any card you like, or say you are done.');},
+  judge(a){const st=cur.st;st.judged=a;S.piles1=st.piles.slice();S.alt1=cur.other.slice();
+   log('judge',{answer:a,piles:st.piles});
+   say(a==='cant'?'Nor can anyone yet: there is no measure that says one sorting is better.':'Better by what measure? Nothing on the table can say yet. These cards come back in level 8.','good');
+   complete(['expvec','clustering'],'L1',{answer:a});}
+ },
+ go(c){const st=c.st;if(st.phase==='sort'&&st.piles.every(p=>p!==null)&&[0,1,2].every(k=>st.piles.includes(k)))return 'These are my three piles';return null;},
+ goAct(c){c.st.phase='compare';log('sorted',{piles:c.st.piles});say('Here is how another student sorted the same twelve cards.');}
+};
+
+/* ===== level 2: the ruler ===== */
+MODES.ruler={
+ init(c){c.inst=makeLevel(lseed(2),2);c.pic=c.inst.pic;c.st={pots:c.inst.pots,lab:Array(144).fill(null),s:0,measured:[],misses:0,phase:'strip'};
+  say('Pixel 1 of 8: lay the ruler to two pots.');},
+ rule:()=>'Every pixel is printed from its nearest pot',
+ stage(c){
+  const st=c.st,pic=c.pic,i=st.phase==='strip'?c.inst.strip[st.s]:null,p=i!==null?pic.px[i]:null;
+  const rulers=p?st.measured.map(j=>({a:p,b:st.pots[j]})):[];
+  return trio(sheetSvg(pic,own(pic),{strip:c.inst.strip,curPx:i}),sheetSvg(pic,printFill(st),{anim:c.justPrinted,strip:c.inst.strip,curPx:i,label:'the print'}),
+   mapSvg({points:pic.px,pots:potsOf(st),potAct:'pot',rulers,focus:p}))+
+   (p?'<p class="meter">This pixel: <span class="swatch" style="background:'+inkOf(p)+'"></span> red '+p[0]+', blue '+p[1]+
+     (st.measured.length?' · '+st.measured.map(j=>POTNAME[j]+' '+f1(dist(p,st.pots[j]))).join(' · '):'')+'</p>':'');
+ },
+ act:{
+  pot(j){const st=cur.st;j=+j;if(st.phase!=='strip')return;const i=cur.inst.strip[st.s],p=cur.pic.px[i];
+   if(!st.measured.includes(j)){st.measured.push(j);log('measure',{px:i,pot:j,d:dist(p,st.pots[j])});
+    say(st.measured.length<2?'The ruler says '+f1(dist(p,st.pots[j]))+' to '+POTNAME[j]+'. Now another pot.':'Click the pot to print this pixel from.');return;}
+   if(st.measured.length<2){say('Lay the ruler to a second pot first.','warn');return;}
+   const want=nearest(p,st.pots);st.lab[i]=want;log('print_px',{px:i,pot:j,nearest:want});
+   if(j!==want){st.misses++;say('The press took '+POTNAME[want]+' instead: it is '+f1(dist(p,st.pots[want]))+' away, '+POTNAME[j]+' is '+f1(dist(p,st.pots[j]))+'.','warn');}
+   else say('Printed from '+POTNAME[j]+'.','good');
+   st.s++;st.measured=[];
+   if(st.s>=8){st.phase='rest';say((st.misses?'':'All eight right. ')+'The press can do the other '+(144-8)+' the same way.','good');}
+   else if(j===want)say('Printed from '+POTNAME[j]+'. Pixel '+(st.s+1)+' of 8.','good');
+  }
+ },
+ go:c=>c.st.phase==='rest'?'Print the rest of the picture':null,
+ goAct(c){const st=c.st;st.lab=assign(c.pic.px,st.pots);st.phase='done';c.justPrinted=true;say('Every pixel printed from its nearest pot.','good');complete(['point','center','cluster','euclid'],'L2',{misses:st.misses});}
+};
+
+/* ===== level 3: the worst pixel ===== */
+function worstView(c,extra){
+ const st=c.st,pic=c.pic,P=pic.px,w=worstIndex(P,st.pots),wp=P[w],j=nearest(wp,st.pots),m=maxDistance(P,st.pots);
+ return trio(sheetSvg(pic,own(pic),{act:'mix',worst:w}),sheetSvg(pic,printFill(st),{worst:w,label:'the print'}),
+  mapSvg({points:P,pots:potsOf(st),potAct:'pour',dotAct:'mixink',worst:wp,rulers:[{a:wp,b:st.pots[j]}]}))+
+  '<div class="meter">'+gaugeSvg('Worst pixel, distance to its nearest pot',m,12,extra.mark,extra.mark!=null&&m<=extra.mark+1e-9)+'</div>';
+}
+function mixAt(i,onlyWorst){
+ const st=cur.st,P=cur.pic.px;i=+i;
+ if(st.pots.length>=cur.k){say('All '+cur.k+' pots are mixed. Click a pot on the map to pour it out.','warn');return false;}
+ const w=worstIndex(P,st.pots);
+ if(onlyWorst&&dist2(P[i],P[w])>0){say('The meter is pointing at the ringed pixel.','warn');return false;}
+ st.picks.push({px:i,wasWorst:dist2(P[i],P[w])===0});st.pots.push(P[i].slice());liveLab();log('mix',{px:i,ink:P[i],wasWorst:dist2(P[i],P[w])===0});return true;
+}
+MODES.worst={
+ init(c){c.inst=makeLevel(lseed(3),3);c.pic=c.inst.pic;c.k=3;c.st={pots:[c.pic.px[0].slice()],locked:[0],picks:[]};liveLab();
+  say('Click a pixel to mix pot 2 to match it.');},
+ rule:()=>'Every pixel is printed from its nearest pot · a pot matches a pixel',
+ stage:c=>worstView(c,{mark:c.inst.best}),
+ act:{
+  mix(i){if(!mixAt(i))return;MODES.worst.settle();},
+  mixink(k){const P=cur.pic.px,i=P.findIndex(p=>p.join(',')===k);if(i>=0)MODES.worst.act.mix(i);},
+  pour(j){j=+j;const st=cur.st;if(j===0){say('Pot 1 stays.','warn');return;}st.pots.splice(j,1);liveLab();log('pour',{pot:j});say('Poured out. '+plural(cur.k-st.pots.length,'pot')+' to mix.');}
+ },
+ settle(){
+  const st=cur.st,m=maxDistance(cur.pic.px,st.pots);
+  if(st.pots.length<cur.k){say('Worst pixel now '+f1(m)+' from its pot. '+plural(cur.k-st.pots.length,'pot')+' left to mix.');return;}
+  if(m<=cur.inst.best+1e-9){say('The worst pixel is only '+f1(m)+' from its pot. That reaches the mark.','good');
+   complete(['kcenter','fft'],'L3',{allWorst:st.picks.every(p=>p.wasWorst)});}
+  else say('The worst pixel is still '+f1(m)+' from its pot; the mark is '+f1(cur.inst.best)+'. Pour out a pot and try another pixel.','warn');
+ }
+};
+
+/* ===== level 4: the stray pixel ===== */
+MODES.stray={
+ init(c){c.inst=makeLevel(lseed(4),4);c.pic=c.inst.pic;c.k=3;c.st={pots:[c.pic.px[0].slice()],locked:[0],picks:[],phase:'move',sel:null};liveLab();
+  say('Mix pot 2.');},
+ rule:c=>c.st.phase==='move'||c.st.phase==='look'?'Every pixel is printed from its nearest pot · a pot matches a pixel':'Every pixel is printed from its nearest pot · mix any ink',
+ stage(c){
+  const st=c.st,pic=c.pic,P=pic.px;
+  if(st.phase==='move'||st.phase==='look')return worstView(c,{mark:st.phase==='look'?c.inst.fftMax:null});
+  const err=distortion(P,st.pots);
+  let h=trio(sheetSvg(pic,own(pic),{mark:st.phase==='hand'?c.inst.six:null}),sheetSvg(pic,printFill(st),{anim:cur.justPrinted,label:'the print',mark:st.phase==='hand'?c.inst.six:null}),
+   mapSvg({points:P,pots:potsOf(st),potAct:st.phase==='place'?'sel':null,spots:st.phase==='place'?'spot':null}));
+  if(st.phase==='hand'){
+   h+='<div class="work"><p>A new meter. For each pixel: the difference in red, squared, plus the difference in blue, squared. That is the ruler’s length, squared. Type it for these six marked pixels.</p><div class="scroll"><table><tr><th>pixel</th><th>its ink</th><th>its pot</th><th>pot ink</th><th>squared length</th></tr>'+
+    c.inst.six.map((i,k)=>{const j=nearest(P[i],st.pots),q=st.pots[j],a=st.ans[k];
+     return '<tr><td>row '+(Math.floor(i/12)+1)+', col '+(i%12+1)+'</td><td><span class="swatch" style="background:'+inkOf(P[i])+'"></span> ('+P[i].join(', ')+')</td><td>'+(j+1)+'</td><td><span class="swatch" style="background:'+inkOf(q)+'"></span> ('+q.join(', ')+')</td>'+
+      '<td><input type="number" min="0" id="sq'+k+'" value="'+(a==null?'':a)+'" class="'+(st.checked&&a!=null?(+a===c.inst.sq[k]?'ok':'bad'):'')+'" aria-label="squared length for pixel '+(k+1)+'"></td></tr>';}).join('')+
+    '</table></div><div class="btnrow"><button data-act="checksq">Check</button></div>'+
+    (st.handDone?'<p><b>Average of these six: '+c.inst.sq.join(' + ')+' = '+c.inst.sq.reduce((a,b)=>a+b,0)+', divided by 6 = '+f2(c.inst.sq.reduce((a,b)=>a+b,0)/6)+'.</b> Over all 144 pixels the average is '+f2(err)+'.</p>':'')+'</div>';
+  }
+  if(st.phase==='place'||st.phase==='hand')h+='<div class="meter">'+gaugeSvg('Average squared ruler length, over all 144 pixels',err,20,st.phase==='place'?c.inst.target:null,st.phase==='place'&&err<=c.inst.target+1e-9)+'</div>';
+  return h;
+ },
+ act:{
+  mix(i){if(cur.st.phase!=='move'||!mixAt(i,true))return;MODES.stray.settle();},
+  mixink(k){const P=cur.pic.px,i=P.findIndex(p=>p.join(',')===k);if(i>=0)MODES.stray.act.mix(i);},
+  pour(){say('These pots stay for now.','warn');},
+  checksq(){const st=cur.st;st.ans=cur.inst.six.map((_,k)=>{const el=$('#sq'+k);return el&&el.value!==''?+el.value:null;});st.checked=true;
+   const ok=st.ans.every((a,k)=>a===cur.inst.sq[k]);log('check_sq',{ans:st.ans,ok});
+   if(ok){st.handDone=true;say('All six right.','good');}else {const n=st.ans.filter((a,k)=>a!==cur.inst.sq[k]).length;say(n+(n===1?' entry is':' entries are')+' not right yet.','warn');}},
+  sel(j){const st=cur.st;if(st.phase!=='place')return;st.sel=st.sel===+j?null:+j;say(st.sel===null?'Click a pot.':POTNAME[st.sel]+' picked up. Click a spot on the map to mix it there.');},
+  spot(k){const st=cur.st;if(st.phase!=='place')return;if(st.sel===null){say('Click a pot first, then the spot to move it to.','warn');return;}
+   st.pots[st.sel]=k.split(',').map(Number);log('place',{pot:st.sel,ink:st.pots[st.sel]});st.sel=null;liveLab();
+   const e=distortion(cur.pic.px,st.pots);
+   if(e<=cur.inst.target+1e-9){say('Average '+f2(e)+': under the mark, and the print looks like a mushroom again.','good');complete(['distortion','kmeans'],'L4');}
+   else say('Average now '+f2(e)+'. The mark is '+f2(cur.inst.target)+'.');}
+ },
+ settle(){const st=cur.st,m=maxDistance(cur.pic.px,st.pots);
+  if(st.pots.length<3){say('Mix pot '+(st.pots.length+1)+'.');return;}
+  st.phase='look';log('stray_spent',{stray:st.pots.some(p=>dist2(p,cur.pic.px[cur.inst.stray])===0)});
+  say('The meter is satisfied: no pixel is more than '+f1(m)+' from its pot. Now look at the print.','good');},
+ go:c=>c.st.phase==='look'?'The print looks wrong. Measure it another way':c.st.phase==='hand'&&c.st.handDone?'Now mix the pots yourself':null,
+ goAct(c){const st=c.st;if(st.phase==='look'){st.phase='hand';st.ans=[null,null,null,null,null,null];say('A meter that counts every pixel, not just the worst.');}
+  else{st.phase='place';st.locked=[];say('Click a pot, then the spot on the map where you want its ink. Get the average under the mark.');}}
+};
+
+/* ===== level 5: where should a pot sit? ===== */
+MODES.gravity={
+ init(c){c.inst=makeLevel(lseed(5),5);c.pic=c.inst.pic;c.st={phase:'A',pot:null,tries:[]};c.showNearest=false;say('Type a red and a blue amount, then mix.');},
+ rule:()=>'These pixels are printed from this pot',
+ ids:c=>c.st.phase==='A'?c.inst.A:c.inst.B,
+ err(c,p){const ids=MODES.gravity.ids(c);return ids.reduce((s,i)=>s+dist2(c.pic.px[i],p),0)/ids.length;},
+ stage(c){
+  const st=c.st,pic=c.pic,ids=MODES.gravity.ids(c),inSet=new Set(ids);
+  const fill=i=>inSet.has(i)?(st.pot?inkOf(st.pot):null):inkOf(pic.px[i]);
+  let h=trio(sheetSvg(pic,own(pic),{mark:st.phase==='B'?ids:null}),sheetSvg(pic,fill,{label:'the print',mark:st.phase==='B'?ids:null}),
+   mapSvg({points:ids.map(i=>pic.px[i]),pots:st.pot?[{p:st.pot}]:[],tries:st.tries}));
+  if(st.phase==='B')h+='<div class="work"><p>The four marked pixels, and only them, now share one pot.</p><table><tr><th>pixel</th><th>red</th><th>blue</th></tr>'+
+   ids.map((i,k)=>'<tr><td><span class="swatch" style="background:'+inkOf(pic.px[i])+'"></span> '+(k+1)+'</td><td>'+pic.px[i][0]+'</td><td>'+pic.px[i][1]+'</td></tr>').join('')+'</table></div>';
+  h+='<div class="work"><label>Red <input type="number" min="0" max="10" id="potr"></label> <label>Blue <input type="number" min="0" max="10" id="potb"></label> <button data-act="mixpot">Mix this pot</button></div>';
+  if(st.pot)h+='<div class="meter">'+gaugeSvg('Average squared ruler length over '+plural(ids.length,'pixel'),MODES.gravity.err(c,st.pot),30,null,false)+'</div>';
+  return h;
+ },
+ act:{
+  mixpot(){const c=cur,st=c.st,r=$('#potr').value,b=$('#potb').value;
+   if(r===''||b===''||!(+r>=0&&+r<=10&&+b>=0&&+b<=10)){say('Type both amounts, each from 0 to 10.','warn');return;}
+   const p=[+r,+b],e=MODES.gravity.err(c,p);st.pot=p;st.tries.push({p,label:f2(e)});log('try_pot',{phase:st.phase,ink:p,err:e});
+   const goal=st.phase==='A'?c.inst.meanA:c.inst.meanB;
+   if(same(p,goal)){
+    if(st.phase==='A'){st.phase='B';st.pot=null;st.tries=[];say('Error '+f2(e)+', and no other ink does better. Now four pixels of the highlight: work out their best pot without trying.','good');}
+    else{say((st.tries.length===1?'Right first time':'Right')+': red '+p[0]+', blue '+p[1]+', the average of the four. Error '+f2(e)+'.','good');complete(['gravity'],'L5',{tries:st.tries.length});}
+   }else say('Error '+f2(e)+'.'+(st.tries.length>1?' Your tries are ringed on the map.':''));
+  }
+ }
+};
+
+/* ===== level 6: repaint, re-average ===== */
+MODES.loop={
+ init(c){c.inst=makeLevel(lseed(6),6);c.pic=c.inst.pic;c.st={pots:c.inst.start.map(p=>p.slice()),lab:Array(144).fill(null),phase:'row',hist:[],wrong:[],next:'assign',rounds:0};
+  say('Print the marked row by hand: click a pixel of the print to choose its pot.');},
+ rule:()=>'A print takes each pixel’s nearest pot · pots move only when you move them',
+ rowIds:c=>Array.from({length:12},(_,x)=>c.inst.row*12+x),
+ stage(c){
+  const st=c.st,pic=c.pic,P=pic.px,row=MODES.loop.rowIds(c);
+  const hp=c.hoverPx!=null&&st.phase==='row'&&row.includes(c.hoverPx)?P[c.hoverPx]:null;
+  let h=trio(sheetSvg(pic,own(pic),{mark:st.phase==='row'?row:null}),
+   sheetSvg(pic,printFill(st),{anim:cur.justPrinted,label:'the print',act:st.phase==='row'?'cycle':null,mark:st.phase==='row'?st.wrong:null,strip:st.phase==='row'?row:null}),
+   mapSvg({points:P,pots:potsOf(st),rulers:hp?st.pots.map(q=>({a:hp,b:q})):[]}),
+   st.phase==='row'?'<div class="rowbtns">'+row.map(i=>'<button data-act="cycle" data-arg="'+i+'" data-px="'+i+'" data-ink="'+P[i].join(',')+'" class="'+kcls(P[i])+'" aria-label="row pixel '+(i%12+1)+(st.lab[i]==null?', not printed':', '+POTNAME[st.lab[i]])+'" style="background:linear-gradient('+inkOf(P[i])+' 0 50%,'+(st.lab[i]==null?'#fbf8f1':inkOf(st.pots[st.lab[i]]))+' 50% 100%)'+(st.wrong.includes(i)?';outline:3px solid #1f2328':'')+'"></button>').join('')+'</div>':'');
+  if(st.phase==='row')h+='<div class="btnrow"><button data-act="checkrow">Check the row</button></div><p class="gmeta">Point at a pixel in the row to lay the ruler to all three pots.</p>';
+  if(st.phase==='avg'){const j=c.inst.handPot,mine=P.filter((_,i)=>st.lab[i]===j),R=mine.reduce((s,p)=>s+p[0],0),B=mine.reduce((s,p)=>s+p[1],0);
+   h+='<div class="work"><p>'+POTNAME[j]+' printed '+mine.length+' pixels. Their red amounts add up to '+R+' and their blue amounts to '+B+'. Where should '+POTNAME[j]+' move?</p>'+
+    '<label>Red <input type="number" min="0" max="10" id="potr"></label> <label>Blue <input type="number" min="0" max="10" id="potb"></label> <button data-act="movepot">Move '+POTNAME[j]+' there</button></div>';}
+  if(st.phase==='free')h+=loopButtons(st);
+  else if(st.hist.length)h+='<div class="work"><p class="cap">Average squared error after each step</p>'+historySvg(st.hist)+'</div>';
+  return h;
+ },
+ act:{
+  cycle(i){const st=cur.st;if(st.phase!=='row')return;i=+i;if(!MODES.loop.rowIds(cur).includes(i))return;
+   st.lab[i]=st.lab[i]==null?0:(st.lab[i]+1)%3;st.wrong=st.wrong.filter(x=>x!==i);log('hand_print',{px:i,pot:st.lab[i]});say('That pixel now prints from '+POTNAME[st.lab[i]]+'.');},
+  checkrow(){const st=cur.st,P=cur.pic.px,row=MODES.loop.rowIds(cur);
+   st.wrong=row.filter(i=>st.lab[i]!==nearest(P[i],st.pots));log('check_row',{wrong:st.wrong.length});
+   if(st.wrong.length)say(plural(st.wrong.length,'pixel')+' in the row '+(st.wrong.length===1?'is':'are')+' not printed from '+(st.wrong.length===1?'its':'their')+' nearest pot. They are boxed.','warn');
+   else{st.phase='print';say('The row is right.','good');}},
+  movepot(){const st=cur.st,j=cur.inst.handPot,P=cur.pic.px,mine=P.filter((_,i)=>st.lab[i]===j),m=centroid(mine);
+   const r=$('#potr').value,b=$('#potb').value;log('hand_avg',{r,b});
+   if(r===''||b===''){say('Type both amounts.','warn');return;}
+   const p=[+r,+b];st.pots[j]=p;
+   if(same(p,m)){st.phase='move';say(POTNAME[j]+' moved to its pixels’ average. The print has not changed, but those pixels now sit closer to their pot.','good');}
+   else{const e=mine.reduce((s,q)=>s+dist2(q,p),0)/mine.length,e0=mine.reduce((s,q)=>s+dist2(q,m),0)/mine.length;
+    say('At red '+p[0]+', blue '+p[1]+' those '+mine.length+' pixels average '+f2(e)+' squared. Somewhere else they would average '+f2(e0)+'.','warn');}},
+  repaint(){doRepaint(cur.pic.px,()=>{say('Nothing changed: every pixel was already printed from its nearest pot. The loop has stopped.','good');complete(['lloyd'],'L6',{rounds:cur.st.rounds});});},
+  reavg(){doReavg(cur.pic.px);}
+ },
+ go:c=>c.st.phase==='print'?'Print every other pixel the same way':c.st.phase==='move'?'Move the other two pots to their pixels’ averages':null,
+ goAct(c){const st=c.st,P=c.pic.px;
+  if(st.phase==='print'){st.lab=assign(P,st.pots);c.justPrinted=true;st.hist.push({kind:'assign',err:labelError(P,st.pots,st.lab)});st.phase='avg';log('repaint',{err:st.hist[0].err});
+   say('Printed. Now move '+POTNAME[c.inst.handPot]+' by hand.');}
+  else{st.pots=moveCenters(P,st.pots,st.lab);st.hist.push({kind:'move',err:labelError(P,st.pots,st.lab)});st.phase='free';st.next='assign';st.rounds=1;log('reaverage',{err:st.hist[1].err});
+   say('All three pots moved. From here the two buttons do the two jobs. Keep going until a print changes nothing.');}}
+};
+
+/* ===== level 7: a bad start ===== */
+MODES.bad={
+ init(c){c.inst=makeLevel(lseed(7),7);c.pic=c.inst.pic;c.k=3;c.st={pots:c.inst.bad.map(p=>p.slice()),lab:null,phase:'bad',hist:[],next:'assign',rounds:0,picks:[]};say('Press the buttons in turn.');},
+ rule:c=>c.st.phase==='ff'?'A pot matches a pixel · each new pot on the worst pixel':'A print takes each pixel’s nearest pot · pots move only when you move them',
+ stage(c){
+  const st=c.st,pic=c.pic;
+  if(st.phase==='ff')return worstView(c,{mark:null})+(c.badPrint?MODES.bad.badCard(c):'');
+  let h=trio(sheetSvg(pic,own(pic)),sheetSvg(pic,printFill(st),{anim:cur.justPrinted,label:'the print'}),mapSvg({points:pic.px,pots:potsOf(st)}));
+  if(st.phase==='bad'||st.phase==='good')h+=loopButtons(st);
+  if(c.badPrint)h+=MODES.bad.badCard(c);
+  return h;
+ },
+ badCard(c){const b=c.badPrint;return '<div class="work"><div class="row two"><div class="fig"><p class="cap">From the bad start: error '+f2(b.err)+'</p>'+sheetSvg(c.pic,i=>inkOf(b.pots[b.lab[i]]),{label:'print from the bad start'})+'</div>'+
+  (c.goodPrint?'<div class="fig"><p class="cap">From the level 3 move: error '+f2(c.goodPrint.err)+'</p>'+sheetSvg(c.pic,i=>inkOf(c.goodPrint.pots[c.goodPrint.lab[i]]),{label:'print from the level 3 start'})+'</div>':'')+'</div></div>';},
+ act:{
+  repaint(){const st=cur.st,c=cur;doRepaint(c.pic.px,()=>{
+   const rec={pots:st.pots.map(p=>p.slice()),lab:st.lab.slice(),err:labelError(c.pic.px,st.pots,st.lab)};
+   if(st.phase==='bad'){c.badPrint=rec;st.phase='ff';st.pots=[c.pic.px[0].slice()];st.locked=[0];liveLab();
+    say('Stopped, at error '+f2(rec.err)+'. Try again: pot 1 matches the top-left pixel, and each new pot goes where level 3 taught you.');}
+   else{c.goodPrint=rec;say('Stopped, at error '+f2(rec.err)+', against '+f2(c.badPrint.err)+' from the bad start.','good');complete([],'L7',{bad:c.badPrint.err,good:rec.err});}
+  });},
+  reavg(){doReavg(cur.pic.px);},
+  mix(i){const st=cur.st;if(st.phase!=='ff'||!mixAt(i,true))return;
+   if(st.pots.length===3){st.phase='good';st.lab=null;st.hist=[];st.next='assign';st.rounds=0;delete st.locked;say('Three pots, spread out. Run the buttons again.');}},
+  mixink(k){const P=cur.pic.px,i=P.findIndex(p=>p.join(',')===k);if(i>=0)MODES.bad.act.mix(i);},
+  pour(){say('These pots stay.','warn');}
+ }
+};
+
+/* ===== level 8: seven numbers a gene ===== */
+MODES.cards={
+ init(c){c.inst=makeLevel(lseed(8),8);const I=c.inst;c.st={pots:I.start.map(i=>I.data[i].slice()),lab:null,phase:'sq',hist:[],next:'assign',rounds:0,ans:Array(6).fill(null),picked:[null,null]};
+  say('Fill in the six sums.');},
+ rule:()=>'A card goes to its nearest pot · seven directions, no map',
+ stage(c){
+  const st=c.st,I=c.inst,D=I.data;
+  let h='<p class="cap">The three pots</p><div class="deck">'+st.pots.map((p,j)=>cardHtml(p,POTNAME[j],{ctr:true,border:PILECOL[j],color:PILECOL[j],dashed:st.phase!=='sq'&&st.phase!=='near'})).join('')+'</div>'+
+   '<p class="cap" style="margin-top:10px">The twelve cards</p><div class="deck">'+D.map((v,i)=>cardHtml(v,CARDN[i],{border:st.lab?PILECOL[st.lab[i]]:(I.hand.includes(i)?'#1f2328':null),tag:I.start.includes(i)?'pot '+(I.start.indexOf(i)+1)+'’s start':I.hand.includes(i)?'by hand':''})).join('')+'</div>';
+  if(st.phase==='sq'||st.phase==='near'){
+   h+='<div class="work"><p>For a card and a pot: take the seven differences in height, square each, add them up. The ruler’s length is the square root of that sum.</p><div class="scroll"><table><tr><th></th>'+[0,1,2,3,4,5,6].map(t=>'<th>'+(t*2-6>0?'+':'')+(t*2-6)+' h</th>').join('')+'<th>sum of squares</th><th>ruler</th></tr>';
+   I.hand.forEach((ci,a)=>{
+    h+='<tr><th>card '+CARDN[ci]+'</th>'+D[ci].map(x=>'<td><b>'+x+'</b></td>').join('')+'<td></td><td></td></tr>';
+    st.pots.forEach((p,j)=>{const k=a*3+j,v=st.ans[k],right=dist2(D[ci],p);
+     h+='<tr><td style="color:'+PILECOL[j]+'">'+POTNAME[j]+'</td>'+p.map(x=>'<td>'+x+'</td>').join('')+
+      '<td><input type="number" min="0" id="sq'+k+'" value="'+(v==null?'':v)+'" class="'+(st.checked&&v!=null?(v===right?'ok':'bad'):'')+'" aria-label="sum of squares, card '+CARDN[ci]+' to '+POTNAME[j]+'"></td>'+
+      '<td>'+(st.phase==='near'?f1(Math.sqrt(right)):'')+'</td></tr>';});
+   });
+   h+='</table></div>';
+   if(st.phase==='sq')h+='<div class="btnrow"><button data-act="checksq">Check</button></div>';
+   else h+=I.hand.map((ci,a)=>'<p>Card '+CARDN[ci]+' prints from: '+[0,1,2].map(j=>'<button data-act="near" data-arg="'+a+','+j+'"'+(st.picked[a]===j?' class="primary"':'')+'>'+POTNAME[j]+'</button>').join(' ')+'</p>').join('');
+   h+='</div>';
+  }
+  if(st.phase==='coord'){const j=I.coord.center,h0=I.coord.hour,mine=D.map((v,i)=>st.lab[i]===j?i:-1).filter(i=>i>=0);
+   h+='<div class="work"><p>'+POTNAME[j]+' printed '+plural(mine.length,'card')+': '+mine.map(i=>CARDN[i]).join(', ')+'. Its new height at hour '+(h0*2-6)+' is the average of their heights at that hour. Read them off the cards.</p>'+
+    '<label>Height at hour '+(h0*2-6)+' <input type="number" min="0" max="10" id="coord"></label> <button data-act="checkcoord">Check</button></div>';}
+  if(st.phase==='free'||st.phase==='end')h+=loopButtons(st,'card');
+  if(st.phase==='end')h+=MODES.cards.compare(c);
+  return h;
+ },
+ compare(c){
+  const D=c.inst.data,loopErr=labelError(D,c.st.pots,c.st.lab);
+  const mine=S.piles1&&S.piles1.length===12?S.piles1:null,alt=S.alt1&&S.alt1.length===12?S.alt1:null;
+  return '<div class="work"><h3>Level 1, settled</h3><table><tr><th>sorting</th><th>average squared error</th></tr>'+
+   (mine?'<tr><td>Your piles from level 1</td><td>'+f2(pileError(D,mine,3))+'</td></tr>':'<tr><td colspan="2">You have not sorted these cards in this session, so there are no piles of yours to score.</td></tr>')+
+   (alt?'<tr><td>The other student’s piles</td><td>'+f2(pileError(D,alt,3))+'</td></tr>':'')+
+   '<tr><td><b>The loop’s piles</b></td><td><b>'+f2(loopErr)+'</b></td></tr></table></div>';
+ },
+ act:{
+  checksq(){const st=cur.st,I=cur.inst;st.ans=st.ans.map((_,k)=>{const el=$('#sq'+k);return el&&el.value!==''?+el.value:null;});st.checked=true;
+   const right=k=>dist2(I.data[I.hand[Math.floor(k/3)]],st.pots[k%3]),bad=st.ans.filter((v,k)=>v!==right(k)).length;log('check_sq',{ans:st.ans,bad});
+   if(!bad){st.phase='near';say('All six right. Which pot does each card print from?','good');}else say(plural(bad,'sum')+(bad===1?' is':' are')+' not right yet.','warn');},
+  near(arg){const st=cur.st,I=cur.inst,[a,j]=arg.split(',').map(Number),ci=I.hand[a],want=nearest(I.data[ci],st.pots);log('pick_near',{card:CARDN[ci],pot:j,want});
+   if(j!==want){say('The press takes '+POTNAME[want]+' for card '+CARDN[ci]+': its ruler is '+f1(dist(I.data[ci],st.pots[want]))+', against '+f1(dist(I.data[ci],st.pots[j]))+'.','warn');st.picked[a]=want;}
+   else{st.picked[a]=j;say('Card '+CARDN[ci]+' prints from '+POTNAME[j]+'.','good');}
+   if(st.picked.every(x=>x!==null))st.phase='print';},
+  checkcoord(){const st=cur.st,I=cur.inst,v=$('#coord').value;log('check_coord',{v});
+   if(v!==''&&+v===I.coord.value){st.phase='move';say('Right: '+v+'.','good');}else say('Not that. Add the '+plural(I.coord.count,'height')+' and divide by '+I.coord.count+'.','warn');},
+  repaint(){doRepaint(cur.inst.data,()=>{cur.st.phase='end';say('Nothing changed. The loop has stopped.','good');complete([],'L8',{rounds:cur.st.rounds});});},
+  reavg(){doReavg(cur.inst.data);}
+ },
+ go:c=>c.st.phase==='print'?'Print every card from its nearest pot':c.st.phase==='move'?'Move every pot to its cards’ average':null,
+ goAct(c){const st=c.st,D=c.inst.data;
+  if(st.phase==='print'){st.lab=assign(D,st.pots);st.hist.push({kind:'assign',err:labelError(D,st.pots,st.lab)});st.phase='coord';st.next='move';log('repaint',{});say('Each card’s frame shows its pot. One height of a new pot, by hand.');}
+  else{st.pots=moveCenters(D,st.pots,st.lab);st.hist.push({kind:'move',err:labelError(D,st.pots,st.lab)});st.phase='free';st.next='assign';st.rounds=1;log('reaverage',{});say('The buttons take it from here. Until a print changes nothing.');}}
+};
+
+/* ===== level 9: family tree ===== */
+MODES.tree={
+ init(c){c.inst=makeLevel(lseed(9),9);c.st={groups:c.inst.D.map((_,i)=>[i]),merges:[],phase:'merge',hint:null};say('Click the cell for the two closest groups.');},
+ rule:()=>'Join the two closest groups · distance between groups = average over pairs',
+ gname:g=>g.map(i=>CARDN[i]).join(''),
+ stage(c){
+  const st=c.st,I=c.inst,G=st.groups,D=I.D;
+  let h='<div class="deck">'+I.cards.map((cd,i)=>cardHtml(cd.v,CARDN[i],{border:st.cut?PILECOL[st.cut.findIndex(g=>g.includes(i))]:null})).join('')+'</div>';
+  if(st.phase!=='cut'&&st.phase!=='done'){
+   h+='<div class="work"><p class="cap">Distances between groups</p><div class="scroll"><table class="matrix"><tr><th></th>'+G.map(g=>'<th>'+MODES.tree.gname(g)+'</th>').join('')+'</tr>'+
+    G.map((a,i)=>'<tr><th>'+MODES.tree.gname(a)+'</th>'+G.map((b,j)=>{
+     if(j<=i)return '<td></td>';
+     const hand=st.phase==='hand'&&((a===st.newG&&b.length===1&&b[0]===I.hand.other)||(b===st.newG&&a.length===1&&a[0]===I.hand.other));
+     if(hand)return '<td><input type="number" step="0.5" id="hand" aria-label="average distance" style="width:4em"></td>';
+     if(st.phase==='hand'&&(a===st.newG||b===st.newG))return '<td><button disabled aria-label="not yet worked out">?</button></td>';
+     const d=groupDist(D,a,b);
+     return '<td><button data-act="merge" data-arg="'+i+','+j+'"'+(st.hint===i+','+j?' class="min"':'')+(st.phase==='hand'?' disabled':'')+'>'+(Number.isInteger(d)?d:f2(d))+'</button></td>';}).join('')+'</tr>').join('')+'</table></div>';
+   if(st.phase==='hand')h+='<p>Group '+MODES.tree.gname(st.newG)+' to card '+CARDN[I.hand.other]+': the average of '+CARDN[st.newG[0]]+'–'+CARDN[I.hand.other]+' ('+D[st.newG[0]][I.hand.other]+') and '+CARDN[st.newG[1]]+'–'+CARDN[I.hand.other]+' ('+D[st.newG[1]][I.hand.other]+'). Type it. <button data-act="checkhand">Check</button></p>';
+   h+='</div>';
+  }
+  h+='<div class="work"><p class="cap">The tree your joins draw'+(st.phase==='cut'?' · click a height to cut it':'')+'</p>'+MODES.tree.dendro(c)+'</div>';
+  return h;
+ },
+ dendro(c){
+  const st=c.st,I=c.inst,M=st.merges,n=8;
+  // leaf order: the order members appear in the last group list
+  const order=[];const walk=g=>g.forEach(i=>{if(!order.includes(i))order.push(i);});
+  (M.length?[M[M.length-1].members]:[]).forEach(walk);st.groups.forEach(walk);
+  const maxD=Math.max(...I.merges.map(m=>m.d)),W=340,H=170,X=i=>20+order.indexOf(i)*(300/7),Y=d=>H-24-d/maxD*(H-44);
+  let h='<div class="scroll"><svg viewBox="0 0 '+W+' '+H+'" style="width:100%;max-width:520px;min-width:300px" role="img" aria-label="tree of joins"><rect width="'+W+'" height="'+H+'" rx="6" fill="#fbf8f1"/>';
+  const pos={};for(let i=0;i<n;i++)pos[i]={x:X(i),y:Y(0)};
+  const key=g=>g.slice().sort((a,b)=>a-b).join(',');
+  M.forEach(m=>{const a=pos[key(m.a)]||pos[m.a[0]],b=pos[key(m.b)]||pos[m.b[0]],y=Y(m.d);
+   h+='<path d="M'+f1(a.x)+','+f1(a.y)+'V'+f1(y)+'H'+f1(b.x)+'V'+f1(b.y)+'" fill="none" stroke="#2a2416" stroke-width="2"/><text x="'+f1(Math.min(a.x,b.x)+4)+'" y="'+f1(y-4)+'" font-size="10" text-anchor="start" fill="#4b4f56" stroke="#fbf8f1" stroke-width="3" paint-order="stroke">'+f1(m.d)+'</text>';
+   pos[key(m.members)]={x:(a.x+b.x)/2,y};});
+  for(let i=0;i<n;i++)h+='<text x="'+f1(X(i))+'" y="'+(H-8)+'" font-size="12" font-weight="700" text-anchor="middle" fill="'+(st.cut?PILECOL[st.cut.findIndex(g=>g.includes(i))]:'#2a2416')+'">'+CARDN[i]+'</text>';
+  if(st.phase==='cut'){
+   // a band between successive join heights leaves k groups
+   const hs=[0].concat(I.merges.map(m=>m.d));
+   for(let t=0;t<hs.length-1;t++){const k=n-t-1,y0=Y(hs[t+1]),y1=Y(hs[t]);
+    h+='<rect x="10" y="'+f1(y0)+'" width="320" height="'+f1(Math.max(4,y1-y0))+'" fill="rgba(194,65,12,'+(t%2?.05:.1)+')" data-act="cut" data-arg="'+(k)+'" style="cursor:pointer"><title>cut here: '+k+' groups</title></rect>';}
+  }
+  if(st.cut){const y=Y((I.merges[4].d+I.merges[5].d)/2);h+='<line x1="10" x2="330" y1="'+f1(y)+'" y2="'+f1(y)+'" stroke="#c2410c" stroke-width="2" stroke-dasharray="6 3"/>';}
+  return h+'</svg></div>';
+ },
+ act:{
+  merge(arg){const st=cur.st,I=cur.inst,G=st.groups,[i,j]=arg.split(',').map(Number);
+   if(st.phase!=='merge')return;
+   let bi=0,bj=1,bd=Infinity;for(let a=0;a<G.length;a++)for(let b=a+1;b<G.length;b++){const d=groupDist(I.D,G[a],G[b]);if(d<bd){bd=d;bi=a;bj=b;}}
+   log('merge_try',{a:MODES.tree.gname(G[i]),b:MODES.tree.gname(G[j]),ok:i===bi&&j===bj});
+   if(i!==bi||j!==bj){st.hint=bi+','+bj;say(MODES.tree.gname(G[i])+' and '+MODES.tree.gname(G[j])+' are '+f2(groupDist(I.D,G[i],G[j]))+' apart, but the marked pair is closer.','warn');return;}
+   st.hint=null;const g=G[i].concat(G[j]);st.merges.push({a:G[i],b:G[j],d:bd,members:g});st.groups=G.filter((_,k)=>k!==i&&k!==j).concat([g]);
+   if(st.merges.length===1){st.phase='hand';st.newG=g;say('Joined. The new group needs its distances to the others: work one out yourself.');}
+   else if(st.groups.length===1){st.phase='cut';say('One group left. Now cut the tree so that it falls into three groups.');}
+   else say('Joined at '+f2(bd)+'. '+plural(st.groups.length,'group')+' left.');},
+  checkhand(){const st=cur.st,v=$('#hand').value;log('hand_avg',{v});
+   if(v!==''&&Math.abs(+v-cur.inst.hand.value)<1e-9){st.phase='merge';say('Right. The game fills in the rest of the table from now on.','good');}
+   else say('Add the two distances and halve the sum.','warn');},
+  cut(k){const st=cur.st;k=+k;log('cut',{k});
+   if(k!==3){say('That cut leaves '+plural(k,'group')+'. Find the height that leaves three.','warn');return;}
+   st.cut=cutTree(8,cur.inst.merges,3);st.phase='done';say('Three groups, coloured on the cards.','good');complete(['hier'],'L9');}
+ }
+};
+
+/* ===== level 10: the shift ===== */
+MODES.shift={
+ init(c){c.inst=makeLevel(lseed(10),10);c.st={pots:c.inst.ff.centers.map(p=>p.slice()),lab:null,hist:[],next:'assign',rounds:0,phase:'free'};say('Press the buttons in turn until a print changes nothing.');},
+ rule:()=>'Each gene goes to its nearest pot',
+ stage(c){
+  const st=c.st,I=c.inst,D=I.data;
+  let h='<p class="cap">Twenty-four genes <span class="illus">illustrative data</span></p><div class="deck">'+D.map((v,i)=>cardHtml(v,'gene '+(i+1),{border:st.lab?PILECOL[st.lab[i]]:null,tag:I.ff.idx.includes(i)?'pot '+(I.ff.idx.indexOf(i)+1)+'’s start':''})).join('')+'</div>';
+  if(st.phase==='free')h+=loopButtons(st,'gene');
+  else h+=MODES.shift.big(c);
+  return h;
+ },
+ big(c){
+  const st=c.st,D=c.inst.data,X=i=>40+i*60,Y=y=>190-y*16;
+  let h='<div class="work"><p class="cap">The three pots: each is the average of its genes</p><svg viewBox="0 0 440 230" style="width:100%;max-width:560px" role="img" aria-label="average of each group over time"><rect width="440" height="230" rx="6" fill="#fbf8f1"/>';
+  [0,5,10].forEach(y=>{h+='<line x1="30" x2="420" y1="'+Y(y)+'" y2="'+Y(y)+'" stroke="#e0d8c6"/><text x="24" y="'+(Y(y)+4)+'" font-size="11" text-anchor="end" fill="#6b7078">'+y+'</text>';});
+  for(let t=0;t<7;t++)h+='<text x="'+X(t)+'" y="212" font-size="11" text-anchor="middle" fill="#6b7078">'+(t*2-6)+' h</text>';
+  h+='<line x1="'+X(3)+'" x2="'+X(3)+'" y1="20" y2="196" stroke="#b4541a" stroke-dasharray="4 3"/><text x="'+(X(3)+4)+'" y="16" font-size="11" fill="#b4541a">sugar runs out</text>';
+  D.forEach((v,i)=>{h+='<polyline fill="none" stroke="'+PILECOL[st.lab[i]]+'" stroke-opacity=".22" stroke-width="1.2" points="'+v.map((y,t)=>X(t)+','+Y(y)).join(' ')+'"/>';});
+  st.pots.forEach((p,j)=>{h+='<polyline fill="none" stroke="'+PILECOL[j]+'" stroke-width="4" points="'+p.map((y,t)=>X(t)+','+f1(Y(y))).join(' ')+'"/>';});
+  return h+'</svg></div>';
+ },
+ act:{
+  repaint(){doRepaint(cur.inst.data,()=>{cur.st.phase='end';say('Nothing changed. The genes have sorted themselves into three sets.','good');
+   complete(VOCAB.map(v=>v.id),'L10',{rounds:cur.st.rounds});});},
+  reavg(){doReavg(cur.inst.data);}
+ }
+};
+
+/* ---------- what the game says when a level is done ---------- */
+const BLOCKS={
+ L1:()=>'<div class="called"><p>A card’s seven heights are the gene’s '+term('expvec','expression vector')+'. Sorting genes into groups of look-alikes is '+term('clustering')+'. You did it by eye, and so did the other student. To say which sorting is better you would need a way to measure one.</p></div>'+srcCard('derisi'),
+ L2:()=>{const c=cur,i=c.inst.strip[7],p=c.pic.px[i],q=c.st.pots[nearest(p,c.st.pots)];
+  return '<div class="called"><p>Each pixel is a '+term('point','data point')+': a point whose coordinates are its two ink amounts. Each pot is a '+term('center')+', and the pixels printed from one pot are its '+term('cluster')+'. The ruler measures '+term('euclid','Euclidean distance')+': for your last pixel, √(('+p[0]+' − '+f1(q[0])+')² + ('+p[1]+' − '+f1(q[1])+')²) = '+f1(dist(p,q))+'. <b>We will use those words from now on.</b></p></div>';},
+ L3:()=>{const c=cur,D=c.pic.px;
+  return '<div class="called"><p>Choosing k centers so that the worst data point is as close as possible to its center is '+term('kcenter','k-center clustering')+'. Nobody knows a fast way to find the best answer. The move the meter points at, each new center on the data point farthest from every center so far, is '+term('fft','farthest-first traversal')+'.</p></div>'+
+   '<div class="row two" style="margin:8px 0">'+c.inst.decoys.map(d=>'<div class="fig"><p class="cap">Pots on '+d.name+': worst '+f1(d.max)+'</p>'+sheetSvg(c.pic,i=>inkOf(d.centers[nearest(D[i],d.centers)]),{label:d.name})+'</div>').join('')+
+   '<div class="fig"><p class="cap">Farthest-first: worst '+f1(c.inst.best)+'</p>'+sheetSvg(c.pic,i=>inkOf(c.inst.ff.centers[nearest(D[i],c.inst.ff.centers)]),{label:'farthest-first'})+'</div></div>'+srcCard('gonzalez');},
+ L4:()=>'<div class="called"><p>The meter that only watches the worst point lets one stray steal a center. The new meter, the average of the squared distances from each data point to its center, is the '+term('distortion','squared error distortion')+'. Choosing k centers, anywhere, to make it as small as possible is '+term('kmeans','k-means clustering')+'.</p></div>',
+ L5:()=>'<div class="called"><p>The best pot sits at the average of its pixels’ inks, one coordinate at a time. That point is the cluster’s '+term('gravity','center of gravity')+'.</p></div>',
+ L6:()=>'<div class="called"><p>Print from the nearest center, move each center to its cluster’s center of gravity, repeat until nothing changes: that is the '+term('lloyd','Lloyd algorithm')+'. Neither step can raise the error, and there are only so many ways to split 144 pixels, so it has to stop.</p></div>'+srcCard('lloyd'),
+ L7:()=>'<div class="called"><p>The Lloyd algorithm stopped twice, at two different errors. Stopping does not mean best: where it ends depends on where the centers start. Farthest-first traversal is a cheap way to spread them out. Real software usually picks starts at random, weighted toward far-off points (k-means++), and keeps the best of many runs.</p></div>',
+ L8:()=>'<div class="called"><p>With seven numbers a gene there was no picture to judge by. The arithmetic was the same as for two inks, and the error now answers level 1’s question.</p></div>',
+ L9:()=>'<div class="called"><p>Joining the closest groups and drawing the joins as a tree is '+term('hier','hierarchical clustering')+'. Averaging the distance over every pair of members is the same rule as UPGMA: this is level 7 of Hollow Mountain, with genes in place of species. Cutting the tree at one height gives the clusters.</p></div>'+srcCard('eisen'),
+ L10:()=>'<div class="called"><p>When the sugar runs out, the yeast changes how it lives: the '+term('diauxic','diauxic shift')+'. One set of genes switches on, another switches off, and many hardly change. These cards are illustrative; DeRisi, Iyer and Brown measured nearly every yeast gene through the real shift.</p></div>'+srcCard('derisi')
+};
+function srcCard(id){const s=SRC[id];
+ return '<div class="src"><span class="tag">Primary source</span><a href="'+s.url+'" target="_blank" rel="noopener">'+s.cite+': “'+s.title+'”</a> <span class="gmeta">'+s.where+'.</span><br>'+s.look+'</div>';}
+/* ---------- loading and drawing ---------- */
+function loadLevel(id){
+ const L=LEVELS[id-1];
+ cur={L,mode:L.mode,M:MODES[L.mode],done:false,msg:{text:'',kind:''},t0:Date.now(),hist:[],pic:null,k:3};
+ cur.M.init(cur);
+ log('load',{mode:L.mode});
+ hoverKey=null;render();
+}
+function renderHeader(){
+ $('#pips').innerHTML=LEVELS.map(l=>'<button data-lvl="'+l.id+'"'+(!previewLevel&&l.id>S.unlocked?' disabled':'')+
+  (l.id===cur.L.id?' class="on" aria-current="true"':'')+' aria-label="Level '+l.id+'">'+l.id+'</button>').join('');
+ const got=VOCAB.filter(v=>S.badges.includes(v.id)).length;
+ $('#count').innerHTML='Puzzle code <b class="mono">'+esc(S.seed)+'</b> · <b>'+got+' of '+VOCAB.length+' terms</b>';
+ $('#badges').innerHTML=VOCAB.map(x=>S.badges.includes(x.id)
+  ?'<span class="badge got term" tabindex="0">'+x.name+'<span class="tip" role="tooltip"><b>'+x.name+'</b>'+x.def+'</span></span>'
+  :'<span class="badge">? ? ?</span>').join('');
+}
+function renderGuide(){
+ const got=VOCAB.filter(v=>S.badges.includes(v.id));
+ $('#gcount').textContent=got.length+' of '+VOCAB.length+' terms';
+ $('#guideBody').innerHTML='<p class="gmeta">Paint by k field guide · puzzle code '+esc(S.seed)+' · '+got.length+' of '+VOCAB.length+' terms earned</p>'+
+  got.map(v=>{const s=v.src&&SRC[v.src];
+   return '<div class="gentry"><h4>'+v.name+'</h4><p>'+v.def+'</p><p class="gmeta">Met in level '+(S.earnedAt[v.id]||'?')+
+    (s?' · Source: <a href="'+s.url+'" target="_blank" rel="noopener">'+s.cite+', “'+s.title+'”</a>':'')+
+    (v.code?' · Code it: <a href="https://rosalind.info/problems/'+v.code.toLowerCase()+'/" target="_blank" rel="noopener">Rosalind '+v.code+'</a>':'')+'</p></div>';}).join('')+
+  (S.badges.includes('lloyd')?'<div class="gentry"><h4>A note on starting the loop</h4><p>Real k-means software usually chooses its starting centers at random, each new one with probability proportional to its squared distance from the centers already chosen (k-means++), and keeps the best of several runs.</p></div>':'')+
+  (got.length?'<p style="margin-top:10px"><button id="printGuide">Print field guide</button></p>':'<p class="gmeta">Nothing yet. Finish level 1.</p>');
+}
+function renderPanel(){
+ if(!cur.done){$('#panel').innerHTML='';return;}
+ let h='<div class="reveal"><h3>Level '+cur.L.id+' complete</h3>'+(BLOCKS[cur.block]?BLOCKS[cur.block]():'');
+ const missing=VOCAB.filter(x=>!S.badges.includes(x.id)).length;
+ if(cur.L.id<LEVELS.length)h+='<button class="primary advance" id="next">Next level →</button>';
+ else h+='<p>'+(missing?missing+' terms are still hidden.':'You have earned the whole vocabulary. Your field guide, below, lists every term with its source.')+'</p>';
+ $('#panel').innerHTML=h+'</div>';
+}
+function renderStage(){$('#stage').innerHTML=cur.M.stage(cur);cur.justPrinted=false;}
+function render(){
+ renderHeader();
+ $('#title').textContent='Level '+cur.L.id+': '+cur.L.title;
+ $('#brief').textContent=cur.L.brief;
+ $('#rule').textContent=cur.M.rule(cur);
+ renderStage();
+ $('#status').textContent=cur.msg.text;$('#status').className='status '+cur.msg.kind;
+ const g=!cur.done&&cur.M.go?cur.M.go(cur):null,go=$('#go');go.hidden=!g;go.textContent=g||'';
+ $('#undo').disabled=cur.done||!cur.hist.length;$('#restart').disabled=false;
+ const keep=cur.L.id===8;$('#fresh').disabled=keep;$('#fresh').title=keep?'These are your level 1 cards; a new puzzle would change them':'';
+ renderPanel();renderGuide();
+ const hs=$('#hov');if(hs)hs.textContent='';hoverKey=null;
+}
+function act(name,arg){
+ if(cur.done&&name!=='noop')return;
+ const fn=cur.M.act&&cur.M.act[name];if(!fn)return;
+ cur.hist.push(JSON.stringify(cur.st));if(cur.hist.length>200)cur.hist.shift();
+ fn(arg);render();
+}
+function goNext(){if(cur.done||!cur.M.go||!cur.M.go(cur))return;cur.hist.push(JSON.stringify(cur.st));cur.M.goAct(cur);render();}
+function undo(){if(cur.done||!cur.hist.length)return;cur.st=JSON.parse(cur.hist.pop());log('undo');say('Undone.');render();}
+
+/* ---------- the workbench (?bench=1): paste points, run both methods ---------- */
+function renderBench(){
+ $('#game').hidden=true;$('#bench').hidden=false;$('#pips').innerHTML='';$('#count').textContent='Workbench';
+ $('#bench').innerHTML='<h2>Workbench</h2><p>Paste points, one per line, numbers separated by spaces or commas, in any number of dimensions. Choose k. Optionally paste k starting points for the Lloyd algorithm; otherwise it starts from the first k points.</p>'+
+  '<div class="row"><div style="flex:1 1 260px"><label class="cap" for="bpts">Points</label><textarea id="bpts" rows="10" style="width:100%;font:14px ui-monospace,Menlo,monospace">0 0\n5 5\n0 5\n1 1\n2 2\n3 3\n1 2</textarea></div>'+
+  '<div style="flex:1 1 200px"><label class="cap" for="bstart">Starting points (optional)</label><textarea id="bstart" rows="4" style="width:100%;font:14px ui-monospace,Menlo,monospace"></textarea>'+
+  '<p><label>k <input type="number" id="bk" min="1" value="3"></label> <button class="primary" id="brun">Run both</button></p></div></div><div id="bout"></div>';
+ const fmt=c=>'('+c.map(x=>Math.round(x*1000)/1000).join(', ')+')';
+ const run=()=>{
+  const P=parsePoints($('#bpts').value),k=+$('#bk').value,st=parsePoints($('#bstart').value);
+  if(!P.length||!(k>=1)||k>P.length||P.some(p=>p.length!==P[0].length)){$('#bout').innerHTML='<p class="status warn">Need at least k points, all with the same number of coordinates.</p>';return;}
+  const r=bench(P,k,st.length===k&&st.every(p=>p.length===P[0].length)?st:null);
+  let h='<div class="compare"><div class="reveal"><h3>Farthest-first traversal</h3><p>Centers: '+r.ff.centers.map(fmt).join(' ')+'</p><p>MaxDistance '+f2(r.ff.max)+' · squared error distortion '+f2(r.ff.err)+'</p></div>'+
+   '<div class="reveal"><h3>Lloyd algorithm</h3><p>Start: '+r.lloyd.start.map(fmt).join(' ')+'</p><table class="work">'+
+   r.lloyd.steps.filter(s=>s.kind==='move').map((s,i)=>'<tr><td>round '+(i+1)+'</td><td>'+s.centers.map(fmt).join(' ')+'</td><td>'+f2(s.err)+'</td></tr>').join('')+
+   '</table><p>Final centers '+r.lloyd.centers.map(fmt).join(' ')+' after '+plural(r.lloyd.rounds,'round')+'</p><p>MaxDistance '+f2(r.lloyd.max)+' · squared error distortion '+f2(r.lloyd.err)+'</p></div></div>'+
+   '<p><b>Final squared error distortion:</b> farthest-first '+f2(r.ff.err)+', Lloyd '+f2(r.lloyd.err)+'.</p>';
+  $('#bout').innerHTML=h;
+ };
+ $('#brun').onclick=run;run();
+}
+
+/* ---------- events ---------- */
+document.addEventListener('click',ev=>{
+ const t=ev.target.closest&&ev.target.closest('[data-act],[data-lvl],#next,#printGuide');
+ if(!t)return;
+ if(t.id==='next'){loadLevel(cur.L.id+1);if(typeof window.scrollTo==='function')window.scrollTo(0,0);return;}
+ if(t.id==='printGuide'){$('#guide').open=true;window.print();return;}
+ if(t.dataset.lvl!==undefined)return loadLevel(+t.dataset.lvl);
+ if(t.disabled)return;
+ act(t.dataset.act,t.dataset.arg);
+});
+document.addEventListener('keydown',ev=>{
+ const t=ev.target.closest&&ev.target.closest('[data-act]');
+ if(t&&t.tagName!=='BUTTON'&&(ev.key==='Enter'||ev.key===' ')){ev.preventDefault();act(t.dataset.act,t.dataset.arg);}
+});
+document.addEventListener('mouseover',ev=>{
+ if(!cur||!ev.target.closest)return;
+ const t=ev.target.closest('[data-ink]');setHover(t?t.dataset.ink:null);
+ const px=ev.target.closest('[data-px]'),pi=px?+px.dataset.px:null;
+ if(cur.mode==='loop'&&cur.st.phase==='row'&&pi!==cur.hoverPx){cur.hoverPx=pi;const m=$('#mapfig');if(m){const all=cur.M.stage(cur);const s=all.indexOf('<div id="mapfig">');
+   const e=all.indexOf('</div></div></div>',s);m.innerHTML=all.slice(s+17,e);}}
+});
+$('#go').onclick=goNext;
+$('#undo').onclick=undo;
+$('#restart').onclick=()=>{log('restart');loadLevel(cur.L.id);};
+$('#fresh').onclick=()=>{if(cur.L.id===8)return;S.variants[cur.L.id]=(S.variants[cur.L.id]||0)+1;log('new_puzzle');save();loadLevel(cur.L.id);};
+$('#seed').value=S.seed;
+$('#setSeed').onclick=()=>{const v=$('#seed').value.trim();if(!v||v===S.seed)return;S=freshState(v);save();cur=null;loadLevel(previewLevel||1);};
+$('#dl').onclick=()=>{
+ const blob=new Blob([JSON.stringify({game:'paint-by-k',version:1,seed:S.seed,exported:new Date().toISOString(),
+  unlocked:S.unlocked,vocabulary:S.badges,earnedAt:S.earnedAt,events:S.log},null,1)],{type:'application/json'});
+ const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='paint-by-k-'+S.seed.replace(/[^\w-]/g,'_')+'.json';
+ document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),1000);
+};
+if(params.get('bench'))renderBench();
+else loadLevel(previewLevel||Math.min(S.unlocked,LEVELS.length));
+/* Test handle, only with ?debug=1 in the address. */
+if(params.get('debug'))window.__pk={state:()=>cur,saved:()=>S,loadLevel,levels:()=>LEVELS.map(l=>({id:l.id,title:l.title})),
+ vocab:()=>VOCAB.map(v=>({id:v.id,name:v.name})),earned:()=>S.badges.slice(),log:()=>S.log.slice(),act,go:goNext,undo,preview:()=>previewLevel};
+})();
+</script>
+</body>
+</html>

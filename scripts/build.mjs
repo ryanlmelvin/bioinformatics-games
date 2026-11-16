@@ -4,7 +4,8 @@ import path from 'node:path';
 const root=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..');
 const output=path.join(root,'_site');
 // Explicit public-file list keeps instructor keys, tests, and local tooling out of Pages.
-const publicFiles=['index.html','bridge-walker/index.html','lockpick/index.html','materials/genome-assembly-play-guide.docx'];
+const publicFiles=['index.html','motif-slots/index.html','bridge-walker/index.html','toll-city/index.html','hollow-mountain/index.html',
+  'paint-by-k/index.html','the-loom/index.html','cho-han-night/index.html','lockpick/index.html','materials/genome-assembly-play-guide.docx'];
 const aliases={'bridge-walker/level-12/index.html':'bridge-walker/index.html'};
 await rm(output,{recursive:true,force:true});
 for(const file of publicFiles){await mkdir(path.dirname(path.join(output,file)),{recursive:true});await copyFile(path.join(root,file),path.join(output,file));}

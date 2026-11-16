@@ -1,0 +1,1610 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Cho-Han Night</title>
+<style>
+:root{
+  --bg:#f6f4ee; --panel:#fffdf8; --ink:#1f2328; --muted:#6b7078; --line:#d9d4c7;
+  --accent:#c2410c; --accent-ink:#ffffff; --good:#2e7d4f; --warn:#b4541a; --chip:#e3f0f3;
+  --plain:#a8792f; --heavy:#b3261e; --plain-soft:#f3e6c8; --heavy-soft:#f7d6d2;
+  /* the parlour is an illustration: one palette in both themes */
+  --p-wall:#3b2a22; --p-wall2:#4a3429; --p-mat:#d8c48e; --p-mat2:#c9b47c; --p-edge:#5b3b1f;
+  --p-ink:#1f2328; --p-paper:#fbf4e2; --p-gold:#f2b632;
+}
+@media (prefers-color-scheme:dark){
+  :root{
+    --bg:#15181c; --panel:#1d2126; --ink:#e8e6e1; --muted:#9aa0a8; --line:#343a42;
+    --accent:#ff9b5e; --accent-ink:#2b1200; --good:#6fcf97; --warn:#f0a36b; --chip:#1d3a44;
+    --plain:#e0b467; --heavy:#ff8a80; --plain-soft:#3a3120; --heavy-soft:#3d2422;
+  }
+}
+*{box-sizing:border-box}
+html,body{overflow-x:hidden}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 system-ui,-apple-system,"Segoe UI",sans-serif}
+.wrap{max-width:900px;margin:0 auto;padding:20px 16px 40px}
+header{display:flex;flex-wrap:wrap;align-items:center;gap:12px 20px;margin-bottom:8px}
+h1{font-size:1.35rem;margin:0;display:flex;align-items:center;gap:8px}
+h1 svg{width:40px;height:40px}
+h2{font-size:1.1rem;margin:18px 0 4px}
+p{margin:4px 0 12px}
+.mono,.seq,.cell input{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+button{font:inherit;color:var(--ink);background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:6px 12px;cursor:pointer}
+button:hover:not(:disabled){border-color:var(--accent)}
+button:disabled{opacity:.45;cursor:default}
+button.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent);font-weight:600}
+button.advance{display:block;width:fit-content;max-width:100%;min-height:44px;margin-top:14px;padding:10px 18px;text-align:left}
+a{color:var(--accent)}
+.pips{display:flex;flex-wrap:wrap;gap:6px}
+.pips button{width:36px;height:36px;padding:0;border-radius:50%}
+.pips button.on{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.hstat{font-size:.85rem;color:var(--muted)}
+.hstat b{color:var(--ink)}
+
+/* vocabulary */
+.vocabhead{font-size:.75rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-top:8px}
+.badges{display:flex;flex-wrap:wrap;gap:6px;margin:4px 0;position:relative}
+.badge{font-size:.8rem;border:1px dashed var(--line);color:var(--muted);border-radius:999px;padding:2px 10px}
+.badge.got{border:1px solid var(--good);color:var(--good);font-weight:600}
+.term{cursor:help}
+span.term:not(.badge){border-bottom:1px dotted currentColor;font-weight:600}
+.tip{display:none;position:absolute;left:0;top:calc(100% + 6px);z-index:20;width:min(360px,84vw);padding:9px 11px;border-radius:8px;
+  background:var(--ink);color:var(--bg);font:400 .82rem/1.45 system-ui,sans-serif;letter-spacing:0;text-transform:none;text-align:left;box-shadow:0 4px 14px rgba(0,0,0,.25)}
+.tip b{display:block;margin-bottom:2px;color:inherit}
+.term:hover>.tip,.term:focus>.tip{display:block}
+
+.rule{display:inline-flex;align-items:center;gap:8px;font-size:.9rem;font-weight:600;padding:3px 12px;border-radius:999px;background:var(--chip);margin-bottom:8px}
+.stage{border:1px solid var(--line);border-radius:12px;overflow:hidden;background:var(--panel)}
+.scene{width:100%;height:auto;display:block}
+.work{padding:12px 14px 14px;border-top:1px solid var(--line)}
+.work:empty{display:none}
+.sub{font-size:.75rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:2px}
+.status{min-height:1.6em;margin:10px 2px 0;font-weight:500}
+.status.warn{color:var(--warn)} .status.good{color:var(--good)}
+.controls{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:12px}
+#skip:not([hidden]) + .controls{margin-top:20px;padding-top:14px;border-top:1px solid var(--line)}
+.row{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:6px 0}
+.hscroll{overflow-x:auto;-webkit-overflow-scrolling:touch;padding-bottom:4px}
+.shake{animation:shake .35s}
+@keyframes shake{25%{transform:translateX(-4px)}75%{transform:translateX(4px)}}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+
+/* family alignment */
+.seq{font-size:1.15rem;font-weight:700;letter-spacing:0;display:flex;gap:2px;margin:2px 0}
+.seq span{display:inline-block;width:1.55em;text-align:center;border-radius:4px;background:var(--plain-soft);color:var(--ink)}
+.seq span.gap{background:transparent;color:var(--muted);font-weight:400}
+.seq span.off{opacity:.35}
+.seq span.room{box-shadow:inset 0 -3px 0 var(--good)}
+.seq span.hot{outline:2px solid var(--accent)}
+.seq span.seqname{font-size:.8rem;color:var(--muted);width:6.2em;flex:none;align-self:center;font-family:system-ui,sans-serif;font-weight:400;background:none;text-align:left}
+.newcomer{display:flex;flex-wrap:wrap;gap:10px;align-items:center;padding:6px 0;border:1px dashed var(--line);border-radius:10px;margin:8px 0}
+.newcomer.chosen{border:2px solid var(--accent)}
+.newcomer.right{border:2px solid var(--good)}
+.tag{font-size:.7rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted)}
+.illus{font-size:.78rem;color:var(--muted);font-style:italic}
+
+/* tallies */
+.tallies{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px}
+.tbox{border:1px solid var(--line);border-radius:10px;padding:8px 10px}
+.tbox.plain{background:var(--plain-soft)} .tbox.heavy{background:var(--heavy-soft)}
+.marks{display:grid;grid-template-columns:auto 1fr 1fr;gap:2px 8px;font-size:.9rem;align-items:center}
+.marks .r{color:var(--muted);font-size:.75rem}
+.stroke{font-family:ui-monospace,Menlo,monospace;letter-spacing:.1em;font-weight:700;min-height:1.3em}
+.bigcall{min-width:88px;min-height:44px;font-weight:700}
+.picker{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.picker button{min-width:40px;min-height:40px}
+.picker button.on{background:var(--ink);color:var(--bg)}
+
+/* belief rail */
+.rail{display:flex;align-items:center;gap:10px;margin:8px 0}
+.rail input{flex:1;accent-color:var(--accent);min-width:120px;height:32px}
+.rail .end{font-size:.85rem;font-weight:600;flex:none}
+.rail .end.plain{color:var(--plain)} .rail .end.heavy{color:var(--heavy)}
+.chart{width:100%;max-width:760px;height:auto;display:block}
+
+/* ledger */
+.ledger{display:grid;gap:4px;width:max-content;align-items:stretch}
+.lhead{font-size:.75rem;color:var(--muted);text-align:center;align-self:end}
+.lcall{text-align:center;font-weight:700;font-size:1rem;padding:2px 0;border-radius:6px;background:var(--chip)}
+.lrow{font-size:.85rem;font-weight:700;align-self:center;padding-right:4px}
+.lrow.plain{color:var(--plain)} .lrow.heavy{color:var(--heavy)}
+.cell{border:1px solid var(--line);border-radius:8px;padding:4px;min-width:84px;text-align:center;background:var(--p-paper);color:#1f2328;position:relative}
+.cell.plain{border-left:4px solid var(--plain)} .cell.heavy{border-left:4px solid var(--heavy)}
+.cell input{width:5.2em;font-size:1rem;padding:3px 4px;border:1px solid #b9ae94;border-radius:6px;text-align:center;background:#fff;color:#1f2328}
+.cell input.bad{border-color:#b3261e;background:#ffe2de}
+.cell .v{font-weight:700;font-size:1.02rem;font-family:ui-monospace,Menlo,monospace}
+.cell .v.auto{color:#5b6470}
+.cell .ways{display:flex;flex-direction:column;gap:2px;margin-bottom:3px;font-size:.7rem}
+.way{font:600 .72rem/1.2 system-ui,sans-serif;padding:3px 5px;min-height:24px;border-radius:5px;border:1px solid #cdbf9a;background:#fff8e6;color:#4a3a20;white-space:nowrap}
+button.way{cursor:pointer}
+.way.pick{background:#1f2328;color:#fff;border-color:#1f2328}
+.way.drop{opacity:.35;text-decoration:line-through}
+.way.lit{outline:2px solid #e8590c}
+.cell .emit{font-size:.7rem;color:#6b5a3a}
+.cell.trail{outline:3px solid var(--p-gold);background:#fff1c2}
+button.cell{font:inherit;cursor:pointer}
+.share{font-size:.72rem;color:var(--muted);text-align:center}
+.lfoot{font-size:.8rem;text-align:center;font-weight:700}
+.prob{margin-top:8px;font-size:.95rem}
+.frac{font-family:ui-monospace,Menlo,monospace;font-weight:700}
+
+/* story builder */
+.story{display:flex;gap:8px;flex-wrap:wrap}
+.rcol{display:flex;flex-direction:column;align-items:center;gap:4px;border:1px solid var(--line);border-radius:10px;padding:6px 8px;min-width:76px}
+.rcol .callw{font-weight:700}
+.cupbtn{min-width:64px;min-height:40px;font-weight:700}
+.cupbtn.plain{background:var(--plain-soft);border-color:var(--plain);color:var(--ink)}
+.cupbtn.heavy{background:var(--heavy-soft);border-color:var(--heavy);color:var(--ink)}
+.smallin{width:3.4em;font:inherit;padding:3px;text-align:center;border:1px solid var(--line);border-radius:6px;background:var(--panel);color:var(--ink)}
+.smallin.bad{border-color:var(--warn);background:#ffe2de;color:#1f2328}
+.smallin.ok{border-color:var(--good)}
+.eq{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin:6px 0}
+
+/* bot */
+.bot{display:flex;gap:14px;align-items:center;flex-wrap:wrap}
+.counter{font:700 1.4rem/1.2 ui-monospace,Menlo,monospace}
+.botlog{font:12px/1.35 ui-monospace,Menlo,monospace;color:var(--muted);max-height:7.5em;overflow:hidden;white-space:pre}
+
+/* house */
+.house{width:100%;height:auto;display:block}
+.board{display:grid;grid-template-columns:repeat(auto-fill,minmax(64px,1fr));gap:4px;margin:6px 0}
+.lkey{min-height:44px;padding:2px;font-weight:700;display:flex;flex-direction:column;align-items:center;line-height:1.1}
+.lkey small{font-weight:400;font-size:.72rem;color:var(--muted)}
+.lkey.bad{border-color:var(--warn);background:#ffe2de;color:#1f2328}
+.moveset{display:flex;flex-wrap:wrap;gap:10px}
+.mv{border:1px solid var(--line);border-radius:10px;padding:6px 10px;display:flex;align-items:center;gap:8px}
+.mv.bad{border-color:var(--warn);background:#ffe2de;color:#1f2328}
+.mv b{min-width:1.4em;text-align:center;font-size:1.1rem}
+.mv button{min-width:40px;min-height:40px}
+button.way{min-height:34px}
+.cell input{min-height:34px}
+.smallin{min-height:36px}
+.slider{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.slider input{accent-color:var(--accent);width:min(260px,70vw)}
+.scores{display:flex;flex-direction:column;gap:6px}
+.score{display:flex;flex-wrap:wrap;align-items:center;gap:8px;padding:6px 8px;border:1px solid var(--line);border-radius:8px}
+.score .bar{height:10px;border-radius:5px;background:var(--good);min-width:2px}
+.score.str .bar{background:var(--warn)}
+.ladder{display:flex;flex-direction:column;gap:0}
+.ladder button.line{border:0;border-top:2px dashed var(--line);border-radius:0;padding:2px 0;font-size:.75rem;color:var(--muted);background:transparent;text-align:left}
+.ladder button.line.on{border-top:3px solid var(--accent);color:var(--accent)}
+
+/* reveals, sources, field guide */
+.reveal{border:1px solid var(--good);border-radius:12px;padding:14px 16px;margin-top:14px;background:var(--panel)}
+.reveal h3{margin:0 0 8px;font-size:1.05rem}
+.called{display:flex;gap:14px;align-items:center;margin:10px 0 4px;padding-left:12px;border-left:3px solid var(--good)}
+.called p{margin:0;position:relative}
+.called b{color:var(--good)}
+.src{margin:4px 0 10px 15px;padding:8px 12px;border-radius:8px;background:var(--chip);font-size:.9rem}
+.src .tag{display:block}
+.src a{font-weight:600}
+.wild{margin:12px 0 10px;padding:10px 14px;border-radius:8px;border:1px dashed var(--line)}
+.guide{margin-top:22px;border:1px solid var(--line);border-radius:12px;padding:10px 14px;background:var(--panel)}
+.guide summary{cursor:pointer;font-weight:600}
+.gentry{padding:8px 0;border-top:1px solid var(--line)}
+.gentry h4{margin:0;font-size:1rem}
+.gentry p{margin:2px 0;font-size:.92rem}
+.gmeta{color:var(--muted);font-size:.9rem}
+footer{margin-top:26px;padding-top:12px;border-top:1px solid var(--line);display:flex;flex-wrap:wrap;gap:10px;align-items:center;font-size:.9rem;color:var(--muted)}
+footer input{font:inherit;width:9em;padding:5px 8px;border:1px solid var(--line);border-radius:8px;background:var(--panel);color:var(--ink)}
+.bench textarea{width:100%;font:14px/1.4 ui-monospace,Menlo,monospace;padding:8px;border:1px solid var(--line);border-radius:8px;background:var(--panel);color:var(--ink)}
+.bench table{border-collapse:collapse;font:13px ui-monospace,Menlo,monospace}
+.bench td,.bench th{border:1px solid var(--line);padding:2px 6px;text-align:right}
+.tabs{display:flex;gap:6px;margin:10px 0}
+.tabs button.on{background:var(--ink);color:var(--bg)}
+[hidden]{display:none!important}
+@media print{
+  body{background:#fff;color:#000}
+  .wrap>*:not(#guide){display:none!important}
+  .guide{border:0;padding:0;margin:0}
+  .guide summary,#printGuide{display:none}
+}
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <!-- ===== ARTWORK: edit these shapes to restyle the game ===== -->
+    <pattern id="pMat" width="120" height="40" patternUnits="userSpaceOnUse">
+      <rect width="120" height="40" fill="#d8c48e"/>
+      <path d="M0,10H120M0,20H120M0,30H120" stroke="#c9b47c" stroke-width="1"/>
+      <rect x="0" y="0" width="120" height="40" fill="none" stroke="#b39a5e" stroke-width=".6"/>
+    </pattern>
+    <pattern id="pWall" width="60" height="60" patternUnits="userSpaceOnUse">
+      <rect width="60" height="60" fill="#3b2a22"/>
+      <path d="M0,0V60M30,0V60" stroke="#4a3429" stroke-width="3"/>
+    </pattern>
+    <g id="a-lantern">
+      <path d="M0,-34V-26" stroke="#2a1a10" stroke-width="2"/>
+      <rect x="-9" y="-28" width="18" height="5" rx="1" fill="#2a1a10"/>
+      <ellipse cx="0" cy="0" rx="17" ry="24" fill="#e8553a"/>
+      <ellipse cx="0" cy="0" rx="11" ry="24" fill="none" stroke="#b23a24" stroke-width="1.2"/>
+      <path d="M-16,-8H16M-17,0H17M-16,8H16" stroke="#b23a24" stroke-width="1"/>
+      <rect x="-9" y="22" width="18" height="5" rx="1" fill="#2a1a10"/>
+      <ellipse cx="-5" cy="-8" rx="4" ry="9" fill="#ffd6a0" opacity=".45"/>
+    </g>
+    <g id="a-dealer">
+      <!-- seated dealer: indigo coat, topknot, bare forearms holding a cup -->
+      <path d="M-62,70Q-60,8 -30,-2L30,-2Q60,8 62,70Z" fill="#283a63"/>
+      <path d="M-30,-2L0,40L30,-2" fill="none" stroke="#f1ead8" stroke-width="6"/>
+      <path d="M-6,-2L0,40L6,-2Z" fill="#c9a37a"/>
+      <path d="M-50,30Q-40,62 -8,58" fill="none" stroke="#c9a37a" stroke-width="13" stroke-linecap="round"/>
+      <path d="M50,30Q40,62 8,58" fill="none" stroke="#c9a37a" stroke-width="13" stroke-linecap="round"/>
+      <path d="M-58,20Q-60,40 -48,46" fill="none" stroke="#283a63" stroke-width="22" stroke-linecap="round"/>
+      <path d="M58,20Q60,40 48,46" fill="none" stroke="#283a63" stroke-width="22" stroke-linecap="round"/>
+      <rect x="-9" y="-16" width="18" height="16" fill="#c9a37a"/>
+      <ellipse cx="0" cy="-36" rx="22" ry="25" fill="#d8b38a"/>
+      <path d="M-22,-40Q-20,-64 0,-62Q20,-64 22,-40Q14,-54 0,-52Q-14,-54 -22,-40Z" fill="#1b1410"/>
+      <path d="M-4,-62Q0,-74 4,-62Z" fill="#1b1410"/><rect x="-3" y="-72" width="6" height="12" rx="2" fill="#1b1410"/>
+      <path d="M-10,-38q3,-2 6,0M4,-38q3,-2 6,0" stroke="#1b1410" stroke-width="2" fill="none" stroke-linecap="round"/>
+      <path d="M-5,-24q5,3 10,0" stroke="#7a4a32" stroke-width="2" fill="none" stroke-linecap="round"/>
+      <path d="M-26,-30q0,6 4,8M26,-30q0,6 -4,8" stroke="#c9a37a" stroke-width="3" fill="none"/>
+      <path d="M-12,-49q6,2 10,0" stroke="#fff" stroke-width="5" opacity=".9"/>
+      <path d="M-30,-50Q0,-44 30,-50" stroke="#f1ead8" stroke-width="6" fill="none"/>
+    </g>
+    <g id="a-cup">
+      <!-- woven cup, mouth down -->
+      <path d="M-26,24L-20,-20Q0,-30 20,-20L26,24Z"/>
+      <path class="weave" d="M-24,12H24M-22,0H22M-21,-12H21M-12,-24L-14,24M0,-26V24M12,-24L14,24" fill="none" stroke-width="1.4"/>
+      <ellipse cx="0" cy="24" rx="26" ry="5"/>
+    </g>
+    <g id="a-keeper">
+      <!-- the bookkeeper: spectacles, brush, a ledger on a low desk -->
+      <path d="M-40,60Q-38,6 -18,0L18,0Q38,6 40,60Z" fill="#5d4a3a"/>
+      <path d="M-18,0L0,26L18,0" fill="none" stroke="#e9dfc8" stroke-width="5"/>
+      <rect x="-7" y="-12" width="14" height="13" fill="#d8b38a"/>
+      <ellipse cx="0" cy="-30" rx="18" ry="21" fill="#e0bf98"/>
+      <path d="M-18,-34Q-16,-54 0,-52Q16,-54 18,-34Q10,-44 0,-43Q-10,-44 -18,-34Z" fill="#8e8a84"/>
+      <circle cx="-7" cy="-30" r="5" fill="none" stroke="#1f2328" stroke-width="1.6"/><circle cx="7" cy="-30" r="5" fill="none" stroke="#1f2328" stroke-width="1.6"/>
+      <path d="M-2,-30h4" stroke="#1f2328" stroke-width="1.6"/>
+      <path d="M-5,-18q5,2 10,0" stroke="#7a4a32" stroke-width="1.8" fill="none"/>
+      <rect x="-56" y="44" width="112" height="16" rx="3" fill="#6a3f1f"/>
+      <path d="M-44,44L-4,36L-4,44ZM4,36L44,44L4,44Z" fill="#fbf4e2" stroke="#cdbf9a"/>
+      <path d="M-36,41l24,-4M12,37l24,4" stroke="#9a8a6a" stroke-width="1"/>
+      <path d="M28,20L44,38" stroke="#2a1a10" stroke-width="3" stroke-linecap="round"/><path d="M42,36L47,42" stroke="#111" stroke-width="4" stroke-linecap="round"/>
+    </g>
+    <g id="a-walker">
+      <circle cx="0" cy="-22" r="7" fill="#e0bf98" stroke="#1f2328" stroke-width="1.2"/>
+      <path d="M-8,-14Q0,-17 8,-14L10,6H-10Z" fill="currentColor" stroke="#1f2328" stroke-width="1.2"/>
+      <path d="M-5,6L-6,18M5,6L6,18" stroke="#1f2328" stroke-width="3" stroke-linecap="round"/>
+    </g>
+  </defs>
+</svg>
+<div class="wrap" id="game">
+  <header>
+    <h1><svg viewBox="-30 -30 60 60" aria-hidden="true"><circle r="30" fill="#3b2a22"/><use href="#a-cup" transform="translate(-6,6) scale(.62)" fill="#a8792f" stroke="#6e4c18"/><rect x="6" y="-18" width="15" height="15" rx="3" fill="#fff" stroke="#333" transform="rotate(14 13 -10)"/><circle cx="13" cy="-10" r="2.4" fill="#b3261e"/></svg>Cho-Han Night</h1>
+    <div class="pips" id="pips" aria-label="Levels"></div>
+    <div class="hstat" id="hstat"></div>
+  </header>
+  <div class="vocabhead">Vocabulary you have earned <span style="text-transform:none;letter-spacing:0">(hover for the definition)</span></div>
+  <div class="badges" id="badges"></div>
+
+  <h2 id="title"></h2>
+  <p id="brief"></p>
+  <div class="rule" id="rule"></div>
+
+  <div class="stage">
+    <div id="scene"></div>
+    <div class="work" id="work"></div>
+  </div>
+
+  <div class="status" id="status" role="status"></div>
+
+  <button id="skip" class="primary advance" hidden></button>
+
+  <div class="controls">
+    <button id="restart">Restart level</button>
+    <button id="fresh">New night</button>
+    <a href="../">All games</a>
+  </div>
+
+  <div id="panel"></div>
+
+  <details class="guide" id="guide">
+    <summary>Field guide: your glossary and sources (<span id="gcount"></span>)</summary>
+    <div id="guideBody"></div>
+  </details>
+
+  <footer>
+    <label for="seed">Puzzle code</label>
+    <input id="seed" autocomplete="off" spellcheck="false">
+    <button id="setSeed">Use code (resets progress)</button>
+    <button id="dl">Download move log</button>
+  </footer>
+</div>
+<div class="wrap bench" id="bench" hidden></div>
+<script id="engine">
+/* Pure puzzle logic: no DOM. */
+function hashStr(s){let h=2166136261>>>0;for(let i=0;i<s.length;i++){h^=s.charCodeAt(i);h=Math.imul(h,16777619);}return h>>>0;}
+function rng(seed){let a=seed>>>0;return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
+function shuffled(n,rand){const a=[...Array(n).keys()];for(let i=n-1;i>0;i--){const j=Math.floor(rand()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+
+/* ===== The parlour, in chances. Cups: 0 = plain (fair), 1 = heavy (loaded). Calls: 'C' = cho (even), 'H' = han (odd). ===== */
+const ODDS={start:[1,1],startOf:2,                 // the night starts with either cup, 1 chance in 2 each
+  emit:[{C:2,H:2},{C:3,H:1}],emitOf:4,              // chances out of 4 of each call
+  keep:3,swap:1,stepOf:4};                          // after each round: keep 3 in 4, swap 1 in 4
+const trans=(a,b)=>a===b?ODDS.keep:ODDS.swap;
+/* Summing ledger: col[t][cup] = sum over the two ways in of (entry before x keep/swap), times this cup's chance of the call. */
+function sumLedger(calls){
+  const cols=[];
+  for(let t=0;t<calls.length;t++){
+    const c=calls[t];
+    cols.push([0,1].map(k=>t===0?ODDS.start[k]*ODDS.emit[k][c]
+      :(cols[t-1][0]*trans(0,k)+cols[t-1][1]*trans(1,k))*ODDS.emit[k][c]));
+  }
+  return cols;
+}
+/* The whole-number total divided by this gives the probability of the calls: 2 for the start, 4 per call, 4 per step. */
+function ledgerDenominator(n){return ODDS.startOf*Math.pow(ODDS.emitOf,n)*Math.pow(ODDS.stepOf,n-1);}
+function nightProbability(calls){const L=sumLedger(calls),last=L[L.length-1];return {num:last[0]+last[1],den:ledgerDenominator(calls.length)};}
+/* Belief that the heavy cup is in play after each round: its share of the column. */
+function beliefs(calls){return sumLedger(calls).map(c=>c[1]/(c[0]+c[1]));}
+/* Round by round, the cup the summing ledger thinks likelier (-1 for a tie). */
+function likelierCups(calls){return sumLedger(calls).map(c=>c[0]===c[1]?-1:c[1]>c[0]?1:0);}
+/* Best-way-in ledger with arrows: from[t][cup] = the cup one round earlier on the better way in (-1 if both ways tie). */
+function bestLedger(calls){
+  const cols=[],from=[];
+  for(let t=0;t<calls.length;t++){
+    const c=calls[t];
+    if(t===0){cols.push([0,1].map(k=>ODDS.start[k]*ODDS.emit[k][c]));from.push([null,null]);continue;}
+    const col=[],fr=[];
+    for(const k of [0,1]){
+      const w0=cols[t-1][0]*trans(0,k),w1=cols[t-1][1]*trans(1,k);
+      col.push(Math.max(w0,w1)*ODDS.emit[k][c]);fr.push(w0===w1?-1:w1>w0?1:0);
+    }
+    cols.push(col);from.push(fr);
+  }
+  return {cols,from};
+}
+/* Most likely story; unique=false if any tie lies on it. */
+function bestStory(calls){
+  const {cols,from}=bestLedger(calls),n=calls.length,last=cols[n-1];
+  let unique=last[0]!==last[1],k=last[1]>last[0]?1:0;const story=[k];
+  for(let t=n-1;t>0;t--){if(from[t][k]===-1)unique=false;k=from[t][k]===-1?0:from[t][k];story.unshift(k);}
+  return {story,unique,value:Math.max(last[0],last[1])};
+}
+/* One story: whole-number chances of the dealer doing it and of the calls given it. */
+function storyChances(story,calls){
+  let path=ODDS.start[story[0]],pathOf=ODDS.startOf,callsN=1,callsOf=1;
+  for(let t=1;t<story.length;t++){path*=trans(story[t-1],story[t]);pathOf*=ODDS.stepOf;}
+  for(let t=0;t<story.length;t++){callsN*=ODDS.emit[story[t]][calls[t]];callsOf*=ODDS.emitOf;}
+  return {path,pathOf,calls:callsN,callsOf,both:path*callsN,bothOf:pathOf*callsOf};
+}
+/* Brute force: every story, one by one. Returns the summed whole-number chance and how many stories were tried. */
+function bruteForce(calls){
+  const n=calls.length;let total=0,best=-1,bestS=null;
+  for(let m=0;m<(1<<n);m++){
+    const s=Array.from({length:n},(_,i)=>(m>>(n-1-i))&1),c=storyChances(s,calls);
+    total+=c.both;if(c.both>best){best=c.both;bestS=s;}
+  }
+  return {total,count:1<<n,best,bestS};
+}
+
+/* Designed nights (found by search, checked in tests). truth: the cups really used; calls: what the dealer called.
+   Level 3 shows twelve rounds; the bookkeeper's belief crosses one half at least twice on each. */
+const NIGHTS=[
+  {truth:'000011111000',calls:'HHHHCHCCCHHH'},{truth:'000001111100',calls:'HHHHHCCCCCHH'},
+  {truth:'111100000111',calls:'CCHCCHHHCCCC'},{truth:'001111100011',calls:'HHHCCCHHHCCC'},
+  {truth:'000111110000',calls:'HHHCHCCCCHHH'},{truth:'111110000011',calls:'HCCCCCHHHHCC'},
+  {truth:'000011110001',calls:'HHCCCCCCCHCC'},{truth:'110000011110',calls:'HCCHHCHCCCCH'}
+].map(o=>({truth:o.truth.split('').map(Number),calls:o.calls.split('')}));
+/* Six-call nights for level 7: the most likely story is unique and differs from the round-by-round likelier cup. */
+const VNIGHTS=['CCHCHC','HCHCHC','CHCHCH','CCHHCC','HCCHCH','CHHCCC','CCCHHC','HCCCHH'].map(c=>c.split(''));
+function nightFor(seed){return NIGHTS[hashStr(seed+'|night')%NIGHTS.length];}
+function vnightFor(seed){return VNIGHTS[hashStr(seed+'|vnight')%VNIGHTS.length];}
+function crossings(calls){
+  const b=beliefs(calls);let n=0;
+  for(let t=1;t<b.length;t++)if((b[t-1]-.5)*(b[t]-.5)<0)n++;
+  return n;
+}
+
+/* ===== General hidden Markov model solvers (floating point; Rosalind BA10A to BA10D) ===== */
+/* hmm = {states:[...], alphabet:[...], T:{a:{b:p}}, E:{a:{x:p}}, start:{a:p} (optional; equal if absent)} */
+function startOf(hmm,s){return hmm.start?hmm.start[s]:1/hmm.states.length;}
+function pathProbability(path,hmm){let p=startOf(hmm,path[0]);for(let i=1;i<path.length;i++)p*=hmm.T[path[i-1]][path[i]];return p;}
+function outcomeGivenPath(x,path,hmm){let p=1;for(let i=0;i<x.length;i++)p*=hmm.E[path[i]][x[i]];return p;}
+function viterbi(x,hmm){
+  const S=hmm.states;let v=S.map(s=>Math.log(startOf(hmm,s))+Math.log(hmm.E[s][x[0]]));const back=[];
+  for(let i=1;i<x.length;i++){
+    const b=[],nv=S.map((s,j)=>{let best=-Infinity,arg=0;S.forEach((r,q)=>{const w=v[q]+Math.log(hmm.T[r][s]);if(w>best){best=w;arg=q;}});b.push(arg);return best+Math.log(hmm.E[s][x[i]]);});
+    back.push(b);v=nv;
+  }
+  let k=v.indexOf(Math.max(...v));const path=[S[k]];
+  for(let i=back.length-1;i>=0;i--){k=back[i][k];path.unshift(S[k]);}
+  return path.join('');
+}
+function forwardProbability(x,hmm){
+  const S=hmm.states;let f=S.map(s=>startOf(hmm,s)*hmm.E[s][x[0]]);
+  for(let i=1;i<x.length;i++)f=S.map(s=>S.reduce((a,r,q)=>a+f[q]*hmm.T[r][s],0)*hmm.E[s][x[i]]);
+  return f.reduce((a,b)=>a+b,0);
+}
+/* The parlour as a general model, for the workbench and the tests. */
+const PARLOUR={states:['F','L'],alphabet:['C','H'],start:{F:.5,L:.5},
+  T:{F:{F:.75,L:.25},L:{F:.25,L:.75}},E:{F:{C:.5,H:.5},L:{C:.75,H:.25}}};
+
+/* ===== Profile models of a family (Rosalind BA10E, BA10F) ===== */
+const AMINO='ACDEFGHIKLMNPQRSTVWY'.split('');
+/* Columns that become rooms: those with at most maxGaps gaps. */
+function roomsOf(aln,maxGaps){
+  const n=aln[0].length;
+  return Array.from({length:n},(_,j)=>aln.filter(s=>s[j]==='-').length<=maxGaps);
+}
+/* The book's rule: drop a column when its fraction of gaps is at least theta. */
+function roomsByTheta(aln,theta){
+  return Array.from({length:aln[0].length},(_,j)=>aln.filter(s=>s[j]==='-').length/aln.length<theta);
+}
+/* Each member's walk: a list of {kind:'M'|'D'|'I', room (index 1..k; corridor j sits after room j), col, letter}. */
+function memberWalk(seq,isRoom){
+  const steps=[];let r=0;
+  for(let j=0;j<seq.length;j++){
+    if(isRoom[j]){r++;steps.push({kind:seq[j]==='-'?'D':'M',room:r,col:j,letter:seq[j]==='-'?null:seq[j]});}
+    else if(seq[j]!=='-')steps.push({kind:'I',room:r,col:j,letter:seq[j]});
+  }
+  return steps;
+}
+/* State names in the book's order: S, I0, M1, D1, I1, ..., Mk, Dk, Ik, E. */
+function profileStates(k){const s=['S','I0'];for(let j=1;j<=k;j++)s.push('M'+j,'D'+j,'I'+j);s.push('E');return s;}
+/* Where each state may go (the edges of the profile diagram). */
+function allowedNext(st,k){
+  if(st==='E')return [];
+  const j=st==='S'?0:+st.slice(1);
+  if(j===k&&st!=='S')return ['I'+k,'E'];
+  if(st==='S'&&k===0)return ['I0','E'];
+  return ['I'+j,'M'+(j+1),'D'+(j+1)];
+}
+/* Whole-number tallies: moves out of each state and letters said in each state. */
+function profileCounts(aln,isRoom,alphabet){
+  const k=isRoom.filter(Boolean).length,states=profileStates(k),T={},E={};
+  states.forEach(s=>{T[s]={};states.forEach(t=>T[s][t]=0);E[s]={};alphabet.forEach(x=>E[s][x]=0);});
+  aln.forEach(seq=>{
+    let prev='S';
+    memberWalk(seq,isRoom).forEach(st=>{const name=st.kind+st.room;T[prev][name]++;if(st.letter)E[name][st.letter]++;prev=name;});
+    T[prev].E++;
+  });
+  return {k,states,T,E};
+}
+/* Probabilities from tallies. add = a count added to every allowed move and every letter of M and I states (the game's pebbles);
+   sigma = a probability added after dividing, then divided again (Rosalind BA10F). */
+function profileHMM(aln,opts){
+  opts=opts||{};
+  const alphabet=opts.alphabet||AMINO,isRoom=opts.isRoom||roomsOf(aln,opts.maxGaps);
+  const {k,states,T,E}=profileCounts(aln,isRoom,alphabet),add=opts.add||0,sigma=opts.sigma||0;
+  const PT={},PE={};
+  const norm=(row,keys,plus)=>{const out={};keys.forEach(x=>out[x]=row[x]+plus);const tot=keys.reduce((a,x)=>a+out[x],0);keys.forEach(x=>out[x]=tot?out[x]/tot:0);return out;};
+  states.forEach(s=>{
+    const nxt=allowedNext(s,k),emits=s[0]==='M'||s[0]==='I';
+    PT[s]={};states.forEach(t=>PT[s][t]=0);
+    let row=norm(T[s],nxt,add);
+    if(sigma){const r2={};nxt.forEach(t=>r2[t]=row[t]);row=norm(r2,nxt,sigma);}
+    nxt.forEach(t=>PT[s][t]=row[t]);
+    PE[s]={};alphabet.forEach(x=>PE[s][x]=0);
+    if(emits){let er=norm(E[s],alphabet,add);if(sigma){const r2={};alphabet.forEach(x=>r2[x]=er[x]);er=norm(r2,alphabet,sigma);}alphabet.forEach(x=>PE[s][x]=er[x]);}
+  });
+  return {k,states,alphabet,T:PT,E:PE,isRoom,add,counts:{T,E}};
+}
+/* Best walk of a text through a profile model, and its probability (0 if every walk is shut). */
+function profileBest(text,P){
+  const k=P.k,n=text.length,st=P.states.filter(s=>s!=='E'),v={},bk={};
+  st.forEach(s=>{v[s]=Array(n+1).fill(0);bk[s]=Array(n+1).fill(null);});
+  v.S[0]=1;
+  for(let i=0;i<=n;i++){
+    for(const s of st){
+      if(s==='S')continue;
+      const emits=s[0]!=='D';if(emits&&i===0)continue;
+      const ii=emits?i-1:i;let best=0,arg=null;
+      for(const p of st){const t=P.T[p][s];if(!t)continue;const w=v[p][ii]*t;if(w>best){best=w;arg=p;}}
+      v[s][i]=best*(emits?P.E[s][text[i-1]]:1);bk[s][i]=arg;
+    }
+  }
+  let best=0,arg=null;
+  for(const p of st){const w=v[p][n]*P.T[p].E;if(w>best){best=w;arg=p;}}
+  const walk=[];let s=arg,i=n;
+  while(s&&s!=='S'){walk.unshift({state:s,letter:s[0]==='D'?null:text[i-1]});const p=bk[s][i];if(s[0]!=='D')i--;s=p;}
+  return {prob:best,walk:best?walk:[]};
+}
+/* Probability of one walk given as a list of state names (the student's own walk). */
+function walkProbability(text,walk,P){
+  let p=1,prev='S',i=0;
+  for(const s of walk){p*=P.T[prev][s];if(s[0]!=='D'){p*=P.E[s][text[i]];i++;}prev=s;}
+  return i===text.length?p*P.T[prev].E:0;
+}
+
+/* ===== The family (levels 1 and 8 to 11): illustrative, generated from the puzzle code. =====
+   Five members, eight to ten columns. Exactly one column has three gaps (two members say extra letters there);
+   one or two room columns have a single gap (their four letters agree); the column before the gappy one has no gap.
+   The other columns are strong (4 members agree, 1 differs) or weak (3 agree, 2 share another letter). */
+const DEFAULT_GAPS=2;
+function makeFamily(key){
+  const rand=rng(hashStr(key+'|family')),pick=a=>a[Math.floor(rand()*a.length)];
+  for(let attempt=0;attempt<20000;attempt++){
+    const n=8+Math.floor(rand()*3),g=3+Math.floor(rand()*(n-5));  // gappy column, not too near the ends
+    const cols=[];const majors=[],minors=[];
+    for(let j=0;j<n;j++){
+      const maj=pick(AMINO);let min=pick(AMINO);while(min===maj)min=pick(AMINO);majors.push(maj);minors.push(min);
+      const kind=j===g?'gappy':rand()<.55?'strong':'weak';
+      cols.push(kind);
+    }
+    const aln=Array.from({length:5},()=>Array(n).fill('?'));
+    const oneGap=new Set([g+1]);while(oneGap.size<1+Math.floor(rand()*2)){const j=Math.floor(rand()*n);if(j!==g&&j!==g-1)oneGap.add(j);}
+    oneGap.forEach(j=>cols[j]='full');
+    for(let j=0;j<n;j++){
+      const order=shuffled(5,rand);
+      if(j===g){aln[order[0]][j]=pick(AMINO);aln[order[1]][j]=pick(AMINO);[2,3,4].forEach(i=>aln[order[i]][j]='-');continue;}
+      const minorCount=cols[j]==='full'?0:cols[j]==='weak'?2:1;
+      order.forEach((m,i)=>{aln[m][j]=i<minorCount?minors[j]:majors[j];});
+      if(oneGap.has(j))aln[order[4]][j]='-';
+    }
+    const rows=aln.map(r=>r.join(''));
+    const isRoom=roomsOf(rows,DEFAULT_GAPS);
+    if(isRoom.filter(x=>!x).length!==1||isRoom[g])continue;
+    if(rows.some(r=>r.replace(/-/g,'').length<n-2))continue;
+    const roomCols=[...Array(n).keys()].filter(j=>isRoom[j]);
+    const majorAt=j=>{const c={};rows.forEach(r=>{if(r[j]!=='-')c[r[j]]=(c[r[j]]||0)+1;});return Object.keys(c).sort((a,b)=>c[b]-c[a])[0];};
+    const minorAt=j=>{const c={};rows.forEach(r=>{if(r[j]!=='-')c[r[j]]=(c[r[j]]||0)+1;});const ks=Object.keys(c).sort((a,b)=>c[a]-c[b]);return ks[0];};
+    /* the true relative: the commonest letter in every room but one */
+    /* the true relative: the commonest letter where the family agrees strongly, the second letter where it is split 3 to 2 */
+    const relative=roomCols.map(j=>cols[j]==='weak'?minorAt(j):majorAt(j)).join('');
+    /* the stranger: the commonest letter where the family is split, the odd one out where it agrees strongly */
+    const stranger=roomCols.map(j=>cols[j]==='strong'?minorAt(j):majorAt(j)).join('');
+    /* the second relative: like the first, with one letter no member ever said in that room */
+    const slipCol=pick(roomCols);
+    const seen=new Set(rows.map(r=>r[slipCol]));
+    let unseen=pick(AMINO);while(seen.has(unseen))unseen=pick(AMINO);
+    const second=roomCols.map(j=>j===slipCol?unseen:majorAt(j)).join('');
+    /* level 11: two more relatives (one with an extra letter where members said extra letters, one missing a letter
+       where a member had a gap) and two more strangers */
+    const cr=roomCols.indexOf(g-1)+1,gl=rows.map(r=>r[g]).filter(x=>x!=='-');
+    const maj=roomCols.map(j=>majorAt(j)).join('');
+    const rel3=maj.slice(0,cr)+pick(gl)+maj.slice(cr);
+    const gapRooms=roomCols.map((j,i)=>[j,i]).filter(([j])=>rows.some(r=>r[j]==='-')).map(([,i])=>i);
+    const dropAt=pick(gapRooms);
+    const rel4=maj.split('').filter((_,i)=>i!==dropAt).join('');
+    const rand20=()=>Array.from({length:roomCols.length},()=>pick(AMINO)).join('');
+    const fam={key,aln:rows,n,gappy:g,isRoom,roomCols,relative,stranger,second,slipCol,unseen,
+      slipRoom:roomCols.indexOf(slipCol)+1,countRoom:roomCols.indexOf(g-1)+1,
+      others:[rel3,rel4,rand20(),stranger.split('').reverse().join('')]};
+    if(!familyOK(fam))continue;
+    return fam;
+  }
+  throw new Error('Could not make a family');
+}
+function familyScores(fam){
+  const P0=profileHMM(fam.aln,{maxGaps:DEFAULT_GAPS}),P1=profileHMM(fam.aln,{maxGaps:DEFAULT_GAPS,add:1});
+  const sc=(s,P)=>profileBest(s,P).prob;
+  return {P0,P1,rel:sc(fam.relative,P0),str:sc(fam.stranger,P0),sec0:sc(fam.second,P0),sec1:sc(fam.second,P1),str1:sc(fam.stranger,P1),
+    others1:fam.others.map(s=>sc(s,P1)),rel1:sc(fam.relative,P1)};
+}
+function familyOK(fam){
+  const s=familyScores(fam);
+  if(!(s.str>0&&s.rel>=100*s.str))return false;
+  if(s.sec0!==0||!(s.sec1>s.str1))return false;
+  /* by eye it is hard: the stranger matches the family letters as often as the true relative does */
+  const near=t=>fam.roomCols.reduce((a,j,i)=>a+fam.aln.filter(r=>r[j]===t[i]).length,0);
+  if(near(fam.stranger)<5)return false;
+  /* level 11: relatives above every stranger, with pseudocounts */
+  const relS=[s.rel1,s.sec1,s.others1[0],s.others1[1]],strS=[s.str1,s.others1[2],s.others1[3]];
+  if(Math.min(...relS)<=10*Math.max(...strS))return false;
+  /* the counting room has all three ways out */
+  const c=profileCounts(fam.aln,fam.isRoom,AMINO).T['M'+fam.countRoom];
+  const r=fam.countRoom;if(!(c['M'+(r+1)]>0&&c['D'+(r+1)]>0&&c['I'+r]>0))return false;
+  return true;
+}
+
+if(typeof module!=='undefined')module.exports={hashStr,rng,shuffled,ODDS,sumLedger,ledgerDenominator,nightProbability,beliefs,likelierCups,
+  bestLedger,bestStory,storyChances,bruteForce,NIGHTS,VNIGHTS,nightFor,vnightFor,crossings,pathProbability,outcomeGivenPath,viterbi,
+  forwardProbability,PARLOUR,AMINO,roomsOf,roomsByTheta,memberWalk,profileStates,allowedNext,profileCounts,profileHMM,profileBest,walkProbability,
+  DEFAULT_GAPS,makeFamily,familyScores,familyOK};
+</script>
+<script id="ui">
+(function(){
+const KEY='chohan:v1';
+const $=s=>document.querySelector(s);
+const params=new URLSearchParams(location.search);
+const REDUCED=typeof matchMedia==='function'&&matchMedia('(prefers-reduced-motion: reduce)').matches;
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const fmt=n=>Number(n).toLocaleString('en-US');
+const CUP=['plain cup','heavy cup'],CUPS=['plain','heavy'],CALL={C:'chō',H:'han'},KANJI={C:'丁',H:'半'};
+const oneIn=p=>p<=0?'no chance at all':p>=1?'certain':'1 in '+fmt(Math.round(1/p));
+
+const LEVELS=[
+  {id:1,mode:'family',title:'One of the family?',
+   brief:'Five proteins from one family, written one above another so that letters doing the same job share a column. A dash means that member has nothing there. Two newcomers say they belong too. Only one of them does. Look hard, then pick.'},
+  {id:2,mode:'open',title:'Chō or han',
+   brief:'The parlour. The dealer shakes two dice in a cup, sets it mouth-down and calls: chō if the dice add up to an even number, han if odd. He owns two cups that look alike from across the room, one plain and one heavy. Tonight he plays each in the open, twenty rounds a cup. Shake, look, and tally every call.'},
+  {id:3,mode:'swap',title:'The swap',
+   brief:'Now he plays for real. The cup goes under a cloth and you hear only the call. Between rounds he may swap cups out of sight; the house card on the wall says how often. Twelve rounds. After each call, slide the bead toward the cup you think is under the cloth.'},
+  {id:4,mode:'story',title:'One story',
+   brief:'The first four calls of that night. Make up one story of what the dealer did: which cup was under the cloth in each round. Then work out, in chances out of 4, how likely he was to play it that way, and how likely those four calls were if he did.'},
+  {id:5,mode:'wall',title:'Too many stories',
+   brief:'Your story was one of 16 for four rounds. To know how likely the calls were, whatever the dealer did, you would add the chances of every story. The parlour has a counting machine that does exactly that, one story at a time.'},
+  {id:6,mode:'ledger',title:'The bookkeeper’s ledger',
+   brief:'The bookkeeper keeps a page with a row for each cup and a column for each call. Each entry adds the two ways in, from either cup one round earlier, times the chance of keeping or swapping, and then multiplies by this cup’s chance of the call. Fill in the first three columns.'},
+  {id:7,mode:'best',title:'The best story',
+   brief:'A different night, six calls. This time the bookkeeper wants the single most likely story, not the total. Same page, one change: keep only the larger of the two ways in. Click the way you keep, then write the entry. After three columns you pick the ways and the bookkeeper writes. Then follow your kept ways back from the end.'},
+  {id:8,mode:'rooms',title:'Rooms',
+   brief:'Back to the family from level 1. The bookkeeper builds them a house with a room for each column that most members fill, a trapdoor under each room for a member with a gap there, and a corridor between rooms for letters that belong to no room. Set how many gaps a column may have and still be a room. Then send the members through, one at a time, and keep the tally for the marked room.'},
+  {id:9,mode:'bouncer',title:'The bouncer',
+   brief:'The two newcomers from level 1 are at the door. Every door and every room of the house now carries its tally. Walk each newcomer through, choosing each step yourself. Each step multiplies the chance by that tally. Then the bookkeeper shows the best walk there is.'},
+  {id:10,mode:'pebbles',title:'One unseen letter',
+   brief:'A third newcomer, and this one is family: a cousin the family knows. Walk the cousin through the house.'},
+  {id:11,mode:'reunion',title:'Reunion',
+   brief:'Seven newcomers queue at the door. Send each one through; the bookkeeper finds each best walk, pebbles and all. Then draw the door line: family above it, strangers below.'}
+];
+
+/* Primary sources. Each was opened (record or abstract) before it went in; see the report. */
+const SRC={
+  rabiner:{cite:'Rabiner, 1989',title:'A tutorial on hidden Markov models and selected applications in speech recognition',where:'Proceedings of the IEEE 77, 257–286',
+    url:'https://doi.org/10.1109/5.18626',look:'Written for speech recognition, not biology. The abstract says it illustrates hidden states with coin tossing, close cousins of your cups, and names three fundamental problems for such models. Look for which of them your two ledger pages solve.'},
+  baum:{cite:'Baum, Petrie, Soules & Weiss, 1970',title:'A maximization technique occurring in the statistical analysis of probabilistic functions of Markov chains',where:'Annals of Mathematical Statistics 41, 164–171',
+    url:'https://doi.org/10.1214/aoms/1177697196',look:'A short mathematics paper. Its title calls a model like the parlour, a chain of hidden states seen only through what they emit, a “probabilistic function of a Markov chain”.'},
+  viterbi:{cite:'Viterbi, 1967',title:'Error bounds for convolutional codes and an asymptotically optimum decoding algorithm',where:'IEEE Transactions on Information Theory 13, 260–269',
+    url:'https://doi.org/10.1109/TIT.1967.1054010',look:'Written about decoding messages sent over a noisy channel, not dice or proteins. The abstract’s “nonsequential decoding algorithm”, shown to be asymptotically optimum, is the method now named after its author.'},
+  krogh:{cite:'Krogh, Brown, Mian, Sjölander & Haussler, 1994',title:'Hidden Markov models in computational biology: applications to protein modeling',where:'Journal of Molecular Biology 235, 1501–1531',
+    url:'https://doi.org/10.1006/jmbi.1994.1104',look:'The abstract says the models were tried on the globins, the protein kinases and the EF-hand, and that they told family members from non-members with high accuracy: your bouncer, on real families.'},
+  eddy:{cite:'Eddy, 1998',title:'Profile hidden Markov models',where:'Bioinformatics 14, 755–763',
+    url:'https://doi.org/10.1093/bioinformatics/14.9.755',look:'A short review. Its abstract describes turning a multiple alignment into a position-specific scoring system for finding distant relatives, which is the house you built from the family.'},
+  starcich:{cite:'Starcich and others, 1986',title:'Identification and characterization of conserved and variable regions in the envelope gene of HTLV-III/LAV, the retrovirus of AIDS',where:'Cell 45, 637–648',
+    url:'https://doi.org/10.1016/0092-8674(86)90778-6',look:'HIV was then called HTLV-III/LAV. The abstract reports that the envelope gene varies most of all, with substitutions, deletions and insertions clustered in some regions, while other stretches (all 18 cysteines) stay fixed: rooms that matter and rooms that do not.'},
+  sonnhammer:{cite:'Sonnhammer, Eddy & Durbin, 1997',title:'Pfam: a comprehensive database of protein domain families based on seed alignments',where:'Proteins 28, 405–420',
+    url:'https://doi.org/10.1002/(SICI)1097-0134(199707)28:3%3C405::AID-PROT10%3E3.0.CO;2-L',look:'Pfam keeps a small hand-checked “seed” alignment for each family, builds a model from it, and lets the model find and align every other member. The abstract says it classified many unannotated worm proteins this way.'}
+};
+
+/* Vocabulary, in the order it is earned. */
+const VOCAB=[
+  {id:'family',name:'Protein family',def:'A group of proteins descended from a common ancestor, with related sequences and usually related functions.'},
+  {id:'msa',name:'Multiple alignment',def:'Several sequences written in rows, with gap symbols (-) inserted so that letters descended from the same ancestral position fall in the same column.'},
+  {id:'hstate',name:'Hidden state',def:'The state a hidden Markov model is in at a given step. It cannot be observed; only the symbol it emits is seen.'},
+  {id:'hpath',name:'Hidden path',def:'The sequence of hidden states π = π₁…πₙ that an HMM passes through while emitting a string x = x₁…xₙ.'},
+  {id:'trans',name:'Transition probability',src:'rabiner',code:'BA10A',def:'transition(l, k): the probability that an HMM in state l is in state k at the next step. The transition probabilities out of each state sum to 1.'},
+  {id:'emit',name:'Emission probability',code:'BA10B',def:'emission(k, b): the probability that an HMM in state k emits the symbol b. The emission probabilities of each state sum to 1.'},
+  {id:'hmm',name:'Hidden Markov model',src:'rabiner',def:'A machine (Σ, States, Transition, Emission) that at each step emits a symbol from the alphabet Σ according to the emission probabilities of its current hidden state, then moves to a state chosen by the transition probabilities. Pr(x, π) is the product of the transition and emission probabilities along π.'},
+  {id:'forward',name:'Forward algorithm',src:'baum',code:'BA10D',def:'Computes Pr(x), the probability that an HMM emits x summed over every hidden path, column by column: forward(k, i) = Σₗ forward(l, i−1) · transition(l, k) · emission(k, xᵢ). Time O(|States|² · n), not |States|ⁿ.'},
+  {id:'viterbi',name:'Viterbi algorithm',src:'viterbi',code:'BA10C',def:'Finds a hidden path π maximising Pr(x, π): the forward recurrence with max in place of the sum, keeping a pointer to the better predecessor, then backtracking from the best final state.'},
+  {id:'phmm',name:'Profile HMM',src:'eddy',code:'BA10E',def:'A hidden Markov model built from a multiple alignment: one match state per column kept (columns whose fraction of gaps is below a threshold θ), with insertion and deletion states, and transition and emission probabilities equal to the normalised counts in the alignment.'},
+  {id:'match',name:'Match state',src:'krogh',def:'MATCH(i): the state for the i-th column kept from the alignment. It emits letters with that column’s frequencies.'},
+  {id:'insert',name:'Insert state',def:'INSERTION(i): a state that emits letters lying between kept columns i and i+1. It can repeat, so a sequence can carry any number of extra letters there.'},
+  {id:'delete',name:'Delete state',def:'DELETION(i): a silent state that emits nothing, letting a sequence skip kept column i.'},
+  {id:'pseudo',name:'Pseudocounts',code:'BA10F',def:'A small number added to every count (or probability) before normalising, so that no allowed letter or move has probability zero. You first met them in Motif Slots.'}
+];
+const DEF={};VOCAB.forEach(v=>DEF[v.id]=v);
+function term(id,label){return '<span class="term" tabindex="0">'+(label||DEF[id].name)+'<span class="tip" role="tooltip"><b>'+DEF[id].name+'</b>'+DEF[id].def+'</span></span>';}
+
+/* ---------- saved state ---------- */
+const urlSeed=params.get('seed');
+const requestedLevel=Number(params.get('level'));
+const previewLevel=Number.isInteger(requestedLevel)&&requestedLevel>=1&&requestedLevel<=LEVELS.length?requestedLevel:0;
+function load(){try{return JSON.parse(localStorage.getItem(KEY))||{};}catch(e){return {};}}
+function save(){if(previewLevel)return;try{localStorage.setItem(KEY,JSON.stringify(S));}catch(e){}}
+function freshState(seed){return {seed,unlocked:1,badges:[],earnedAt:{},variants:{},marks:{},picked:{},log:[]};}
+function randomCode(){const c='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';let s='';for(let i=0;i<6;i++)s+=c[Math.floor(Math.random()*c.length)];return s;}
+let S=previewLevel?freshState(urlSeed||randomCode()):load();
+if(urlSeed&&urlSeed!==S.seed)S=freshState(urlSeed);
+if(!S.seed)S=freshState(randomCode());
+['marks','picked','variants','earnedAt'].forEach(k=>{if(!S[k])S[k]={};});
+save();
+
+/* Levels that share one instance share one variant counter. */
+const GROUP={1:'fam',8:'fam',9:'fam',10:'fam',11:'fam',2:'open',3:'night',4:'night',5:'night',6:'night',7:'vnight'};
+function gkey(group){return S.seed+'|'+group+'|'+(S.variants[group]||0);}
+const night=()=>nightFor(gkey('night'));
+const family=()=>makeFamily(gkey('fam'));
+
+let cur=null;
+function log(ev,data){
+  S.log.push(Object.assign({t:Date.now(),lvl:cur?cur.L.id:0,ev},data||{}));
+  if(S.log.length>8000)S.log.splice(0,S.log.length-8000);
+  save();
+}
+function say(text,kind){cur.msg={text,kind:kind||''};}
+function grant(ids){let fresh=false;ids.forEach(id=>{if(!S.badges.includes(id)){S.badges.push(id);S.earnedAt[id]=cur.L.id;fresh=true;}});return fresh;}
+function complete(ids,blocks,msg){
+  if(cur.done)return;
+  cur.done=true;grant(ids||[]);cur.blocks=blocks||[];
+  if(cur.L.id<LEVELS.length)S.unlocked=Math.max(S.unlocked,cur.L.id+1);
+  if(msg)say(msg,'good');
+  log('complete',{ms:Date.now()-cur.t0,earned:ids||[]});
+}
+const MODES={};
+function loadLevel(id){
+  if(cur&&cur.timer)clearInterval(cur.timer);
+  const L=LEVELS[id-1];
+  cur={L,mode:L.mode,done:false,blocks:[],msg:{text:'',kind:''},t0:Date.now(),timer:0};
+  MODES[L.mode].init();
+  log('load',{mode:L.mode});
+  render();
+}
+
+/* ---------- panel, header, guide ---------- */
+function srcCard(id){
+  const s=SRC[id];
+  return '<div class="src"><span class="tag">Primary source</span><a href="'+s.url+'" target="_blank" rel="noopener">'+s.cite+
+    ': “'+s.title+'”</a> <span class="gmeta">'+s.where+'.</span><br>'+s.look+'</div>';
+}
+function renderPanel(){
+  if(!cur.done){$('#panel').innerHTML='';return;}
+  const M=MODES[cur.mode];
+  let h='<div class="reveal"><h3>'+(cur.headline||'Level '+cur.L.id+' complete')+'</h3>';
+  (M.reveal?M.reveal():[]).forEach(b=>{
+    if(b.wild){h+='<div class="wild"><span class="sub">In the wild</span>'+b.wild+'</div>';return;}
+    if(b.html)h+='<div class="called"><p>'+b.html+'</p></div>';
+    (b.src||[]).forEach(s=>{h+=srcCard(s);});
+  });
+  const missing=VOCAB.filter(x=>!S.badges.includes(x.id)).length;
+  if(cur.L.id<LEVELS.length)h+='<button class="primary advance" id="next">Next level →</button>';
+  else h+='<p>'+(missing?missing+' vocabulary term'+(missing===1?'':'s')+' still hidden: replay the levels whose pips you have not finished.'
+     :'You have earned the whole vocabulary. Your field guide, below, lists every term with its source.')+'</p>';
+  $('#panel').innerHTML=h+'</div>';
+}
+function renderHeader(){
+  $('#pips').innerHTML=LEVELS.map(l=>'<button data-lvl="'+l.id+'"'+(!previewLevel&&l.id>S.unlocked?' disabled':'')+
+    (l.id===cur.L.id?' class="on" aria-current="true"':'')+' aria-label="Level '+l.id+'">'+l.id+'</button>').join('');
+  $('#hstat').innerHTML='Puzzle code <b>'+esc(S.seed)+'</b> · <b>'+S.badges.length+' of '+VOCAB.length+' terms</b>'+(previewLevel?' · practice session (not saved)':'');
+  $('#badges').innerHTML=VOCAB.map(x=>S.badges.includes(x.id)
+    ?'<span class="badge got term" tabindex="0">'+x.name+'<span class="tip" role="tooltip"><b>'+x.name+'</b>'+x.def+'</span></span>'
+    :'<span class="badge">? ? ?</span>').join('');
+}
+function renderGuide(){
+  const got=VOCAB.filter(v=>S.badges.includes(v.id));
+  $('#gcount').textContent=got.length+' of '+VOCAB.length+' terms';
+  $('#guideBody').innerHTML='<p class="gmeta">Cho-Han Night field guide · puzzle code '+esc(S.seed)+' · '+got.length+' of '+VOCAB.length+' terms earned</p>'+
+    got.map(v=>{
+      const s=v.src&&SRC[v.src];
+      return '<div class="gentry"><h4>'+v.name+'</h4><p>'+v.def+'</p><p class="gmeta">Met in level '+(S.earnedAt[v.id]||'?')+
+        (s?' · Source: <a href="'+s.url+'" target="_blank" rel="noopener">'+s.cite+', “'+s.title+'”</a>':'')+
+        (v.code?' · Code it: <a href="https://rosalind.info/problems/'+v.code.toLowerCase()+'/" target="_blank" rel="noopener">Rosalind '+v.code+'</a>':'')+'</p></div>';
+    }).join('')+
+    (got.length?'<p style="margin-top:10px"><button id="printGuide">Print field guide</button></p>':'<p class="gmeta">Nothing yet. Finish level 1.</p>');
+}
+let rendering=false;
+function render(){
+  if(rendering)return;rendering=true;
+  try{renderNow();}finally{rendering=false;}
+  if(cur.focus){const f=document.getElementById?document.getElementById(cur.focus):null;cur.focus=null;if(f&&f.focus)f.focus();}
+}
+function renderNow(){
+  const M=MODES[cur.mode];
+  renderHeader();
+  $('#title').textContent='Level '+cur.L.id+': '+cur.L.title;
+  $('#brief').textContent=cur.L.brief;
+  $('#rule').textContent=M.rule();
+  $('#scene').innerHTML=M.scene();
+  $('#work').innerHTML=M.work();
+  $('#status').textContent=cur.msg.text;$('#status').className='status '+cur.msg.kind;
+  const sk=$('#skip'),label=!cur.done&&M.skip?M.skip():'';
+  sk.hidden=!label;sk.textContent=label||'';
+  $('#fresh').disabled=!GROUP[cur.L.id];
+  renderPanel();renderGuide();
+}
+/* a short jolt on the element the world rejected */
+function jolt(id){if(REDUCED||!document.getElementById)return;setTimeout(()=>{const e=document.getElementById(id);if(e&&e.classList){e.classList.remove('shake');void e.offsetWidth;e.classList.add('shake');}},0);}
+
+/* ---------- parlour artwork ---------- */
+const PIPS={1:[[0,0]],2:[[-1,-1],[1,1]],3:[[-1,-1],[0,0],[1,1]],4:[[-1,-1],[1,-1],[-1,1],[1,1]],5:[[-1,-1],[1,-1],[0,0],[-1,1],[1,1]],6:[[-1,-1],[1,-1],[-1,0],[1,0],[-1,1],[1,1]]};
+function die(x,y,v,rot){
+  const s=13;let h='<g transform="translate('+x+','+y+') rotate('+(rot||0)+')"><rect x="-'+s+'" y="-'+s+'" width="'+2*s+'" height="'+2*s+'" rx="5" fill="#fffdf6" stroke="#3a3a3a" stroke-width="1.4"/>';
+  PIPS[v].forEach(([a,b])=>{h+='<circle cx="'+a*6.5+'" cy="'+b*6.5+'" r="2.6" fill="'+(v===1?'#b3261e':'#1f2328')+'"/>';});
+  return h+'</g>';
+}
+function cupSvg(x,y,kind,lift){
+  const col=kind==='plain'?['#c99a4b','#6e4c18']:kind==='heavy'?['#b3261e','#5e120d']:['#2b2b2e','#000'];
+  return '<g transform="translate('+x+','+(y-(lift||0)*.7)+') scale(1.25)"><use href="#a-cup" fill="'+col[0]+'" stroke="'+col[1]+'" stroke-width="1.5"/></g>';
+}
+/* opts: cups:[{x,kind,lift,dice:[a,b]}], call:'C'|'H', card:[lines], keeper:true, cloth:true */
+function parlour(o){
+  o=o||{};
+  let h='<svg class="scene" viewBox="0 0 760 250" role="img" aria-label="'+esc(o.label||'The parlour')+'">'+
+    '<rect width="760" height="140" fill="url(#pWall)"/><rect y="140" width="760" height="110" fill="url(#pMat)"/>'+
+    '<rect y="136" width="760" height="6" fill="#5b3b1f"/>'+
+    '<use href="#a-lantern" transform="translate(700,52)"/>'+(o.card?'':'<use href="#a-lantern" transform="translate(60,52)"/>');
+  if(o.card){
+    h+='<g transform="translate(18,16)"><rect width="262" height="'+(18+o.card.length*15)+'" rx="3" fill="#fbf4e2" stroke="#9a7a4a"/><path d="M131,-12L20,0M131,-12L242,0" stroke="#2a1a10"/>'+
+      '<text x="131" y="14" text-anchor="middle" font-size="10" font-weight="700" fill="#5b3b1f" font-family="system-ui,sans-serif">HOUSE CARD</text>'+
+      o.card.map((l,i)=>'<text x="8" y="'+(29+i*15)+'" font-size="10.5" fill="#1f2328" font-family="system-ui,sans-serif">'+esc(l)+'</text>').join('')+'</g>';
+  }
+  h+='<rect x="300" y="186" width="160" height="16" rx="6" fill="#7a2f2a"/><use href="#a-dealer" transform="translate(380,128)"/><rect x="250" y="196" width="260" height="10" rx="3" fill="#6a3f1f"/>';
+  if(o.keeper)h+='<use href="#a-keeper" transform="translate(640,168) scale(.9)"/>';
+  if(o.cloth)h+='<path d="M326,240Q330,190 380,184Q430,190 434,240Q380,246 326,240Z" fill="#2c2f4a"/><path d="M342,236Q348,204 380,198Q412,204 418,236" fill="none" stroke="#454a70" stroke-width="3"/><path d="M360,238l6,-30M398,238l-5,-30" stroke="#22253c" stroke-width="2"/>';
+  (o.cups||[]).forEach(c=>{
+    if(c.dice&&c.lift){h+=die(c.x-15,222,c.dice[0],-8)+die(c.x+15,224,c.dice[1],11);}
+    if(c.kind!=='hidden'||!o.cloth)h+=cupSvg(c.x,206,c.kind,c.lift);
+    if(c.label)h+='<text x="'+c.x+'" y="246" text-anchor="middle" font-size="12" font-weight="700" fill="#3b2a22" font-family="system-ui,sans-serif">'+esc(c.label)+'</text>';
+  });
+  if(o.call){
+    h+='<g transform="translate(470,46)"><path d="M0,0H112V52H30L12,66L18,52H0Z" fill="#fffdf6" stroke="#1f2328" stroke-width="1.5"/>'+
+      '<text x="30" y="37" text-anchor="middle" font-size="30" fill="#b3261e" font-family="serif">'+KANJI[o.call]+'</text>'+
+      '<text x="78" y="34" text-anchor="middle" font-size="19" font-weight="700" fill="#1f2328" font-family="system-ui,sans-serif">'+CALL[o.call]+'!</text></g>';
+  }
+  return h+'</svg>';
+}
+const CARD_CALLS=['Plain cup: chō 2 in 4, han 2 in 4','Heavy cup: chō 3 in 4, han 1 in 4'];
+const CARD_SWAP=['Keeps his cup 3 rounds in 4, swaps 1 in 4','First round: either cup, 1 chance in 2'];
+
+/* ================= Level 2: both cups in the open ================= */
+function diceFor(call,rand){
+  for(;;){const a=1+Math.floor(rand()*6),b=1+Math.floor(rand()*6);if(((a+b)%2===0)===(call==='C'))return [a,b];}
+}
+MODES.open={
+  init(){
+    const rand=rng(hashStr(gkey('open')));
+    const make=(c,h)=>shuffled(20,rand).map(i=>i<c?'C':'H');
+    const seq=[make(10,10),make(15,5)];
+    cur.o={seq,dice:seq.map(s=>s.map(c=>diceFor(c,rand))),idx:[0,0],shown:[null,null],tally:[[],[]],ans:[null,null],ok:[false,false],last:null};
+    say('Shake either cup to start.');
+  },
+  rule(){return 'Shake · tally the call · twenty rounds a cup';},
+  scene(){
+    const o=cur.o,cups=[0,1].map(c=>({x:c?520:240,kind:CUPS[c],label:CUP[c],lift:o.last===c&&o.shown[c]!==null?44:0,
+      dice:o.shown[c]!==null?o.dice[c][o.shown[c]]:null}));
+    const call=o.last!==null&&o.shown[o.last]!==null?o.seq[o.last][o.shown[o.last]]:null;
+    return parlour({cups,call,card:o.ok[0]&&o.ok[1]?CARD_CALLS:null,label:'The dealer with the plain cup and the heavy cup'});
+  },
+  work(){
+    const o=cur.o,both=o.tally[0].length===20&&o.tally[1].length===20;
+    let h='<div class="tallies">';
+    for(const c of [0,1]){
+      const t=o.tally[c],done=t.length===20;
+      h+='<div class="tbox '+CUPS[c]+'"><div class="row"><b>'+CUP[c][0].toUpperCase()+CUP[c].slice(1)+'</b><span class="gmeta">round '+Math.min(20,t.length+(o.shown[c]!==null?1:0))+' of 20</span></div>'+
+        '<div class="row"><button class="bigcall" id="shake'+c+'" data-act="shake" data-arg="'+c+'"'+(done?' disabled':'')+'>Shake</button>'+
+        '<button class="bigcall" id="tally'+c+'C" data-act="tally" data-arg="'+c+'C"'+(done?' disabled':'')+'>tally chō</button>'+
+        '<button class="bigcall" id="tally'+c+'H" data-act="tally" data-arg="'+c+'H"'+(done?' disabled':'')+'>tally han</button></div>'+
+        '<div class="marks"><span class="r"></span><span class="sub">chō</span><span class="sub">han</span>';
+      for(let r=0;r<5;r++){
+        const row=t.slice(4*r,4*r+4);
+        h+='<span class="r">rounds '+(4*r+1)+'–'+(4*r+4)+'</span><span class="stroke">'+'|'.repeat(row.filter(x=>x==='C').length)+'</span><span class="stroke">'+'|'.repeat(row.filter(x=>x==='H').length)+'</span>';
+      }
+      h+='</div>';
+      if(both){
+        h+='<p style="margin:8px 0 2px">In every 4 rounds, how many chō?</p><div class="picker">'+[0,1,2,3,4].map(v=>
+          '<button data-act="ans" data-arg="'+c+v+'" id="ans'+c+v+'" class="'+(o.ans[c]===v?'on':'')+'"'+(o.ok[c]?' disabled':'')+'>'+v+'</button>').join('')+
+          (o.ok[c]?' <b style="color:var(--good)">'+v4(o.ans[c])+'</b>':'')+'</div>';
+      }
+      h+='</div>';
+    }
+    return h+'</div>';
+  },
+  reveal(){return [{html:'The plain cup calls chō about 2 rounds in 4. The heavy cup calls chō about 3 rounds in 4. The dealer has pinned both on the house card. From here on you will not see which cup he uses.'}];}
+};
+const v4=v=>v+' in 4';
+const ACT={};
+ACT.shake=c=>{
+  const o=cur.o;c=+c;if(cur.done)return;
+  if(o.shown[c]!==null){say('The dealer is waiting for you to tally that call.','warn');jolt('tally'+c+'C');return;}
+  if(o.idx[c]>=20)return;
+  o.shown[c]=o.idx[c];o.last=c;log('shake',{cup:c,round:o.idx[c],call:o.seq[c][o.idx[c]]});
+  say('The '+CUP[c]+' comes up: '+CALL[o.seq[c][o.idx[c]]]+'.');
+};
+ACT.tally=a=>{
+  const o=cur.o,c=+a[0],call=a[1];if(cur.done)return;
+  if(o.shown[c]===null){say('Shake the '+CUP[c]+' first.','warn');jolt('shake'+c);return;}
+  const real=o.seq[c][o.shown[c]];
+  if(call!==real){say('The chalk will not take it: the dealer called '+CALL[real]+'.','warn');jolt('tally'+c+call);log('tally_wrong',{cup:c});return;}
+  o.tally[c].push(call);o.idx[c]++;o.shown[c]=null;log('tally',{cup:c,call});
+  const left=40-o.tally[0].length-o.tally[1].length;
+  say(left?left+(left===1?' call':' calls')+' still to tally.':'Both tallies are full. Read them off.');
+};
+ACT.ans=a=>{
+  const o=cur.o,c=+a[0],v=+a[1];if(cur.done||o.ok[c])return;
+  o.ans[c]=v;const want=c?3:2;
+  if(v===want){o.ok[c]=true;log('estimate',{cup:c,v,ok:true});}
+  else{log('estimate',{cup:c,v,ok:false});say('The dealer laughs. Count the chō marks in each row of four on the '+CUP[c]+'.','warn');jolt('ans'+c+v);return;}
+  if(o.ok[0]&&o.ok[1])complete([],null,'He pins both on the house card.');
+  else say('Right for the '+CUP[c]+'.');
+};
+
+/* ================= Level 3: the swap ================= */
+function callStrip(calls,upto,extra){
+  return '<div class="hscroll"><div class="ledger" style="grid-template-columns:auto repeat('+calls.length+',minmax(46px,1fr))">'+
+    '<span class="lrow">call</span>'+calls.map((c,i)=>'<span class="lcall">'+(i<upto?CALL[c]:'·')+'</span>').join('')+(extra||'')+'</div></div>';
+}
+function cupRow(label,cups){
+  return '<span class="lrow">'+label+'</span>'+cups.map(k=>'<span class="lcall" style="background:'+(k?'var(--heavy-soft)':'var(--plain-soft)')+';color:var(--'+(k?'heavy':'plain')+')">'+(k?'heavy':'plain')+'</span>').join('');
+}
+/* marks: student bead positions (0..100), keeper: belief per round (0..1), truth: cups */
+function beliefChart(n,marks,keeper,truth){
+  const W=760,H=190,x0=46,x1=W-14,y0=18,y1=H-28,X=i=>x0+(i+.5)*(x1-x0)/n,Y=v=>y1-v*(y1-y0);
+  let h='<svg class="chart" viewBox="0 0 '+W+' '+H+'" role="img" aria-label="How sure, round by round, that the heavy cup was in play">';
+  if(truth)truth.forEach((k,i)=>{if(k)h+='<rect x="'+(x0+i*(x1-x0)/n)+'" y="'+y0+'" width="'+(x1-x0)/n+'" height="'+(y1-y0)+'" fill="var(--heavy-soft)"/>';});
+  h+='<line x1="'+x0+'" x2="'+x1+'" y1="'+Y(.5)+'" y2="'+Y(.5)+'" stroke="var(--line)" stroke-dasharray="4 4"/>'+
+    '<text x="'+(x0-6)+'" y="'+(Y(1)+4)+'" text-anchor="end" font-size="11" fill="var(--heavy)">heavy</text>'+
+    '<text x="'+(x0-6)+'" y="'+(Y(0)+4)+'" text-anchor="end" font-size="11" fill="var(--plain)">plain</text>'+
+    '<line x1="'+x0+'" x2="'+x0+'" y1="'+y0+'" y2="'+y1+'" stroke="var(--muted)"/>';
+  for(let i=0;i<n;i++)h+='<text x="'+X(i)+'" y="'+(H-10)+'" text-anchor="middle" font-size="11" fill="var(--muted)">'+(i+1)+'</text>';
+  const line=(vals,attrs,dot)=>{if(!vals||!vals.length)return '';const p=vals.map((v,i)=>X(i).toFixed(1)+','+Y(v).toFixed(1)).join(' ');
+    return '<polyline points="'+p+'" fill="none" '+attrs+'/>'+vals.map((v,i)=>'<circle cx="'+X(i).toFixed(1)+'" cy="'+Y(v).toFixed(1)+'" r="'+dot+'" fill="var(--panel)" '+attrs+'/>').join('');};
+  if(marks)h+=line(marks.map(m=>m/100),'stroke="var(--accent)" stroke-width="2" stroke-dasharray="5 4"',3.5);
+  if(keeper)h+=line(keeper,'stroke="var(--ink)" stroke-width="2.6"',3);
+  return h+'</svg><div class="gmeta">'+(truth?'<span style="background:var(--heavy-soft);padding:0 6px">shaded</span> rounds: the heavy cup really was in play. ':'')+
+    (marks?'<span style="color:var(--accent)">dashed</span>: your bead. ':'')+(keeper?'<b>solid</b>: the bookkeeper’s share for the heavy cup.':'')+'</div>';
+}
+MODES.swap={
+  init(){cur.N=night();cur.s={t:1,marks:[],bead:50,lifted:false};say('Round 1: the dealer calls '+CALL[cur.N.calls[0]]+'. Slide the bead, then lock it in.');},
+  rule(){return cur.s.lifted?'The cloth is off':'Cups under the cloth · you hear only the call';},
+  scene(){
+    const s=cur.s,N=cur.N;
+    if(s.lifted)return parlour({cups:[{x:380,kind:CUPS[N.truth[11]],lift:44,dice:diceFor(N.calls[11],rng(hashStr(gkey('night')+'|d')))}],call:N.calls[11],card:CARD_CALLS.concat(CARD_SWAP)});
+    return parlour({cloth:true,cups:[{x:380,kind:'hidden'}],call:s.marks.length<12?N.calls[s.t-1]:null,card:CARD_CALLS.concat(CARD_SWAP),label:'The cup under the cloth'});
+  },
+  work(){
+    const s=cur.s,N=cur.N;
+    let h='<div class="sub">Calls so far</div>'+callStrip(N.calls,s.t,s.lifted?cupRow('cup',N.truth):
+      '<span class="lrow">bead</span>'+N.calls.map((_,i)=>'<span class="share">'+(i<s.marks.length?(s.marks[i]>50?'heavy':s.marks[i]<50?'plain':'even'):'')+'</span>').join(''));
+    if(!s.lifted&&s.marks.length<12){
+      h+='<div class="rail"><span class="end plain">plain cup</span><input type="range" min="0" max="100" step="5" value="'+s.bead+'" id="bead" data-slide="bead" aria-label="How sure you are that the heavy cup is under the cloth"><span class="end heavy">heavy cup</span></div>'+
+        '<button class="primary" id="lock" data-act="lock">Lock in round '+s.t+'</button>';
+    }
+    if(s.lifted)h+='<div class="sub" style="margin-top:10px">Your bead against the truth</div>'+beliefChart(12,s.marks,null,N.truth);
+    return h;
+  },
+  skip(){return cur.s.marks.length===12&&!cur.s.lifted?'Lift the cloth':'';},
+  onSkip(){
+    cur.s.lifted=true;S.marks[gkey('night')]=cur.s.marks.slice();log('lift',{marks:cur.s.marks});
+    complete(['hstate','hpath'],null,'Under the cloth, round by round.');
+  },
+  reveal(){return [{html:'Which cup was under the cloth in a round is a '+term('hstate','hidden state')+': it shaped the call, but you never saw it. The whole night’s sequence of cups is the '+term('hpath','hidden path')+'. Your bead was a guess at it. Keep it: the bookkeeper will draw over it soon.'}];}
+};
+ACT.lock=()=>{
+  const s=cur.s;if(cur.done||s.marks.length>=12)return;
+  s.marks.push(s.bead);log('bead',{round:s.t,bead:s.bead});
+  if(s.t<12){s.t++;say('Round '+s.t+': the dealer calls '+CALL[cur.N.calls[s.t-1]]+'.');}
+  else say('Twelve rounds. Lift the cloth when you are ready.');
+};
+ACT.bead=v=>{cur.s.bead=+v;};
+
+/* ================= Level 4: one story ================= */
+function nIn(id,val,ok,bad,w){return '<input class="smallin'+(ok?' ok':bad?' bad':'')+'" id="'+id+'" data-cell="'+id+'" inputmode="numeric" autocomplete="off" '+(w?'style="width:'+w+'em" ':'')+'value="'+(val===undefined?'':esc(val))+'"'+(ok?' disabled':'')+' aria-label="'+id+'">';}
+MODES.story={
+  init(){cur.calls=night().calls.slice(0,4);cur.st={story:[null,null,null,null],v:{},ok:{},bad:null};say('Click each round’s cup to make up a story.');},
+  rule(){return 'One story · chances out of 4 · multiply';},
+  scene(){return parlour({cloth:true,cups:[{x:380,kind:'hidden'}],card:CARD_CALLS.concat(CARD_SWAP)});},
+  want(){
+    const st=cur.st.story,c=storyChances(st,cur.calls),w={s0:ODDS.start[st[0]],pp:c.path,pe:c.calls,pb:c.both};
+    for(let t=1;t<4;t++)w['t'+t]=trans(st[t-1],st[t]);
+    for(let t=0;t<4;t++)w['e'+t]=ODDS.emit[st[t]][cur.calls[t]];
+    return w;
+  },
+  work(){
+    const st=cur.st,set=st.story.every(k=>k!==null);
+    let h='<div class="sub">Your story</div><div class="story">'+cur.calls.map((c,i)=>'<div class="rcol"><span class="gmeta">round '+(i+1)+'</span><span class="callw">'+CALL[c]+'</span>'+
+      '<button class="cupbtn '+(st.story[i]===null?'':CUPS[st.story[i]])+'" id="cup'+i+'" data-act="cup" data-arg="'+i+'">'+(st.story[i]===null?'which cup?':CUPS[st.story[i]])+'</button></div>').join('')+'</div>';
+    if(!set)return h;
+    const f=id=>nIn(id,st.v[id],st.ok[id],st.bad===id),nw=s=>'<span style="white-space:nowrap">'+s+'</span>';
+    h+='<div class="sub" style="margin-top:12px">How likely was he to play it this way?</div><div class="eq">'+nw('round 1 '+CUPS[st.story[0]]+': '+f('s0')+' in 2');
+    for(let t=1;t<4;t++)h+=' · '+nw('then '+(st.story[t]===st.story[t-1]?'keeps':'swaps to')+' '+CUPS[st.story[t]]+': '+f('t'+t)+' in 4');
+    h+='</div><div class="eq">multiplied: '+nIn('pp',st.v.pp,st.ok.pp,st.bad==='pp',5)+' in '+fmt(storyChances(st.story,cur.calls).pathOf)+'</div>';
+    h+='<div class="sub" style="margin-top:12px">If he did, how likely were these four calls?</div><div class="eq">'+
+      cur.calls.map((c,t)=>nw(CUPS[st.story[t]]+' calls '+CALL[c]+': '+f('e'+t)+' in 4')).join(' · ')+'</div>'+
+      '<div class="eq">multiplied: '+nIn('pe',st.v.pe,st.ok.pe,st.bad==='pe',5)+' in 256</div>'+
+      '<div class="sub" style="margin-top:12px">Both together</div><div class="eq">'+nIn('pb',st.v.pb,st.ok.pb,st.bad==='pb',6)+' in 32,768</div>';
+    return h;
+  },
+  reveal(){
+    const c=storyChances(cur.st.story,cur.calls);
+    return [{html:'The chances of keeping or swapping, 3 in 4 and 1 in 4, are '+term('trans','transition probabilities')+'. A cup’s chances of each call are its '+term('emit','emission probabilities')+': 2/4 and 2/4 for the plain cup, 3/4 and 1/4 for the heavy one. The whole parlour, a hidden cup that changes by transition probabilities and a call emitted by whichever cup is in play, is a '+term('hmm','hidden Markov model')+'.'},
+      {html:'Your story with its calls: '+c.both+' / 32,768 = '+(c.both/32768).toPrecision(3)+'. That is one story. There are others.',src:['rabiner']}];
+  }
+};
+ACT.cup=i=>{
+  const st=cur.st;if(cur.done)return;i=+i;
+  st.story[i]=st.story[i]===null?0:1-st.story[i];
+  if(Object.keys(st.v).length){st.v={};st.ok={};say('New story: the sums start again.');}
+  else say(st.story.every(k=>k!==null)?'Now the chances. Type each one and press Enter.':'Click each round’s cup.');
+  log('story',{story:st.story.slice()});
+};
+function checkStory(id,val){
+  const st=cur.st,w=MODES.story.want();if(!(id in w)||st.ok[id])return;
+  st.v[id]=val;const n=Number(val);
+  if(String(val).trim()===''||!Number.isInteger(n)){return;}
+  if(n===w[id]){st.ok[id]=true;st.bad=null;log('cell',{id,ok:true});
+    const next=['s0','t1','t2','t3','pp','e0','e1','e2','e3','pe','pb'].find(k=>!st.ok[k]);
+    if(!next){complete(['trans','emit','hmm'],null,'One story, priced.');return;}
+    cur.focus=next;say('Written in.');
+  }else{
+    st.bad=id;log('cell',{id,ok:false,val:n});jolt(id);cur.focus=id;
+    say(id[0]==='t'||id==='s0'?'The bookkeeper crosses it out: check the house card for how often he keeps and swaps.'
+      :id[0]==='e'?'The bookkeeper crosses it out: check the house card for that cup’s chances of that call.'
+      :'The bookkeeper crosses it out: multiply the numbers in the row above.','warn');
+  }
+}
+
+/* ================= Level 5: the wall ================= */
+const BIG100='1,267,650,600,228,229,401,496,703,205,376';
+function machine(spin){
+  return '<svg class="scene" viewBox="0 0 760 210" role="img" aria-label="The counting machine">'+
+    '<rect width="760" height="120" fill="url(#pWall)"/><rect y="120" width="760" height="90" fill="url(#pMat)"/>'+
+    '<use href="#a-lantern" transform="translate(60,52)"/><use href="#a-lantern" transform="translate(700,52)"/>'+
+    '<g transform="translate(250,40)"><rect width="260" height="140" rx="10" fill="#8a6a2f" stroke="#4a3412" stroke-width="3"/>'+
+    '<rect x="16" y="16" width="228" height="44" rx="6" fill="#1f2328"/>'+
+    [0,1,2,3,4,5].map(i=>'<g transform="translate('+(40+i*36)+',105)"><circle r="16" fill="#c9a34a" stroke="#4a3412" stroke-width="2"/><path d="M0,-16V16M-16,0H16" stroke="#4a3412" stroke-width="2" transform="rotate('+((spin||0)*(i+1)*17%360)+')"/></g>').join('')+
+    '<text x="130" y="46" text-anchor="middle" font-size="22" fill="#9be7a2" font-family="ui-monospace,Menlo,monospace">'+esc(cur.w.display||'0')+'</text></g>'+
+    '<use href="#a-dealer" transform="translate(620,128) scale(.8)"/></svg>';
+}
+MODES.wall={
+  init(){cur.w={done4:null,done12:null,on100:false,count:0,display:'0',spin:0};say('Start with four rounds.');},
+  rule(){return 'One story at a time · add them all';},
+  scene(){return machine(cur.w.spin);},
+  work(){
+    const w=cur.w,c4=night().calls.slice(0,4);
+    let h='<div class="row"><button id="run4" data-act="run" data-arg="4"'+(w.done4?' disabled':'')+'>Count every story: 4 rounds</button>'+
+      '<button id="run12" data-act="run" data-arg="12"'+(!w.done4||w.done12?' disabled':'')+'>Count: all 12 rounds of the night</button>'+
+      '<button id="run100" data-act="run" data-arg="100"'+(!w.done12||w.on100?' disabled':'')+'>Count: a night of 100 rounds</button></div>';
+    if(w.done4){
+      h+='<div class="sub" style="margin-top:8px">Four rounds: '+c4.map(c=>CALL[c]).join(', ')+'</div><div class="botlog">'+
+        w.done4.list.map(r=>r.s.map(k=>k?'H':'P').join('')+'  '+String(r.v).padStart(4)+' in 32,768').join('\n')+'</div>'+
+        '<p>16 stories. Added up: <b class="frac">'+fmt(w.done4.total)+' in 32,768</b>.</p>';
+    }
+    if(w.done12)h+='<p>Twelve rounds: <b>'+fmt(4096)+'</b> stories, each a product of 24 chances. Added up: <b class="frac">'+fmt(w.done12.total)+'</b> in '+fmt(ledgerDenominator(12))+'.</p>';
+    if(w.on100)h+='<p>One hundred rounds: <b>'+BIG100+'</b> stories (2 multiplied by itself 100 times). At a million stories a second the machine needs about 40,000,000,000,000,000 years.</p>'+
+      '<p class="counter">counted: '+fmt(w.count)+'</p>';
+    return h;
+  },
+  skip(){return cur.w.on100?'Switch the machine off: this is hopeless':'';},
+  onSkip(){clearInterval(cur.timer);cur.headline='Giving up is the right answer';log('gave_up',{count:cur.w.count});complete([],null,'The machine stops. The bookkeeper looks up from her page.');},
+  reveal(){return [{html:'Every extra round doubles the number of stories, so adding them one by one is hopeless long before a real night ends. The bookkeeper never lists a single story, and her total for the twelve-round night is the same as the machine’s. Next level: how.'}];}
+};
+ACT.run=n=>{
+  const w=cur.w;n=+n;if(cur.done)return;
+  const calls=night().calls;
+  if(n===4&&!w.done4){
+    const c=calls.slice(0,4),list=[];
+    for(let m=0;m<16;m++){const s=[0,1,2,3].map(i=>(m>>(3-i))&1);list.push({s,v:storyChances(s,c).both});}
+    w.done4={list,total:list.reduce((a,r)=>a+r.v,0)};w.display=fmt(16);say('Sixteen stories, sixteen products, one total. Now the whole night.');
+  }else if(n===12&&w.done4&&!w.done12){
+    w.done12=bruteForce(calls);w.display=fmt(4096);say('4,096 stories. Now a longer night.');
+  }else if(n===100&&w.done12&&!w.on100){
+    w.on100=true;w.count=0;say('The machine starts on a night of 100 rounds.');
+    if(!REDUCED){const mine=cur;cur.timer=setInterval(()=>{if(cur!==mine||cur.done)return clearInterval(mine.timer);
+      w.count+=48611;w.spin++;w.display=fmt(w.count);const sc=$('#scene');if(sc)sc.innerHTML=machine(w.spin);const ct=document.querySelector('.counter');if(ct)ct.textContent='counted: '+fmt(w.count);},120);}
+    else{w.count=48611;w.display=fmt(w.count);}
+  }else return;
+  log('run',{rounds:n});
+};
+
+/* ================= the ledger page (levels 6 and 7) ================= */
+function ledgerGrid(calls,cellFn,extraRows){
+  const n=calls.length;
+  let h='<div class="hscroll"><div class="ledger" style="grid-template-columns:auto repeat('+n+',minmax(92px,auto))">'+
+    '<span></span>'+calls.map((_,t)=>'<span class="lhead">round '+(t+1)+'</span>').join('')+
+    '<span class="lrow">call</span>'+calls.map(c=>'<span class="lcall">'+CALL[c]+'</span>').join('');
+  for(const k of [0,1]){h+='<span class="lrow '+CUPS[k]+'">'+CUPS[k]+'</span>';for(let t=0;t<n;t++)h+=cellFn(t,k);}
+  return h+(extraRows||'')+'</div></div>';
+}
+function waysHtml(t,k,mode,state){
+  if(t===0)return '<div class="ways"><span class="way">start ×1</span></div>';
+  return '<div class="ways">'+[0,1].map(j=>{
+    const lab='from '+CUPS[j]+' ×'+trans(j,k),pick=state&&state.pick?state.pick[t+','+k]:undefined;
+    if(mode==='pick'&&pick!==undefined)return '<span class="way'+(pick===j?' pick':' drop')+'">'+lab+'</span>';
+    if(mode==='pick')return '<button class="way" id="w'+t+k+j+'" data-act="way" data-arg="'+t+','+k+','+j+'">'+lab+'</button>';
+    return '<span class="way'+(state&&state.lit===t+','+k?' lit':'')+'">'+lab+'</span>';
+  }).join('')+'</div>';
+}
+const emitHtml=(k,c)=>'<div class="emit">× '+ODDS.emit[k][c]+' for '+CALL[c]+'</div>';
+
+/* ================= Level 6: the summing ledger ================= */
+MODES.ledger={
+  init(){cur.N=night();cur.cols=sumLedger(cur.N.calls);cur.lg={v:{},ok:{},bad:null,lit:null};say('Start with round 1: type each entry and press Enter.');},
+  rule(){return 'Each entry: add the ways in, then multiply by the call';},
+  scene(){return parlour({keeper:true,card:CARD_CALLS.concat(CARD_SWAP),cups:[{x:380,kind:'hidden'}],cloth:true});},
+  work(){
+    const lg=cur.lg,N=cur.N,cols=cur.cols,done=cur.done;
+    const cell=(t,k)=>{
+      const id='c'+t+k;
+      if(t<3)return '<div class="cell '+CUPS[k]+'">'+waysHtml(t,k,'show',lg)+(lg.ok[id]?'<div class="v">'+cols[t][k]+'</div>':nIn(id,lg.v[id],false,lg.bad===id,5))+emitHtml(k,N.calls[t])+'</div>';
+      return '<div class="cell '+CUPS[k]+'">'+waysHtml(t,k,'show')+'<div class="v auto">'+(done?fmt(cols[t][k]):'…')+'</div>'+emitHtml(k,N.calls[t])+'</div>';
+    };
+    let extra='';
+    if(done)extra='<span class="lrow">heavy share</span>'+cols.map(c=>'<span class="share">'+Math.round(100*c[1]/(c[0]+c[1]))+'%</span>').join('')+cupRow('truth',N.truth);
+    let h=ledgerGrid(N.calls,cell,extra);
+    if(done){
+      const p3=cols[2][0]+cols[2][1],tot=cols[11][0]+cols[11][1],d=ledgerDenominator(12);
+      h+='<div class="prob">After three calls the column adds to <b class="frac">'+p3+'</b>. Divide by 2 for the start, by 4 for each of the 3 calls and by 4 for each of the 2 steps between rounds: <b class="frac">'+p3+' / '+fmt(ledgerDenominator(3))+' = '+(p3/ledgerDenominator(3)).toFixed(4)+'</b>, the chance of those three calls whatever the dealer did.</div>'+
+        '<div class="prob">After all twelve: <b class="frac">'+fmt(tot)+' / '+fmt(d)+' = '+(tot/d).toPrecision(3)+'</b>, the chance of the whole night. It is the counting machine’s total, with no story listed.</div>'+
+        '<div class="sub" style="margin-top:10px">The bookkeeper’s share for the heavy cup, over your bead from level 3</div>'+
+        beliefChart(12,S.marks[gkey('night')]||null,beliefs(N.calls),N.truth)+(S.marks[gkey('night')]?'':'<p class="gmeta">(Your level 3 beads for this night were not saved: play level 3 to see them here.)</p>');
+    }
+    return h;
+  },
+  reveal(){return [{html:'The bookkeeper’s page is the '+term('forward','forward algorithm')+'. Each column needs only the column before it, so twelve rounds cost twelve columns of four products, not 4,096 stories, and a hundred rounds cost a hundred columns.',src:['baum']}];}
+};
+function checkLedger(id,val){
+  const lg=cur.lg,t=+id[1],k=+id[2];if(lg.ok[id])return;
+  lg.v[id]=val;const n=Number(val);if(String(val).trim()===''||!Number.isInteger(n))return;
+  const order=['c00','c01','c10','c11','c20','c21'];
+  if(t>0&&!lg.ok['c'+(t-1)+'0']||t>0&&!lg.ok['c'+(t-1)+'1']){say('This entry is built from the column before it. Fill that first.','warn');jolt(id);return;}
+  if(n===cur.cols[t][k]){lg.ok[id]=true;lg.bad=null;lg.lit=null;log('cell',{id,ok:true});
+    const next=order.find(x=>!lg.ok[x]);
+    if(!next){complete(['forward'],null,'The bookkeeper takes it from here and fills the rest of the night.');return;}
+    cur.focus=next;say('Written in.');
+  }else{lg.bad=id;lg.lit=t+','+k;log('cell',{id,ok:false,val:n});jolt(id);cur.focus=id;
+    say('The ink will not take '+n+'. Follow the ways in to this entry, then the call.','warn');}
+}
+
+/* ================= Level 7: the best story ================= */
+MODES.best={
+  init(){cur.calls=vnightFor(gkey('vnight'));cur.bl=bestLedger(cur.calls);cur.bs=bestStory(cur.calls);cur.b={v:{},ok:{},pick:{},bad:null,trail:[]};say('Round 1 first: type both entries.');},
+  rule(){return cur.b.stage==='back'?'Follow the kept ways back from the larger end':'Each entry: keep the larger way in, then multiply by the call';},
+  scene(){return parlour({keeper:true,card:CARD_CALLS.concat(CARD_SWAP),cups:[{x:380,kind:'hidden'}],cloth:true});},
+  colDone(t){return [0,1].every(k=>this.cellDone(t,k));},
+  cellDone(t,k){const b=cur.b;return t===0?!!b.ok['c0'+k]:b.pick[t+','+k]!==undefined&&(t>2||!!b.ok['c'+t+k]);},
+  allDone(){return cur.calls.every((_,t)=>this.colDone(t));},
+  work(){
+    const b=cur.b,cols=cur.bl.cols,calls=cur.calls,n=calls.length,back=this.allDone();
+    const onTrail=(t,k)=>b.trail.some(([a,c])=>a===t&&c===k);
+    const cell=(t,k)=>{
+      const id='c'+t+k,picked=t===0||b.pick[t+','+k]!==undefined,showV=t===0?b.ok[id]:picked&&(t>2||b.ok[id]);
+      let inner=(t===0?waysHtml(0,k):waysHtml(t,k,'pick',b));
+      if(showV)inner+='<div class="v'+(t>2?' auto':'')+'">'+fmt(cols[t][k])+'</div>';
+      else if(picked||t===0)inner+=nIn(id,b.v[id],false,b.bad===id,5);
+      else inner+='<div class="v auto">·</div>';
+      inner+=emitHtml(k,calls[t]);
+      if(back&&!cur.done)return '<button class="cell '+CUPS[k]+(onTrail(t,k)?' trail':'')+'" id="bk'+t+k+'" data-act="back" data-arg="'+t+','+k+'">'+inner+'</button>';
+      return '<div class="cell '+CUPS[k]+(onTrail(t,k)?' trail':'')+'">'+inner+'</div>';
+    };
+    let extra='';
+    if(cur.done){
+      const L=likelierCups(calls);
+      extra=cupRow('best story',cur.bs.story)+cupRow('likelier each round',L)+
+        '<span class="lrow">agree?</span>'+L.map((k,i)=>'<span class="share" style="font-weight:700;color:'+(k===cur.bs.story[i]?'var(--good)':'var(--warn)')+'">'+(k===cur.bs.story[i]?'yes':'no')+'</span>').join('');
+    }
+    let h=ledgerGrid(calls,cell,extra);
+    if(cur.done){
+      const L=likelierCups(calls),diff=L.map((k,i)=>k!==cur.bs.story[i]?i+1:0).filter(Boolean);
+      h+='<p class="prob">The best story is worth <b class="frac">'+fmt(cur.bs.value)+' / '+fmt(ledgerDenominator(n))+'</b>. The bottom row bets each round on the cup the adding page (level 6) favours for that round. They part in round'+(diff.length>1?'s ':' ')+diff.join(', ')+'.</p>';
+    }
+    return h;
+  },
+  reveal(){
+    const L=likelierCups(cur.calls),diff=L.map((k,i)=>k!==cur.bs.story[i]?i+1:0).filter(Boolean);
+    return [{html:'Keeping the better way in, then following the kept ways back, is the '+term('viterbi','Viterbi algorithm')+'. It finds the single most likely story. Betting each round on the cup the adding page favours answers a different question, which cup is likelier in that one round, and here the two disagree in round'+(diff.length>1?'s ':' ')+diff.join(', ')+'. A story made of round-by-round favourites can even be one the dealer was unlikely to play.'},
+      {html:'You have seen this page before. It is Toll City with two rows: there you added tolls along a route and kept the better way into each corner; here you multiply chances along a story and keep the better way into each entry.',src:['viterbi']}];
+  }
+};
+ACT.way=a=>{
+  const b=cur.b,[t,k,j]=a.split(',').map(Number);if(cur.done||b.pick[t+','+k]!==undefined)return;
+  if(!MODES.best.colDone(t-1)){say('Finish round '+t+' first.','warn');jolt('w'+t+k+j);return;}
+  if(cur.bl.from[t][k]!==j){say('The bookkeeper shakes her head: work out both ways in. The other one is larger.','warn');jolt('w'+t+k+j);log('way',{t,k,j,ok:false});return;}
+  b.pick[t+','+k]=j;log('way',{t,k,j,ok:true});
+  if(t<=2){cur.focus='c'+t+k;say('Kept. Now write the entry.');}else say('Kept. The bookkeeper writes it in.');
+  if(MODES.best.allDone()){b.stage='back';say('The page is full. Now follow the kept ways back: start at the larger entry in the last round.');}
+};
+function checkBest(id,val){
+  const b=cur.b,t=+id[1],k=+id[2];if(b.ok[id])return;
+  b.v[id]=val;const n=Number(val);if(String(val).trim()===''||!Number.isInteger(n))return;
+  if(t>0&&b.pick[t+','+k]===undefined){say('Choose the way in to keep first.','warn');return;}
+  if(n===cur.bl.cols[t][k]){b.ok[id]=true;b.bad=null;log('cell',{id,ok:true});say('Written in.');
+    if(MODES.best.allDone()){b.stage='back';say('The page is full. Now follow the kept ways back: start at the larger entry in the last round.');}
+  }else{b.bad=id;log('cell',{id,ok:false,val:n});jolt(id);cur.focus=id;say('The ink will not take '+n+': the larger way in, times the call.','warn');}
+}
+ACT.back=a=>{
+  const b=cur.b,[t,k]=a.split(',').map(Number),n=cur.calls.length;if(cur.done||!MODES.best.allDone())return;
+  const story=cur.bs.story,want=n-1-b.trail.length;
+  if(t!==want||k!==story[want]){
+    say(b.trail.length?'Your kept way into round '+(want+2)+' does not lead there.':'Start from the larger entry in the last round.','warn');jolt('bk'+t+k);log('back',{t,k,ok:false});return;}
+  b.trail.push([t,k]);log('back',{t,k,ok:true});
+  if(b.trail.length===n)complete(['viterbi'],null,'The most likely story, read backwards along your kept ways.');
+  else say('Now the entry your kept way came from, in round '+t+'.');
+};
+
+/* ================= the family ================= */
+const AB='ABCDEFG';
+function famRows(f,opts){
+  opts=opts||{};const isRoom=opts.isRoom;
+  let h='<div class="hscroll">';
+  if(isRoom)h+='<div class="seq"><span class="seqname">room</span>'+f.aln[0].split('').map((_,j)=>'<span class="gap" style="font-size:.75rem">'+(isRoom[j]?isRoom.slice(0,j+1).filter(Boolean).length:'')+'</span>').join('')+'</div>';
+  f.aln.forEach((r,i)=>{h+='<div class="seq"><span class="seqname">member '+(i+1)+'</span>'+r.split('').map((ch,j)=>'<span class="'+(ch==='-'?'gap':'')+(isRoom&&!isRoom[j]?' off':'')+(isRoom&&isRoom[j]?' room':'')+(opts.hot===j?' hot':'')+'">'+ch+'</span>').join('')+'</div>';});
+  return h+'</div>';
+}
+/* a newcomer written under the room columns of the default house (blank under the gappy column) */
+function spread(f,s){let i=0;return f.aln[0].split('').map((_,j)=>f.isRoom[j]?s[i++]||'':'');}
+function newcomerOrder(f){return rng(hashStr(f.key+'|order'))()<.5?['relative','stranger']:['stranger','relative'];}
+MODES.family={
+  init(){cur.f=family();cur.order=newcomerOrder(cur.f);cur.pick=null;say('Which newcomer belongs?');},
+  rule(){return 'Pick the newcomer that belongs';},
+  scene(){return houseFront();},
+  work(){
+    const f=cur.f;
+    let h='<div class="sub">The family</div>'+famRows(f)+'<p class="illus">Illustrative family, invented for this game.</p>';
+    cur.order.forEach((who,i)=>{
+      const cls=cur.done?(who==='relative'?' right':cur.pick===i?' chosen':''):'';
+      h+='<div class="newcomer'+cls+'"><div class="seq"><span class="seqname">newcomer '+AB[i]+'</span>'+spread(f,f[who]).map(ch=>'<span class="'+(ch?'':'gap')+'">'+(ch||' ')+'</span>').join('')+'</div>'+
+        (cur.done?(who==='relative'?'<b style="color:var(--good)">family</b>':'<span class="gmeta">not family</span>'):'<button class="primary" id="pick'+i+'" data-act="pick" data-arg="'+i+'">This one belongs</button>')+'</div>';
+    });
+    return h;
+  },
+  reveal(){
+    const right=cur.order.indexOf('relative');
+    return [{html:'Newcomer '+AB[right]+' is family. '+(cur.pick===right?'You picked it.':'You picked the other one, and no wonder:')+' nearly every letter the stranger has, some member has in that column too. Why one is family and the other is not, you cannot yet say. By the end of the night you will have built a doorkeeper who can.'},
+      {html:'Proteins descended from one ancestor form a '+term('family','protein family')+'. Rows written one above another, with dashes so that related letters share a column, are a '+term('msa','multiple alignment')+'.'}];
+  }
+};
+ACT.pick=i=>{if(cur.done)return;cur.pick=+i;S.picked.l1=cur.order[+i];log('pick',{newcomer:AB[+i],who:cur.order[+i]});complete(['family','msa'],null,'The door opens for newcomer '+AB[cur.order.indexOf('relative')]+'.');};
+
+/* ================= the house ================= */
+function houseFront(){
+  return '<svg class="scene" viewBox="0 0 760 170" role="img" aria-label="The family house">'+
+    '<rect width="760" height="170" fill="#e9dcc0"/><rect y="132" width="760" height="38" fill="url(#pMat)"/>'+
+    '<path d="M150,60L380,14L610,60Z" fill="#5b3b1f"/><rect x="170" y="60" width="420" height="74" fill="#fbf4e2" stroke="#5b3b1f" stroke-width="3"/>'+
+    [0,1,2,3,4,5].map(i=>'<path d="M'+(170+i*70)+',60V134" stroke="#9a7a4a" stroke-width="2"/>').join('')+
+    '<rect x="355" y="84" width="50" height="50" fill="#5b3b1f"/><circle cx="397" cy="110" r="3" fill="#f2b632"/>'+
+    '<use href="#a-walker" transform="translate(300,140)" style="color:#2e7d4f"/><use href="#a-walker" transform="translate(460,140)" style="color:#b4541a"/>'+
+    '<use href="#a-lantern" transform="translate(120,70) scale(.8)"/><use href="#a-lantern" transform="translate(640,70) scale(.8)"/></svg>';
+}
+/* trail: [{state, letter}] (the walk to draw); mark: room number to outline */
+function houseSvg(k,opts){
+  opts=opts||{};
+  const W=760,H=230,pad=20,slot=(W-2*pad)/(k+1),rw=Math.min(64,slot*.62),X=j=>pad+slot*(j-.5)+slot/2;  // room j centre
+  const top=78,bot=150,cx=j=>X(j)+slot/2;  // corridor j sits between room j and j+1
+  let h='<svg class="house" viewBox="0 0 '+W+' '+H+'" role="img" aria-label="The house: '+k+' rooms in a row">'+
+    '<rect width="'+W+'" height="'+H+'" fill="#efe4cb"/><rect y="'+(bot+30)+'" width="'+W+'" height="'+(H-bot-30)+'" fill="#7b5a3a"/>';
+  h+='<text x="'+(pad+4)+'" y="'+(top+40)+'" font-size="15" fill="#5b3b1f" font-family="system-ui,sans-serif">door</text>';
+  for(let j=0;j<=k;j++){  // corridors (after room j; corridor 0 is before room 1)
+    const x=j===0?pad+slot*.25:cx(j)-slot/2+slot/2;
+    const xx=j===0?X(1)-rw/2-26:X(j)+rw/2+4,ww=j===0?22:Math.max(14,slot-rw-8);
+    h+='<rect x="'+xx.toFixed(1)+'" y="28" width="'+ww.toFixed(1)+'" height="34" rx="8" fill="#dfe9d2" stroke="#6e8a5a" stroke-dasharray="4 3"/>';
+    void x;
+  }
+  for(let j=1;j<=k;j++){
+    const x=X(j)-rw/2;
+    h+='<rect x="'+x.toFixed(1)+'" y="'+top+'" width="'+rw.toFixed(1)+'" height="'+(bot-top)+'" rx="4" fill="#fbf4e2" stroke="'+(opts.mark===j?'#e8590c':'#5b3b1f')+'" stroke-width="'+(opts.mark===j?4:2)+'"/>'+
+      '<rect x="'+(X(j)-rw*.3).toFixed(1)+'" y="'+(bot-6)+'" width="'+(rw*.6).toFixed(1)+'" height="8" fill="#3b2a22"/>'+
+      '<text x="'+X(j).toFixed(1)+'" y="'+(top-6)+'" text-anchor="middle" font-size="17" font-weight="700" fill="#5b3b1f" font-family="system-ui,sans-serif">'+j+'</text>';
+    if(j<k)h+='<path d="M'+(X(j)+rw/2).toFixed(1)+','+(top+40)+'H'+(X(j+1)-rw/2).toFixed(1)+'" stroke="#5b3b1f" stroke-width="2" marker-end="url(#none)"/>';
+  }
+  h+='<text x="'+(W-pad-2)+'" y="'+(top+40)+'" text-anchor="end" font-size="15" fill="#5b3b1f" font-family="system-ui,sans-serif">out</text>';
+  /* the walk */
+  const tr=opts.trail||[];let lastX=pad+6,lastY=top+50,pts=[[lastX,lastY]];
+  tr.forEach((st,i)=>{
+    const kind=st.state[0],j=+st.state.slice(1),delay=REDUCED?0:i*0.25,anim=REDUCED?'':' style="animation:fadein .3s '+delay+'s both"';
+    if(kind==='M'){lastX=X(j);lastY=top+46;pts.push([lastX,lastY]);
+      h+='<g'+anim+'><circle cx="'+lastX.toFixed(1)+'" cy="'+(top+46)+'" r="14" fill="'+(opts.col||'#2e7d4f')+'"/><text x="'+lastX.toFixed(1)+'" y="'+(top+51)+'" text-anchor="middle" font-size="15" font-weight="700" fill="#fff">'+st.letter+'</text></g>';}
+    else if(kind==='D'){lastX=X(j);lastY=bot+18;pts.push([lastX,lastY]);
+      h+='<g'+anim+'><path d="M'+lastX.toFixed(1)+','+(bot-4)+'v18" stroke="#b3261e" stroke-width="3"/><path d="M'+(lastX-6).toFixed(1)+','+(bot+8)+'l6,8l6,-8" fill="none" stroke="#b3261e" stroke-width="3"/></g>';}
+    else if(kind==='I'){lastX=j===0?X(1)-rw/2-15:X(j)+slot/2;lastY=45;pts.push([lastX,lastY]);
+      h+='<g'+anim+'><circle cx="'+lastX.toFixed(1)+'" cy="45" r="11" fill="#6e8a5a"/><text x="'+lastX.toFixed(1)+'" y="50" text-anchor="middle" font-size="13" font-weight="700" fill="#fff">'+st.letter+'</text></g>';}
+  });
+  if(opts.out)pts.push([W-pad-8,top+50]);
+  if(pts.length>1)h+='<polyline points="'+pts.map(p=>p[0].toFixed(1)+','+p[1].toFixed(1)).join(' ')+'" fill="none" stroke="'+(opts.col||'#2e7d4f')+'" stroke-width="2" stroke-dasharray="3 4" opacity=".8"/>';
+  const end=pts[pts.length-1];
+  if(opts.walker!==false)h+='<use href="#a-walker" transform="translate('+end[0].toFixed(1)+','+(end[1]+(end[1]<60?-8:28)).toFixed(1)+')" style="color:'+(opts.col||'#2e7d4f')+'"/>';
+  return h+'<style>@keyframes fadein{from{opacity:0}to{opacity:1}}</style></svg>';
+}
+const roomNo=(isRoom,col)=>isRoom.slice(0,col+1).filter(Boolean).length;
+const stName=(s,letter)=>{const j=s.slice(1);return s==='E'?'out the back door':s[0]==='M'?'into room '+j+(letter?' and say '+letter:''):s[0]==='D'?'down the trapdoor past room '+j:'into the corridor after '+(j==='0'?'the door':'room '+j)+(letter?' and say '+letter:'');};
+
+/* ================= Level 8: rooms ================= */
+MODES.rooms={
+  init(){cur.f=family();cur.r={gaps:4,member:null,mv:{},lt:{},bad:null};say('Set how many gaps a room may have.');},
+  rule(){return 'A room for each column most members fill · trapdoor for a gap · corridor for the rest';},
+  isRoom(){return roomsOf(cur.f.aln,cur.r.gaps);},
+  R(){return roomNo(this.isRoom(),cur.f.gappy-1);},
+  ok(){return cur.r.gaps<=2;},
+  scene(){
+    const r=cur.r,isR=this.isRoom(),k=isR.filter(Boolean).length;
+    const trail=r.member!==null&&this.ok()?memberWalk(cur.f.aln[r.member],isR).map(s=>({state:s.kind+s.room,letter:s.letter})):[];
+    return houseSvg(k,{mark:this.R(),trail,out:trail.length>0,walker:trail.length>0});
+  },
+  moves(){const k=this.isRoom().filter(Boolean).length;return allowedNext('M'+this.R(),k);},
+  work(){
+    const r=cur.r,f=cur.f,isR=this.isRoom(),R=this.R(),ok=this.ok(),k=isR.filter(Boolean).length;
+    const most=[...Array(f.n).keys()].filter(j=>f.aln.filter(s=>s[j]==='-').length>2);
+    let h='<div class="slider"><label for="gaps">A column may have at most <b>'+r.gaps+'</b> gap'+(r.gaps===1?'':'s')+' and still be a room</label>'+
+      '<input type="range" id="gaps" min="0" max="4" step="1" value="'+r.gaps+'" data-slide="gaps"> <span class="gmeta">'+k+' rooms</span></div>';
+    h+=famRows(f,{isRoom:isR,hot:f.gappy-1});
+    if(!ok){h+='<p class="status warn">With this setting room '+roomNo(isR,most[0])+' is one that three of the five members fall straight through. The bookkeeper will not build a room most members skip.</p>';return h;}
+    h+='<div class="row"><span class="sub">Send through:</span>'+f.aln.map((_,i)=>'<button id="mem'+i+'" data-act="member" data-arg="'+i+'" class="'+(r.member===i?'primary':'')+'">member '+(i+1)+'</button>').join('')+'</div>';
+    h+='<div class="sub" style="margin-top:10px">Your tally for room '+R+' (outlined): where each member goes next</div><div class="moveset">'+
+      this.moves().map(s=>'<div class="mv'+(r.bad&&r.bad.includes(s)?' bad':'')+'"><span>'+stName(s)+'</span><button data-act="mv" data-arg="'+s+',-1" aria-label="one fewer">−</button><b id="mv'+s+'">'+(r.mv[s]||0)+'</b><button data-act="mv" data-arg="'+s+',1" id="mvp'+s+'" aria-label="one more">+</button></div>').join('')+'</div>';
+    h+='<div class="sub" style="margin-top:10px">Letters said in room '+R+' (click to add one; '+'<button data-act="clearlt" style="padding:0 8px">clear</button>)</div><div class="board">'+
+      AMINO.map(x=>'<button class="lkey'+(r.bad&&r.bad.includes(x)?' bad':'')+'" id="lt'+x+'" data-act="lt" data-arg="'+x+'">'+x+'<small>'+(r.lt[x]||0)+'</small></button>').join('')+'</div>'+
+      '<button class="primary" id="pin" data-act="pin">Pin the tally on room '+R+'’s door</button>';
+    if(cur.done)h+=this.table();
+    return h;
+  },
+  table(){
+    const f=cur.f,isR=this.isRoom(),C=profileCounts(f.aln,isR,AMINO),k=C.k;
+    let h='<div class="sub" style="margin-top:12px">The bookkeeper tallies every room the same way, in fifths</div><div class="hscroll"><table class="gmeta" style="border-collapse:collapse"><tr><th></th>';
+    for(let j=1;j<=k;j++)h+='<th style="padding:2px 8px">room '+j+'</th>';
+    h+='</tr><tr><td>letters</td>';
+    for(let j=1;j<=k;j++){const e=C.E['M'+j],tot=AMINO.reduce((a,x)=>a+e[x],0);h+='<td style="padding:2px 8px;vertical-align:top">'+AMINO.filter(x=>e[x]).map(x=>x+' '+e[x]+'/'+tot).join('<br>')+'</td>';}
+    h+='</tr><tr><td>moves out</td>';
+    for(let j=1;j<=k;j++){const t=C.T['M'+j],nx=allowedNext('M'+j,k),tot=nx.reduce((a,s)=>a+t[s],0);
+      h+='<td style="padding:2px 8px;vertical-align:top">'+nx.filter(s=>t[s]).map(s=>(s==='E'?'out':s[0]==='M'?'room':s[0]==='D'?'trapdoor':'corridor')+' '+t[s]+'/'+tot).join('<br>')+'</td>';}
+    return h+'</tr></table></div>';
+  },
+  reveal(){
+    return [{html:'The house is a '+term('phmm','profile HMM')+' of the family. Each room is a '+term('match','match state')+': it emits letters with its column’s tally. The corridor is an '+term('insert','insert state')+', for extra letters between rooms. The trapdoor is a '+term('delete','delete state')+': silent, it lets a member skip a room. The moves out of each room are its transition probabilities, the letters its emission probabilities. Counting the traffic of the aligned members is how the model is built.',src:['krogh','eddy']}];
+  }
+};
+ACT.gaps=v=>{const r=cur.r;if(cur.done)return;v=+v;if(v===r.gaps)return;r.gaps=v;r.mv={};r.lt={};r.bad=null;r.member=null;log('gaps',{v});
+  say(MODES.rooms.ok()?'The house has '+roomsOf(cur.f.aln,v).filter(Boolean).length+' rooms. Send the members through.':'');};
+ACT.member=i=>{if(!MODES.rooms.ok())return;cur.r.member=+i;log('member',{i:+i});
+  const w=memberWalk(cur.f.aln[+i],MODES.rooms.isRoom()),R=MODES.rooms.R();
+  say('Member '+(+i+1)+' walks through. Watch room '+R+'.');void w;};
+ACT.mv=a=>{const [s,d]=a.split(',');if(cur.done)return;cur.r.mv[s]=Math.max(0,(cur.r.mv[s]||0)+(+d));cur.r.bad=null;};
+ACT.lt=x=>{if(cur.done)return;cur.r.lt[x]=(cur.r.lt[x]||0)+1;cur.r.bad=null;};
+ACT.clearlt=()=>{if(cur.done)return;cur.r.lt={};};
+ACT.pin=()=>{
+  const r=cur.r,M=MODES.rooms;if(cur.done||!M.ok())return;
+  const C=profileCounts(cur.f.aln,M.isRoom(),AMINO),R=M.R(),bad=[];
+  M.moves().forEach(s=>{if((r.mv[s]||0)!==C.T['M'+R][s])bad.push(s);});
+  AMINO.forEach(x=>{if((r.lt[x]||0)!==C.E['M'+R][x])bad.push(x);});
+  log('pin',{ok:!bad.length,bad});
+  if(bad.length){r.bad=bad;say('The tally on the door does not match the traffic. Send the members through again and watch room '+R+'.','warn');jolt('pin');return;}
+  const e=C.E['M'+R],t=C.T['M'+R];
+  complete(['phmm','match','insert','delete'],null,'Room '+R+': '+AMINO.filter(x=>e[x]).map(x=>x+' '+e[x]+'/5').join(', ')+'; moves '+M.moves().filter(s=>t[s]).map(s=>t[s]+'/5').join(', ')+'.');
+};
+
+/* ================= walking a newcomer (levels 9 and 10) ================= */
+function newWalk(text){return {text,steps:[],out:false};}
+function walkState(w){return w.steps.length?w.steps[w.steps.length-1]:'S';}
+function walkUsed(w){return w.steps.filter(s=>s[0]!=='D').length;}
+function stepChance(P,prev,s,letter){
+  const C=P.counts,nx=allowedNext(prev,P.k),add=P.add||0;
+  const tn=C.T[prev][s]+add,td=nx.reduce((a,x)=>a+C.T[prev][x]+add,0);
+  let f=[[tn,td]];
+  if(s[0]==='M'||s[0]==='I'){const en=C.E[s][letter]+add,ed=AMINO.reduce((a,x)=>a+C.E[s][x]+add,0);f.push([en,ed]);}
+  return f;
+}
+function walkFactors(w,P){
+  const out=[];let prev='S',i=0;
+  w.steps.forEach(s=>{const L=s[0]==='D'?null:w.text[i];out.push(...stepChance(P,prev,s,L));if(L)i++;prev=s;});
+  if(w.out)out.push(...stepChance(P,prev,'E'));
+  return out;
+}
+const fprod=fs=>fs.reduce((a,[n,d])=>a*(d?n/d:0),1);
+function trailOf(w){let i=0;return w.steps.map(s=>({state:s,letter:s[0]==='D'?null:w.text[i++]}));}
+function walkPanel(w,P,id){
+  const st=walkState(w),k=P.k,used=walkUsed(w),left=w.text.length-used;
+  let h='<div class="sub">'+esc(id)+': <span class="mono">'+w.text.split('').map((c,i)=>i<used?'<span style="opacity:.35">'+c+'</span>':i===used?'<b style="color:var(--accent)">'+c+'</b>':c).join('')+'</span></div>';
+  if(!w.out){
+    h+='<div class="row">'+allowedNext(st,k).map(s=>{
+      const emits=s[0]==='M'||s[0]==='I',dis=emits?left===0:s==='E'?left>0:false;
+      return '<button id="step'+s+'" data-act="step" data-arg="'+s+'"'+(dis?' disabled':'')+'>'+stName(s,emits?w.text[used]:null)+'</button>';
+    }).join('')+(w.steps.length?'<button data-act="unstep" id="unstep">Back one step</button>':'')+'</div>';
+  }
+  const fs=walkFactors(w,P),p=fprod(fs);
+  h+='<div class="prob">Chance so far: '+(fs.length?fs.map(([n,d])=>'<span class="frac">'+n+'/'+d+'</span>').join(' × '):'nothing yet')+(fs.length?' = <b>'+oneIn(p)+'</b>':'')+'</div>';
+  return h;
+}
+ACT.step=s=>{
+  const w=cur.walk;if(!w||w.out||cur.done)return;
+  if(s==='E'){if(walkUsed(w)<w.text.length)return;w.out=true;}
+  else{const emits=s[0]!=='D';if(emits&&walkUsed(w)>=w.text.length)return;if(!allowedNext(walkState(w),cur.P.k).includes(s))return;w.steps.push(s);}
+  const fs=walkFactors(w,cur.P),last=fs[fs.length-1],prevZero=fprod(fs.slice(0,-1))===0;
+  log('step',{s});
+  if(fs.length&&!prevZero&&fprod(fs)===0){
+    const L=s[0]==='M'||s[0]==='I'?w.text[walkUsed(w)-1]:null,eZero=L&&last[0]===0;
+    say(eZero?'Nobody in the family ever said '+L+' '+(s[0]==='M'?'in room '+s.slice(1):'in that corridor')+'. The walk is now worth nothing.':'No family member ever went that way. The walk is now worth nothing.','warn');
+  }else if(w.out)MODES[cur.mode].walked();
+  else say('');
+};
+ACT.unstep=()=>{const w=cur.walk;if(!w||cur.done)return;if(w.out)w.out=false;else w.steps.pop();say('');log('unstep');};
+
+/* ================= Level 9: the bouncer ================= */
+MODES.bouncer={
+  init(){cur.f=family();cur.P=profileHMM(cur.f.aln,{maxGaps:DEFAULT_GAPS});cur.order=newcomerOrder(cur.f);
+    cur.walks=cur.order.map(who=>newWalk(cur.f[who]));cur.best=[null,null];cur.which=0;cur.walk=cur.walks[0];say('Walk newcomer A through, one step at a time.');},
+  rule(){return 'Each step multiplies the chance by the tally on that door';},
+  scene(){const w=cur.walk;return houseSvg(cur.P.k,{trail:trailOf(w),out:w.out,col:cur.which?'#b4541a':'#2b5fb3'});},
+  walked(){const i=cur.which,b=profileBest(cur.walk.text,cur.P);cur.best[i]=b;log('walked',{who:cur.order[i],mine:fprod(walkFactors(cur.walk,cur.P)),best:b.prob});
+    say('Out the back. The bookkeeper checks every possible walk: the best is '+oneIn(b.prob)+'.');},
+  work(){
+    let h='<div class="row">'+cur.order.map((_,i)=>'<button id="nc'+i+'" data-act="which" data-arg="'+i+'" class="'+(cur.which===i?'primary':'')+'">Newcomer '+AB[i]+(cur.best[i]?' ✓':'')+'</button>').join('')+'</div>';
+    h+=walkPanel(cur.walk,cur.P,'Newcomer '+AB[cur.which]);
+    const both=cur.best[0]&&cur.best[1];
+    h+='<div class="scores">'+cur.order.map((_,i)=>cur.best[i]?'<div class="score"><b>Newcomer '+AB[i]+'</b> best walk: '+oneIn(cur.best[i].prob)+'</div>':'').join('')+'</div>';
+    if(both&&!cur.done)h+='<div class="row"><span class="sub">Who gets in?</span>'+cur.order.map((_,i)=>'<button class="primary" id="admit'+i+'" data-act="admit" data-arg="'+i+'">Let in newcomer '+AB[i]+'</button>').join('')+'</div>';
+    return h;
+  },
+  reveal(){
+    const b=cur.best,r=cur.order.indexOf('relative'),ratio=b[r].prob/b[1-r].prob;
+    return [{html:'The best walk is found the way the bookkeeper found the best story in level 7: keep the better way into each room, then follow it back. Newcomer '+AB[r]+'’s best walk is about '+fmt(Math.round(ratio))+' times likelier than the other’s. Every letter the stranger said had been said in its room by somebody, but mostly by one member out of five, in rooms where the others agree.'}];
+  }
+};
+ACT.which=i=>{if(cur.done)return;cur.which=+i;cur.walk=cur.walks[+i];say('Newcomer '+AB[+i]+'.');};
+ACT.admit=i=>{
+  if(cur.done)return;i=+i;const r=cur.order.indexOf('relative');log('admit',{i,ok:i===r});
+  if(i!==r){say('The bookkeeper holds the door: '+oneIn(cur.best[i].prob)+' against '+oneIn(cur.best[1-i].prob)+'.','warn');jolt('admit'+i);return;}
+  complete([],null,'Newcomer '+AB[r]+' is let in.');
+};
+
+/* ================= Level 10: one unseen letter ================= */
+MODES.pebbles={
+  init(){cur.f=family();cur.P=profileHMM(cur.f.aln,{maxGaps:DEFAULT_GAPS});cur.walk=newWalk(cur.f.second);cur.which=0;cur.best0=null;
+    cur.pb={on:false,letters:{},moves:{},spread:false};say('Walk the cousin through.');},
+  rule(){return cur.pb.on?'One pebble on every letter and every move':'Each step multiplies the chance by the tally on that door';},
+  scene(){return houseSvg(cur.P.k,{trail:trailOf(cur.walk),out:cur.walk.out,col:'#2e7d4f',mark:cur.pb.on?cur.f.slipRoom:undefined});},
+  walked(){if(cur.pb.spread)return MODES.pebbles.rescored();cur.best0=profileBest(cur.walk.text,cur.P);log('walked',{best:cur.best0.prob});
+    say(cur.best0.prob?'Best walk: '+oneIn(cur.best0.prob)+'.':'Out the back. The bookkeeper checks every possible walk: every one is worth nothing. The house turns the cousin away.','warn');},
+  moves(){return allowedNext('M'+cur.f.slipRoom,cur.P.k);},
+  work(){
+    const pb=cur.pb,R=cur.f.slipRoom;
+    let h=walkPanel(cur.walk,cur.P,'The cousin');
+    if(pb.on&&!pb.spread){
+      h+='<div class="sub" style="margin-top:10px">Room '+R+': drop one pebble on each letter (it counts as one more time that letter was said)</div><div class="board">'+
+        AMINO.map(x=>'<button class="lkey" id="pl'+x+'" data-act="peb" data-arg="L'+x+'"'+(pb.letters[x]?' disabled':'')+'>'+x+'<small>'+(cur.P.counts.E['M'+R][x]+(pb.letters[x]?1:0))+'</small></button>').join('')+'</div>'+
+        '<div class="sub">and one on each way out of room '+R+'</div><div class="moveset">'+
+        this.moves().map(s=>'<button class="mv" id="pm'+s+'" data-act="peb" data-arg="M'+s+'"'+(pb.moves[s]?' disabled':'')+'>'+stName(s)+' <b>'+(cur.P.counts.T['M'+R][s]+(pb.moves[s]?1:0))+'</b></button>').join('')+'</div>';
+      const e=AMINO.reduce((a,x)=>a+cur.P.counts.E['M'+R][x]+(pb.letters[x]?1:0),0);
+      h+='<p class="prob">Room '+R+' now counts '+e+' letters. '+cur.f.unseen+' has <b class="frac">'+(pb.letters[cur.f.unseen]?1:0)+' / '+e+'</b>.</p>';
+    }
+    if(pb.spread){
+      const s=familyScores(cur.f);
+      h+='<div class="scores"><div class="score"><b>The cousin</b> '+oneIn(s.sec1)+'</div><div class="score"><b>Level 9’s family newcomer</b> '+oneIn(s.rel1)+'</div><div class="score str"><b>Level 9’s stranger</b> '+oneIn(s.str1)+'</div></div>';
+    }
+    return h;
+  },
+  skip(){const pb=cur.pb;
+    if(!pb.on&&cur.best0&&cur.best0.prob===0)return 'Bring the bookkeeper’s pebble bag';
+    if(pb.on&&!pb.spread&&AMINO.every(x=>pb.letters[x])&&this.moves().every(s=>pb.moves[s]))return 'Let the bookkeeper drop one on everything else';
+    return '';},
+  onSkip(){const pb=cur.pb;
+    if(!pb.on){pb.on=true;log('pebbles_open');say('One pebble on each letter of room '+cur.f.slipRoom+', and one on each way out.');return;}
+    pb.spread=true;cur.P=profileHMM(cur.f.aln,{maxGaps:DEFAULT_GAPS,add:1});cur.walk=newWalk(cur.f.second);log('pebbles_spread');
+    say('Every room, corridor and trapdoor has a pebble on every letter and move. Walk the cousin through again.');
+  },
+  rescored(){const b=profileBest(cur.walk.text,cur.P),s=familyScores(cur.f);log('walked',{best:b.prob});
+    complete(['pseudo'],null,'The cousin’s best walk is now '+oneIn(b.prob)+': above the stranger’s '+oneIn(s.str1)+'.');},
+  reveal(){return [{html:'A pebble on every letter and every move is a '+term('pseudo','pseudocount')+'. You met the same trick in Motif Slots (unit 1), where a profile that had never seen a letter called a good motif impossible. One letter the family had not happened to say had shut the cousin out; now it costs the cousin a little, not everything.'}];}
+};
+ACT.peb=a=>{const pb=cur.pb;if(!pb||!pb.on||pb.spread)return;
+  if(a[0]==='L')pb.letters[a.slice(1)]=true;else pb.moves[a.slice(1)]=true;log('pebble',{a});
+  const left=AMINO.filter(x=>!pb.letters[x]).length+MODES.pebbles.moves().filter(s=>!pb.moves[s]).length;
+  say(left?left+(left===1?' pebble':' pebbles')+' to go.':'Room '+cur.f.slipRoom+' is done.');};
+
+/* ================= Level 11: reunion ================= */
+MODES.reunion={
+  init(){const f=cur.f=family();cur.P=profileHMM(f.aln,{maxGaps:DEFAULT_GAPS,add:1});
+    const all=[{s:f.relative,fam:1},{s:f.stranger,fam:0},{s:f.second,fam:1},{s:f.others[0],fam:1},{s:f.others[1],fam:1},{s:f.others[2],fam:0},{s:f.others[3],fam:0}];
+    cur.q=shuffled(7,rng(hashStr(f.key+'|queue'))).map(i=>all[i]);cur.sc={};cur.line=null;cur.show=null;say('Send each newcomer through.');},
+  rule(){return 'Score everyone · draw the door line';},
+  scene(){const i=cur.show;if(i===null)return houseFront();const b=cur.sc[i];return houseSvg(cur.P.k,{trail:b.walk.map(w=>({state:w.state,letter:w.letter})),out:true,col:'#2b5fb3'});},
+  work(){
+    let h='<div class="row">'+cur.q.map((n,i)=>'<button id="send'+i+'" data-act="send" data-arg="'+i+'"'+(cur.sc[i]?' disabled':'')+'>Send in '+AB[i]+': <span class="mono">'+n.s+'</span></button>').join('')+'</div>';
+    const done=Object.keys(cur.sc).length===7;
+    const order=Object.keys(cur.sc).map(Number).sort((a,b)=>cur.sc[b].prob-cur.sc[a].prob),top=order.length?Math.log10(cur.sc[order[0]].prob):0;
+    h+='<div class="ladder">';
+    order.forEach((i,r)=>{
+      const lg=Math.log10(cur.sc[i].prob),wpx=Math.max(4,100-(top-lg)*9);
+      h+='<div class="score'+(cur.done&&!cur.q[i].fam?' str':'')+'"><b>'+AB[i]+'</b> <span class="mono">'+cur.q[i].s+'</span> '+oneIn(cur.sc[i].prob)+' <span class="bar" style="width:'+wpx.toFixed(0)+'px"></span></div>';
+      if(done&&r<6)h+='<button class="line'+(cur.line===r?' on':'')+'" id="line'+r+'" data-act="line" data-arg="'+r+'">'+(cur.line===r?'door line':'draw the door line here')+'</button>';
+    });
+    return h+'</div>';
+  },
+  reveal(){
+    const f=cur.f;
+    return [{html:'Back to level 1. Every letter the stranger said had been said in that column by some member, but where the family agrees it kept picking the odd one out, and where the family is split it picked the popular letter, which matters little. Counting letters by eye treats every column alike; the house weighs each room by how sure the family is there, and lets the corridor and trapdoors absorb what varies.'},
+      {wild:'<p>HIV’s envelope protein mutates so fast that two samples, even from one patient, differ in many places, while some stretches never change. Compared one pair at a time, distant relatives look like strangers. Models built from whole families, like your house, are how such relatives are found: the Pfam database keeps one for each of thousands of protein families.</p>'+srcCard('starcich')+srcCard('sonnhammer')},
+      {html:'What you played, in the book’s words: the cup in play is a '+term('hstate','hidden state')+'; the night of cups a '+term('hpath','hidden path')+'; the chances of each call '+term('emit','emission probabilities')+'; keeping and swapping '+term('trans','transition probabilities')+'; the adding page the '+term('forward','forward algorithm')+'; the keep-the-better page the '+term('viterbi','Viterbi algorithm')+'; rooms, corridors and trapdoors the '+term('match','match')+', '+term('insert','insert')+' and '+term('delete','delete states')+' of a '+term('phmm','profile HMM')+'. The family in this game is illustrative.'}];
+  }
+};
+ACT.send=i=>{i=+i;if(cur.done||cur.sc[i])return;const b=profileBest(cur.q[i].s,cur.P);cur.sc[i]=b;cur.show=i;log('send',{i,prob:b.prob});
+  say('Newcomer '+AB[i]+': best walk '+oneIn(b.prob)+'.'+(Object.keys(cur.sc).length===7?' Everyone is scored. Draw the door line.':''));};
+ACT.line=r=>{r=+r;if(cur.done)return;cur.line=r;
+  const order=Object.keys(cur.sc).map(Number).sort((a,b)=>cur.sc[b].prob-cur.sc[a].prob),above=order.slice(0,r+1);
+  const ok=above.every(i=>cur.q[i].fam)&&order.slice(r+1).every(i=>!cur.q[i].fam);log('line',{r,ok});
+  if(!ok){say(above.some(i=>!cur.q[i].fam)?'A stranger slips in above your line.':'Family left outside below your line.','warn');jolt('line'+r);return;}
+  cur.headline='Reunion';
+  complete(VOCAB.map(v=>v.id),null,'Four family members in, three strangers out.');
+};
+
+/* ---------- events ---------- */
+function act(name,arg){
+  if(name==='skip'){const M=MODES[cur.mode];if(!cur.done&&M.skip&&M.skip())M.onSkip();render();return;}
+  if(!ACT[name])return;ACT[name](arg);render();
+}
+function cell(id,val){
+  if(cur.done||rendering)return;
+  if(cur.mode==='story')checkStory(id,val);
+  else if(cur.mode==='ledger')checkLedger(id,val);
+  else if(cur.mode==='best')checkBest(id,val);
+  render();
+}
+document.addEventListener('click',ev=>{
+  const t=ev.target.closest&&ev.target.closest('[data-act],[data-lvl],#next,#printGuide,[data-tab]');
+  if(!t)return;
+  const d=t.dataset;
+  if(d.act!==undefined)act(d.act,d.arg);
+  else if(d.lvl!==undefined)loadLevel(+d.lvl);
+  else if(t.id==='next')loadLevel(cur.L.id+1);
+  else if(t.id==='printGuide'){$('#guide').open=true;window.print();}
+});
+document.addEventListener('keydown',ev=>{
+  const t=ev.target;
+  if(t&&t.dataset&&t.dataset.cell!==undefined&&ev.key==='Enter'){ev.preventDefault();cell(t.dataset.cell,t.value);}
+});
+document.addEventListener('focusin',ev=>{const t=ev.target;if(t&&t.dataset&&t.dataset.cell!==undefined&&t.select)setTimeout(()=>{try{t.select();}catch(e){}},0);});
+document.addEventListener('change',ev=>{
+  const t=ev.target;
+  if(t&&t.dataset&&t.dataset.cell!==undefined)cell(t.dataset.cell,t.value);
+  else if(t&&t.dataset&&t.dataset.slide==='gaps'){cur.focus='gaps';act('gaps',t.value);}
+});
+document.addEventListener('input',ev=>{
+  const t=ev.target;
+  if(t&&t.dataset&&t.dataset.slide==='bead')ACT.bead(t.value);
+  else if(t&&t.dataset&&t.dataset.slide==='gaps'){ACT.gaps(t.value);$('#scene').innerHTML=MODES.rooms.scene();const lb=document.querySelector('label[for=gaps] b');if(lb)lb.textContent=t.value;}
+});
+$('#skip').onclick=()=>act('skip');
+$('#restart').onclick=()=>{log('restart');loadLevel(cur.L.id);};
+$('#fresh').onclick=()=>{const g=GROUP[cur.L.id];if(!g)return;S.variants[g]=(S.variants[g]||0)+1;log('new_puzzle',{group:g});save();loadLevel(cur.L.id);};
+$('#seed').value=S.seed;
+$('#setSeed').onclick=()=>{const v=$('#seed').value.trim();if(!v||v===S.seed)return;S=freshState(v);save();cur=null;loadLevel(previewLevel||1);};
+$('#dl').onclick=()=>{
+  const blob=new Blob([JSON.stringify({game:'cho-han-night',version:1,seed:S.seed,exported:new Date().toISOString(),
+    unlocked:S.unlocked,vocabulary:S.badges,earnedAt:S.earnedAt,events:S.log},null,1)],{type:'application/json'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='cho-han-night-'+S.seed.replace(/[^\w-]/g,'_')+'.json';
+  document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),1000);
+};
+
+/* ---------- workbench (?bench=1): no artwork, saves nothing ---------- */
+function benchCalls(txt){
+  const calls=txt.toUpperCase().replace(/[^CH]/g,'').split('');
+  if(!calls.length)return '<p class="gmeta">Type calls as C (chō) and H (han).</p>';
+  if(calls.length>30)return '<p class="status warn">At most 30 calls, so the whole numbers stay exact.</p>';
+  const L=sumLedger(calls),B=bestLedger(calls),bs=bestStory(calls),lk=likelierCups(calls),P=nightProbability(calls);
+  const row=(name,f)=>'<tr><th>'+name+'</th>'+calls.map((_,t)=>'<td>'+f(t)+'</td>').join('')+'</tr>';
+  const cn=k=>k===-1?'tie':k?'heavy':'plain';
+  const differ=bs.story.some((k,i)=>k!==lk[i]);
+  return '<div class="hscroll"><table><tr><th></th>'+calls.map((c,t)=>'<th>'+(t+1)+' '+CALL[c]+'</th>').join('')+'</tr>'+
+    row('adding: plain',t=>fmt(L[t][0]))+row('adding: heavy',t=>fmt(L[t][1]))+row('likelier this round',t=>cn(lk[t]))+
+    row('best: plain',t=>fmt(B.cols[t][0])+(t?' ←'+cn(B.from[t][0]):''))+row('best: heavy',t=>fmt(B.cols[t][1])+(t?' ←'+cn(B.from[t][1]):''))+
+    row('most likely story',t=>cn(bs.story[t]))+'</table></div>'+
+    '<p>Chance of the calls: '+fmt(P.num)+' / '+fmt(P.den)+' = '+(P.num/P.den).toPrecision(4)+'. Most likely story: '+fmt(bs.value)+' / '+fmt(P.den)+(bs.unique?'':' (not unique: a tie lies on it)')+'.</p>'+
+    '<p><b>'+(differ?'They disagree':'They agree')+'</b>: the most likely story and betting round by round on the likelier cup '+(differ?(d=>'part in round'+(d.length>1?'s ':' ')+d.join(', ')+'.')(bs.story.map((k,i)=>k!==lk[i]?i+1:0).filter(Boolean)):'pick the same cups.')+'</p>';
+}
+function benchFamily(txt,maxGaps,seq,add){
+  const rows=txt.toUpperCase().split(/\s+/).filter(Boolean);
+  if(rows.length<2||rows.some(r=>r.length!==rows[0].length||/[^A-Z-]/.test(r)))return '<p class="status warn">Paste at least two rows of equal length, letters and dashes only.</p>';
+  const isRoom=roomsOf(rows,maxGaps),k=isRoom.filter(Boolean).length;
+  const al=[...new Set(rows.join('').replace(/-/g,'').split('').concat(AMINO))].sort();
+  const C=profileCounts(rows,isRoom,al);
+  let h='<p>Rooms (columns with at most '+maxGaps+' gaps): '+isRoom.map((r,j)=>r?'col '+(j+1)+'→room '+roomNo(isRoom,j):'col '+(j+1)+'→corridor').join(', ')+'.</p>';
+  const tb=a=>{
+    const P=profileHMM(rows,{isRoom,alphabet:al,add:a});
+    let t='<div class="hscroll"><table><tr><th>state</th><th>letters said</th><th>moves out</th></tr>';
+    P.states.filter(s=>s!=='E').forEach(s=>{
+      const e=al.filter(x=>C.E[s][x]||(a&&(s[0]==='M'||s[0]==='I'))).slice(0,a?6:al.length).map(x=>x+' '+(C.E[s][x]+(s[0]==='D'||s==='S'?0:a))+(a?'':'')).join(' ');
+      const nx=allowedNext(s,k).map(x=>x+' '+(C.T[s][x]+a)).join(' ');
+      t+='<tr><td>'+s+'</td><td style="text-align:left">'+(s[0]==='M'||s[0]==='I'?e+(a?' … (every letter +'+a+')':''):'')+'</td><td style="text-align:left">'+nx+'</td></tr>';
+    });
+    t+='</table></div>';
+    const sq=seq.toUpperCase().replace(/[^A-Z]/g,'');
+    if(sq){const b=profileBest(sq,P);t+='<p>Score of '+sq+': best walk '+oneIn(b.prob)+(b.prob?' via '+b.walk.map(w=>w.state).join(' '):'')+'.</p>';}
+    return t;
+  };
+  return h+'<h3>Tallies</h3>'+tb(0)+'<h3>With '+add+' added to every count</h3>'+tb(add);
+}
+function bench(){
+  $('#game').hidden=true;const b=$('#bench');b.hidden=false;
+  const f=makeFamily((urlSeed||'BENCH')+'|fam|0');
+  b.innerHTML='<h1>Cho-Han Night workbench</h1><p class="gmeta">Nothing here is saved. <a href="./">Back to the game</a></p>'+
+    '<div class="tabs"><button data-tab="calls" class="on" id="tabcalls">Calls</button><button data-tab="family" id="tabfamily">Family</button></div>'+
+    '<div id="tcalls"><label for="bcalls">Calls (C for chō, H for han)</label><textarea id="bcalls" rows="2">CCHCHC</textarea><div id="ocalls"></div></div>'+
+    '<div id="tfamily" hidden><label for="baln">Alignment, one member per line</label><textarea id="baln" rows="6">'+f.aln.join('\n')+'</textarea>'+
+    '<p><label>A room may have at most <input id="bgaps" type="number" min="0" max="20" value="2" style="width:4em"> gaps</label> · <label>pseudocount <input id="badd" type="number" min="0" value="1" style="width:4em"></label></p>'+
+    '<label for="bseq">Sequence to score</label><textarea id="bseq" rows="1">'+f.relative+'</textarea><div id="ofamily"></div></div>';
+  const upd=()=>{$('#ocalls').innerHTML=benchCalls($('#bcalls').value);$('#ofamily').innerHTML=benchFamily($('#baln').value,+$('#bgaps').value||0,$('#bseq').value,Math.max(0,+$('#badd').value||0));};
+  b.addEventListener('input',upd);
+  b.addEventListener('click',ev=>{const t=ev.target.closest('[data-tab]');if(!t)return;const on=t.dataset.tab;
+    $('#tcalls').hidden=on!=='calls';$('#tfamily').hidden=on!=='family';$('#tabcalls').className=on==='calls'?'on':'';$('#tabfamily').className=on==='family'?'on':'';});
+  upd();
+}
+
+if(params.get('bench'))bench();
+else loadLevel(previewLevel||Math.min(S.unlocked,LEVELS.length));
+/* Test handle, only with ?debug=1 in the address. */
+if(params.get('debug'))window.__ch={state:()=>cur,saved:()=>S,loadLevel,act,cell,
+  levels:()=>LEVELS.map(l=>({id:l.id,title:l.title})),vocab:()=>VOCAB.map(v=>({id:v.id,name:v.name})),
+  earned:()=>S.badges.slice(),likelier:()=>cur.calls?likelierCups(cur.calls):null,log:()=>S.log.slice(),
+  /* answers the tests and the play-through read (they still act through the page) */
+  answers:()=>({night:night(),vnight:vnightFor(gkey('vnight')),family:family(),order:cur.order||null,
+    want:cur.mode==='story'&&cur.st.story.every(k=>k!==null)?MODES.story.want():null,
+    roomCounts:cur.mode==='rooms'?profileCounts(cur.f.aln,MODES.rooms.isRoom(),AMINO).T['M'+MODES.rooms.R()]:null,
+    roomLetters:cur.mode==='rooms'?profileCounts(cur.f.aln,MODES.rooms.isRoom(),AMINO).E['M'+MODES.rooms.R()]:null,
+    roomR:cur.mode==='rooms'?MODES.rooms.R():null,moves:cur.mode==='rooms'?MODES.rooms.moves():cur.mode==='pebbles'?MODES.pebbles.moves():null,
+    best:cur.walk?profileBest(cur.walk.text,cur.P).walk.map(w=>w.state):null})};
+
+})();
+</script>
+</body>
+</html>
