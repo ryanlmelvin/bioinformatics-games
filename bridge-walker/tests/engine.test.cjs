@@ -8,11 +8,11 @@ const sandbox={module:{exports:{}}};vm.runInNewContext(engine,sandbox);
 const {analyse,makeInstance,makePairs,eulerWalks,spellWalk,pairPositions,pairedGraph}=sandbox.module.exports;
 const plain=x=>JSON.parse(JSON.stringify(x));
 function verifyPuzzle(inst){
- assert.equal(inst.reads.length,15);
- assert.equal(new Set(inst.reads).size,15);
+ assert.equal(inst.reads.length,20);
+ assert.equal(new Set(inst.reads).size,20);
  // Independently enumerate all edge-covering routes, without an early cutoff.
  const paths=[];function search(v,ids){
-  if(ids.length===15){paths.push(ids);return;}
+  if(ids.length===20){paths.push(ids);return;}
   for(const e of inst.edges)if(e.from===v&&!ids.includes(e.id))search(e.to,[...ids,e.id]);
  }search(inst.start,[]);
  assert.equal(paths.length,2);
@@ -27,7 +27,7 @@ function verifyPuzzle(inst){
  assert(inst.pairs.some(p=>!pairPositions(other,p,4,1).length));
  for(const p of inst.pairs)assert(pairPositions(inst.genome,p,4,1).includes(p.index));
  const g=inst.paired;
- assert.equal(g.nodes.length,11);assert.equal(g.edges.length,10);
+ assert.equal(g.nodes.length,16);assert.equal(g.edges.length,15);
  assert(g.out.every(n=>n<=1)&&g.inn.every(n=>n<=1));
  const pairedWalks=eulerWalks(g);assert.equal(pairedWalks.length,1);
  const seqs=[0,1].map(j=>g.nodes[g.start].split('|')[j]+pairedWalks[0].map(id=>g.edges[id].read.split('|')[j].slice(-1)).join(''));
@@ -35,13 +35,40 @@ function verifyPuzzle(inst){
  assert.equal(seqs[0]+seqs[1].slice(-5),inst.genome);
  for(const c of inst.candidates){
   const groups=c.walk.map(id=>inst.loopByEdge[id]).filter(Boolean);
-  assert(['11112222','22221111'].includes(groups.join('')));
+  assert(['111111222222','222222111111'].includes(groups.join('')));
  }
+ // A pair fits both strings exactly when its two reads lie in one stretch: one pair per loop, two in the tail.
+ const fitsBoth=p=>pairPositions(other,p,4,1).length>0;
+ assert.deepEqual(plain(inst.pairs.filter(fitsBoth).map(p=>p.index)),[1,7,13,14]);
+ inst.pairs.forEach(p=>assert.equal(inst.pairStretch[p.index]>=0,fitsBoth(p)));
+ assert.deepEqual(plain([1,7,13,14].map(i=>inst.pairStretch[i])),[1,2,3,3]);
+ // The bench offers those four and exactly one pair that decides, and never offers the deciding pair first.
+ assert.equal(inst.bench.length,5);assert.equal(new Set(inst.bench).size,5);
+ for(const i of [1,7,13,14])assert(inst.bench.includes(i));
+ const deciders=inst.bench.filter(i=>!fitsBoth(inst.pairs[i]));
+ assert.equal(deciders.length,1);assert.notEqual(inst.bench[0],deciders[0]);
+ return {decider:deciders[0],slot:inst.bench.indexOf(deciders[0])};
 }
 test('1,000 seeded read-pair puzzles have exactly two walks and one paired reconstruction',()=>{
- const seen=new Set(),positions=new Set();
- for(let i=0;i<1000;i++){const inst=makePairs('PAIR-TEST|12|'+i);verifyPuzzle(inst);seen.add(inst.genome);positions.add(inst.candidates.findIndex(c=>c.text===inst.genome));}
+ const seen=new Set(),positions=new Set(),deciders=new Set(),slots=new Set();
+ for(let i=0;i<1000;i++){
+  const inst=makePairs('PAIR-TEST|12|'+i),bench=verifyPuzzle(inst);
+  deciders.add(bench.decider);slots.add(bench.slot);seen.add(inst.genome);positions.add(inst.candidates.findIndex(c=>c.text===inst.genome));
+ }
  assert(seen.size>900);assert.equal(positions.size,2);
+ // The deciding pair is not predictable: any of the eleven can be offered, in any slot but the first.
+ assert.equal(deciders.size,11);assert.deepEqual([...slots].sort(),[1,2,3,4]);
+});
+test('the hard-coded fallback genome satisfies the same invariants',()=>{
+ const fallback=engine.match(/const PAIR_FALLBACK='([ACGT]+)'/)[1];
+ const inst=analyse(fallback,4);
+ assert.equal(inst.reads.length,20);assert.equal(new Set(inst.reads).size,20);assert.equal(inst.selfLoops,0);
+ const walks=eulerWalks(inst,5);assert.equal(walks.length,2);
+ const strings=plain(walks.map(w=>spellWalk(inst,w)));assert(strings.includes(fallback));assert.notEqual(strings[0],strings[1]);
+ const pairs=Array.from({length:15},(_,i)=>({left:fallback.slice(i,i+4),right:fallback.slice(i+5,i+9),index:i}));
+ const g=pairedGraph(pairs,4);assert.equal(g.nodes.length,16);assert(g.out.every(n=>n<=1)&&g.inn.every(n=>n<=1));
+ const other=strings.find(s=>s!==fallback);
+ assert.deepEqual(pairs.filter(p=>pairPositions(other,p,4,1).length).map(p=>p.index),[1,7,13,14]);
 });
 test('seed reproducibility and new puzzle variation',()=>{
  assert.deepEqual(plain(makePairs('CLASS|12|0')),plain(makePairs('CLASS|12|0')));
