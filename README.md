@@ -15,7 +15,7 @@ One game for each unit of the course, in teaching order:
 Also here:
 
 - `lockpick/`: a second genome assembly game, not tied to a unit.
-- `materials/`: public student downloads. `genome-assembly-play-guide.docx` is the sheet students fill in by hand while they play Bridge Walker. It is a copy: the master is kept with the unit's other class materials outside this repository, so replace it from that master rather than editing it here.
+- `materials/`: public student downloads. Each `<unit>-play-guide.docx` is the sheet students fill in by hand while they play that unit's game. It is a copy: the master is kept with the unit's other class materials outside this repository, so replace it from that master rather than editing it here.
 
 Every game is one self-contained `index.html` (inline styles and artwork, an `engine` script with the puzzle generators and solvers, and a `ui` script), with its tests beside it in `tests/`. A puzzle code can be supplied with `?seed=`, `?level=N` opens a fresh practice session that never touches saved progress, `?bench=1` opens the game's workbench (the six newer games), and `?debug=1` exposes the test handle.
 
