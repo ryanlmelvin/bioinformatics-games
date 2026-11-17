@@ -96,13 +96,13 @@ def adapt(source, output, unit, kind, title):
     if kind=='play-guide':
         body=ps[4].text
         body=body[body.index('Play all'):].split('You must hand write')[0].strip()
-        change(ps[4],f'Explore {game} at {BASE}{gamepath}/. {body} Write your reasoning on this guide or separate paper.')
+        change(ps[4],f'The game is {game}, at {BASE}{gamepath}/. {body} Write your answers on this guide or on separate paper.')
         remove(ps[5])
         for p in ps:
             if p.text=='Pen and paper' and slug=='motifs': p.paragraph_format.page_break_before=True
-        change(ps[6],'Connect each term to an example in the game, not only its definition. Describe what changes when the input changes.')
+        change(ps[6],'For each term, be able to point to an example in the game as well as give its definition.')
     elif kind=='discussion-questions':
-        change(ps[4],ps[4].text.replace('One sheet per group. Pick someone to write.','Record your reasoning and compare approaches with a partner or group.'))
+        change(ps[4],ps[4].text.replace('One sheet per group. Pick someone to write.','Work with a partner or a group and write down your reasoning.'))
         if slug=='motifs':
             change(ps[6], 'Optional group activity: use nucleotide dice to make ten DNA strings of length 10. Choose a secret 4-mer and overwrite a four-letter window in each string to hide it. Swap strings with another group and try to recover its secret. Repeat with fresh strings: hide an exact copy in only three or four strings, then a copy with at most one mismatch in three or four strings, then a copy with at most one mismatch in every string. Record each predicted 4-mer and its supporting windows before comparing with the group that encoded it.')
             change(ps[7], 'Compare two scoring rules: count windows within one mismatch of a candidate, or add the distance to its closest window in each sequence. In the final round, which rule was your group using? Why can counting matching windows become less useful when every embedded copy has a mismatch?')
@@ -120,9 +120,9 @@ def adapt(source, output, unit, kind, title):
             if p.text=='Part 1: On the table': change(p,'Activities to discuss')
             elif p.text=='Part 2: Two problems to present': change(p,'Problems to discuss')
             elif p.text.startswith('Work on both problems. Both will be presented'):
-                change(p,'Work through both problems. Explain your approach to someone else, compare solutions, and identify what you would add or change.')
+                change(p,'Work both problems, then compare solutions with another group.')
             elif p.text.startswith('Finished both?'):
-                change(p,'Next, try the suggested coding challenges and pen-and-paper tasks for this topic.')
+                remove(p)
             elif p.text.startswith('Your instructor’s discussion question'):
                 text=re.sub(r'^Your instructor’s discussion question \d+: “','',p.text)
                 text=text.replace('”','')
@@ -131,10 +131,10 @@ def adapt(source, output, unit, kind, title):
                 change(p,'Why must RandomizedMotifSearch eventually stop? Work through these three strings with k = 3, starting from the windows in bold, then make an argument for any strings.')
     else:
         remove(ps[4])
-        change(ps[5],'Choose from the suggested challenges below. Each has a small pen-and-paper companion. Work through that example before testing the same input with your implementation; the final challenge offers an additional extension.')
+        change(ps[5],'Each challenge below has a pen-and-paper companion. Work the companion by hand, then run your code on the same input. The last challenge is an extension.')
         for p in ps[6:]:
             t=p.text
-            if t.startswith('Want a warm-up first?'):
+            if t.startswith('Optional warm-up.'):
                 change(p,re.sub(r' (They are|It is) not required, and nobody presents (them|it)\.', '',t))
             elif t.startswith('Optional extension. BA5M'):
                 change(p,'Another extension: BA5M Multiple Sequence Alignment aligns three strings using an LCS scoring rule.')
@@ -144,9 +144,9 @@ def adapt(source, output, unit, kind, title):
                 change(p,'BA10A and BA10B share the first pen-and-paper task.')
             elif t=='Hand companions': change(p,'Suggested pen and paper tasks')
             elif t.startswith('Each required problem has a hand companion:'):
-                change(p,'Each challenge has a small example to work by hand. Then run your code on the same input and record its output. If they disagree, investigate: one method may be wrong, or more than one answer may be valid.')
+                change(p,'Work each example by hand, then run your code on the same input and record the output. If the two disagree, either one of them is wrong or there is more than one correct answer.')
             elif t.startswith(('AI assistance with code is allowed','Any use of generative AI on the code is acceptable')):
-                change(p,'Check any code you write or obtain with these examples and additional tests. Be able to explain the implementation and its limitations.')
+                change(p,'Test your code on these examples and on inputs of your own, whether or not you wrote it yourself. You should be able to explain how it works.')
             elif t.startswith('Hand write the companions,'):
                 remove(p)
             elif t.startswith('INFO 602.'):
@@ -154,7 +154,7 @@ def adapt(source, output, unit, kind, title):
             elif t.startswith('Course coding specification.'):
                 change(p,t.replace('Course coding specification.','Coding task.',1))
             elif 'This is coverage only;' in t:
-                change(p,t.replace('This is coverage only; the required Rosalind problems keep their stated linear penalties.','This example extends the discussion; the linked Rosalind problems use their stated linear penalties.'))
+                change(p,t.replace('This is coverage only; the required Rosalind problems keep their stated linear penalties.','The linked Rosalind problems use linear penalties only.'))
         # Remove only the grading column; keep challenge statements and links intact.
         table=doc.tables[0]
         idx=next(i for i,c in enumerate(table.rows[0].cells) if c.text=='Points')
@@ -195,53 +195,53 @@ def fresh(title):
 
 def shared(output):
     d=fresh('Learning bioinformatics algorithms')
-    d.add_paragraph('Use the games to explore an algorithm, connect its actions to technical vocabulary, and test your understanding with small examples and code. These resources support independent study, discussion groups and teaching.')
+    d.add_paragraph('These games and handouts cover seven topics in bioinformatics algorithms. They can be used for self-study, in a study group or in a course.')
     d.add_heading('A suggested path',1)
     for _,slug,heading,topic,game,gamepath in UNITS:
         d.add_paragraph(f'{heading}: {game}, {BASE}{gamepath}/',style='List Bullet')
     d.add_heading('Working through a topic',1)
     for text in [
-      'Play the game and use its exploration guide to connect the game, the algorithm and the biological problem. Explain the terms in your own words.',
-      'Use the discussion questions to compare approaches, construct counterexamples and justify why an algorithm works. Some optional activities need a partner or physical game materials.',
-      'Choose suggested coding challenges from the linked Rosalind problem statements. Use their input and output formats. Warm-ups and extensions let you adjust the depth of study.',
-      'Work the paired pen-and-paper tasks before testing your implementation. Explain discrepancies and check whether multiple answers are valid.',
-      'Use the presentation checklist to explain a hand solution, connect it to code, predict an unfamiliar input and respond to questions.'
+      'Play the game and fill in its exploration guide. Define each term in your own words.',
+      'Work the discussion questions, preferably with a group. Some of the optional activities need a partner or a board game.',
+      'Code the suggested Rosalind problems, using their input and output formats. Each topic also lists easier warm-ups and a harder extension.',
+      'Do each pen-and-paper task before running your code on the same input. If the results differ, find out why. Some problems have more than one correct answer.',
+      'Present one algorithm to someone else, following the presentation checklist.'
     ]: d.add_paragraph(text,style='List Bullet')
-    d.add_heading('Continue with an investigation',1)
-    d.add_paragraph('Reuse an implementation to explore mutation rate and motif recovery, gap penalties and alignment, or initialization and clustering. The suggested investigations give questions and a framework for a small reproducible experiment.')
+    d.add_heading('Investigations',1)
+    d.add_paragraph('The suggested investigations describe three small experiments that reuse your code: mutation rate and motif recovery, gap penalties and alignment, and initialization and Lloyd clustering.')
     finish(d,output/'learning-guide.docx')
     d=fresh('Suggested algorithm investigations')
-    d.add_paragraph('Choose one question and investigate it with a small experiment using code developed in the suggested challenges.')
+    d.add_paragraph('Choose one question and answer it with a small experiment, using code you wrote for the coding challenges.')
     for h,t in [('Motif recovery','How does mutation rate affect motif recovery?'),('Sequence alignment','How does a gap penalty affect an alignment?'),('Clustering','How does initialization affect Lloyd clustering?')]:
         d.add_heading(h,1); d.add_paragraph(t)
-    d.add_heading('Develop the experiment',1)
+    d.add_heading('The experiment',1)
     for text in [
-      'State a focused question and choose the input data and parameter values you will compare.',
-      'Explain the checks used to establish that the code behaves as intended.',
-      'Present results that support an interpretation, including a limitation or alternative explanation.',
-      'Share runnable code and a brief analysis in a notebook or repository, with enough information to repeat the experiment.'
+      'State the question, and choose the input data and the parameter values you will compare.',
+      'Say how you checked that the code is correct.',
+      'Report the results and what you conclude from them. Give one limitation or one alternative explanation.',
+      'Put the code and a short write-up in a notebook or repository, with enough detail for someone else to repeat the experiment.'
     ]:d.add_paragraph(text,style='List Bullet')
-    d.add_heading('Discuss the results',1)
+    d.add_heading('Questions to be ready for',1)
     for text in [
-      'Explain the algorithm and connect one of its steps to the implementation.',
-      'Justify the experiment and interpret a result.',
-      'Identify a limitation and what would provide stronger evidence.',
-      'Predict the consequence of an unfamiliar input or parameter change. Compare that prediction with a new run.'
+      'How does the algorithm work, and where is one of its steps in your code?',
+      'Why did you design the experiment this way, and what does one of your results show?',
+      'What is one limitation, and what evidence would be stronger?',
+      'What will happen with a new input or a changed parameter? Predict, then run it.'
     ]:d.add_paragraph(text,style='List Bullet')
     finish(d,output/'suggested-investigations.docx')
     d=fresh('Presenting an algorithm')
-    d.add_paragraph('Use this checklist to explain an algorithm to a partner or group, or to assess your own understanding. Choose a small example you can solve by hand and connect each step to the code.')
+    d.add_paragraph('Use this checklist when you present an algorithm to a partner or a group. Choose a small example that you can solve by hand.')
     for h,t in [
-      ('Hand solution','Explain and justify the steps on a small example. Show enough intermediate work for someone else to follow your reasoning.'),
-      ('Code explanation','Connect the algorithm to the implementation and explain its data structures.'),
-      ('An unfamiliar input','Predict the output before running the code. Explain the result or diagnose a discrepancy.'),
-      ('Questions','Answer follow-up questions and reason through uncertainty. Identify what you would check next.')
+      ('Hand solution','Work the example by hand and justify each step. Show enough intermediate work for the audience to follow.'),
+      ('Code explanation','Show where each step is in the code, and explain the data structures.'),
+      ('An unfamiliar input','Take an input you have not seen. Predict the output, run the code, and explain any difference.'),
+      ('Questions','Answer questions from the audience. If you are unsure, say what you would check.')
     ]:d.add_heading(h,1);d.add_paragraph(t)
     d.add_heading('A suggested format',1)
-    d.add_paragraph('Allow about 15 minutes: four for the hand solution, four for the code explanation, three to predict and run a new input, and four for questions. A shorter rehearsal can help identify gaps before a discussion.')
-    d.add_paragraph('Use notes, code, figures and sketches as needed. Finding and explaining a bug can demonstrate understanding. Be able to explain and verify code regardless of how it was produced.')
+    d.add_paragraph('Allow about 15 minutes: four for the hand solution, four for the code, three to predict and run a new input, and four for questions.')
+    d.add_paragraph('Notes, figures and sketches are fine. Finding and explaining a bug during the presentation counts in your favour. You should be able to explain the code whether or not you wrote it yourself.')
     d.add_heading('Feedback',1)
-    d.add_paragraph('What was clear? Where did the reasoning leave a gap? What example or test would help resolve it?')
+    d.add_paragraph('What was clear? Where was a step missing? What example or test would fill the gap?')
     finish(d,output/'presentation-checklist.docx')
 
 

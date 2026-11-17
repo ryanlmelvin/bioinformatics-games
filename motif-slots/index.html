@@ -229,7 +229,7 @@ textarea{font:14px/1.4 ui-monospace,Menlo,monospace;width:100%;min-height:9em;pa
   </details>
 
   <div class="savebar" id="savebar">
-    <p><b>Progress link.</b> Your earned terms and finished levels are saved in this browser. Copy this link and keep it. Opening it in any browser restores them. The <a href="../#keep">front page</a> has one link for every chapter.</p>
+    <p><b>Progress link.</b> Progress is saved in this browser. This link restores it in any other. The <a href="../#keep">front page</a> has one link for all chapters.</p>
     <div class="saverow"><input id="saveLink" readonly aria-label="Your progress link"><button id="copyLink">Copy progress link</button></div>
     <p class="savenote" id="saveNote" role="status"></p>
     <div data-bk-app></div>
@@ -562,17 +562,17 @@ function parseNum(s){s=String(s).trim().replace(/\s+/g,'');if(!s)return NaN;cons
 
 const LEVELS=[
   {id:1,title:'A word that keeps turning up',
-   brief:'Eighty letters of bacterial DNA. One five-letter word is here far more often than chance allows. Which?'},
+   brief:'Eighty letters of bacterial DNA. One five-letter word occurs far more often than chance would predict. Find it.'},
   {id:2,title:'Close enough',
-   brief:'A new stretch of the same kind of DNA. The word is hidden here again, five times, but every copy has one letter changed, and never the same letter twice.'},
+   brief:'A new stretch of the same kind of DNA. The word occurs five times here. Each copy has one letter changed, at a different position each time.'},
   {id:3,title:'Both strands',
-   brief:'DNA has two strands. Every letter has a partner on the other strand: A with T, C with G. The partner strand runs the other way, so a protein sitting on it reads from right to left.'},
+   brief:'DNA has two strands. Each letter pairs with a letter on the other strand, A with T and C with G. The other strand runs in the opposite direction, so a protein bound to it reads from right to left.'},
   {id:4,title:'Ten genes, one switch',
-   brief:'Ten genes that switch on together, and the 24 letters just upstream of each. One six-letter word, a little different on each strip, is the switch: when the protein grips it, that gene lights up.'},
+   brief:'Ten genes switch on together. Each strip is the 24 letters upstream of one gene. A protein grips a six-letter word on each strip to switch that gene on, and the word differs slightly from strip to strip.'},
   {id:5,title:'The reels',
    brief:'Four of those strips are now reels in a machine. A reel can only slide. The clamp reads the window at the payline on every reel at once.'},
   {id:6,title:'Too many stops',
-   brief:'All ten reels. Each one has 19 stops, so the machine has 19¹⁰ settings: about 6 × 10¹² of them.'},
+   brief:'All ten reels. Each one has 19 stops, so the machine has 19¹⁰ settings, about 6 × 10¹².'},
   {id:7,title:'Let the reels vote',
    brief:'Five reels with four letters at the payline. The reels already stopped vote on what each column should be, and a reel stops where the vote favours.'},
   {id:8,title:'One zero spoils everything',
@@ -589,19 +589,19 @@ const LEVELS=[
 const SRC={
   fuller:{cite:'Fuller, Funnell & Kornberg, 1984',title:'The dnaA protein complex with the E. coli chromosomal replication origin (oriC) and other DNA sites',where:'Cell 38, 889–900',
     url:'https://doi.org/10.1016/0092-8674(84)90284-8',
-    look:'The abstract reports that every strong DnaA binding site shares one short sequence of about nine letters, repeated at four conserved positions within the E. coli origin: the kind of word you just found by counting.'},
+    look:'The abstract reports that every strong DnaA binding site shares one short sequence of about nine letters, repeated at four conserved positions within the E. coli origin. Counting found a word of this kind.'},
   pevzner:{cite:'Pevzner & Sze, 2000',title:'Combinatorial approaches to finding subtle signals in DNA sequences',where:'Proc. Int. Conf. Intelligent Systems for Molecular Biology 8, 269–278',
     url:'https://pubmed.ncbi.nlm.nih.gov/10977088/',
     look:'The abstract calls the task signal finding, pattern discovery in unaligned DNA, and says most signals are too subtle for reliable recognition. The paper offers a combinatorial approach for the very subtle ones.'},
   hertz:{cite:'Hertz & Stormo, 1999',title:'Identifying DNA and protein patterns with statistically significant alignments of multiple sequences',where:'Bioinformatics 15, 563–577',
     url:'https://doi.org/10.1093/bioinformatics/15.7.563',
-    look:'The abstract lists a scoring scheme built from the letter shares in each column of the aligned sites, and a greedy algorithm that chooses the sites: a vote table and a trip down the reels.'},
+    look:'The abstract lists a scoring scheme built from the letter shares in each column of the aligned sites, and a greedy algorithm that chooses the sites. In the game these are the vote table and the trip down the reels.'},
   lawrence:{cite:'Lawrence et al., 1993',title:'Detecting subtle sequence signals: a Gibbs sampling strategy for multiple alignment',where:'Science 262, 208–214',
     url:'https://doi.org/10.1126/science.8211139',
-    look:'The abstract describes an algorithm based on iterative sampling that finds subtle patterns shared by many sequences in seconds, applied to protein families. Random draws, weighted by the odds, are the loaded wheel.'},
+    look:'The abstract describes an algorithm based on iterative sampling that finds subtle patterns shared by many sequences in seconds, applied to protein families. The loaded wheel is this weighted random draw.'},
   harmer:{cite:'Harmer et al., 2000',title:'Orchestrated transcription of key pathways in Arabidopsis by the circadian clock',where:'Science 290, 2110–2113',
     url:'https://doi.org/10.1126/science.290.5499.2110',
-    look:'Microarrays showed that 6% of more than 8000 Arabidopsis genes cycle with the daily clock. Computational analysis of the cycling genes found a conserved promoter motif required for clock control: the evening element.'}
+    look:'Microarrays showed that 6% of more than 8000 Arabidopsis genes cycle with the daily clock. Computational analysis of the cycling genes found a conserved promoter motif required for clock control, the evening element.'}
 };
 
 const VOCAB=[
@@ -884,7 +884,7 @@ function stripLit(text,w,d,both){
 function tapeDraw(extra){return tapeSvg(Object.assign({text:cur.inst.text,k:cur.inst.k},extra));}
 
 LV[1]={
-  init(){cur.step='guess';cur.clamp=0;cur.found=[];cur.guess=null;cur.dial=null;cur.board=null;say('Click any letter: the clamp grips the five letters starting there.');},
+  init(){cur.step='guess';cur.clamp=0;cur.found=[];cur.guess=null;cur.dial=null;cur.board=null;say('Click a letter. The clamp grips the five letters starting there.');},
   rule(){return 'The clamp grips five letters at a time';},
   draw(){
     const I=cur.inst,lit=[];
@@ -960,7 +960,7 @@ LV[2]={
       const [r,j]=arg.split(':').map(Number),w=I.text.substr(I.compare[r],5);
       if(w[j]===I.word[j]){say('That letter matches the word above it.','warn');log('mark_wrong',{r,j});}
       else if(!cur.marks[r].includes(j)){cur.marks[r].push(j);log('mark',{r,j});say('Marked.');}
-      if(cur.marks.every(m=>m.length===1)){cur.step='tol';cur.dial=I.word;cur.d=0;cur.board=null;say('Each window is just one letter away from the word. Tell the clamp how many wrong letters to put up with.','good');}
+      if(cur.marks.every(m=>m.length===1)){cur.step='tol';cur.dial=I.word;cur.d=0;cur.board=null;say('Each window differs from the word by one letter. Set the number of wrong letters the clamp allows.','good');}
     }
     if(a==='tol'&&cur.step==='tol'){cur.d=+arg;log('tol',{d:cur.d});say(cur.d?'The clamp now grips windows with up to '+plural(cur.d,'wrong letter')+'.':'Exact copies only.');}
     if(a==='pick'&&cur.step==='tol'&&cur.board){
@@ -969,7 +969,7 @@ LV[2]={
       else say(arg+' lights '+plural(n,'window')+'.');
     }
   },
-  reveal(){return '<p>The number of letters that differ between two words of the same length is their '+term('ham')+'. A lit window is one within Hamming distance d of the word on the dial, here d = 1. The winning word never appeared exactly; it won by being close to more windows than any other word.</p>';}
+  reveal(){return '<p>The number of letters that differ between two words of the same length is their '+term('ham')+'. A lit window is one within Hamming distance d of the word on the dial, here d = 1. The winning word never occurs exactly. It wins because more windows are within distance 1 of it than of any other word.</p>';}
 };
 
 LV[3]={
@@ -1055,7 +1055,7 @@ LV[4]={
   },
   reveal(){const I=cur.inst;return '<p>A word that turns up, a little changed, once on every strip of a set of genes that switch on together is a '+term('motif','motif')+', and choosing one window on every strip to find it is '+term('mf','motif finding')+'. '+
     'Counting lit windows rewarded '+wordHtml(I.decoy)+', which is common on three strips and absent from the rest. A switch has to be on every strip.</p>'+
-    '<p>With two wrong letters allowed, '+plural(I.allTen.length,'word')+' light all ten genes. Which one is the switch? The next two levels decide.</p>';},
+    '<p>With two wrong letters allowed, '+plural(I.allTen.length,'word')+' light all ten genes. The next two levels determine which one is the switch.</p>';},
   src:['pevzner']
 };
 
@@ -1074,7 +1074,7 @@ LV[5]={
       if(m<=I.target){say('Jackpot: '+plural(m,'miss')+'.','good');finish(['mm','cons','score'],{misses:m});}
       else say(plural(m,'miss')+'.');}
   },
-  reveal(){return '<p>The stack of payline windows is a '+term('mm','motif matrix')+'. Its row of favourite letters is the '+term('cons','consensus string')+', and the misses meter is the matrix’s '+term('score','score')+': lower is better, and 0 would mean every window is the same.</p>';}
+  reveal(){return '<p>The stack of payline windows is a '+term('mm','motif matrix')+'. Its row of favourite letters is the '+term('cons','consensus string')+', and the misses meter is the matrix’s '+term('score','score')+'. Lower is better, and 0 means every window is the same.</p>';}
 };
 
 const SETTINGS=Math.pow(19,10);
@@ -1082,9 +1082,9 @@ LV[6]={
   init(){
     cur.big=genL4(codeFor(4));cur.step='bot';cur.off=cur.big.strips.map(()=>0);cur.bot={n:0,best:Infinity,ms:0,running:false};
     cur.wi=0;cur.choice=[null,null,null];cur.totals=[];cur.board=null;
-    say('Every setting of the ten reels could be tried in turn. Start the bot that does exactly that.');
+    say('A bot can try every setting of the ten reels in turn. Start it.');
   },
-  rule(){return cur.step==='bot'?'The bot tries every setting of the reels':cur.step==='hand'?'For each word: the closest window on every reel':'Search the words, not the stops';},
+  rule(){return cur.step==='bot'?'The bot tries every setting of the reels':cur.step==='hand'?'For each word: the closest window on every reel':'Search over words instead of stops';},
   botChunk(m){
     const b=cur.bot,dna=cur.big.strips,t0=performance.now();
     for(let r=0;r<m;r++){
@@ -1116,7 +1116,7 @@ LV[6]={
   drawHand(){
     const H=cur.inst,w=H.words[cur.wi],lit=H.reels.map((r,i)=>cur.choice[i]===null?[]:[cur.choice[i]]);
     const svg=rackSvg({reels:H.reels,k:3,mode:'strips',lit,clamps:true,click:cur.wi<2});
-    let t='<div class="hand"><h3>Search the words, not the stops</h3>';
+    let t='<div class="hand"><h3>Search over words instead of stops</h3>';
     if(cur.wi<2){
       t+='<p>Three short reels. For the word '+wordHtml(w)+', click the window on each reel that differs from it in the fewest letters. Then add up those differences.</p>'+
         dialHtml(w,'Word '+(cur.wi+1))+'<div class="row"><label for="total">Letters different, all three reels:</label><input id="total" class="num" inputmode="numeric" autocomplete="off"><button class="primary" data-act="check">Check</button></div>';
@@ -1156,7 +1156,7 @@ LV[6]={
   skip(){return cur.step==='bot'&&cur.bot.running?'Stop the bot. Search the words instead →':'';},
   onSkip(){if(cur.step!=='bot')return;cur.step='hand';log('gave_up',{tried:cur.bot.n});timers.forEach(clearTimeout);say('Click a window on each reel.');},
   reveal(){const B=cur.big;return '<p>Instead of 6 × 10¹² settings of the reels, the dial checked 4,096 words, each against every reel’s closest window. A word whose closest windows add up to the fewest letters is a '+term('median','median string')+'. '+
-    'Here it is '+wordHtml(B.word)+', the word that lit all ten genes in level 4 for the right reason. Its closest windows, stacked, are as good a payline as any setting of the reels.</p>';}
+    'Here it is '+wordHtml(B.word)+', one of the words that lit all ten genes in level 4. Its closest windows, stacked, score as well as the best setting of the reels.</p>';}
 };
 
 
@@ -1313,7 +1313,7 @@ LV[9]={
     say('Best of twenty spins: '+plural(cur.best.score,'miss')+'. Some spins got stuck higher; the best one did not.','good');
     finish(['rand'],{best:cur.best.score,spins:cur.spins});
   },
-  reveal(){return '<p>Random stops, then re-stopping every reel at its most probable window until nothing improves, then doing the whole thing many times and keeping the best: that is '+term('rand','randomized motif search')+'. One spin can get stuck; twenty rarely all do.</p>';}
+  reveal(){return '<p>Starting from random stops, re-stopping every reel at its most probable window until nothing improves, and keeping the best of many such runs is '+term('rand','randomized motif search')+'. A single run can stop at a poor score. Twenty runs rarely all do.</p>';}
 };
 
 function wheelSvg(w,at){
@@ -1332,7 +1332,7 @@ function wheelSvg(w,at){
 }
 LV[10]={
   init(){const I=cur.inst;cur.pos=I.stall.slice();cur.lifted=-1;cur.tried=[];cur.step='stall';cur.hist=[scoreAt(I.dna,cur.pos,5)];cur.n=0;cur.wheel=null;
-    say('Lift one reel off the payline: the others still vote.');},
+    say('Lift one reel off the payline. The others still vote.');},
   rule(){return cur.step==='stall'?'Hold all but one':'Hold all but one · the others load the wheel';},
   draw(){
     const I=cur.inst;
@@ -1344,7 +1344,7 @@ LV[10]={
         t+=voteHtml(others,{pseudo:true})+oddsHtml(I.dna[i],5,profileOf(others,true),0,{act:'none',title:'Reel '+(i+1)+': odds of every stop, from the other five'})+
           '<div class="row"><button class="primary" data-act="best">Re-stop reel '+(i+1)+' at its most probable stop</button></div>';}
     }else{
-      t+='<div class="called handover"><p><b>The loaded wheel.</b> Lawrence and colleagues (1993) did not send the lifted reel to its most probable stop. They drew its stop at random, from a wheel whose slices are as wide as each stop’s odds. A likely stop usually wins; an unlikely one sometimes does, and a worse stop can be the way out of a stall.</p></div>'+srcCard('lawrence');
+      t+='<div class="called handover"><p><b>The loaded wheel.</b> Lawrence and colleagues (1993) did not send the lifted reel to its most probable stop. They drew its stop at random, from a wheel whose slices are proportional to each stop’s odds. A likely stop usually wins, but an unlikely one sometimes does, and moving to a worse stop can get the search out of a stall.</p></div>'+srcCard('lawrence');
       t+='<div class="row" style="align-items:flex-start">'+(cur.wheel?wheelSvg(cur.wheel.w,cur.wheel.at):wheelSvg(I.dna[0].length-4?[1,1,1,1,1,1,1,1,1,1,1]:[1],-1))+
         '<div><p class="mono">Misses: '+cur.hist.slice(-12).join(' → ')+'</p>'+(cur.wheel?'<p>The machine lifted reel '+(cur.wheel.i+1)+'; the wheel landed on stop '+(cur.wheel.at+1)+'.</p>':'')+
         (cur.step==='wheel'?'<div class="row"><button class="primary" data-act="spinwheel">Lift a reel at random and spin the wheel</button>'+(cur.n>=5?'<button data-act="auto">Keep spinning on its own</button>':'')+'</div>':'')+'</div></div>';
@@ -1370,7 +1370,7 @@ LV[10]={
     }
   },
   after(){const g=document.getElementById('wheelRot');if(!g)return;const to=g.dataset.to;if(reduced()){g.style.transform='rotate('+to+'deg)';return;}g.style.transform='rotate('+(+to+360)+'deg)';later(()=>{g.style.transform='rotate('+(+to+1080)+'deg)';},30);},
-  reveal(){return '<p>Lifting one reel, letting the others set the odds, and drawing its new stop from that loaded wheel, over and over, is '+term('gibbs','Gibbs sampling')+'. Because it can step to a worse stop, it does not stay stuck where every best re-stop changes nothing.</p>';},
+  reveal(){return '<p>Lifting one reel, letting the others set the odds, and drawing its new stop from that loaded wheel, over and over, is '+term('gibbs','Gibbs sampling')+'. Because it can move to a worse stop, it can leave a setting where re-stopping every reel at its best stop changes nothing.</p>';},
 };
 
 LV[11]={
@@ -1392,7 +1392,7 @@ LV[11]={
       later(step,500);
     }
   },
-  reveal(){return '<p>The word the machine found, '+wordHtml(EVENING)+', is the <b>evening element</b>. It sits just upstream of plant genes that switch on near dusk, and a clock protein binds it. Harmer and colleagues found it the way you just did: by searching the upstream DNA of genes that rise and fall together for one short word they all share.</p>'+
+  reveal(){return '<p>The word the machine found, '+wordHtml(EVENING)+', is the <b>evening element</b>. It sits just upstream of plant genes that switch on near dusk, and a clock protein binds it. Harmer and colleagues found it by the same approach, searching the upstream DNA of genes that rise and fall together for a short word they share.</p>'+
     '<p class="gmeta">Illustrative: these ten strips are made up for this game, with the real nine-letter element planted in each, one letter changed. The element itself is real.</p>';},
   src:['harmer']
 };

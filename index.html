@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Bioinformatics Algorithms: a playable textbook</title>
-<meta name="description" content="A textbook of seven games. Each starts with a problem from genomics and leads you to work out the algorithm before naming it.">
+<meta name="description" content="Games and handouts for a course in bioinformatics algorithms: motif finding, genome assembly, sequence alignment, hidden Markov models, evolutionary trees, clustering and read mapping.">
 <link rel="icon" href="book/favicon.svg" type="image/svg+xml">
 <link rel="stylesheet" href="book/book.css">
 <link rel="manifest" href="manifest.webmanifest">
@@ -77,7 +77,7 @@ section{padding-top:38px}
 <div class="front">
   <h1>Bioinformatics Algorithms</h1>
   <p class="sub">A playable textbook</p>
-  <p class="lede">Seven chapters, each built around a game. You start with a problem from genomics, work out an algorithm for it, and learn its name once you have found it.</p>
+  <p class="lede">Each chapter covers one family of algorithms and is taught through a game. Play the game before using its handouts.</p>
   <p class="resume"><a id="resume" href="motif-slots/">Start chapter 1</a></p>
 </div>
 
@@ -90,22 +90,22 @@ section{padding-top:38px}
 <section aria-labelledby="howT">
   <div class="sechead"><h2 id="howT">How a chapter works</h2></div>
   <ol class="steps">
-    <li><b>Play.</b> The game gives you the problem before any method. The exploration guide lists what to look for.</li>
-    <li><b>Discuss.</b> Compare what you found, using the terms you earned.</li>
-    <li><b>Build.</b> Code the algorithm and work an example on paper.</li>
-    <li><b>Present.</b> Explain the algorithm to someone who has not seen it.</li>
+    <li>Play the game and fill in its exploration guide.</li>
+    <li>Work the discussion questions with a group.</li>
+    <li>Do the coding and pen-and-paper tasks.</li>
+    <li>Present one algorithm, using the presentation checklist.</li>
   </ol>
   <p class="meta" id="shelf"></p>
 </section>
 
 <section id="keep" aria-labelledby="keepT">
-  <div class="sechead"><h2 id="keepT">Keep your place</h2><p>Progress is saved in this browser only.</p></div>
+  <div class="sechead"><h2 id="keepT">Saved progress</h2></div>
   <p class="restoring" id="restoring" role="status" hidden></p>
   <div class="keep">
     <div><h3>Your book link</h3><p id="bookText"></p>
       <div class="krow" id="bookRow"><input id="bookLink" readonly aria-label="Your book link"><button type="button" id="copyBook">Copy</button></div>
       <p class="knote" id="bookNote" role="status"></p></div>
-    <div><h3>Restore from a link</h3><p>Paste a book link or a chapter’s progress link. Nothing already here is removed.</p>
+    <div><h3>Restore from a link</h3><p>Paste a book link or a chapter’s progress link. Existing progress is kept.</p>
       <div class="krow"><input id="pasteLink" aria-label="A book link or a progress link" placeholder="Paste a link" autocomplete="off" spellcheck="false"><button type="button" id="usePaste">Restore</button></div>
       <p class="knote" id="pasteNote" role="status"></p></div>
     <div><h3>On this device</h3><div data-bk-app></div></div>
@@ -113,7 +113,7 @@ section{padding-top:38px}
 </section>
 
 <section id="glossary" aria-labelledby="glT">
-  <div class="sechead"><h2 id="glT">Glossary</h2><p>The terms you have earned, by chapter.</p></div>
+  <div class="sechead"><h2 id="glT">Glossary</h2></div>
   <div id="gloss"></div>
 </section>
 </main>
@@ -150,7 +150,7 @@ $('#toc').innerHTML=state.map(st=>{const c=st.c;
 
 // the reader's place in the book
 const total=B.chapters.reduce((n,c)=>n+c.terms,0),got=state.reduce((n,s)=>n+s.got,0);
-$('#overall').textContent=got?got+' of '+total+' terms earned':'Chapters can be read in any order';
+$('#overall').textContent=got?got+' of '+total+' terms earned':'';
 const last=read('book:last',null),lastSt=last&&state.find(s=>s.c.dir===last.dir&&s.started&&!s.done);
 const nextUp=lastSt||state.find(s=>s.started&&!s.done)||state.find(s=>!s.started);
 if(nextUp&&got){const r=$('#resume');r.href=nextUp.c.dir+'/';r.textContent=nextUp.started?'Continue '+nextUp.c.game:'Start chapter '+nextUp.c.n+': '+nextUp.c.game;}
@@ -163,8 +163,8 @@ function sound(c,enc){const m=/^1\.([0-9a-z]+)\.([01]+)\.([0-9a-z]+)\.(.+)$/.exe
 const held=()=>B.chapters.reduce((n,c)=>{const s=read(c.key,null);return n+(s&&Array.isArray(s.badges)?s.badges.length:0)+(s&&Array.isArray(s.done)?s.done.length:0);},0);
 const parts=state.filter(s=>s.link).map(s=>s.c.dir+':'+s.link);
 if(parts.length){$('#bookLink').value=location.origin+location.pathname+'#book=1/'+parts.join('/');
-  $('#bookText').textContent='One link restores everything you have earned in every chapter. It changes as you earn more, so copy it again before you leave.';}
-else{$('#bookRow').hidden=true;$('#bookText').textContent='Finish a level in any chapter and your link appears here.';}
+  $('#bookText').textContent='Progress is saved in this browser. This link restores it in any other. It changes as you earn terms, so copy it again before you leave.';}
+else{$('#bookRow').hidden=true;$('#bookText').textContent='Progress is saved in this browser. A link that restores it elsewhere appears here after you finish a level.';}
 $('#bookLink').onclick=()=>$('#bookLink').select();
 $('#copyBook').onclick=()=>{const b=$('#bookLink'),ok=()=>{$('#bookNote').textContent='Copied.';},
   byHand=()=>{b.select();let done=false;try{done=document.execCommand('copy');}catch(e){}if(done)ok();else $('#bookNote').textContent='Could not copy. The link is selected, so copy it by hand.';};
@@ -212,7 +212,7 @@ function gloss(q){
 }
 const have=state.some(s=>s.terms.length);
 $('#gloss').innerHTML=have?'<div class="gtools"><input id="gq" type="search" placeholder="Search your terms" aria-label="Search your terms"><span class="gcount" id="gn"></span></div><div id="glist"></div>'
-  :'<p class="empty">No terms yet. Finish a level in any game to earn its terms.</p>';
+  :'<p class="empty">No terms earned yet.</p>';
 if(have){gloss('');$('#gq').addEventListener('input',e=>gloss(e.target.value));}
 
 })();

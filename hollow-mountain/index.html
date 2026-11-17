@@ -264,7 +264,7 @@ footer input{font:inherit;width:9em;padding:5px 8px;border:1px solid var(--line)
   </details>
 
   <div class="savebar" id="savebar">
-    <p><b>Progress link.</b> Your earned terms and finished levels are saved in this browser. Copy this link and keep it. Opening it in any browser restores them. The <a href="../#keep">front page</a> has one link for every chapter.</p>
+    <p><b>Progress link.</b> Progress is saved in this browser. This link restores it in any other. The <a href="../#keep">front page</a> has one link for all chapters.</p>
     <div class="saverow"><input id="saveLink" readonly aria-label="Your progress link"><button id="copyLink">Copy progress link</button></div>
     <p class="savenote" id="saveNote" role="status"></p>
     <div data-bk-app></div>
@@ -552,9 +552,9 @@ const reduced=()=>{try{return matchMedia('(prefers-reduced-motion: reduce)').mat
 
 const LEVELS=[
   {id:1,mode:'count',title:'Who caught it from whom?',
-   brief:'Four patients fell ill with the same new virus, and a short stretch of each patient’s virus has been read, letter by letter. A virus copies itself with the odd mistake, so viruses passed from one person to the next differ in few letters. Compare two pairs: click every column where the two rows differ.'},
+   brief:'Four patients fell ill with the same new virus, and a short stretch of each patient’s virus has been read, letter by letter. A virus makes occasional copying errors, so viruses passed directly from one person to another differ in few letters. Compare two pairs: click every column where the two rows differ.'},
   {id:2,mode:'lit',title:'The mountain, lights on',
-   brief:'Inside Hollow Mountain, tunnels meet at junctions, and there is exactly one way through between any two entrances. Today the lamps are lit. The surveyor’s one instrument is a rope: click an entrance, then another, and the rope is stretched along the only way through.'},
+   brief:'Inside Hollow Mountain, tunnels meet at junctions, and there is exactly one way through between any two entrances. In this level the lamps are lit. The surveyor measures with a rope. Click two entrances to stretch the rope along the way between them.'},
   {id:3,mode:'y',title:'Lights out',
    brief:'The lamps are out. Three entrances, and the rope readings between them. With three entrances and no loops, the inside can only be one internal node with a tunnel to each leaf. How long is each tunnel? Type your three lengths, then walk the map to compare it with the ropes.'},
   {id:4,mode:'grow',n:4,title:'A fourth entrance',
@@ -570,7 +570,7 @@ const LEVELS=[
   {id:9,mode:'join5',title:'Join and repeat',
    brief:'Five leaves. The first round of neighbor joining is yours, with a calculator for the row totals; the game does the later rounds.'},
   {id:10,mode:'swap',title:'One swap',
-   brief:'Closest-pair joining built this map for a chart with a fast lineage. It is close, and wrong. The score counts the foursomes of leaves that the map pairs the way the chart’s four-point test pairs them. Click an inner tunnel (internal nodes at both ends) to see the four groups hanging off it, and the two other ways to hang them.'},
+   brief:'Closest-pair joining built this map for a chart with a fast lineage. It is close but not correct. The score counts the foursomes of leaves that the map pairs the way the chart’s four-point test pairs them. Click an inner tunnel (internal nodes at both ends) to see the four groups hanging off it, and the two other ways to hang them.'},
   {id:11,mode:'final',title:'Whose virus?',
    brief:'Coronaviruses related to the SARS virus, from people, from palm civets sold at a market in southern China, and from bats. Rebuild their tree with neighbor joining: in each round, click the smallest entry of the discounted chart.'}
 ];
@@ -579,7 +579,7 @@ const LEVELS=[
 const SRC={
   zuck:{cite:'Zuckerkandl & Pauling, 1965',title:'Evolutionary divergence and convergence in proteins',where:'In Evolving Genes and Proteins (Academic Press), 97–166',
     url:'https://doi.org/10.1016/B978-1-4832-2734-4.50017-6',
-    look:'A long chapter in a 1965 symposium volume on how proteins drift apart, and sometimes together, as lineages evolve. Read it against the steady-digging story: what would have to be true of the rate for the story to hold?'},
+    look:'A long chapter in a 1965 symposium volume on how proteins drift apart, and sometimes together, as lineages evolve. Compare it with the steady-digging story. What must be true of the rate for the story to hold?'},
   buneman:{cite:'Buneman, 1974',title:'A note on the metric properties of trees',where:'Journal of Combinatorial Theory, Series B 17, 48–50',
     url:'https://doi.org/10.1016/0095-8956(74)90047-1',
     look:'A three-page note on which tables of distances a tree can produce. Look for a test that needs only four points at a time.'},
@@ -851,15 +851,15 @@ function firstOpen(ids){return ids.find(id=>cur.hand[id]&&!cur.hand[id].ok);}
 
 /* ---------- what the game says when vocabulary is earned ---------- */
 const BLOCKS={
-  dmat:{html:()=>'Your chart of counts is a '+term('dmat','distance matrix')+': zero down the diagonal, the same read across as read down, and never negative. Fewer differences means a closer relative. But a chart is only a list of pairs, and the question was a history: who passed it to whom, and through whom.'},
+  dmat:{html:()=>'Your chart of counts is a '+term('dmat','distance matrix')+': zero on the diagonal, symmetric, and never negative. Fewer differences means a closer relative. The chart gives only pairwise distances, though, and the question is about the history of transmission.'},
   tree:{html:()=>'In biology this cave is a '+term('tree','tree')+'. Its entrances are '+term('leaf','leaves')+' (the viruses we sampled), its junctions are '+term('inode','internal nodes')+' (ancestors nobody sampled), and the number on each tunnel is its '+term('blen','branch length')+'. You counted '+cur.lit.nodes+' nodes and '+cur.lit.edges+' tunnels: one fewer tunnel than nodes. A loop would need one more, and there are no loops. <b>We will use these words from now on.</b>'},
   limb:{html:()=>{const d=cur.D,f=(i,j)=>d[i][j];return 'The tunnel from a leaf to its internal node is the leaf’s limb, and you found all three '+term('limb','limb lengths')+'. For A: the ropes from A to B and from A to C both run along A’s limb, and the rope from B to C runs along neither, so A’s limb is ('+f(0,1)+' + '+f(0,2)+' − '+f(1,2)+') / 2 = '+fmt((f(0,1)+f(0,2)-f(1,2))/2)+'.';}},
   additive:{html:()=>'Your four-leaf map reproduces every rope reading. A chart that some tree fits exactly is an '+term('additive','additive matrix')+'. Of the three values you worked out, the smallest was D’s limb. For a pair whose path D does not branch off, both ropes from D take a detour along that path before coming back, so the value can only come out larger.'},
   addphylo:{html:()=>'Splitting a tunnel and hanging one leaf at a time, until the map reproduces the chart, is '+term('addphylo','additive phylogeny')+' (AdditivePhylogeny). A recursive implementation trims the last leaf’s limb off the chart, solves the smaller chart, then hangs the leaf back where it belongs.'},
   fourpoint:{src:['buneman'],html:()=>'In a real tree, of the three ways to pair four leaves, two pairings send both of their ropes along the middle tunnel, so those two sums are equal and the largest. That is the '+term('fourpoint','four-point condition')+', and a chart is additive exactly when every foursome meets it. In this chart the two largest sums differ by '+cur.gap+'. Look back at the new letters: the same change turns up in two viruses that are not each other’s closest relatives. It happened twice, independently, and a count of differences cannot tell that from shared descent.'},
   clock:{src:['zuck'],html:()=>'Steady digging is the '+term('clock','molecular clock')+': if a sequence changes at a constant rate, every present-day leaf is equally far from the common ancestor. That first chamber is the root, and a tree with one is a '+term('rooted','rooted tree')+'. Joining the closest pair under a node at half their distance, and averaging their rows, is '+term('upgma','UPGMA')+'. Its map reproduces this chart exactly.'},
-  nj:{src:['saitou'],html:()=>'The real mountain has no first chamber to start from: it is an '+term('unrooted','unrooted tree')+'. Two leaves that share an internal node are '+term('neighbors','neighbors')+'. The closest pair here were not neighbors; the smallest entry of the discounted chart, the '+term('njm','neighbor-joining matrix')+', was. Joining that pair, replacing it by its internal node, and repeating is '+term('nj','neighbor joining')+'. The game did not prove the guarantee, and neither did the 1987 paper; the proof came later.'},
-  join5:{html:()=>'On an exact chart, neighbor joining rebuilt the mountain. On level 6’s chart, where no tree fits, it still returned a tree: its best compromise, with ropes that do not all agree. Real data are like level 6, which is why neighbor joining, and not additive phylogeny, is the method in use.'},
+  nj:{src:['saitou'],html:()=>'The real mountain has no first chamber to start from: it is an '+term('unrooted','unrooted tree')+'. Two leaves that share an internal node are '+term('neighbors','neighbors')+'. The closest pair here were not neighbors; the smallest entry of the discounted chart, the '+term('njm','neighbor-joining matrix')+', was. Joining that pair, replacing it by its internal node, and repeating is '+term('nj','neighbor joining')+'. The 1987 paper did not prove this guarantee, and neither does the game. The proof came later.'},
+  join5:{html:()=>'On an exact chart, neighbor joining rebuilt the mountain. On level 6’s chart, where no tree fits, it still returned a tree, although the tree does not reproduce every rope reading. Real data resemble level 6, which is why neighbor joining is used in practice and additive phylogeny is not.'},
   nni:{html:()=>'Re-hanging two of the four groups across one inner tunnel is a '+term('nni','nearest neighbor interchange')+'. Each inner tunnel gives a tree two nearest neighbors. This level compares those alternative shapes using the distance chart.'},
   finale:{src:['guan','li'],html:()=>'In this illustrative chart, the human viruses’ closest relative is the civet virus, and the bat viruses branch off further in. That is the shape of the real finding: in 2003 viruses almost identical to the human SARS virus were found in palm civets at a market in Guangdong, and in 2005 bats were shown to carry a wider family of related viruses, with the human and civet viruses nested inside it. The civet was the go-between; bats were the reservoir.'}
 };
@@ -1123,7 +1123,7 @@ function dstarChart(c,R,names,o){o=o||{};const m=R.labels.length;
     if(o.hand&&i>j){const h=c.hand['d'+j+'_'+i];return {html:h&&h.ok?fmt(h.want):'',cls:'diag'};}
     return {html:fmt(R.Dstar[i][j]),cls:(o.pick?'pick':'')+(chosen?' chosen':''),attr:o.pick?' data-cell="'+i+','+j+'"':''};}});}
 function njLimbs(R,i,j){const m=R.labels.length,delta=(R.total[i]-R.total[j])/(m-2);return [(R.D[i][j]+delta)/2,(R.D[i][j]-delta)/2];}
-const HAND_TOT='<p><b>Handed over</b> (Saitou and Nei, 1987): do not trust the smallest entry of the chart. Discount every entry by how far its two leaves are from everybody else. First each leaf’s <b>TotalDistance</b>, the sum of its row.</p>';
+const HAND_TOT='<p><b>Handed over</b> (Saitou and Nei, 1987): the smallest entry of the chart is not reliable. Discount every entry by how far its two leaves are from all the others. First each leaf’s <b>TotalDistance</b>, the sum of its row.</p>';
 const HAND_DS=n=>'<p>Then the discounted chart, <span class="formula">D*(i, j) = (n − 2) · D(i, j) − TotalDistance(i) − TotalDistance(j)</span>, with n = '+n+'.</p>';
 const HAND_PICK='<p>The guarantee: when a chart fits a tree exactly, the smallest entry of D* is always two leaves that share an internal node. (It was proved after 1987; this game does not prove it.) Click the smallest entry.</p>';
 const HAND_LIMB='<p>Their limbs: <span class="formula">Δ = (TotalDistance(i) − TotalDistance(j)) / (n − 2)</span>, <span class="formula">limb(i) = (D(i, j) + Δ) / 2</span>, <span class="formula">limb(j) = (D(i, j) − Δ) / 2</span>.</p>';

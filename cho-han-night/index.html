@@ -321,7 +321,7 @@ footer input{font:inherit;width:9em;padding:5px 8px;border:1px solid var(--line)
   </details>
 
   <div class="savebar" id="savebar">
-    <p><b>Progress link.</b> Your earned terms and finished levels are saved in this browser. Copy this link and keep it. Opening it in any browser restores them. The <a href="../#keep">front page</a> has one link for every chapter.</p>
+    <p><b>Progress link.</b> Progress is saved in this browser. This link restores it in any other. The <a href="../#keep">front page</a> has one link for all chapters.</p>
     <div class="saverow"><input id="saveLink" readonly aria-label="Your progress link"><button id="copyLink">Copy progress link</button></div>
     <p class="savenote" id="saveNote" role="status"></p>
     <div data-bk-app></div>
@@ -629,15 +629,15 @@ const oneIn=p=>p<=0?'no chance at all':p>=1?'certain':'1 in '+fmt(Math.round(1/p
 
 const LEVELS=[
   {id:1,mode:'family',title:'One of the family?',
-   brief:'Five proteins from one family, written one above another so that letters doing the same job share a column. A dash means that member has nothing there. Two newcomers say they belong too. Only one of them does. Pick it.'},
+   brief:'Five proteins from one family are written in rows so that letters with the same role share a column. A dash means that member has nothing at that position. Two newcomers claim to belong, and only one does. Pick it.'},
   {id:2,mode:'open',title:'Chō or han',
-   brief:'The parlour. The dealer shakes two dice in a cup, sets it mouth-down and calls: chō if the dice add up to an even number, han if odd. He owns two cups that look alike from across the room, one plain and one heavy. Tonight he plays each in the open, twenty rounds a cup. Shake, look, and tally every call.'},
+   brief:'The dealer shakes two dice in a cup, sets it mouth-down and calls chō if the dice sum to an even number and han if odd. He has two cups that look alike, one plain and one heavy. First he plays each cup in the open for twenty rounds. Shake, look, and tally every call.'},
   {id:3,mode:'swap',title:'The swap',
-   brief:'Now he plays for real. The cup goes under a cloth and you hear only the call. Between rounds he may swap cups out of sight; the house card on the wall says how often. Twelve rounds. After each call, slide the bead toward the cup you think is under the cloth.'},
+   brief:'Now the cup is under a cloth and you hear only the call. Between rounds he may swap cups unseen, and the house card on the wall gives how often. Twelve rounds. After each call, slide the bead toward the cup you think is under the cloth.'},
   {id:4,mode:'story',title:'One story',
    brief:'The first four calls of that night. Make up one story of what the dealer did: which cup was under the cloth in each round. Then work out, in chances out of 4, how likely he was to play it that way, and how likely those four calls were if he did.'},
   {id:5,mode:'wall',title:'Too many stories',
-   brief:'Your story was one of 16 for four rounds. To know how likely the calls were, whatever the dealer did, you would add the chances of every story. The parlour has a counting machine that does exactly that, one story at a time.'},
+   brief:'Your story was one of 16 for four rounds. To know how likely the calls were, whatever the dealer did, you would add the chances of every story. The parlour’s counting machine does this one story at a time.'},
   {id:6,mode:'ledger',title:'The bookkeeper’s ledger',
    brief:'The bookkeeper keeps a page with a row for each cup and a column for each call. Each entry adds the two ways in, from either cup one round earlier, times the chance of keeping or swapping, and then multiplies by this cup’s chance of the call. Fill in the first three columns.'},
   {id:7,mode:'best',title:'The best story',
@@ -647,7 +647,7 @@ const LEVELS=[
   {id:9,mode:'bouncer',title:'The bouncer',
    brief:'The two newcomers from level 1 are at the door. Every door and every room of the house now carries its tally. Walk each newcomer through, choosing each step yourself. Each step multiplies the chance by that tally. Then the bookkeeper shows the best walk there is.'},
   {id:10,mode:'pebbles',title:'One unseen letter',
-   brief:'A third newcomer, and this one is family: a cousin the family knows. Walk the cousin through the house.'},
+   brief:'A third newcomer is a known member of the family, a cousin. Walk the cousin through the house.'},
   {id:11,mode:'reunion',title:'Reunion',
    brief:'Seven newcomers queue at the door. Send each one through; the bookkeeper finds each best walk, pebbles and all. Then draw the door line: family above it, strangers below.'}
 ];
@@ -655,17 +655,17 @@ const LEVELS=[
 /* Primary sources. Each was opened (record or abstract) before it went in; see the report. */
 const SRC={
   rabiner:{cite:'Rabiner, 1989',title:'A tutorial on hidden Markov models and selected applications in speech recognition',where:'Proceedings of the IEEE 77, 257–286',
-    url:'https://doi.org/10.1109/5.18626',look:'Written for speech recognition, not biology. The abstract says it illustrates hidden states with coin tossing, close cousins of your cups, and names three fundamental problems for such models. Look for which of them your two ledger pages solve.'},
+    url:'https://doi.org/10.1109/5.18626',look:'Written for speech recognition. The abstract illustrates hidden states with coin tossing, which is close to the two cups, and names three fundamental problems for such models. Identify which of them your two ledger pages solve.'},
   baum:{cite:'Baum, Petrie, Soules & Weiss, 1970',title:'A maximization technique occurring in the statistical analysis of probabilistic functions of Markov chains',where:'Annals of Mathematical Statistics 41, 164–171',
     url:'https://doi.org/10.1214/aoms/1177697196',look:'A short mathematics paper. Its title calls a model like the parlour, a chain of hidden states seen only through what they emit, a “probabilistic function of a Markov chain”.'},
   viterbi:{cite:'Viterbi, 1967',title:'Error bounds for convolutional codes and an asymptotically optimum decoding algorithm',where:'IEEE Transactions on Information Theory 13, 260–269',
-    url:'https://doi.org/10.1109/TIT.1967.1054010',look:'Written about decoding messages sent over a noisy channel, not dice or proteins. The abstract’s “nonsequential decoding algorithm”, shown to be asymptotically optimum, is the method now named after its author.'},
+    url:'https://doi.org/10.1109/TIT.1967.1054010',look:'Written about decoding messages sent over a noisy channel. The abstract’s “nonsequential decoding algorithm”, shown to be asymptotically optimum, is the method now named after its author.'},
   krogh:{cite:'Krogh, Brown, Mian, Sjölander & Haussler, 1994',title:'Hidden Markov models in computational biology: applications to protein modeling',where:'Journal of Molecular Biology 235, 1501–1531',
-    url:'https://doi.org/10.1006/jmbi.1994.1104',look:'The abstract says the models were tried on the globins, the protein kinases and the EF-hand, and that they told family members from non-members with high accuracy: your bouncer, on real families.'},
+    url:'https://doi.org/10.1006/jmbi.1994.1104',look:'The abstract says the models were tried on the globins, the protein kinases and the EF-hand, and that they told family members from non-members with high accuracy, as the house does in the last level.'},
   eddy:{cite:'Eddy, 1998',title:'Profile hidden Markov models',where:'Bioinformatics 14, 755–763',
     url:'https://doi.org/10.1093/bioinformatics/14.9.755',look:'A short review. Its abstract describes turning a multiple alignment into a position-specific scoring system for finding distant relatives, which is the house you built from the family.'},
   starcich:{cite:'Starcich and others, 1986',title:'Identification and characterization of conserved and variable regions in the envelope gene of HTLV-III/LAV, the retrovirus of AIDS',where:'Cell 45, 637–648',
-    url:'https://doi.org/10.1016/0092-8674(86)90778-6',look:'HIV was then called HTLV-III/LAV. The abstract reports that the envelope gene varies most of all, with substitutions, deletions and insertions clustered in some regions, while other stretches (all 18 cysteines) stay fixed: rooms that matter and rooms that do not.'},
+    url:'https://doi.org/10.1016/0092-8674(86)90778-6',look:'HIV was then called HTLV-III/LAV. The abstract reports that the envelope gene varies most of all, with substitutions, deletions and insertions clustered in some regions, while other stretches (all 18 cysteines) stay fixed. In the game’s terms, some rooms are conserved and others vary.'},
   sonnhammer:{cite:'Sonnhammer, Eddy & Durbin, 1997',title:'Pfam: a comprehensive database of protein domain families based on seed alignments',where:'Proteins 28, 405–420',
     url:'https://doi.org/10.1002/(SICI)1097-0134(199707)28:3%3C405::AID-PROT10%3E3.0.CO;2-L',look:'Pfam keeps a small hand-checked “seed” alignment for each family, builds a model from it, and lets the model find and align every other member. The abstract says it classified many unannotated worm proteins this way.'}
 };
@@ -1141,7 +1141,7 @@ MODES.wall={
   },
   skip(){return cur.w.on100?'Switch the machine off: this is hopeless':'';},
   onSkip(){clearInterval(cur.timer);cur.headline='Giving up is the right answer';log('gave_up',{count:cur.w.count});complete([],null,'The machine stops. The bookkeeper looks up from her page.');},
-  reveal(){return [{html:'Every extra round doubles the number of stories, so adding them one by one is hopeless long before a real night ends. The bookkeeper never lists a single story, and her total for the twelve-round night is the same as the machine’s. Next level: how.'}];}
+  reveal(){return [{html:'Every extra round doubles the number of stories, so adding them one by one is hopeless long before a real night ends. The bookkeeper gets the same total for the twelve-round night without listing any story. The next level shows how.'}];}
 };
 ACT.run=n=>{
   const w=cur.w;n=+n;if(cur.done)return;
@@ -1257,13 +1257,13 @@ MODES.best={
   reveal(){
     const L=likelierCups(cur.calls),diff=L.map((k,i)=>k!==cur.bs.story[i]?i+1:0).filter(Boolean);
     return [{html:'Keeping the better way in, then following the kept ways back, is the '+term('viterbi','Viterbi algorithm')+'. It finds the single most likely story. Betting each round on the cup the adding page favours answers a different question, which cup is likelier in that one round, and here the two disagree in round'+(diff.length>1?'s ':' ')+diff.join(', ')+'. A story made of round-by-round favourites can even be one the dealer was unlikely to play.'},
-      {html:'You have seen this page before. It is Toll City with two rows: there you added tolls along a route and kept the better way into each corner; here you multiply chances along a story and keep the better way into each entry.',src:['viterbi']}];
+      {html:'This page is the Toll City table with two rows. There you added tolls along a route and kept the better way into each corner. Here you multiply chances along a story and keep the better way into each entry.',src:['viterbi']}];
   }
 };
 ACT.way=a=>{
   const b=cur.b,[t,k,j]=a.split(',').map(Number);if(cur.done||b.pick[t+','+k]!==undefined)return;
   if(!MODES.best.colDone(t-1)){say('Finish round '+t+' first.','warn');jolt('w'+t+k+j);return;}
-  if(cur.bl.from[t][k]!==j){say('The bookkeeper shakes her head: work out both ways in. The other one is larger.','warn');jolt('w'+t+k+j);log('way',{t,k,j,ok:false});return;}
+  if(cur.bl.from[t][k]!==j){say('Work out both ways in. The other one is larger.','warn');jolt('w'+t+k+j);log('way',{t,k,j,ok:false});return;}
   b.pick[t+','+k]=j;log('way',{t,k,j,ok:true});
   if(t<=2){cur.focus='c'+t+k;say('Kept. Now write the entry.');}else say('Kept. The bookkeeper writes it in.');
   if(MODES.best.allDone()){b.stage='back';say('The page is full. Now follow the kept ways back: start at the larger entry in the last round.');}
@@ -1314,7 +1314,7 @@ MODES.family={
   },
   reveal(){
     const right=cur.order.indexOf('relative');
-    return [{html:'Newcomer '+AB[right]+' is family. '+(cur.pick===right?'You picked it.':'You picked the other one, and no wonder:')+' nearly every letter the stranger has, some member has in that column too. Why one is family and the other is not, you cannot yet say. By the end of the night you will have built a doorkeeper who can.'},
+    return [{html:'Newcomer '+AB[right]+' is family. '+(cur.pick===right?'You picked it.':'You picked the other one, and no wonder:')+' nearly every letter the stranger has, some member has in that column too. You cannot yet say why one is family and the other is not. The model built in the later levels can.'},
       {html:'Proteins descended from one ancestor form a '+term('family','protein family')+'. Rows written one above another, with dashes so that related letters share a column, are a '+term('msa','multiple alignment')+'.'}];
   }
 };
@@ -1516,7 +1516,7 @@ MODES.pebbles={
   rule(){return cur.pb.on?'One pebble on every letter and every move':'Each step multiplies the chance by the tally on that door';},
   scene(){return houseSvg(cur.P.k,{trail:trailOf(cur.walk),out:cur.walk.out,col:'#2e7d4f',mark:cur.pb.on?cur.f.slipRoom:undefined});},
   walked(){if(cur.pb.spread)return MODES.pebbles.rescored();cur.best0=profileBest(cur.walk.text,cur.P);log('walked',{best:cur.best0.prob});
-    say(cur.best0.prob?'Best walk: '+oneIn(cur.best0.prob)+'.':'Out the back. The bookkeeper checks every possible walk: every one is worth nothing. The house turns the cousin away.','warn');},
+    say(cur.best0.prob?'Best walk: '+oneIn(cur.best0.prob)+'.':'The bookkeeper checks every possible walk, and each has chance zero. The house turns the cousin away.','warn');},
   moves(){return allowedNext('M'+cur.f.slipRoom,cur.P.k);},
   work(){
     const pb=cur.pb,R=cur.f.slipRoom;
@@ -1546,7 +1546,7 @@ MODES.pebbles={
   },
   rescored(){const b=profileBest(cur.walk.text,cur.P),s=familyScores(cur.f);log('walked',{best:b.prob});
     complete(['pseudo'],null,'The cousin’s best walk is now '+oneIn(b.prob)+': above the stranger’s '+oneIn(s.str1)+'.');},
-  reveal(){return [{html:'A pebble on every letter and every move is a '+term('pseudo','pseudocount')+'. You met the same trick in Motif Slots (unit 1), where a profile that had never seen a letter called a good motif impossible. One letter the family had not happened to say had shut the cousin out; now it costs the cousin a little, not everything.'}];}
+  reveal(){return [{html:'A pebble on every letter and every move is a '+term('pseudo','pseudocount')+'. Motif Slots used the same correction, where a profile that had never seen a letter gave a good motif probability zero. Here one letter that no member had said in that room excluded the cousin. With the pebbles it only lowers the cousin’s chance.'}];}
 };
 ACT.peb=a=>{const pb=cur.pb;if(!pb||!pb.on||pb.spread)return;
   if(a[0]==='L')pb.letters[a.slice(1)]=true;else pb.moves[a.slice(1)]=true;log('pebble',{a});
@@ -1574,8 +1574,8 @@ MODES.reunion={
   },
   reveal(){
     const f=cur.f;
-    return [{html:'Back to level 1. Every letter the stranger said had been said in that column by some member, but where the family agrees it kept picking the odd one out, and where the family is split it picked the popular letter, which matters little. Counting letters by eye treats every column alike; the house weighs each room by how sure the family is there, and lets the corridor and trapdoors absorb what varies.'},
-      {wild:'<p>HIV’s envelope protein mutates so fast that two samples, even from one patient, differ in many places, while some stretches never change. Compared one pair at a time, distant relatives look like strangers. Models built from whole families, like your house, are how such relatives are found: the Pfam database keeps one for each of thousands of protein families.</p>'+srcCard('starcich')+srcCard('sonnhammer')},
+    return [{html:'Back to level 1. Every letter the stranger said had been said in that column by some member, but where the family agrees it kept picking the odd one out, and where the family is split it picked the popular letter, which matters little. Counting letters by eye treats every column alike. The house weights each room by how strongly the family agrees there, and the corridor and trapdoors account for insertions and gaps.'},
+      {wild:'<p>HIV’s envelope protein mutates so fast that two samples, even from one patient, differ in many places, while some stretches never change. In pairwise comparison, distant relatives look unrelated. Models built from whole families, like your house, are how such relatives are found: the Pfam database keeps one for each of thousands of protein families.</p>'+srcCard('starcich')+srcCard('sonnhammer')},
       {html:'What you played, in the book’s words: the cup in play is a '+term('hstate','hidden state')+'; the night of cups a '+term('hpath','hidden path')+'; the chances of each call '+term('emit','emission probabilities')+'; keeping and swapping '+term('trans','transition probabilities')+'; the adding page the '+term('forward','forward algorithm')+'; the keep-the-better page the '+term('viterbi','Viterbi algorithm')+'; rooms, corridors and trapdoors the '+term('match','match')+', '+term('insert','insert')+' and '+term('delete','delete states')+' of a '+term('phmm','profile HMM')+'. The family in this game is illustrative.'}];
   }
 };

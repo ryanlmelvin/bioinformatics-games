@@ -141,7 +141,7 @@ function gamePage(){
     o.innerHTML='<div class="bk-cover-card"><img src="'+base+'book/art/'+G.dir+'.svg" alt=""><div class="bk-cover-body">'+
       '<p class="bk-eyebrow"><span>'+(side?'Side quest, chapter '+ch.n:'Chapter '+ch.n)+'</span>'+esc(ch.topic)+'</p>'+
       '<h2 id="bkCoverT">'+esc(G.game)+'</h2><p class="bk-hook">'+esc(G.hook)+'</p>'+
-      (G.levels?'<p class="bk-meta">'+G.levels+' levels, '+G.terms+' terms. Levels can be played in any order.</p>':'')+
+      (G.levels?'<p class="bk-meta">'+G.levels+' levels, '+G.terms+' terms</p>':'')+
       '<div class="bk-cover-go"><button type="button" class="bk-begin">Begin</button><a href="'+base+'">Back to the contents</a></div></div></div>';
     document.body.append(o);document.body.classList.add('bk-locked');
     const go=$('.bk-begin',o);go.focus();

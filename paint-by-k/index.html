@@ -206,7 +206,7 @@ footer input{font:inherit;width:9em;padding:5px 8px;border:1px solid var(--line)
   </div>
   <div id="bench" hidden></div>
   <div class="savebar" id="savebar">
-    <p><b>Progress link.</b> Your earned terms and finished levels are saved in this browser. Copy this link and keep it. Opening it in any browser restores them. The <a href="../#keep">front page</a> has one link for every chapter.</p>
+    <p><b>Progress link.</b> Progress is saved in this browser. This link restores it in any other. The <a href="../#keep">front page</a> has one link for all chapters.</p>
     <div class="saverow"><input id="saveLink" readonly aria-label="Your progress link"><button id="copyLink">Copy progress link</button></div>
     <p class="savenote" id="saveNote" role="status"></p>
     <div data-bk-app></div>
@@ -571,7 +571,7 @@ const LEVELS=[
  {id:7,mode:'bad',title:'A bad start',
   brief:'A house. Two of the three pots start almost the same colour. Run the two buttons until nothing changes.'},
  {id:8,mode:'cards',title:'Seven numbers a gene',
-  brief:'Your twelve cards from level 1. A card has seven heights, so it would need a map with seven directions. There is nothing to look at, only arithmetic. Three cards serve as the starting pots.'},
+  brief:'Your twelve cards from level 1. A card has seven heights, so it would need a map with seven directions. It cannot be drawn, but the arithmetic is the same. Three cards serve as the starting pots.'},
  {id:9,mode:'tree',title:'Family tree',
   brief:'Eight genes. The table gives the distance between every two of them. Join the two closest groups, again and again, until one group is left. When two groups join, the distance from the new group to any other is the average over all pairs of members.'},
  {id:10,mode:'shift',title:'The shift',
@@ -585,7 +585,7 @@ const SRC={
  gonzalez:{cite:'Gonzalez, 1985',title:'Clustering to minimize the maximum intercluster distance',where:'Theoretical Computer Science 38, 293–306',
   url:'https://doi.org/10.1016/0304-3975(85)90224-5',look:'The 1985 paper behind farthest-first traversal, on choosing clusters so that the largest distance is as small as possible: your worst-pixel meter.'},
  lloyd:{cite:'Lloyd, 1982',title:'Least squares quantization in PCM',where:'IEEE Transactions on Information Theory 28, 129–137',
-  url:'https://doi.org/10.1109/TIT.1982.1056489',look:'Written about pulse-code modulation, not genes: where to put a fixed number of signal levels so that the average quantization noise power, a squared error, is least. Look for the necessary conditions that an optimal scheme must satisfy.'},
+  url:'https://doi.org/10.1109/TIT.1982.1056489',look:'Written about pulse-code modulation: where to put a fixed number of signal levels so that the average quantization noise power, a squared error, is least. Look for the necessary conditions that an optimal scheme must satisfy.'},
  eisen:{cite:'Eisen, Spellman, Brown & Botstein, 1998',title:'Cluster analysis and display of genome-wide expression patterns',where:'PNAS 95, 14863–14868',
   url:'https://doi.org/10.1073/pnas.95.25.14863',look:'Its abstract describes arranging genes by similarity in their pattern of expression with standard statistical algorithms, displayed so biologists can read it, and reports that yeast genes of known similar function end up together.'}
 };
@@ -884,7 +884,7 @@ MODES.sort={
    say(left?plural(left,'card')+' to go.':empty?'Every pile needs at least one card.':'All twelve sorted. Move any card you like, or say you are done.');},
   judge(a){const st=cur.st;st.judged=a;S.piles1=st.piles.slice();S.alt1=cur.other.slice();
    log('judge',{answer:a,piles:st.piles});
-   say(a==='cant'?'Nor can anyone yet: there is no measure that says one sorting is better.':'Better by what measure? Nothing on the table can say yet. These cards come back in level 8.','good');
+   say(a==='cant'?'Nor can anyone yet: there is no measure that says one sorting is better.':'There is no measure yet for comparing two sortings. These cards return in level 8.','good');
    complete(['expvec','clustering'],'L1',{answer:a});}
  },
  go(c){const st=c.st;if(st.phase==='sort'&&st.piles.every(p=>p!==null)&&[0,1,2].every(k=>st.piles.includes(k)))return 'These are my three piles';return null;},
@@ -1255,16 +1255,16 @@ MODES.shift={
 
 /* ---------- what the game says when a level is done ---------- */
 const BLOCKS={
- L1:()=>'<div class="called"><p>A card’s seven heights are the gene’s '+term('expvec','expression vector')+'. Sorting genes into groups of look-alikes is '+term('clustering')+'. You did it by eye, and so did the other student. To say which sorting is better you would need a way to measure one.</p></div>'+srcCard('derisi'),
+ L1:()=>'<div class="called"><p>A card’s seven heights are the gene’s '+term('expvec','expression vector')+'. Sorting genes into groups of look-alikes is '+term('clustering')+'. Both you and the other student sorted by eye. Deciding which sorting is better requires a measure.</p></div>'+srcCard('derisi'),
  L2:()=>{const c=cur,i=c.inst.strip[7],p=c.pic.px[i],q=c.st.pots[nearest(p,c.st.pots)];
   return '<div class="called"><p>Each pixel is a '+term('point','data point')+': a point whose coordinates are its two ink amounts. Each pot is a '+term('center')+', and the pixels printed from one pot are its '+term('cluster')+'. The ruler measures '+term('euclid','Euclidean distance')+': for your last pixel, √(('+p[0]+' − '+f1(q[0])+')² + ('+p[1]+' − '+f1(q[1])+')²) = '+f1(dist(p,q))+'. <b>We will use those words from now on.</b></p></div>';},
  L3:()=>{const c=cur,D=c.pic.px;
-  return '<div class="called"><p>Choosing k centers so that the worst data point is as close as possible to its center is '+term('kcenter','k-center clustering')+'. Nobody knows a fast way to find the best answer. The move the meter points at, each new center on the data point farthest from every center so far, is '+term('fft','farthest-first traversal')+'.</p></div>'+
+  return '<div class="called"><p>Choosing k centers so that the worst data point is as close as possible to its center is '+term('kcenter','k-center clustering')+'. No fast algorithm is known for finding the best answer. The move the meter points at, each new center on the data point farthest from every center so far, is '+term('fft','farthest-first traversal')+'.</p></div>'+
    '<div class="row two" style="margin:8px 0">'+c.inst.decoys.map(d=>'<div class="fig"><p class="cap">Pots on '+d.name+': worst '+f1(d.max)+'</p>'+sheetSvg(c.pic,i=>inkOf(d.centers[nearest(D[i],d.centers)]),{label:d.name})+'</div>').join('')+
    '<div class="fig"><p class="cap">Farthest-first: worst '+f1(c.inst.best)+'</p>'+sheetSvg(c.pic,i=>inkOf(c.inst.ff.centers[nearest(D[i],c.inst.ff.centers)]),{label:'farthest-first'})+'</div></div>'+srcCard('gonzalez');},
  L4:()=>'<div class="called"><p>The meter that only watches the worst point lets one stray steal a center. The new meter, the average of the squared distances from each data point to its center, is the '+term('distortion','squared error distortion')+'. Choosing k centers, anywhere, to make it as small as possible is '+term('kmeans','k-means clustering')+'.</p></div>',
  L5:()=>'<div class="called"><p>The best pot sits at the average of its pixels’ inks, one coordinate at a time. That point is the cluster’s '+term('gravity','center of gravity')+'.</p></div>',
- L6:()=>'<div class="called"><p>Print from the nearest center, move each center to its cluster’s center of gravity, repeat until nothing changes: that is the '+term('lloyd','Lloyd algorithm')+'. Neither step can raise the error, and there are only so many ways to split 144 pixels, so it has to stop.</p></div>'+srcCard('lloyd'),
+ L6:()=>'<div class="called"><p>Print from the nearest center, move each center to its cluster’s center of gravity, repeat until nothing changes: that is the '+term('lloyd','Lloyd algorithm')+'. Neither step can raise the error, and 144 pixels can be split in only finitely many ways, so the loop must stop.</p></div>'+srcCard('lloyd'),
  L7:()=>'<div class="called"><p>The Lloyd algorithm stopped twice, at two different errors. Stopping does not mean best: where it ends depends on where the centers start. Farthest-first traversal is a cheap way to spread them out. Real software usually picks starts at random, weighted toward far-off points (k-means++), and keeps the best of many runs.</p></div>',
  L8:()=>'<div class="called"><p>With seven numbers a gene there was no picture to judge by. The arithmetic was the same as for two inks, and the error now answers level 1’s question.</p></div>',
  L9:()=>'<div class="called"><p>Joining the closest groups and drawing the joins as a tree is '+term('hier','hierarchical clustering')+'. Averaging the distance over every pair of members is the same rule as UPGMA: this is level 7 of Hollow Mountain, with genes in place of species. Cutting the tree at one height gives the clusters.</p></div>'+srcCard('eisen'),
