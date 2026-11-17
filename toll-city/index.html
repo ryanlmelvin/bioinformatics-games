@@ -580,7 +580,7 @@ const LEVELS=[
   {id:3,mode:'table',inst:'decks',title:'Two games, one table',
    brief:'Two players are part-way through the same deal. They played differently, but the same cards are left on the table.'},
   {id:4,mode:'wall',inst:'twelve',title:'Too many games',
-   brief:'Twelve cards in each deck. A bot will play every possible game in turn and keep the best score. Start it. You can also play yourself.'},
+   brief:'Each deck has twelve cards. A bot will play every possible game in turn and keep the best score. Start it. You can also play yourself.'},
   {id:5,mode:'tourist',inst:'city',title:'The tourist',
    brief:'A different city. A tourist walks from the top-left corner to the bottom-right, only east or south, never back, and counts the sights on each street they walk (the number on the street). Which route sees the most?'},
   {id:6,mode:'follow',inst:'city',title:'Follow your arrows',
@@ -1108,7 +1108,7 @@ MODES.table={
     const tr=trailList(c),n=v.length,m=w.length;
     const ov=tr.list.map((mv,k)=>({corners:routeCorners([0,0],mv).slice(0,c.phase==='dots'&&!c.done?Math.max(1,c.drawn+1):99),cls:'trail',off:(k%3-1)*3,w:4}));
     const cornerTitle=(i,j)=>'Deck 1: '+(n-i)+' left'+(i<n?' ('+v.slice(i)+')':'')+'; deck 2: '+(m-j)+' left'+(j<m?' ('+w.slice(j)+')':'');
-    return tables+'<div class="pad sub">'+(tr.mine?'Your level 2 games':'Two sample games')+' as trails · rows: cards gone from deck 1 · columns: cards gone from deck 2</div>'+
+    return tables+'<div class="pad sub">'+(tr.mine?'Your level 2 games':'Two sample games')+' as trails · rows: deck 1 cards taken or thrown away · columns: deck 2 cards taken or thrown away</div>'+
       '<div class="cityscroll">'+gridSvg({n,m,rows:v,cols:w,diag:true,P:58,maxw:620,minw:480,label:'Every position of the two decks',
       street:()=>({cls:'faint',w:3}),overlays:ov,
       corner:(i,j)=>({cls:(c.done&&i===tp.i&&j===tp.j?'pick':'')+(c.miss&&c.miss[0]===i&&c.miss[1]===j?' shake':''),hit:cornerTitle(i,j)}),
@@ -1124,7 +1124,7 @@ MODES.table={
         say('Choose again.');render();return;
       }
       c.phase='dots';c.stage=null;c.drawn=0;
-      say('Each dot stands for the number of cards gone from each deck. Your games are drawn as walks across the dots.');
+      say('Each dot stands for the number of cards taken or thrown away from each deck. Your games are drawn as walks across the dots.');
       const len=Math.max(...trailList(c).list.map(x=>x.length));
       show(len+1,260,k2=>{c.drawn=k2;},()=>{c.drawn=99;say('Click the dot where tables A and B both stand.');render();});
       render();return;
@@ -1132,8 +1132,8 @@ MODES.table={
     if(type==='corner'&&c.phase==='dots'){
       const i=+a,j=+b,tp=c.tp;log('dot',{at:[i,j],right:i===tp.i&&j===tp.j});
       if(i!==tp.i||j!==tp.j){c.miss=[i,j];stage('That dot leaves '+(c.inst.v.length-i)+' cards on the table from deck 1 and '+(c.inst.w.length-j)+' from deck 2. The tables have '+(c.inst.v.length-tp.i)+' and '+(c.inst.w.length-tp.j)+'.','warn');render();c.miss=null;return;}
-      c.stage=null;say('Both tables stand on this dot: '+tp.i+' cards gone from deck 1, '+tp.j+' from deck 2.','good');
-      complete(['graph','path'],[{html:'Each dot stands for one state of the table, which is determined by how many cards have gone from each deck. In Bridge Walker you called dots like these <b>nodes</b> and the steps between them <b>edges</b>; the same words apply here. This grid of nodes and edges is the '+term('graph','alignment graph')+' of the two decks. A step south throws away from deck 1, a step east from deck 2, a step south-east takes both.'},
+      c.stage=null;say('Both tables stand on this dot: '+tp.i+' cards taken or thrown away from deck 1, '+tp.j+' from deck 2.','good');
+      complete(['graph','path'],[{html:'Each dot stands for one state of the table, which is determined by how many cards have been taken or thrown away from each deck. In Bridge Walker you called dots like these <b>nodes</b> and the steps between them <b>edges</b>; the same words apply here. This grid of nodes and edges is the '+term('graph','alignment graph')+' of the two decks. A step south throws away from deck 1, a step east from deck 2, a step south-east takes both.'},
         {html:'One complete game is a '+term('path','path')+' from the top-left node to the bottom-right one, and every path is a game.'}]);
     }
   },
@@ -1343,7 +1343,7 @@ MODES.deckcity={
     if(c.phase==='pre')return deckTable(v,w,newGame(),false,'Deck 1 and deck 2');
     c.ready=(i,j)=>c.phase==='row'&&i===1&&penReady(c.g,i,j);
     const route=c.done?c.back:c.phase==='back'?c.back:[];
-    return '<div class="pad sub">Rows: cards gone from deck 1 · columns: cards gone from deck 2 · gold diagonal = a pair, worth 1</div>'+
+    return '<div class="pad sub">Rows: deck 1 cards taken or thrown away · columns: deck 2 cards taken or thrown away · gold diagonal = a pair, worth 1</div>'+
       '<div class="cityscroll">'+gridSvg({n,m,rows:v,cols:w,diag:true,P:56,maxw:640,minw:480,label:'The decks as a city',
       street:deckStreet(c,v,w,(i,j,d)=>c.phase==='row'&&i===1&&penReady(c.g,i,j)?{hit:'Pencil this corner from this street',cls:(d==='D'&&v[i-1]===w[j-1]?'gold':'avail')}:{}),
       overlays:route.length?[{corners:route,cls:'route',w:6}]:[],
@@ -1405,7 +1405,7 @@ MODES.tolls={
       overlays:[{corners:old,cls:'ghost',w:4}].concat(c.back&&c.back.length>1?[{corners:c.back,cls:'route',w:6}]:[]),
       corner:(i,j)=>{const base=deckCorner(c,c.phase==='back'&&!c.done?(a,b)=>'Corner '+a+','+b:null)(i,j);if(into(i,j)){base.cls+=' ready';base.num='?';}return base;},
       tourist:c.pos||null})+'</div>';
-    if(c.phase==='one')h+='<div class="entry"><label for="entry">Best arrival at the marked corner (2 cards gone from each deck):</label><input id="entry" inputmode="numeric" autocomplete="off" data-change="typed"><button class="primary" data-act="type">Pencil it</button></div>';
+    if(c.phase==='one')h+='<div class="entry"><label for="entry">Best arrival at the marked corner (2 cards taken or thrown away from each deck):</label><input id="entry" inputmode="numeric" autocomplete="off" data-change="typed"><button class="primary" data-act="type">Pencil it</button></div>';
     h+='<div class="pad gmeta">Dashed grey: your best route from level 7.</div>';
     if(c.done)h+=alignTiles(c.top,c.bot,{label:'The best route under tolls, as a line-up · score '+c.g.s[n][m]});
     return h;
