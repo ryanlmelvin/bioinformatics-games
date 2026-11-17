@@ -576,7 +576,7 @@ const LEVELS=[
   {id:1,mode:'strands',inst:'decks',title:'Two strands',
    brief:'Two short DNA sequences, like the same gene in two species (these two are invented for the puzzle). Letters have been inserted and deleted over time, so matching letters no longer line up. Line up as many matching letters as you can, then lock it in.'},
   {id:2,mode:'decks',inst:'decks',title:'Two decks',
-   brief:'The same two strands, dealt as two decks of cards with the top card on the left. Each turn, take both top cards (a point if they show the same letter) or throw away the top card of one deck. A card that is taken or thrown away never comes back. Score as many points as you can.'},
+   brief:'The same two sequences as two decks of cards. The outlined card in each deck is the one in play. Each turn, take both outlined cards (a point if they show the same letter) or throw away the outlined card of one deck. A card that is taken or thrown away does not come back. Score as many points as you can.'},
   {id:3,mode:'table',inst:'decks',title:'What does the table remember?',
    brief:'Two players are part-way through the same deal. They played differently, but the same cards are left on the table.'},
   {id:4,mode:'wall',inst:'twelve',title:'Too many games',
@@ -1016,7 +1016,7 @@ function deckRow(label,s,k,live){
   return '<div class="deckrow"><span class="decklab">'+label+'</span><div class="cards">'+[...s].map((ch,x)=>{
     if(x<k)return '';
     const top=x===k;
-    return top&&live?'<button class="tcard top" data-act="move" data-a="'+(label==='Deck 1'?'S':'E')+'" aria-label="Top card '+ch+': throw it away">'+letters(ch)+'</button>'
+    return top&&live?'<button class="tcard top" data-act="move" data-a="'+(label==='Deck 1'?'S':'E')+'" aria-label="Outlined card '+ch+': throw it away">'+letters(ch)+'</button>'
       :'<span class="tcard'+(top?' top':'')+'">'+letters(ch)+'</span>';
   }).join('')+(k>=s.length?'<span class="sub">empty</span>':'')+'</div></div>';
 }
@@ -1033,7 +1033,7 @@ function deckTable(v,w,g,live,title){
   if(live&&!gameOver(g,v,w)){
     const same=v[g.i]===w[g.j];
     h+='<div class="moves"><button class="take" data-act="move" data-a="D">Take both'+(same?' (a pair: +1)':' (no point)')+'</button>'+
-      '<button data-act="move" data-a="S">Throw away deck 1’s top card</button><button data-act="move" data-a="E">Throw away deck 2’s top card</button></div>';
+      '<button data-act="move" data-a="S">Throw away deck 1’s outlined card</button><button data-act="move" data-a="E">Throw away deck 2’s outlined card</button></div>';
   }
   h+='<div class="sub" style="margin-top:10px">Taken · '+plural(g.score,'point')+'</div><div class="pairs">'+
     pairs.map(([a,b])=>'<div class="pair '+(a===b?'match':'miss')+'"><span class="tcard">'+letters(a)+'</span><span class="tcard">'+letters(b)+'</span></div>').join('')+'</div>'+
