@@ -131,3 +131,13 @@ test('level 9: the first spin stalls above the best; level 10: every best re-sto
   for(let i=0;i<6;i++){d.step='stall';v.api.act('lift',String(i));v.api.act('best');}
   assert.deepEqual(JSON.parse(JSON.stringify(d.pos)),JSON.parse(JSON.stringify(before)));
 });
+
+/* Every first-load code: a new browser draws one of these, so each is played through every level. */
+test('every first-load code plays every level without a fallback puzzle',()=>{
+  const codes=boot('?debug=1&seed=PROGRESS').api.codes();assert.equal(codes.length,50);assert.equal(new Set(codes).size,50);
+  for(const code of codes){
+    const u=boot('?debug=1&seed='+code);
+    for(let id=1;id<=11;id++){if(id>1)u.api.loadLevel(id);SOLVE[id](u);assert(u.api.state().done,code+' level '+id+' completes');}
+    assert.equal(u.api.earned().length,u.api.vocab().length,code+' earns every term');assert.equal(u.api.fell(),0,code+' needs no fallback');
+  }
+});

@@ -170,3 +170,13 @@ test('the dice model upgrade retains earned progress and clears only old bead gu
   const current={...ui.persisted(),marks:{new:[0,85]}};
   assert.deepEqual(boot('?debug=1',current).persisted().marks,{new:[0,85]});
 });
+
+/* Every first-load code: a new browser draws one of these, so each is played through every level. */
+test('every first-load code plays every level without a fallback puzzle',()=>{
+  const codes=boot('?debug=1&seed=PROG').api.codes();assert.equal(codes.length,50);assert.equal(new Set(codes).size,50);
+  for(const code of codes){
+    const ui=boot('?debug=1&seed='+code);
+    for(let n=1;n<=11;n++){if(n>1)ui.api.loadLevel(n);PLAY[n](ui);assert(ui.api.state().done,code+' level '+n+' completes');}
+    assert.equal(ui.api.earned().length,ui.api.vocab().length,code+' earns every term');assert.equal(ui.api.fell(),0,code+' needs no fallback');
+  }
+});

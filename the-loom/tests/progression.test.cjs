@@ -155,3 +155,13 @@ test('undo and restart rebuild the screen from the level state',()=>{
   api.drop('peg',0,'lpeg',x.rows.findIndex(q=>q.start===(x.rows[0].start+n-1)%n));
   assert.equal(Object.keys(api.state().st.tied).length,1);ui.el('#undo').click();assert.equal(Object.keys(api.state().st.tied).length,0);
 });
+
+/* Every first-load code: a new browser draws one of these, so each is played through every level. */
+test('every first-load code plays every level without a fallback puzzle',()=>{
+  const codes=boot('?debug=1&seed=X').api.codes();assert.equal(codes.length,50);assert.equal(new Set(codes).size,50);
+  for(const code of codes){
+    const ui=boot('?debug=1&seed='+code);
+    for(let id=1;id<=11;id++){ui.api.loadLevel(id);solve(ui.api,id);assert(ui.api.state().done,code+' level '+id+' completes');}
+    assert.equal(ui.api.earned().length,ui.api.vocab().length,code+' earns every term');assert.equal(ui.api.fell(),0,code+' needs no fallback');
+  }
+});

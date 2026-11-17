@@ -291,9 +291,6 @@ dd{margin:0;font-size:.93rem}
   </div>
 
   <footer>
-    <label for="seed">Puzzle code</label>
-    <input id="seed" autocomplete="off" spellcheck="false" maxlength="24">
-    <button class="aux" id="setSeed" type="button">Set</button>
     <button class="aux" id="dl" type="button">Download move log</button>
     <button class="link" id="reset" type="button">Reset progress</button>
   </footer>
@@ -434,7 +431,9 @@ const FINDS=[
 const FIND={};FINDS.forEach(F=>{FIND[F.id]=F;});
 
 /* ---------- saved state ---------- */
-function freshState(seed){return{v:1,seed:seed||Math.random().toString(36).slice(2,8),variant:0,unlocked:1,map:false,cur:1,gaveUp:false,tapes:{},grps:{},sp:{},best:{},found:{},perf:{},first:{},spoiled:{},log:[]};}
+/* First-load puzzle codes: each was checked to generate every level without the fallback strip. */
+const CODES='3PNLAJ C7MUJV XD7UTV UZXGX9 F5SK6N 5KQS7F RUE7XL ZY25FW 5277DJ YNU2G7 UWW24J JEV45D C2H7ZL WYHD9D N9ZUU7 PS2LVM UAW2WF A5RA7K 5NQ63V LFU54D SMXE2A P5RERE 4BV8L4 JDPLK8 QU77WZ VHJUXF 6JE3FB B5XS58 78ABZQ FRVBNS MCQDNK FTN6FE HKTH8Z C94LYL CL9SDA VX9RUA MBQ3KC LCW77R K7PKMD NXUNGH 3RRAJ5 CH55W4 Z8D5WD EJJLLX F2WW45 VDTNCP CX677D 63P3HH WHSSSN Q6JLXH'.split(' ');
+function freshState(seed){return{v:1,seed:seed||CODES[Math.floor(Math.random()*CODES.length)],variant:0,unlocked:1,map:false,cur:1,gaveUp:false,tapes:{},grps:{},sp:{},best:{},found:{},perf:{},first:{},spoiled:{},log:[]};}
 let S=null;
 try{S=JSON.parse(localStorage.getItem(KEY)||'null');}catch(e){}
 if(!S||S.v!==1)S=freshState();
@@ -983,13 +982,6 @@ document.addEventListener('keydown',e=>{
 $('#codexBtn').onclick=()=>{renderCodex();$('#codex').showModal();};
 $('#codexClose').onclick=()=>$('#codex').close();
 $('#codex').addEventListener('click',e=>{if(e.target===$('#codex'))$('#codex').close();});
-$('#seed').value=S.seed;
-$('#setSeed').onclick=()=>{
-  const v=$('#seed').value.replace(/[^\w-]/g,'').slice(0,24);
-  if(!v||v===S.seed){$('#seed').value=S.seed;return;}
-  if(S.log.length>1&&!confirm('Setting a new puzzle code starts the game over. Continue?')){$('#seed').value=S.seed;return;}
-  S=freshState(v);cache.clear();$('#seed').value=S.seed;save();loadLevel(1);
-};
 $('#dl').onclick=()=>{
   save();
   const blob=new Blob([JSON.stringify({game:'lockpick',version:1,seed:S.seed,variant:S.variant,exported:new Date().toISOString(),unlocked:S.unlocked,

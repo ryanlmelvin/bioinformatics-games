@@ -92,3 +92,13 @@ test('workbench opens with ?bench=1 and saves nothing',()=>{
  const ui=boot(null,{search:'?bench=1'});assert.match(ui.el('#bOut').innerHTML,/Neighbor joining/);assert.match(ui.el('#bOut').innerHTML,/Reproduces the chart/);
  assert.equal(ui.writes.length,0);
 });
+
+/* Every first-load code: a new browser draws one of these, so each is played through every level. */
+test('every first-load code plays every level without a fallback puzzle',()=>{
+ const codes=boot().api.codes();assert.equal(codes.length,50);assert.equal(new Set(codes).size,50);
+ for(const code of codes){
+  const ui=boot(null,{search:'?debug=1&seed='+code}),n=ui.api.levels().length;
+  for(let id=1;id<=n;id++){if(id>1)ui.api.loadLevel(id);PLAY[id](ui);assert(st(ui).done,code+' level '+id+' completes');}
+  assert.equal(ui.api.earned().length,ui.api.vocab().length,code+' earns every term');assert.equal(ui.api.fell(),0,code+' needs no fallback');
+ }
+});

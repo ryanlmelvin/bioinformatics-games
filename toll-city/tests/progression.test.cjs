@@ -137,3 +137,13 @@ test('the wall level cannot be finished by the bot: it has hundreds of millions 
 test('workbench opens without touching saved progress',()=>{
   const ui=boot(null,'?bench=1');assert.equal(ui.writes.length,0);assert.equal(ui.el('#title').textContent,'Workbench');
 });
+
+/* Every first-load code: a new browser draws one of these, so each is played through every level. */
+test('every first-load code plays every level without a fallback puzzle',()=>{
+  const codes=boot().api.codes();assert.equal(codes.length,50);assert.equal(new Set(codes).size,50);
+  for(const code of codes){
+    const ui=boot(null,'?debug=1&seed='+code);
+    for(let n=1;n<=11;n++){if(n>1)ui.api.loadLevel(n);play[n](ui);assert(st(ui).done,code+' level '+n+' completes');}
+    assert.equal(ui.api.earned().length,ui.api.vocab().length,code+' earns every term');assert.equal(ui.api.fell(),0,code+' needs no fallback');
+  }
+});

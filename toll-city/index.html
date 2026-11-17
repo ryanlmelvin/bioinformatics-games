@@ -306,9 +306,6 @@ footer input{font:inherit;width:9em;padding:5px 8px;border:1px solid var(--line)
   </div>
   <footer>
     <a href="../">← All games</a>
-    <label for="seed">Puzzle code</label>
-    <input id="seed" autocomplete="off" spellcheck="false">
-    <button id="setSeed">Use code (resets progress)</button>
     <button id="dl">Download move log</button>
     <a href="?bench=1">Workbench</a>
   </footer>
@@ -325,6 +322,7 @@ function randStr(rand,n,alpha){let s='';for(let i=0;i<n;i++)s+=(alpha||DNA)[Math
 const TRIES={limit:null,strict:false},maxTries=n=>TRIES.limit===null?n:TRIES.limit;
 function fallback(name,key,pool,make){
   if(TRIES.strict)throw new Error(name+' ran out of tries for '+key);
+  TRIES.fell=(TRIES.fell||0)+1;
   const t=TRIES.limit;TRIES.strict=true;TRIES.limit=null;
   try{return make(pool[hashStr(key)%pool.length]);}finally{TRIES.strict=false;TRIES.limit=t;}
 }
@@ -651,7 +649,9 @@ const BENCH=!!params.get('bench');
 function load(){try{return JSON.parse(localStorage.getItem(KEY))||{};}catch(e){return {};}}
 function save(){if(previewLevel||BENCH)return;if(S&&S.done)S.link=encodeProgress(S);try{localStorage.setItem(KEY,JSON.stringify(S));}catch(e){}writeLink();}
 function freshState(seed){return {seed,unlocked:1,done:[],badges:[],earnedAt:{},variants:{},games:{},arrows:{},routes:{},log:[]};}
-function randomCode(){const c='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';let s='';for(let i=0;i<6;i++)s+=c[Math.floor(Math.random()*c.length)];return s;}
+/* First-load puzzle codes. The tests play every level of each one. */
+const CODES='MGX4TL VLF4TG MY647S 93R4MZ QKTGB3 5UXPHF QQRPX8 CB6WDN D87J49 T52A9W PF3U2K H4Y2GV ZSF3MN MQZNQN KFVH8W QQ9LK5 HAEHCY 3ZN4XY BHXKJ7 CW6GSC G4YYTD MHFDET J7HBFY QFRJCZ JYQ49N 92CXEF NQT4XG 3ZGPDT VAFWA5 KSG85N PG8763 QUH4R2 VQWP6X 9TGQK8 3QL24H NATEUZ RAUJEH LFMLW7 2U5WDG BSPF6R W98QFC 7EVDDT J4LT4A MAY4PV DJ8XYU 299ZA6 J5RP7K JURUMG JNLNJP XQPDZS'.split(' ');
+function randomCode(){return CODES[Math.floor(Math.random()*CODES.length)];}
 /* ---------- progress link ----------
    Every level is open; only the vocabulary is earned. The progress link is this page's address plus
    #save=1.<terms>.<levels>.<check>.<puzzle code>; opening it restores the earned terms and finished levels in any browser.
@@ -816,7 +816,7 @@ function renderHeader(){
   $('#badges').innerHTML=VOCAB.map(x=>S.badges.includes(x.id)
     ?'<span class="badge got term" tabindex="0">'+x.name+'<span class="tip" role="tooltip"><b>'+x.name+'</b>'+x.def+'</span></span>'
     :'<span class="badge">? ? ?</span>').join('');
-  $('#hdrinfo').innerHTML='Puzzle code <b class="mono">'+esc(S.seed)+'</b> · <b>'+S.badges.length+' of '+VOCAB.length+' terms</b>'+(previewLevel?' · practice':'');
+  $('#hdrinfo').innerHTML='<b>'+S.badges.length+' of '+VOCAB.length+' terms</b>'+(previewLevel?' · practice':'');
 }
 function renderGuide(){
   const got=VOCAB.filter(v=>S.badges.includes(v.id));
@@ -1637,8 +1637,6 @@ else{
   };
   window.addEventListener&&window.addEventListener('hashchange',()=>{if(/^#save=/.test(location.hash))location.reload();});
 }
-$('#seed').value=S.seed;
-$('#setSeed').onclick=()=>{const v=$('#seed').value.trim();if(!v||v===S.seed)return;S=freshState(v);save();cur=null;loadLevel(previewLevel||1);};
 $('#dl').onclick=()=>{
   const blob=new Blob([JSON.stringify({game:'toll-city',version:1,seed:S.seed,exported:new Date().toISOString(),
     unlocked:S.unlocked,finished:S.done,vocabulary:S.badges,earnedAt:S.earnedAt,events:S.log},null,1)],{type:'application/json'});
@@ -1649,7 +1647,7 @@ $('#dl').onclick=()=>{
 if(BENCH)renderBench();
 else loadLevel(previewLevel||resumeLevel());
 /* Test handle, only with ?debug=1 in the address. */
-if(params.get('debug'))window.__tc={state:()=>cur,saved:()=>S,loadLevel,act,render,
+if(params.get('debug'))window.__tc={state:()=>cur,saved:()=>S,codes:()=>CODES.slice(),fell:()=>TRIES.fell||0,loadLevel,act,render,
   levels:()=>LEVELS.map(l=>({id:l.id,title:l.title})),vocab:()=>VOCAB.map(v=>({id:v.id,name:v.name})),
   earned:()=>S.badges.slice(),log:()=>S.log.slice(),inst,instKey,termsAt:()=>TERMS_AT};
 })();

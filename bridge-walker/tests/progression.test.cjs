@@ -26,6 +26,30 @@ function settle(ui){
  slide(ui,real,decisive[0].index);ui.api.choosePairAnswer(real);
  return {real,wrong:1-real,pair:decisive[0]};
 }
+
+/* Each player finishes one level through the same handlers the page's clicks reach. Levels 4 and 5 cannot be won: the way on is the give-up button. */
+const giveUp=ui=>{ui.api.state().skipOK=true;ui.api.skip();};
+function drawMap(ui){
+ const c=ui.api.state(),bd=c.bd;let spot=0;
+ const end=v=>bd.pos[v]?ui.api.buildClick(v):ui.api.buildClick(undefined,{x:90+(spot%6)*116,y:100+Math.floor(spot++/6)*100});
+ c.inst.edges.forEach((e,i)=>{ui.api.buildPick(i);end(e.from);end(e.to);});
+}
+const PLAY={
+ 1(ui){ui.api.state().inst.reads.forEach((_,i)=>ui.api.cardClick(i));},
+ 2(ui){ui.api.state().inst.reads.forEach((_,i)=>ui.api.nodeClick(i));},
+ 3(ui){ui.api.state().inst.reads.forEach((_,i)=>ui.api.nodeClick(i));},
+ 4:giveUp,5:giveUp,
+ 6:ui=>walk(ui),7:ui=>walk(ui),
+ 8(ui){const c=ui.api.state(),d=c.inst.nodes.map(()=>0);c.inst.edges.forEach(e=>{d[e.from]++;d[e.to]--;});
+  const from=[],to=[];d.forEach((x,v)=>{for(let i=0;i<-x;i++)from.push(v);for(let i=0;i<x;i++)to.push(v);});
+  from.forEach((v,i)=>{ui.api.nodeClick(v);ui.api.nodeClick(to[i]);});},
+ 9(ui){drawMap(ui);assert.equal(ui.api.state().phase,'play','the map is drawn');walk(ui);},
+ 10(ui){ui.api.candClick(ui.api.state().inst.start);ui.api.skip();walk(ui);},
+ 11:ui=>walk(ui),
+ 12(ui){walk(ui);settle(ui);ui.api.skip();}
+};
+const fresh=code=>boot(1,true,{seed:code,unlocked:1,badges:[],earnedAt:{},variants:{},clean:[],intros:[1,2,3,4,5,6,7,8,9,10,11,12],log:[]});
+
 test('level 11 retains its finale and unlocks level 12 in existing saved progress',()=>{
  const ui=boot(null);assert.equal(ui.api.state().L.id,11);walk(ui);
  assert(ui.api.state().done);assert(ui.api.state().blocks.includes('finale'));assert.equal(ui.persisted().unlocked,12);assert.deepEqual(ui.persisted().done,Array.from({length:11},(_,i)=>i+1));
@@ -90,13 +114,12 @@ test('direct level links start fresh without debug or inherited vocabulary',()=>
   assert.deepEqual(ui.persisted(),saved);assert.equal(ui.writes.length,0);
  }
 });
-test('practice completion, navigation, and puzzle changes never alter saved course progress',()=>{
+test('practice completion, navigation, and new puzzles never alter saved course progress',()=>{
  const ui=boot(null,true,null,{pathname:'/bridge-walker/level-12/'}),prior=ui.persisted();
  walk(ui);const c=ui.api.state();settle(ui);ui.el('#skip').click();
  assert(c.done);assert(ui.api.saved().badges.includes('pairedgraph'));
  ui.api.loadLevel(1);assert.match(ui.el('#pips').innerHTML,/<button data-lvl="12" class=" fin" aria-label/);
- ui.el('#seed').value='FRESHPAIR';ui.el('#setSeed').click();
- assert.equal(ui.api.state().L.id,12);assert.equal(ui.api.saved().badges.length,0);
+ ui.api.loadLevel(12);assert.equal(ui.api.state().L.id,12);
  ui.el('#fresh').click();assert.equal(ui.api.state().phase,'play');
  assert.deepEqual(ui.persisted(),prior);assert.equal(ui.writes.length,0);
  const reloaded=boot(null,true,prior,{pathname:'/bridge-walker/level-12/'});
@@ -108,5 +131,15 @@ test('invalid direct levels fall back to normal saved progress, with every level
   assert.equal(ui.api.state().L.id,11);assert(ui.api.saved().badges.includes('debruijn'));
   assert.doesNotMatch(ui.el('#pips').innerHTML,/ disabled/);assert.match(ui.el('#pips').innerHTML,/<button data-lvl="12" class="" aria-label="Level 12"/);
   ui.api.loadLevel(12);assert.equal(ui.api.state().L.id,12);
+ }
+});
+
+/* Every first-load code: a new browser draws one of these, so each is played through every level. */
+test('every first-load code plays every level without a fallback puzzle',()=>{
+ const codes=boot().api.codes();assert.equal(codes.length,50);assert.equal(new Set(codes).size,50);
+ for(const code of codes){
+  const ui=fresh(code);
+  for(let n=1;n<=12;n++){ui.api.loadLevel(n);PLAY[n](ui);assert(ui.api.state().done,code+' level '+n+' completes');}
+  assert.equal(ui.persisted().done.length,12,code+' has every level marked');assert.equal(ui.api.fell(),0,code+' needs no fallback');
  }
 });

@@ -354,9 +354,6 @@ footer input{font:inherit;width:9em;padding:5px 8px;border:1px solid var(--line)
     <div data-bk-app></div>
   </div>
   <footer>
-    <label for="seed">Puzzle code</label>
-    <input id="seed" autocomplete="off" spellcheck="false">
-    <button id="setSeed">Use code (resets progress)</button>
     <button id="dl">Download move log</button>
   </footer>
 </div>
@@ -370,6 +367,7 @@ function shuffled(n,rand){const a=[...Array(n).keys()];for(let i=n-1;i>0;i--){co
 const TRIES={limit:null,strict:false},maxTries=n=>TRIES.limit===null?n:TRIES.limit;
 function fallback(name,key,pool,make){
   if(TRIES.strict)throw new Error(name+' ran out of tries for '+key);
+  TRIES.fell=(TRIES.fell||0)+1;
   const t=TRIES.limit;TRIES.strict=true;TRIES.limit=null;
   try{return make(pool[hashStr(key)%pool.length]);}finally{TRIES.strict=false;TRIES.limit=t;}
 }
@@ -705,7 +703,9 @@ const previewLevel=Number.isInteger(requestedLevel)&&requestedLevel>=1&&requeste
 function load(){try{return JSON.parse(localStorage.getItem(KEY))||{};}catch(e){return {};}}
 function save(){if(previewLevel)return;if(S&&S.done)S.link=encodeProgress(S);try{localStorage.setItem(KEY,JSON.stringify(S));}catch(e){}writeLink();}
 function freshState(seed){return {seed,unlocked:1,done:[],badges:[],earnedAt:{},variants:{},clean:[],intros:[],log:[]};}
-function randomCode(){const c='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';let s='';for(let i=0;i<6;i++)s+=c[Math.floor(Math.random()*c.length)];return s;}
+/* First-load puzzle codes. The tests play every level of each one. */
+const CODES='HDBUBD E4RQHD 2EM4BL SFBVT3 T4RLJ2 BPDXM7 HT663L X9DF2B QKGELR NYSA66 JCB22J E64BCP EXG6NH YELN5Q K5FNTF 4KWZZV TG6TXE T2AWKH RTYM7A KD6RES 58C9EC 4GG3GN 8BNHXC KGUAGT 8VK48W FRYX4M S5KZ6D HJPZZD X35ZYN AKSMAA VTL4GH 2GR2VS BV45C4 JB9XUW 9C7BBC 6SUTVT VPGNMN 2KUGYF BZF2SU H9VM9A M8ZPXL 8D4N65 9BEKYZ 5WUQJU CEJBDU TUSRQ5 HGV7QT ECGMR7 6VKAH8 ASB79W'.split(' ');
+function randomCode(){return CODES[Math.floor(Math.random()*CODES.length)];}
 
 // Direct level links are fresh practice sessions, separate from course progress.
 /* ---------- progress link ----------
@@ -1833,8 +1833,6 @@ else{
   };
   window.addEventListener&&window.addEventListener('hashchange',()=>{if(/^#save=/.test(location.hash))location.reload();});
 }
-$('#seed').value=S.seed;
-$('#setSeed').onclick=()=>{const v=$('#seed').value.trim();if(!v||v===S.seed)return;S=freshState(v);save();cur=null;loadLevel(previewLevel||1);};
 $('#dl').onclick=()=>{
   const blob=new Blob([JSON.stringify({game:'bridge-walker',version:5,seed:S.seed,exported:new Date().toISOString(),
     unlocked:S.unlocked,finished:S.done,vocabulary:S.badges,earnedAt:S.earnedAt,events:S.log},null,1)],{type:'application/json'});
@@ -1844,7 +1842,7 @@ $('#dl').onclick=()=>{
 
 loadLevel(previewLevel||resumeLevel());
 /* Test handle, only with ?debug=1 in the address. */
-if(params.get('debug'))window.__bw={state:()=>cur,saved:()=>S,nodeClick,cardClick,loadLevel,morphFrame,cardsFrame,
+if(params.get('debug'))window.__bw={state:()=>cur,saved:()=>S,codes:()=>CODES.slice(),fell:()=>TRIES.fell||0,nodeClick,cardClick,loadLevel,morphFrame,cardsFrame,
   buildPick,buildClick,candClick,balRemove,choosePairAnswer,pairSplitFrame,skip:()=>$('#skip').click(),
   levels:()=>LEVELS.map(l=>({id:l.id,title:l.title})),vocab:()=>VOCAB.map(v=>({id:v.id,name:v.name}))};
 })();

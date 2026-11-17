@@ -235,9 +235,6 @@ textarea{font:14px/1.4 ui-monospace,Menlo,monospace;width:100%;min-height:9em;pa
     <div data-bk-app></div>
   </div>
   <footer>
-    <label for="seed">Puzzle code</label>
-    <input id="seed" autocomplete="off" spellcheck="false">
-    <button id="setSeed">Use code (resets progress)</button>
     <button id="dl">Download move log</button>
     <a href="../">All games</a>
   </footer>
@@ -260,6 +257,7 @@ function put(s,p,w){return s.slice(0,p)+w+s.slice(p+w.length);}
 const TRIES={limit:null,strict:false},maxTries=n=>TRIES.limit===null?n:TRIES.limit;
 function fallback(name,key,pool,make){
   if(TRIES.strict)throw new Error(name+' ran out of tries for '+key);
+  TRIES.fell=(TRIES.fell||0)+1;
   const t=TRIES.limit;TRIES.strict=true;TRIES.limit=null;
   try{return make(pool[hashStr(key)%pool.length]);}finally{TRIES.strict=false;TRIES.limit=t;}
 }
@@ -654,7 +652,9 @@ const previewLevel=Number.isInteger(requestedLevel)&&requestedLevel>=1&&requeste
 function load(){try{return JSON.parse(localStorage.getItem(KEY))||{};}catch(e){return {};}}
 function save(){if(previewLevel)return;if(S&&S.done)S.link=encodeProgress(S);try{localStorage.setItem(KEY,JSON.stringify(S));}catch(e){}writeLink();}
 function freshState(seed){return {seed,unlocked:1,done:[],badges:[],earnedAt:{},variants:{},log:[]};}
-function randomCode(){const c='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';let s='';for(let i=0;i<6;i++)s+=c[Math.floor(Math.random()*c.length)];return s;}
+/* First-load puzzle codes. The tests play every level of each one. */
+const CODES='2J2KZF 57GXSW 6A7PLJ 49DHEX K2GDFM 2FBVBU 8BRY5Q PFV7P6 FSMQQ5 BD94UU LRX5XQ MGKH6X XH2DVM 55AJNJ 9PJ7QG F3AJBB FHY3XR Y65CBJ TUS6AS FW9MEC SZHDYU ZFA4C7 P4VXTE 6QJSXF BD4EV9 KS3Y9G YNPZFX G7WF9W LY4D9H UR5PK2 STR844 FUFJ4R ED7533 XXUKF9 BR4HQR 7XD85W 5BMZYE PB3ASD LXWULC UZ984D B5XJNR LKSNDR UCQHZZ KXFYNC YQJFX9 LL7MAC E8AUVH P59PXS 56YRZ7 DGM2R3'.split(' ');
+function randomCode(){return CODES[Math.floor(Math.random()*CODES.length)];}
 /* ---------- progress link ----------
    Every level is open; only the vocabulary is earned. The progress link is this page's address plus
    #save=1.<terms>.<levels>.<check>.<puzzle code>; opening it restores the earned terms and finished levels in any browser.
@@ -1464,7 +1464,7 @@ function renderHeader(){
   $('#pips').innerHTML=LEVELS.map(l=>'<button data-lvl="'+l.id+'"'+' class="'+(l.id===cur.L.id?'on':'')+(S.done.includes(l.id)?' fin':'')+'"'+(l.id===cur.L.id?' aria-current="true"':'')+
     ' aria-label="Level '+l.id+(S.done.includes(l.id)?' (finished)':'')+'">'+l.id+'</button>').join('');
   const got=VOCAB.filter(v=>S.badges.includes(v.id)).length;
-  $('#hmeta').textContent='Puzzle code '+S.seed+' · '+got+' of '+VOCAB.length+' terms'+(previewLevel?' · practice':'');
+  $('#hmeta').textContent=got+' of '+VOCAB.length+' terms'+(previewLevel?' · practice':'');
   $('#badges').innerHTML=VOCAB.map(x=>S.badges.includes(x.id)
     ?'<span class="badge got term" tabindex="0">'+x.name+'<span class="tip" role="tooltip"><b>'+x.name+'</b>'+x.def+'</span></span>'
     :'<span class="badge">? ? ?</span>').join('');
@@ -1543,8 +1543,6 @@ else{
   };
   window.addEventListener&&window.addEventListener('hashchange',()=>{if(/^#save=/.test(location.hash))location.reload();});
 }
-$('#seed').value=S.seed;
-$('#setSeed').onclick=()=>{const v=$('#seed').value.trim();if(!v||v===S.seed)return;S=freshState(v);save();cur=null;loadLevel(previewLevel||1);};
 $('#dl').onclick=()=>{
   const blob=new Blob([JSON.stringify({game:'motif-slots',version:1,seed:S.seed,exported:new Date().toISOString(),
     unlocked:S.unlocked,finished:S.done,vocabulary:S.badges,earnedAt:S.earnedAt,events:S.log},null,1)],{type:'application/json'});
@@ -1556,7 +1554,7 @@ window.addEventListener&&window.addEventListener('resize',()=>{clearTimeout(wind
 if(params.get('bench'))bench();
 else loadLevel(previewLevel||resumeLevel());
 /* Test handle, only with ?debug=1 in the address. */
-if(params.get('debug'))window.__ms={state:()=>cur,saved:()=>S,loadLevel,act,skip:()=>$('#skip').click(),
+if(params.get('debug'))window.__ms={state:()=>cur,saved:()=>S,codes:()=>CODES.slice(),fell:()=>TRIES.fell||0,loadLevel,act,skip:()=>$('#skip').click(),
   levels:()=>LEVELS.map(l=>({id:l.id,title:l.title})),vocab:()=>VOCAB.map(v=>({id:v.id,name:v.name})),
   earned:()=>S.badges.slice(),log:()=>S.log.slice()};
 })();

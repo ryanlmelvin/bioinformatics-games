@@ -242,9 +242,6 @@ input.ok{border-color:#2e7d4f!important;background:#cfeedd!important}
     <div data-bk-app></div>
   </div>
   <footer>
-    <label for="seed">Puzzle code</label>
-    <input id="seed" autocomplete="off" spellcheck="false">
-    <button id="setSeed">Use code (resets progress)</button>
     <button id="dl">Download move log</button>
     <a href="?bench=1">Workbench</a>
   </footer>
@@ -261,6 +258,7 @@ const dna=(n,rand)=>Array.from({length:n},()=>'ACGT'[Math.floor(rand()*4)]).join
 const TRIES={limit:null,strict:false},maxTries=n=>TRIES.limit===null?n:TRIES.limit;
 function fallback(name,key,pool,make){
   if(TRIES.strict)throw new Error(name+' ran out of tries for '+key);
+  TRIES.fell=(TRIES.fell||0)+1;
   const t=TRIES.limit;TRIES.strict=true;TRIES.limit=null;
   try{return make(pool[hashStr(key)%pool.length]);}finally{TRIES.strict=false;TRIES.limit=t;}
 }
@@ -576,7 +574,9 @@ const previewLevel=Number.isInteger(requestedLevel)&&requestedLevel>=1&&requeste
 function load(){try{return JSON.parse(localStorage.getItem(KEY))||{};}catch(e){return {};}}
 function save(){if(previewLevel||bench)return;if(S&&S.done)S.link=encodeProgress(S);try{localStorage.setItem(KEY,JSON.stringify(S));}catch(e){}writeLink();}
 function freshState(seed){return {seed,unlocked:1,done:[],badges:[],earnedAt:{},variants:{},log:[]};}
-function randomCode(){const c='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';let s='';for(let i=0;i<6;i++)s+=c[Math.floor(Math.random()*c.length)];return s;}
+/* First-load puzzle codes. The tests play every level of each one. */
+const CODES='3PNLAJ C7MUJV XD7UTV UZXGX9 F5SK6N 5KQS7F RUE7XL ZY25FW 5277DJ YNU2G7 UWW24J JEV45D C2H7ZL WYHD9D N9ZUU7 PS2LVM UAW2WF A5RA7K 5NQ63V LFU54D SMXE2A P5RERE 4BV8L4 JDPLK8 QU77WZ VHJUXF 6JE3FB B5XS58 78ABZQ FRVBNS MCQDNK FTN6FE HKTH8Z C94LYL CL9SDA VX9RUA MBQ3KC LCW77R K7PKMD NXUNGH 3RRAJ5 CH55W4 Z8D5WD EJJLLX F2WW45 VDTNCP CX677D 63P3HH WHSSSN Q6JLXH'.split(' ');
+function randomCode(){return CODES[Math.floor(Math.random()*CODES.length)];}
 const bench=!!params.get('bench');
 /* ---------- progress link ----------
    Every level is open; only the vocabulary is earned. The progress link is this page's address plus
@@ -1529,8 +1529,6 @@ else{
   };
   window.addEventListener&&window.addEventListener('hashchange',()=>{if(/^#save=/.test(location.hash))location.reload();});
 }
-$('#seed').value=S.seed;
-$('#setSeed').onclick=()=>{const v=$('#seed').value.trim();if(!v||v===S.seed)return;S=freshState(v);save();cur=null;loadLevel(previewLevel||1);};
 $('#dl').onclick=()=>{
   const blob=new Blob([JSON.stringify({game:'the-loom',version:1,seed:S.seed,exported:new Date().toISOString(),
     unlocked:S.unlocked,finished:S.done,vocabulary:S.badges,earnedAt:S.earnedAt,events:S.log},null,1)],{type:'application/json'});
@@ -1540,7 +1538,7 @@ $('#dl').onclick=()=>{
 if(bench)renderBench();
 else loadLevel(previewLevel||resumeLevel());
 /* Test handle, only with ?debug=1 in the address. */
-if(params.get('debug'))window.__tl={state:()=>cur,saved:()=>S,loadLevel,levels:()=>LEVELS.map(l=>({id:l.id,title:l.title})),
+if(params.get('debug'))window.__tl={state:()=>cur,saved:()=>S,codes:()=>CODES.slice(),fell:()=>TRIES.fell||0,loadLevel,levels:()=>LEVELS.map(l=>({id:l.id,title:l.title})),
   vocab:()=>VOCAB.map(v=>({id:v.id,name:v.name})),earned:()=>S.badges.slice(),log:()=>S.log.slice(),
   act:(a,d)=>{LV[cur.id].act(a,d||{},{});},drop:(k,i,tk,j)=>{LV[cur.id].drop(k,i,tk,j);render();},
   input:(n,v,d)=>{LV[cur.id].input(n,String(v),d||{},null);},skip:()=>$('#skip').click(),render:()=>render()};

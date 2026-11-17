@@ -270,9 +270,6 @@ footer input{font:inherit;width:9em;padding:5px 8px;border:1px solid var(--line)
     <div data-bk-app></div>
   </div>
   <footer>
-    <label for="seed">Puzzle code</label>
-    <input id="seed" autocomplete="off" spellcheck="false">
-    <button id="setSeed">Use code (resets progress)</button>
     <button id="dl">Download move log</button>
     <a href="../">All games</a>
   </footer>
@@ -290,6 +287,7 @@ const whole=x=>Number.isInteger(x);
 const TRIES={limit:null,strict:false},maxTries=n=>TRIES.limit===null?n:TRIES.limit;
 function fallback(name,key,pool,make){
   if(TRIES.strict)throw new Error(name+' ran out of tries for '+key);
+  TRIES.fell=(TRIES.fell||0)+1;
   const t=TRIES.limit;TRIES.strict=true;TRIES.limit=null;
   try{return make(pool[hashStr(key)%pool.length]);}finally{TRIES.strict=false;TRIES.limit=t;}
 }
@@ -650,7 +648,9 @@ const BENCH=params.get('bench')==='1';
 function load(){try{return JSON.parse(localStorage.getItem(KEY))||{};}catch(e){return {};}}
 function save(){if(previewLevel||BENCH)return;if(S&&S.done)S.link=encodeProgress(S);try{localStorage.setItem(KEY,JSON.stringify(S));}catch(e){}writeLink();}
 function freshState(seed){return {seed,unlocked:1,done:[],badges:[],earnedAt:{},variants:{},log:[]};}
-function randomCode(){const c='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';let s='';for(let i=0;i<6;i++)s+=c[Math.floor(Math.random()*c.length)];return s;}
+/* First-load puzzle codes. The tests play every level of each one. */
+const CODES='TF8ATK 7VJFZS QCTNJ5 72BVMF QTW7PB DAP2TA RP6N55 H3LB6B ZZYUK9 RFB9KZ X763RL QB58HL JP4NPE 2TJWN5 5Y7N9Q 6Q46GF J8RSKU 2RXYBY 6XWM6Z C26MTJ UU9Y47 YPSNX4 VXVLHC YCQ3S7 K2KCQ3 SYRR3Y DZSGQ4 RY5LXK 2Z2CW3 7V7DYQ D6R9R6 LVJ422 WBR6C7 5LCDL6 3KAM2Z J7627H 3C7B4J TALT25 Y2CMZS UUPQF9 L2NU2N BXCYV9 T8B9GC F7C3J3 9M3WPM 6DPE2Z SWURYK ALFWV6 G5XGKG ENNTG9'.split(' ');
+function randomCode(){return CODES[Math.floor(Math.random()*CODES.length)];}
 /* ---------- progress link ----------
    Every level is open; only the vocabulary is earned. The progress link is this page's address plus
    #save=1.<terms>.<levels>.<check>.<puzzle code>; opening it restores the earned terms and finished levels in any browser.
@@ -1439,8 +1439,6 @@ else{
   };
   window.addEventListener&&window.addEventListener('hashchange',()=>{if(/^#save=/.test(location.hash))location.reload();});
 }
-$('#seed').value=S.seed;
-$('#setSeed').onclick=()=>{const v=$('#seed').value.trim();if(!v||v===S.seed)return;S=freshState(v);save();cur=null;loadLevel(previewLevel||1);};
 $('#dl').onclick=()=>{
   const blob=new Blob([JSON.stringify({game:'hollow-mountain',version:1,seed:S.seed,exported:new Date().toISOString(),
     unlocked:S.unlocked,finished:S.done,vocabulary:S.badges,earnedAt:S.earnedAt,events:S.log},null,1)],{type:'application/json'});
@@ -1450,7 +1448,7 @@ $('#dl').onclick=()=>{
 
 if(BENCH)bench();else loadLevel(previewLevel||resumeLevel());
 /* Test handle, only with ?debug=1 in the address. */
-if(params.get('debug'))window.__hm={state:()=>cur,saved:()=>S,loadLevel,act,levels:()=>LEVELS.map(l=>({id:l.id,title:l.title})),
+if(params.get('debug'))window.__hm={state:()=>cur,saved:()=>S,codes:()=>CODES.slice(),fell:()=>TRIES.fell||0,loadLevel,act,levels:()=>LEVELS.map(l=>({id:l.id,title:l.title})),
   vocab:()=>VOCAB.map(v=>({id:v.id,name:v.name})),earned:()=>S.badges.slice(),log:()=>S.log.slice(),render};
 })();
 </script>
