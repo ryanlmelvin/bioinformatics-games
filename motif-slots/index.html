@@ -1055,7 +1055,7 @@ LV[4]={
   },
   reveal(){const I=cur.inst;return '<p>A word that turns up, a little changed, once on every strip of a set of genes that switch on together is a '+term('motif','motif')+', and choosing one window on every strip to find it is '+term('mf','motif finding')+'. '+
     'Counting lit windows rewarded '+wordHtml(I.decoy)+', which is common on three strips and absent from the rest. A switch has to be on every strip.</p>'+
-    '<p>With two wrong letters allowed, '+plural(I.allTen.length,'word')+' light all ten genes. The next two levels determine which one is the switch.</p>';},
+    '<p>With two wrong letters allowed, '+plural(I.allTen.length,'word')+' light all ten genes.</p>';},
   src:['pevzner']
 };
 
@@ -1279,7 +1279,7 @@ LV[8]={
 };
 
 LV[9]={
-  init(){cur.step='spin';cur.pos=null;cur.spins=[];cur.hist=[];cur.best=null;say('Pull the lever.');},
+  init(){cur.step='spin';cur.pos=null;cur.spins=[];cur.hist=[];cur.best=null;say('');},
   rule(){return 'Pull: every reel stops at random · then let the reels vote';},
   draw(){
     const I=cur.inst,off=cur.pos||I.dna.map(()=>0);

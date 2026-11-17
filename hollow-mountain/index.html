@@ -552,7 +552,7 @@ const reduced=()=>{try{return matchMedia('(prefers-reduced-motion: reduce)').mat
 
 const LEVELS=[
   {id:1,mode:'count',title:'Who caught it from whom?',
-   brief:'Four patients fell ill with the same new virus, and a short stretch of each patient’s virus has been read, letter by letter. A virus makes occasional copying errors, so viruses passed directly from one person to another differ in few letters. Compare two pairs: click every column where the two rows differ.'},
+   brief:'Four patients fell ill with the same new virus, and a short stretch of each patient’s virus has been read, letter by letter. A virus makes occasional copying errors, so viruses passed directly from one person to another differ in few letters.'},
   {id:2,mode:'lit',title:'The mountain, lights on',
    brief:'Inside Hollow Mountain, tunnels meet at junctions, and there is exactly one way through between any two entrances. In this level the lamps are lit. The surveyor measures with a rope. Click two entrances to stretch the rope along the way between them.'},
   {id:3,mode:'y',title:'Lights out',
@@ -564,7 +564,7 @@ const LEVELS=[
   {id:6,mode:'lie',title:'A rope that lies',
    brief:'Level 1’s four patients, read further along: twenty letters each. The surveyor counted the differences and made a chart. Map it the way you did in level 4.'},
   {id:7,mode:'clock',title:'Dug at a steady rate',
-   brief:'The miners’ story: the first miners dug outward from one chamber, all at the same steady rate, splitting into two crews at each junction, until every crew broke through to the surface. So every leaf is the same distance from that first chamber. Rebuild this mountain from the story: click the pair of leaves whose crews split last.'},
+   brief:'The miners’ story: the first miners dug outward from one chamber, all at the same steady rate, splitting into two crews at each junction, until every crew broke through to the surface. So every leaf is the same distance from that first chamber. Rebuild this mountain from the story.'},
   {id:8,mode:'fast',title:'The fast tunnel',
    brief:'A chart from a mountain where one crew dug much faster than the others. Try the level 7 method on it first.'},
   {id:9,mode:'join5',title:'Join and repeat',
@@ -572,7 +572,7 @@ const LEVELS=[
   {id:10,mode:'swap',title:'One swap',
    brief:'Closest-pair joining built this map for a chart with a fast lineage. It is close but not correct. The score counts the foursomes of leaves that the map pairs the way the chart’s four-point test pairs them. Click an inner tunnel (internal nodes at both ends) to see the four groups hanging off it, and the two other ways to hang them.'},
   {id:11,mode:'final',title:'Whose virus?',
-   brief:'Coronaviruses related to the SARS virus, from people, from palm civets sold at a market in southern China, and from bats. Rebuild their tree with neighbor joining: in each round, click the smallest entry of the discounted chart.'}
+   brief:'Coronaviruses related to the SARS virus, from people, from palm civets sold at a market in southern China, and from bats. Rebuild their tree with neighbor joining.'}
 ];
 
 /* Primary sources. Each line was written from the record that was opened (see the report). */
@@ -920,7 +920,7 @@ HANDLERS.count={
 HANDLERS.lit={
   init(c){const L=makeLit(keyFor(2));c.t=L.tree;c.D=range(4).map(i=>range(4).map(j=>i===j?0:null));c.true=L.D;c.pos=caveLayout(c.t);
     c.sel=null;c.byHand=0;c.pending=null;c.stage='rope';c.lit={nodes:c.t.N,edges:c.t.edges.length};
-    say('Click an entrance to tie the rope there.');},
+    say('');},
   rule:()=>'Lamps lit · the rope runs the only way through',
   scene(c){const ropes=c.rope?[{path:pathNodes(c.t,c.rope[0],c.rope[1]),draw:true}]:[];
     return {lit:true,svg:caveSVG(c.t,c.pos,{style:'lit',click:c.stage==='rope',ropes,selLeaf:c.sel,hot:new Set(c.rope||[])}),
@@ -955,7 +955,7 @@ HANDLERS.lit={
 HANDLERS.y={
   init(c){const s=makeStar(keyFor(3));c.D=s.D;c.vals=['','',''];c.walkRes=null;c.walkLeft=3;
     c.map={n:3,N:4,edges:[0,1,2].map(i=>({a:i,b:3,w:0}))};c.pos=caveLayout(c.map);
-    say('Type a length for each tunnel, then walk the map.');},
+    say('');},
   rule:()=>'Lamps out · the rope is the only instrument · no loops',
   scene(c){const hidden=new Set([0,1,2].filter(i=>!(+c.vals[i]>0)));
     return {svg:caveSVG(c.map,c.pos,{style:'chalk',hidden,edgeText:i=>c.vals[i]}),surveyor:c.pos.angles[0],label:'Your map of three tunnels'};},
@@ -1135,7 +1135,7 @@ function isMinPair(R,i,j){const a=R.labels[i],b=R.labels[j];return R.mins.some(p
 
 HANDLERS.fast={
   init(c){const f=makeFast(keyFor(8));c.f=f;c.D=f.D;c.R=f.nj.rounds[0];c.stage='try';c.walkLeft=1;c.chosen=null;
-    say('Try the level 7 method first.');},
+    say('');},
   rule:c=>c.stage==='try'||c.stage==='upgma'?'Lamps out · closest pair first?':'Lamps out · discount, then join',
   skip:c=>c.stage==='try'?'Join the closest pairs, as in level 7':null,
   skipAct(c){c.stage='upgma';log('upgma_run');say('Closest-pair joining built this map. Walk it.');},
@@ -1215,7 +1215,7 @@ HANDLERS.join5={
 function subEdges(t,from,avoid){const A=adjOf(t),out=[],seen=new Set([avoid,from]),st=[from];
   out.push(edgeIndex(t,avoid,from));while(st.length){const u=st.pop();A[u].forEach(y=>{if(!seen.has(y.v)){seen.add(y.v);out.push(y.i);st.push(y.v);}});}return out;}
 HANDLERS.swap={
-  init(c){const w=makeSwap(keyFor(10));c.w=w;c.D=w.D;c.t=cloneT(w.start);c.hist=[];c.selE=null;say('Click an inner tunnel.');},
+  init(c){const w=makeSwap(keyFor(10));c.w=w;c.D=w.D;c.t=cloneT(w.start);c.hist=[];c.selE=null;say('');},
   rule:()=>'Score: foursomes the map pairs the way the chart does',
   score:c=>quartetScore(c.t,c.D),
   groups(c){if(c.selE===null)return null;const t=c.t,e=t.edges[c.selE],A=adjOf(t),u=e.a,v=e.b;
@@ -1236,7 +1236,7 @@ HANDLERS.swap={
     return h;},
   act(c,type,d){const t=c.t;
     if(type==='tunnel'){const e=t.edges[d.e];if(!e||e.a<t.n||e.b<t.n){say('That tunnel ends at a leaf: there is nothing to swap across it.','warn');return;}
-      c.selE=c.selE===d.e?null:d.e;say(c.selE===null?'Click an inner tunnel.':'Choose a swap, or click another inner tunnel.');return;}
+      c.selE=c.selE===d.e?null:d.e;say(c.selE===null?'':'Choose a swap, or click another inner tunnel.');return;}
     if(type==='swap'&&c.selE!==null){const o=nniOptions(t).filter(x=>x.edge===c.selE)[+d.k];if(!o)return;const before=this.score(c);
       c.hist.push(cloneT(t));c.t=o.tree;c.selE=null;const s=this.score(c);log('swap',{edge:c.selE,k:+d.k,score:s});
       if(s===c.w.max)return complete(['nni'],'nni','Score '+s+' of '+c.w.max+': every foursome agrees with the chart.');

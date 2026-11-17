@@ -850,7 +850,7 @@ function renderMsg(A,t,p){
     if(A.done)note+=`<div class="note"><b>Everything is ${I.scraps?'used':'open'}</b>, but ${A.waste} press${A.waste===1?' was':'es were'} wasted: the struck-through one${A.waste===1?'':'s'}. It can be done with none.</div>`;
     else{const d=deadEnd(A,t);if(d!==null&&p===t.length)note+=deadHTML(d,A,t);}
     if(showHint)note+=`<div class="note hint">${hintFor()}</div>`;
-    if(lv.gave)card=`<div class="card"><h3>Good call</h3><p>${I.codes.length} scraps, and the only way to find which one comes next is trial and error. The strip returns later.</p><p>The next parts use a lock instead.</p><button class="primary" type="button" data-a="next">Next &rarr;</button></div>`;
+    if(lv.gave)card=`<div class="card"><h3>Good call</h3><p>${I.codes.length} scraps, and the only way to find which one comes next is trial and error.</p><button class="primary" type="button" data-a="next">Next &rarr;</button></div>`;
     else if(I.L.id===1&&(lv.presses>=12||lv.deads>=1||S.gaveUp))note+='<p class="aside"><button class="aux" type="button" data-a="giveup">This is hard. Set it aside &rarr;</button></p>';
   }
   put('#note',note);put('#msg',card);

@@ -557,7 +557,7 @@ const reduced=()=>{try{return matchMedia('(prefers-reduced-motion: reduce)').mat
 /* ---------- levels ---------- */
 const LEVELS=[
  {id:1,mode:'sort',title:'Which genes move together?',
-  brief:'Each card is one yeast gene. Its seven dots are how active the gene was at seven times, two hours apart, while the yeast ate through its sugar. Genes that rise and fall together probably work together. Sort the twelve cards into three piles of look-alikes: click a card, then a pile.'},
+  brief:'Each card is one yeast gene. Its seven dots are how active the gene was at seven times, two hours apart, while the yeast ate through its sugar. Genes that rise and fall together probably work together. Sort the twelve cards into three piles of look-alikes.'},
  {id:2,mode:'ruler',title:'Two inks',
   brief:'A print shop with two inks, red and blue. Every colour in this tulip is some amount of red and some amount of blue, each from 0 to 10, so each pixel has a spot on the ink map. The shop has three pots of mixed paint, and the press prints every pixel from the pot nearest to it on the map. Do the press’s job for the eight pixels in the dashed strip: click two pots to lay the ruler from the pixel to each, then click the pot to print it from.'},
  {id:3,mode:'worst',title:'The worst pixel',
@@ -884,7 +884,7 @@ MODES.sort={
    say(left?plural(left,'card')+' to go.':empty?'Every pile needs at least one card.':'All twelve sorted. Move any card you like, or say you are done.');},
   judge(a){const st=cur.st;st.judged=a;S.piles1=st.piles.slice();S.alt1=cur.other.slice();
    log('judge',{answer:a,piles:st.piles});
-   say(a==='cant'?'Nor can anyone yet: there is no measure that says one sorting is better.':'There is no measure yet for comparing two sortings. These cards return in level 8.','good');
+   say(a==='cant'?'Nor can anyone yet: there is no measure that says one sorting is better.':'There is no measure yet for comparing two sortings.','good');
    complete(['expvec','clustering'],'L1',{answer:a});}
  },
  go(c){const st=c.st;if(st.phase==='sort'&&st.piles.every(p=>p!==null)&&[0,1,2].every(k=>st.piles.includes(k)))return 'These are my three piles';return null;},
@@ -1001,7 +1001,7 @@ MODES.stray={
 
 /* ===== level 5: where should a pot sit? ===== */
 MODES.gravity={
- init(c){c.inst=makeLevel(lseed(5),5);c.pic=c.inst.pic;c.st={phase:'A',pot:null,tries:[]};c.showNearest=false;say('Type a red and a blue amount, then mix.');},
+ init(c){c.inst=makeLevel(lseed(5),5);c.pic=c.inst.pic;c.st={phase:'A',pot:null,tries:[]};c.showNearest=false;say('');},
  rule:()=>'These pixels are printed from this pot',
  ids:c=>c.st.phase==='A'?c.inst.A:c.inst.B,
  err(c,p){const ids=MODES.gravity.ids(c);return ids.reduce((s,i)=>s+dist2(c.pic.px[i],p),0)/ids.length;},

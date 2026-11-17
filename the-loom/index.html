@@ -1072,7 +1072,7 @@ LV[3]={
         '<p>1. Put one new sign at the end of the text, <b class="mono">$</b>, and let it sort before every letter.</p>'+
         '<p>2. Write the text on a ring. Cut the ring before each letter in turn, so there is one strip per letter. Sort the strips.</p>'+
         '<p>3. Keep only the last column. Throw the rest away.</p>'+
-        '<p><b>They claimed that this one column is enough to recover the text and the position of every pattern in it.</b> The next five levels test that claim.</p></div>';
+        '<p><b>They claimed that this one column is enough to recover the text and the position of every pattern in it.</b></p></div>';
       const rows=x.rows.map(r=>r.rot),m=rows.length;
       h+='<div class="sub">The sorted strips of '+esc(x.text)+'. Click a column to count its runs of repeated letters</div><div class="tscroll"><table class="mini"><tr>'+
         [...Array(m).keys()].map(j=>'<th><button data-act="col" data-c="'+j+'" aria-label="Column '+(j+1)+'">'+(j===0?'first':j===m-1?'last':j+1)+'</button></th>').join('')+'</tr>'+
@@ -1183,7 +1183,7 @@ LV[5]={
 };
 BLOCKS.fl={html:()=>{const x=cur.inst,c=[...x.word].find(ch=>repeated(x.text,ch));
   return 'Look at the threads of one colour. The '+c+' threads run side by side and never cross: the first '+c+' on the right beam is the first '+c+' on the left, the second is the second, and so on. That holds for every letter. '+
-  '<b>It is called the '+term('fl','first-last property')+'.</b> It is why the right beam can stand in for the whole table, as the next level shows.';}};
+  '<b>It is called the '+term('fl','first-last property')+'.</b> It is why the right beam can stand in for the whole table.';}};
 
 /* ---------- level 6: unweave a last column ---------- */
 LV[6]={

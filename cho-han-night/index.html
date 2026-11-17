@@ -1141,7 +1141,7 @@ MODES.wall={
   },
   skip(){return cur.w.on100?'Switch the machine off: this is hopeless':'';},
   onSkip(){clearInterval(cur.timer);cur.headline='Giving up is the right answer';log('gave_up',{count:cur.w.count});complete([],null,'The machine stops. The bookkeeper looks up from her page.');},
-  reveal(){return [{html:'Every extra round doubles the number of stories, so adding them one by one is hopeless long before a real night ends. The bookkeeper gets the same total for the twelve-round night without listing any story. The next level shows how.'}];}
+  reveal(){return [{html:'Every extra round doubles the number of stories, so adding them one by one is hopeless long before a real night ends. The bookkeeper gets the same total for the twelve-round night without listing any story.'}];}
 };
 ACT.run=n=>{
   const w=cur.w;n=+n;if(cur.done)return;
@@ -1314,7 +1314,7 @@ MODES.family={
   },
   reveal(){
     const right=cur.order.indexOf('relative');
-    return [{html:'Newcomer '+AB[right]+' is family. '+(cur.pick===right?'You picked it.':'You picked the other one, and no wonder:')+' nearly every letter the stranger has, some member has in that column too. You cannot yet say why one is family and the other is not. The model built in the later levels can.'},
+    return [{html:'Newcomer '+AB[right]+' is family. '+(cur.pick===right?'You picked it.':'You picked the other one, and no wonder:')+' nearly every letter the stranger has, some member has in that column too. You cannot yet say why one is family and the other is not.'},
       {html:'Proteins descended from one ancestor form a '+term('family','protein family')+'. Rows written one above another, with dashes so that related letters share a column, are a '+term('msa','multiple alignment')+'.'}];
   }
 };
@@ -1374,7 +1374,7 @@ const stName=(s,letter)=>{const j=s.slice(1);return s==='E'?'out the back door':
 
 /* ================= Level 8: rooms ================= */
 MODES.rooms={
-  init(){cur.f=family();cur.r={gaps:4,member:null,mv:{},lt:{},bad:null};say('Set how many gaps a room may have.');},
+  init(){cur.f=family();cur.r={gaps:4,member:null,mv:{},lt:{},bad:null};say('');},
   rule(){return 'A room for each column most members fill · trapdoor for a gap · corridor for the rest';},
   isRoom(){return roomsOf(cur.f.aln,cur.r.gaps);},
   R(){return roomNo(this.isRoom(),cur.f.gappy-1);},
@@ -1512,7 +1512,7 @@ ACT.admit=i=>{
 /* ================= Level 10: one unseen letter ================= */
 MODES.pebbles={
   init(){cur.f=family();cur.P=profileHMM(cur.f.aln,{maxGaps:DEFAULT_GAPS});cur.walk=newWalk(cur.f.second);cur.which=0;cur.best0=null;
-    cur.pb={on:false,letters:{},moves:{},spread:false};say('Walk the cousin through.');},
+    cur.pb={on:false,letters:{},moves:{},spread:false};say('');},
   rule(){return cur.pb.on?'One pebble on every letter and every move':'Each step multiplies the chance by the tally on that door';},
   scene(){return houseSvg(cur.P.k,{trail:trailOf(cur.walk),out:cur.walk.out,col:'#2e7d4f',mark:cur.pb.on?cur.f.slipRoom:undefined});},
   walked(){if(cur.pb.spread)return MODES.pebbles.rescored();cur.best0=profileBest(cur.walk.text,cur.P);log('walked',{best:cur.best0.prob});
@@ -1557,7 +1557,7 @@ ACT.peb=a=>{const pb=cur.pb;if(!pb||!pb.on||pb.spread)return;
 MODES.reunion={
   init(){const f=cur.f=family();cur.P=profileHMM(f.aln,{maxGaps:DEFAULT_GAPS,add:1});
     const all=[{s:f.relative,fam:1},{s:f.stranger,fam:0},{s:f.second,fam:1},{s:f.others[0],fam:1},{s:f.others[1],fam:1},{s:f.others[2],fam:0},{s:f.others[3],fam:0}];
-    cur.q=shuffled(7,rng(hashStr(f.key+'|queue'))).map(i=>all[i]);cur.sc={};cur.line=null;cur.show=null;say('Send each newcomer through.');},
+    cur.q=shuffled(7,rng(hashStr(f.key+'|queue'))).map(i=>all[i]);cur.sc={};cur.line=null;cur.show=null;say('');},
   rule(){return 'Score everyone · draw the door line';},
   scene(){const i=cur.show;if(i===null)return houseFront();const b=cur.sc[i];return houseSvg(cur.P.k,{trail:b.walk.map(w=>({state:w.state,letter:w.letter})),out:true,col:'#2b5fb3'});},
   work(){

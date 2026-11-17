@@ -574,7 +574,7 @@ const RM=()=>{try{return matchMedia('(prefers-reduced-motion: reduce)').matches;
 
 const LEVELS=[
   {id:1,mode:'strands',inst:'decks',title:'Two strands',
-   brief:'Two short DNA sequences, like the same gene in two species (these two are invented for the puzzle). Letters have been inserted and deleted over time, so matching letters no longer line up. Click a letter to put a gap before it, and click a gap to remove it. Line up as many matching letters as you can, then lock it in.'},
+   brief:'Two short DNA sequences, like the same gene in two species (these two are invented for the puzzle). Letters have been inserted and deleted over time, so matching letters no longer line up. Line up as many matching letters as you can, then lock it in.'},
   {id:2,mode:'decks',inst:'decks',title:'Two decks',
    brief:'The same two strands, dealt as two decks of cards with the top card on the left. Each turn, take both top cards (a point if they show the same letter) or throw away the top card of one deck. A card that is taken or thrown away never comes back. Score as many points as you can.'},
   {id:3,mode:'table',inst:'decks',title:'What does the table remember?',
@@ -584,7 +584,7 @@ const LEVELS=[
   {id:5,mode:'tourist',inst:'city',title:'The tourist',
    brief:'A different city. A tourist walks from the top-left corner to the bottom-right, only east or south, never back, and counts the sights on each street they walk (the number on the street). Which route sees the most?'},
   {id:6,mode:'follow',inst:'city',title:'Follow your arrows',
-   brief:'Your pencilled city from level 5. The tourist stands at the far corner. Each arrow says which street that corner’s number arrived by. Walk back to the start along the arrows: click the corner each arrow comes from.'},
+   brief:'Your pencilled city from level 5. The tourist stands at the far corner. Each arrow says which street that corner’s number arrived by. Walk back to the start along the arrows.'},
   {id:7,mode:'deckcity',inst:'decks',title:'The decks are a city',
    brief:'Your two decks from level 2, laid along the edges of a city: deck 1 down the left side, deck 2 across the top. A step south throws away a card from deck 1, a step east throws away a card from deck 2, and a step south-east takes both. Where the two cards match, that diagonal is gold and pays 1 point.'},
   {id:8,mode:'tolls',inst:'decks',title:'Tolls',
@@ -963,7 +963,7 @@ function strandTidy(c){
   while(c.b.length&&c.b[c.b.length-1]==='-')c.b.pop();
 }
 MODES.strands={
-  init(c){c.a=[...c.inst.v];c.b=[...c.inst.w];c.hist=[];say('Click a letter to push a gap in front of it.');},
+  init(c){c.a=[...c.inst.v];c.b=[...c.inst.w];c.hist=[];say('Click a letter to put a gap before it. Click a gap to remove it.');},
   rule:()=>'Letters keep their order · a gap pushes a letter to the right',
   view(c){
     const cols=strandCols(c),row=(arr,r)=>'<div class="strand">'+cols.map(([x,y],k)=>{
@@ -990,7 +990,7 @@ MODES.strands={
       c.final={top,bot,k};
       complete(['alignment','indel'],[
         {html:()=>alignTiles(top,bot,{label:'Your line-up'})+'What you built is an '+term('alignment','alignment')+': the two strands one above the other, each kept in order, with gaps (–) put in so that letters stand in columns. A column with a gap marks a letter that one strand gained or the other lost: an '+term('indel','indel')+' (insertion or deletion).'},
-        {html:()=>k<par?'You found '+k+' matching columns. <b>'+par+' is possible.</b> Sliding gaps by hand is trial and error. The next level restates the problem as a card game.':'You found the most matching columns possible, '+par+'. You have no proof yet that it is the best possible. The next level restates the problem as a card game.'}
+        {html:()=>k<par?'You found '+k+' matching columns. <b>'+par+' is possible.</b> Sliding gaps by hand is trial and error.':'You found the most matching columns possible, '+par+'. You have no proof yet that it is the best possible.'}
       ],{hits:k,par});
     }
   },
@@ -1044,7 +1044,7 @@ function deckTable(v,w,g,live,title){
 /* ---------- level 2: two decks ---------- */
 MODES.decks={
   init(c){c.g=newGame();c.games=0;c.best=0;S.games[instKey('decks')]=S.games[instKey('decks')]||[];
-    say('Take both top cards, or throw one away.');},
+    say('');},
   rule:c=>'Take both top cards, or throw one away · nothing comes back'+(c.games||(S.games[instKey('decks')]||[]).length?' · par '+c.inst.par:''),
   view(c){
     const list=S.games[instKey('decks')]||[];
@@ -1335,7 +1335,7 @@ function deckCorner(c,hitFn){
 MODES.deckcity={
   init(c){const {v,w}=c.inst;c.phase='pre';c.g=penInit(v.length,w.length,matchW(v)(w));
     for(let j=1;j<=w.length;j++)penSet(c.g,0,j,'E');
-    say('The two decks from level 2.');},
+    say('');},
   rule:c=>c.phase==='pre'?'Deck 1 down the side · deck 2 across the top':c.phase==='row'?'Pencil row 1 by hand: the most points on arrival':c.phase==='fill'?'The pencil fills the rest':'Walk back along the arrows',
   view(c){
     const {v,w}=c.inst,n=v.length,m=w.length;
