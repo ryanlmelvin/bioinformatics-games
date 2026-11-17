@@ -1029,7 +1029,7 @@ BLOCKS.l7={src:['vig'],html:()=>'<b>One query with its own cords is an '+term('h
   'The rule you chose for the lamp stands for the small network that follows the heads in a real model and combines what they bring back.'};
 
 /* ---------- level 8: two layers ---------- */
-function l8pred(b,st){const n=b.labels.length,r=round1(b.labels,st.r1),want=st.r2.want?st.r2.want+(st.r2.riv?'+':''):null,js=want?answers(r.labels,n,{want:[want]}):[];
+function l8pred(b,st){const n=b.labels.length,r=round1(b.labels,st.r1),want=st.r2.want?(st.r2.riv?[st.r2.want+'+']:[st.r2.want,st.r2.want+'+']):null,js=want?answers(r.labels,n,{want}):[];
   return {labels:r.labels,links:r.links,js,on:js.length>0};}
 LV[8]={
   init(){return {r1:{who:null,want:null,dist:null},r2:{want:null,riv:false},arm:'who',ran:false};},

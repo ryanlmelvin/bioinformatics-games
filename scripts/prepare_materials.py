@@ -23,6 +23,7 @@ UNITS = [
  ('4_EvolutionaryTrees','evolutionary-trees','Evolutionary trees','Evolutionary trees','Hollow Mountain','hollow-mountain'),
  ('5_Clustering','clustering','Clustering','Clustering','Paint by k','paint-by-k'),
  ('6_BurrowsWheeler','burrows-wheeler','Read mapping with the Burrows–Wheeler transform','Burrows Wheeler transform','The Loom','the-loom'),
+ ('8_Transformers','transformers','Transformers','Transformers','Long Distance','long-distance'),
 ]
 SOURCES = [
  ('1_BeforeClass1_PlayGuide.docx','play-guide','Exploration guide'),
@@ -154,6 +155,8 @@ def adapt(source, output, unit, kind, title):
             change(ps[6],re.sub(r'^Play a 40-minute loaded-dice investigation:.*?The dealer', 'Optional group activity: conduct a loaded-dice investigation. The dealer',ps[6].text))
         elif slug=='evolutionary-trees':
             change(ps[6],'Optional group activity: photograph the starting board of a game such as Pandemic, play, then photograph the final board. Exchange only final photographs and reconstruct possible earlier states before revealing the starting photographs.')
+        elif slug=='transformers':
+            change(ps[6],'Optional group activity: bean attention. '+ps[6].text)
         elif slug=='clustering':
             change(ps[6],'Optional group activity: choose cards with several visible attributes, such as number, color and suit. Sort the same cards into four groups twice, changing the features used for the second sort. Record both rules and compare the groupings.')
         for p in ps:
@@ -183,6 +186,8 @@ def adapt(source, output, unit, kind, title):
             elif t.startswith('Course points are independent'):
                 change(p,'BA10A and BA10B share the first pen-and-paper task.')
             elif t=='Hand companions': change(p,'Suggested pen and paper tasks')
+            elif t.startswith('Rosalind has no problems on this topic.'):
+                change(p,t.replace('written for this course','written for this book'))
             elif t.startswith('Each required problem has a hand companion:'):
                 change(p,'Work each example by hand, then run your code on the same input and record the output. If the two disagree, either one of them is wrong or there is more than one correct answer.')
             elif t.startswith(('AI assistance with code is allowed','Any use of generative AI on the code is acceptable')):
@@ -236,7 +241,7 @@ def fresh(title):
 
 def shared(output):
     d=fresh('Learning bioinformatics algorithms')
-    d.add_paragraph('These games and handouts cover seven topics in bioinformatics algorithms. They can be used for self-study, in a study group or in a course.')
+    d.add_paragraph('These games and handouts cover eight topics in bioinformatics algorithms. They can be used for self-study, in a study group or in a course.')
     d.add_heading('A suggested path',1)
     for _,slug,heading,topic,game,gamepath in UNITS:
         d.add_paragraph(f'{heading}: {game}, {BASE}{gamepath}/',style='List Bullet')
@@ -244,7 +249,7 @@ def shared(output):
     for text in [
       'Play the game and fill in its exploration guide. Define each term in your own words.',
       'Work the discussion questions, preferably with a group. Some of the optional activities need a partner or a board game.',
-      'Code the suggested Rosalind problems, using their input and output formats. Each topic also lists easier warm-ups and a harder extension.',
+      'Code the suggested Rosalind problems, using their input and output formats. Each topic also lists easier warm-ups and a harder extension. The transformers topic states its own problems, because Rosalind has none.',
       'Do each pen-and-paper task before running your code on the same input. If the results differ, find out why. Some problems have more than one correct answer.',
       'Review the vocabulary with the Pictionary cards, which have one card for each term in the game. Print them and cut them apart. One person draws a term without letters, numbers or symbols, and the group guesses it. A wrong guess shows which terms the group confuses.',
       'Present one algorithm to someone else, following the presentation checklist.'
@@ -301,6 +306,6 @@ def main():
         for filename,kind,title in SOURCES:
             adapt(args.source/unit[0]/filename,output/f'{unit[1]}-{kind}.docx',unit,kind,title)
     shared(output)
-    print('Prepared 24 general learning documents.')
+    print('Prepared %d general learning documents.' % (3*len(UNITS)+3))
 
 if __name__=='__main__': main()

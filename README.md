@@ -11,12 +11,12 @@ The topic index follows a suggested learning path:
 - `hollow-mountain/`: evolutionary trees from distance matrices: additive phylogeny, UPGMA and neighbor joining.
 - `paint-by-k/`: clustering: farthest-first traversal, the Lloyd algorithm and hierarchical clustering.
 - `the-loom/`: read mapping with the suffix array and the Burrows–Wheeler transform.
-- `long-distance/`: Long Distance, transformers: attention from queries, keys and values, positional encoding, heads and layers, masked training and in silico mutagenesis, on the problem of predicting a gene's activity from a distant enhancer. It has no Word handouts yet (`docs:false` in `book/chapters.js`).
+- `long-distance/`: Long Distance, transformers: attention from queries, keys and values, positional encoding, heads and layers, masked training and in silico mutagenesis, on the problem of predicting a gene's activity from a distant enhancer.
 
 Also here:
 
 - `lockpick/`: a second genome assembly game.
-- `materials/`: 31 Word downloads for independent study, discussion groups and teaching. Each topic includes an exploration guide, discussion questions, suggested coding and pen-and-paper tasks, and Pictionary cards (one card for each term in the game, to print and cut apart for a drawing-and-guessing game; these are built in the teaching folder by `build-tools/pictionary-cards/make_cards.js`, not by the script below). Shared resources provide a learning guide, suggested investigations, and a presentation checklist. The original `*-play-guide.docx` URLs are retained for existing links.
+- `materials/`: 35 Word downloads for independent study, discussion groups and teaching. Each topic includes an exploration guide, discussion questions, suggested coding and pen-and-paper tasks, and Pictionary cards (one card for each term in the game, to print and cut apart for a drawing-and-guessing game; these are built in the teaching folder by `build-tools/pictionary-cards/make_cards.js`, not by the script below). Shared resources provide a learning guide, suggested investigations, and a presentation checklist. The original `*-play-guide.docx` URLs are retained for existing links.
 
 The public handouts are adapted editions of the current teaching masters, which remain outside this repository. Course numbers, dates, grading, submission instructions, and enrollment-specific requirements are removed; exercises, figures, examples and problem links are retained. Group activities include enough instructions to use them independently. Do not replace public editions with raw classroom files.
 
@@ -28,7 +28,7 @@ To regenerate the handouts, install `python-docx` in an authoring environment an
 python scripts/prepare_materials.py /path/to/GameFirstImplementation /path/to/bioinformatics_games
 ```
 
-The script reads only the exploration, group-discussion and code-and-paper masters for the seven named topic folders. The three shared documents are maintained in the script. Check regenerated documents for course-specific language and render every page to inspect layout before publishing; source changes can require updating the adaptation rules.
+The script reads only the exploration, group-discussion and code-and-paper masters for the eight named topic folders. The three shared documents are maintained in the script. Check regenerated documents for course-specific language and render every page to inspect layout before publishing; source changes can require updating the adaptation rules.
 
 The site reads as a playable textbook. `index.html` is the front page: a table of contents with a cover for every chapter, the reader's progress, and a glossary of the terms they have earned (both read from the browser's own storage). `book/` holds the shell every page shares: `chapters.js` (the contents: order, titles, hooks, level and term counts, each game's storage key, its celebration pieces and the sounds of its own controls), `book.css` and `book.js` (the chapter bar, the chapter cover shown before a first play, level and vocabulary styling, synthesised sound with a mute button, and the celebration when a level is completed), and `art/` (one hand-drawn SVG cover per game). The shell only watches the page; it never reads or changes a game's state, and a game still plays if the shell fails to load. Chapter hooks state the problem only, because the games name the algorithms. Nothing the shell adds has a face: decoration is kept to objects, materials, sound and motion, so that it does not pull attention from the task.
 
