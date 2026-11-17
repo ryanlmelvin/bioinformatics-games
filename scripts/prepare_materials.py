@@ -255,11 +255,11 @@ def shared(output):
       'Present one algorithm to someone else, following the presentation checklist.'
     ]: d.add_paragraph(text,style='List Bullet')
     d.add_heading('Investigations',1)
-    d.add_paragraph('The suggested investigations describe three small experiments that reuse your code: mutation rate and motif recovery, gap penalties and alignment, and initialization and Lloyd clustering.')
+    d.add_paragraph('The suggested investigations describe four small experiments that reuse your code: mutation rate and motif recovery, gap penalties and alignment, initialization and Lloyd clustering, and input length, softmax base and attention.')
     finish(d,output/'learning-guide.docx')
     d=fresh('Suggested algorithm investigations')
     d.add_paragraph('Choose one question and answer it with a small experiment, using code you wrote for the coding challenges.')
-    for h,t in [('Motif recovery','How does mutation rate affect motif recovery?'),('Sequence alignment','How does a gap penalty affect an alignment?'),('Clustering','How does initialization affect Lloyd clustering?')]:
+    for h,t in [('Motif recovery','How does mutation rate affect motif recovery?'),('Sequence alignment','How does a gap penalty affect an alignment?'),('Clustering','How does initialization affect Lloyd clustering?'),('Attention','How do the length of the input and the base of the softmax affect the attention weight on one matching site?')]:
         d.add_heading(h,1); d.add_paragraph(t)
     d.add_heading('The experiment',1)
     for text in [
