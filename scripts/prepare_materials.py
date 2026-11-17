@@ -11,6 +11,9 @@ from html import escape
 from docx import Document
 from docx.shared import Inches, Pt, RGBColor
 from docx.oxml.ns import qn
+from docx.opc.constants import RELATIONSHIP_TYPE as RT
+from docx.oxml import OxmlElement
+from docx.text.run import Run
 
 UNITS = [
  ('1_Motifs','motifs','Finding motifs','Motifs','Motif Slots','motif-slots'),
@@ -27,6 +30,43 @@ SOURCES = [
  ('4_Homework_CodeAndPaper.docx','coding-and-paper-tasks','Suggested coding and pen and paper tasks'),
 ]
 BASE='https://ryanlmelvin.github.io/bioinformatics-games/'
+# Prefer the publisher or creator, or a non-commercial reference for traditional
+# games and discontinued puzzles. Keep sources inline with the optional activity.
+ACTIVITY_SOURCES = {
+    'motifs': [('Carolina Mutation: A DNA Dice Game',
+        'https://www.carolina.com/dna-models-and-simulations/carolina-mutation%3A-a-dna-dice-game/441208.pr')],
+    'genome-assembly': [
+        ('Triazzle', 'https://www.dangilbert.com/triazzle.php'),
+        ('Eternity II', 'https://en.wikipedia.org/wiki/Eternity_II_puzzle')],
+    'alignment': [
+        ('Ticket to Ride', 'https://www.daysofwonder.com/game/ticket-to-ride/'),
+        ('rook', 'https://en.wikipedia.org/wiki/Rook_(chess)')],
+    'hmm': [('cho-han', 'https://en.wikipedia.org/wiki/Ch%C5%8D-han')],
+    'evolutionary-trees': [('Pandemic', 'https://www.zmangames.com/game/pandemic/')],
+    'clustering': [('cards', 'https://en.wikipedia.org/wiki/Standard_52-card_deck')],
+}
+
+
+def link_activity_sources(doc, slug):
+    for p in doc.paragraphs:
+        if not p.text.startswith('Optional group activit'): continue
+        for label, url in ACTIVITY_SOURCES.get(slug, []):
+            if any(h.text == label and h.url == url for h in p.hyperlinks): continue
+            run=next(r for r in p.runs if label in r.text)
+            before, after=run.text.split(label, 1)
+            linked=copy.deepcopy(run._r)
+            tail=copy.deepcopy(run._r)
+            run.text=before
+            # Preserve the source run's font and size for both pieces.
+            linked_run=Run(linked,p); linked_run.text=label
+            linked_run.font.color.rgb=RGBColor.from_string('0563C1')
+            linked_run.font.underline=True
+            Run(tail,p).text=after
+            hyperlink=OxmlElement('w:hyperlink')
+            hyperlink.set(qn('r:id'),p.part.relate_to(url,RT.HYPERLINK,is_external=True))
+            hyperlink.append(linked)
+            run._r.addnext(hyperlink)
+            hyperlink.addnext(tail)
 
 def remove(p):
     p._element.getparent().remove(p._element)
@@ -104,7 +144,7 @@ def adapt(source, output, unit, kind, title):
     elif kind=='discussion-questions':
         change(ps[4],ps[4].text.replace('One sheet per group. Pick someone to write.','Work with a partner or a group and write down your reasoning.'))
         if slug=='motifs':
-            change(ps[6], 'Optional group activity: use nucleotide dice to make ten DNA strings of length 10. Choose a secret 4-mer and overwrite a four-letter window in each string to hide it. Swap strings with another group and try to recover its secret. Repeat with fresh strings: hide an exact copy in only three or four strings, then a copy with at most one mismatch in three or four strings, then a copy with at most one mismatch in every string. Record each predicted 4-mer and its supporting windows before comparing with the group that encoded it.')
+            change(ps[6], 'Optional group activity: use nucleotide dice from Carolina Mutation: A DNA Dice Game to make ten DNA strings of length 10. Choose a secret 4-mer and overwrite a four-letter window in each string to hide it. Swap strings with another group and try to recover its secret. Repeat with fresh strings: hide an exact copy in only three or four strings, then a copy with at most one mismatch in three or four strings, then a copy with at most one mismatch in every string. Record each predicted 4-mer and its supporting windows before comparing with the group that encoded it.')
             change(ps[7], 'Compare two scoring rules: count windows within one mismatch of a candidate, or add the distance to its closest window in each sequence. In the final round, which rule was your group using? Why can counting matching windows become less useful when every embedded copy has a mismatch?')
         elif slug=='genome-assembly':
             change(ps[6],'Optional group activity: work on an edge-matching puzzle such as Triazzle or Eternity II. Keep the same puzzle while you compare local matches with complete solutions. Record a promising placement that later caused a conflict.')
@@ -174,6 +214,7 @@ def adapt(source, output, unit, kind, title):
         t=p.text
         if 'classmate' in t: change(p,t.replace('classmate','learner'))
         if '(page 1)' in p.text: change(p,p.text.replace('(page 1)','above'))
+    if kind=='discussion-questions': link_activity_sources(doc,slug)
     finish(doc,output)
 
 

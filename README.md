@@ -19,6 +19,8 @@ Also here:
 
 The public handouts are adapted editions of the current teaching masters, which remain outside this repository. Course numbers, dates, grading, submission instructions, and enrollment-specific requirements are removed; exercises, figures, examples and problem links are retained. Group activities include enough instructions to use them independently. Do not replace public editions with raw classroom files.
 
+Optional physical game activities link to the publisher or creator, or to a non-commercial reference. Keep these links in the discussion guides and in `ACTIVITY_SOURCES` in `scripts/prepare_materials.py` when updating the handouts.
+
 To regenerate the handouts, install `python-docx` in an authoring environment and run:
 
 ```sh
