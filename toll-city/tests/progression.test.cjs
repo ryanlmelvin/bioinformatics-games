@@ -89,7 +89,7 @@ const play={
     ui.api.act('corner',0,0);ui.api.act('corner',p.v.length,p.w.length);assert.equal(c.done,false);
     ui.api.act('corner',...p.overlap.start);ui.api.act('corner',...p.overlap.end);
   },
-  11(ui){ui.api.act('skip');assert.equal(st(ui).phase,'filled');ui.api.act('skip');}
+  11(ui){ui.api.act('skip');assert.equal(st(ui).phase,'back');assert.equal(ui.el('#skip').hidden,true);ui.api.act('corner',0,0);assert.equal(st(ui).back.length,1);walkBack(ui);assert.equal(st(ui).back.length,22);}
 };
 
 test('a fresh save plays through every level and earns every term, and the move log records each completion',()=>{
