@@ -577,7 +577,7 @@ const LEVELS=[
    brief:'Two short DNA sequences, like the same gene in two species (these two are invented for the puzzle). Letters have been inserted and deleted over time, so matching letters no longer line up. Line up as many matching letters as you can, then lock it in.'},
   {id:2,mode:'decks',inst:'decks',title:'Two decks',
    brief:'The same two sequences as two decks of cards. The outlined card in each deck is the one in play. Each turn, take both outlined cards (a point if they show the same letter) or throw away the outlined card of one deck. A card that is taken or thrown away does not come back. Score as many points as you can.'},
-  {id:3,mode:'table',inst:'decks',title:'What does the table remember?',
+  {id:3,mode:'table',inst:'decks',title:'Two games, one table',
    brief:'Two players are part-way through the same deal. They played differently, but the same cards are left on the table.'},
   {id:4,mode:'wall',inst:'twelve',title:'Too many games',
    brief:'Twelve cards in each deck. A bot will play every possible game in turn and keep the best score. Start it. You can also play yourself.'},
@@ -1076,8 +1076,8 @@ MODES.decks={
   skip:c=>gameOver(c.g,c.inst.v,c.inst.w)?{label:'Deal the same decks again',act:['deal']}:null
 };
 
-/* ---------- level 3: what does the table remember? ---------- */
-const CHOICES=['Every move made so far','The score so far','Only how many cards have gone from each deck'];
+/* ---------- level 3: two games, one table ---------- */
+const CHOICES=['The moves made so far','The score so far','Only the cards still in the two decks'];
 function histChips(v,w,moves,start){
   let [i,j]=start||[0,0];
   return moves.map(d=>{const s=d==='D'?'pair '+v[i]+'·'+w[j]+(v[i]===w[j]?' +1':''):d==='S'?'threw away '+v[i]+' (deck 1)':'threw away '+w[j]+' (deck 2)';
@@ -1094,12 +1094,13 @@ MODES.table={
   rule:c=>c.phase==='ask'?'Same cards left on both tables':'One dot for every way the table can look',
   view(c){
     const {v,w}=c.inst,tp=c.tp;
-    if(c.phase==='ask'){
-      const one=(name,hist,score)=>{const g={i:tp.i,j:tp.j,moves:[],score:0};
+    const one=(name,hist,score)=>{
         return '<div class="table"><div class="sub">Table '+name+' · '+plural(score,'point')+' so far</div><div class="hist">'+histChips(v,w,hist)+'</div>'+
           deckRow('Deck 1',v,tp.i,false)+deckRow('Deck 2',w,tp.j,false)+
           (c.shown?'<div class="sub">Best finish from here</div><div class="hist">'+histChips(v,w,tp.finish,[tp.i,tp.j])+'</div><div class="spell">'+signed(tp.finishScore)+' → '+plural(score+tp.finishScore,'point')+'</div>':'')+'</div>';};
-      return '<div class="twotables pad">'+one('A',tp.histA,tp.scoreA)+one('B',tp.histB,tp.scoreB)+'</div>'+
+    const tables='<div class="twotables pad">'+one('A',tp.histA,tp.scoreA)+one('B',tp.histB,tp.scoreB)+'</div>';
+    if(c.phase==='ask'){
+      return tables+
         '<div class="choices"><div class="sub">To finish as well as possible from here, you need to know…</div>'+
         CHOICES.map((t,k)=>'<button data-act="answer" data-a="'+k+'"'+(c.struck.includes(k)?' class="struck" disabled':'')+'>'+t+'</button>').join('')+'</div>';
     }
@@ -1107,7 +1108,7 @@ MODES.table={
     const tr=trailList(c),n=v.length,m=w.length;
     const ov=tr.list.map((mv,k)=>({corners:routeCorners([0,0],mv).slice(0,c.phase==='dots'&&!c.done?Math.max(1,c.drawn+1):99),cls:'trail',off:(k%3-1)*3,w:4}));
     const cornerTitle=(i,j)=>'Deck 1: '+(n-i)+' left'+(i<n?' ('+v.slice(i)+')':'')+'; deck 2: '+(m-j)+' left'+(j<m?' ('+w.slice(j)+')':'');
-    return '<div class="pad sub">'+(tr.mine?'Your level 2 games':'Two sample games')+' as trails · rows: cards gone from deck 1 · columns: cards gone from deck 2</div>'+
+    return tables+'<div class="pad sub">'+(tr.mine?'Your level 2 games':'Two sample games')+' as trails · rows: cards gone from deck 1 · columns: cards gone from deck 2</div>'+
       '<div class="cityscroll">'+gridSvg({n,m,rows:v,cols:w,diag:true,P:58,maxw:620,minw:480,label:'Every position of the two decks',
       street:()=>({cls:'faint',w:3}),overlays:ov,
       corner:(i,j)=>({cls:(c.done&&i===tp.i&&j===tp.j?'pick':'')+(c.miss&&c.miss[0]===i&&c.miss[1]===j?' shake':''),hit:cornerTitle(i,j)}),
@@ -1123,7 +1124,7 @@ MODES.table={
         say('Choose again.');render();return;
       }
       c.phase='dots';c.stage=null;c.drawn=0;
-      say('Each dot is one state of the table. Your games are drawn as walks across the dots.');
+      say('Each dot stands for the number of cards gone from each deck. Your games are drawn as walks across the dots.');
       const len=Math.max(...trailList(c).list.map(x=>x.length));
       show(len+1,260,k2=>{c.drawn=k2;},()=>{c.drawn=99;say('Click the dot where tables A and B both stand.');render();});
       render();return;
