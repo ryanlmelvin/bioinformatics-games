@@ -679,10 +679,10 @@ const BLOCKS={
   np:{pic:'ham',src:['karp'],html:'<b>Nobody knows a fast way to find a Hamiltonian path.</b> The problem is '+term('np','NP-complete')+': every added node multiplies the number of routes to try, and the search becomes infeasible long before a million reads.'},
   degree:{src:['euler'],html:'Correct, and Euler proved it. Each time '+ANT+' walks onto a node, a second edge is needed to walk off, so edges get used up in pairs. The number of edges at a node is its '+term('degree','degree')+', and <b>all four nodes here have odd degree.</b> Only the first and last node of a walk can be odd.'},
   euler:{pic:'eul',src:['pevzner89'],html:ANT+' crossed every edge exactly once. <b>That’s called an '+term('euler','Eulerian path')+'.</b> The reads moved from the nodes to the edges.'},
-  inout:{html:'The counter under each node has proper names. The number of edges entering a node is its '+term('inout','indegree')+'; the number leaving it is its '+term('inout','outdegree')+'.'},
+  inout:{html:'The number of edges entering a node is its '+term('inout','indegree')+'; the number leaving it is its '+term('inout','outdegree')+'.'},
   roundtrip:{html:()=>'Every node now has indegree equal to outdegree: each one is a '+term('balanced','balanced node')+'. That is exactly when a round trip over every edge exists, an '+term('cycle','Eulerian cycle')+'. <b>That’s '+term('balance','Euler’s theorem')+'.</b> You needed '+cur.inst.need+' new edges because each one repairs one node that was short an edge out and one that was short an edge in. The table under the map is the graph’s '+term('adj','adjacency list')+'.'},
   debruijn:{src:['debruijn'],html:'You drew a node for every 3-letter prefix or suffix and an edge for every read. <b>That map is called a '+term('debruijn','de Bruijn graph')+'.</b> Reads of length k always give nodes of length k − 1.'},
-  nomap:{html:'You found the start without a map. A node’s outdegree is the number of reads that start with it, and its indegree is the number that end with it. '+ANT+' must start where outdegree − indegree = 1: '+term('balance','Euler’s theorem')+' again, this time for a path.'},
+  nomap:{html:'A node’s outdegree is the number of reads that start with it, and its indegree is the number that end with it. '+ANT+' must start where outdegree − indegree = 1: '+term('balance','Euler’s theorem')+' again, this time for a path.'},
   balance:{html:'You set '+ANT+' down on the right node first time, twice. <b>That’s '+term('balance','Euler’s theorem')+'.</b> Start where one more edge leaves than arrives; you will finish where one more arrives than leaves. Every other node has as many in as out.'},
   hier:{src:['hierholzer'],html:'No backing up: when stranded, '+ANT+' went to a node with unused edges and spliced in a loop. <b>That’s '+term('hier','Hierholzer’s algorithm')+'.</b> It touches each edge once, so it works for millions of reads.'},
   nohier:{html:ANT+' was never stranded, so one term is still hidden. Try a new puzzle and let '+ANT+' get stranded once to earn it.'},
@@ -906,7 +906,7 @@ function loadLevel(id){
       cur.phase='ask';
       cur.nm={cand:null,misses:0,order:shuffled(cur.inst.nodes.length,rng(hashStr(key+'|cand')))};
       say('Which node must '+ANT+' start on?');
-    }else say(cur.phase==='pre'?'Here they are as nodes, the way you have seen them.':startMsg());
+    }else say(cur.phase==='pre'?'The reads as nodes.':startMsg());
     if(L.mode==='konig')cur.skipTimer=setTimeout(()=>{cur.skipOK=true;renderControls();},60000);
   }
   log('load',{mode:L.mode});
@@ -1606,7 +1606,7 @@ function renderPanel(){
   const missing=VOCAB.filter(x=>!S.badges.includes(x.id)).length;
   if(cur.L.id<LEVELS.length)h+='<button class="primary advance" id="next">Next level →</button>';
   else h+='<p>'+(missing?plural(missing,'vocabulary term')+' still hidden. Try a new puzzle on levels 6 to 11.'
-     :'You have earned every term. The field guide below lists each one with its source.')+'</p>';
+     :'You have earned every term.')+'</p>';
   $('#panel').innerHTML=h+'</div>';
 }
 

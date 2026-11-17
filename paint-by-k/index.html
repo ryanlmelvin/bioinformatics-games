@@ -1265,7 +1265,7 @@ const BLOCKS={
  L4:()=>'<div class="called"><p>The meter that only watches the worst point lets one stray steal a center. The new meter, the average of the squared distances from each data point to its center, is the '+term('distortion','squared error distortion')+'. Choosing k centers, anywhere, to make it as small as possible is '+term('kmeans','k-means clustering')+'.</p></div>',
  L5:()=>'<div class="called"><p>The best pot sits at the average of its pixels’ inks, one coordinate at a time. That point is the cluster’s '+term('gravity','center of gravity')+'.</p></div>',
  L6:()=>'<div class="called"><p>Print from the nearest center, move each center to its cluster’s center of gravity, repeat until nothing changes: that is the '+term('lloyd','Lloyd algorithm')+'. Neither step can raise the error, and 144 pixels can be split in only finitely many ways, so the loop must stop.</p></div>'+srcCard('lloyd'),
- L7:()=>'<div class="called"><p>The Lloyd algorithm stopped twice, at two different errors. Stopping does not mean best: where it ends depends on where the centers start. Farthest-first traversal is a cheap way to spread them out. Real software usually picks starts at random, weighted toward far-off points (k-means++), and keeps the best of many runs.</p></div>',
+ L7:()=>'<div class="called"><p>The Lloyd algorithm stopped twice, at two different errors. Where it stops depends on where the centers start. Farthest-first traversal is a cheap way to spread them out. Real software usually picks starts at random, weighted toward far-off points (k-means++), and keeps the best of many runs.</p></div>',
  L8:()=>'<div class="called"><p>With seven numbers a gene there was no picture to judge by. The arithmetic was the same as for two inks, and the error now answers level 1’s question.</p></div>',
  L9:()=>'<div class="called"><p>Joining the closest groups and drawing the joins as a tree is '+term('hier','hierarchical clustering')+'. Averaging the distance over every pair of members is the same rule as UPGMA: this is level 7 of Hollow Mountain, with genes in place of species. Cutting the tree at one height gives the clusters.</p></div>'+srcCard('eisen'),
  L10:()=>'<div class="called"><p>When the sugar runs out, the yeast changes how it lives: the '+term('diauxic','diauxic shift')+'. One set of genes switches on, another switches off, and many hardly change. These cards are illustrative; DeRisi, Iyer and Brown measured nearly every yeast gene through the real shift.</p></div>'+srcCard('derisi')
@@ -1305,7 +1305,7 @@ function renderPanel(){
  let h='<div class="reveal"><h3>Level '+cur.L.id+' complete</h3>'+(BLOCKS[cur.block]?BLOCKS[cur.block]():'');
  const missing=VOCAB.filter(x=>!S.badges.includes(x.id)).length;
  if(cur.L.id<LEVELS.length)h+='<button class="primary advance" id="next">Next level →</button>';
- else h+='<p>'+(missing?missing+' vocabulary term'+(missing===1?'':'s')+' still hidden. Finish the levels without a ✓ to earn them.':'You have earned every term. The field guide below lists each one with its source.')+'</p>';
+ else h+='<p>'+(missing?missing+' vocabulary term'+(missing===1?'':'s')+' still hidden. Finish the levels without a ✓ to earn them.':'You have earned every term.')+'</p>';
  $('#panel').innerHTML=h+'</div>';
 }
 function renderStage(){$('#stage').innerHTML=cur.M.stage(cur);cur.justPrinted=false;}

@@ -795,7 +795,7 @@ function renderPanel(){
   const missing=VOCAB.filter(x=>!S.badges.includes(x.id)).length;
   if(cur.L.id<LEVELS.length)h+='<button class="primary advance" id="next" data-act="next">Next level →</button>';
   else h+='<p>'+(missing?plural(missing,'vocabulary term')+' still hidden: '+VOCAB.filter(x=>!S.badges.includes(x.id)).map(x=>'level '+(LEVELS.find(l=>(TERMS_AT[l.id]||[]).includes(x.id))||{id:'?'}).id).join(', ')+'.'
-     :'You have earned every term. The field guide below lists each one with its source.')+'</p>';
+     :'You have earned every term.')+'</p>';
   $('#panel').innerHTML=h+'</div>';
 }
 const TERMS_AT={1:['alignment','indel'],2:['lcs'],3:['graph','path'],5:['mtp','dp'],6:['backtrack'],8:['global','matrix','indelpen'],9:['local'],10:['overlap']};
@@ -990,7 +990,7 @@ MODES.strands={
       c.final={top,bot,k};
       complete(['alignment','indel'],[
         {html:()=>alignTiles(top,bot,{label:'Your line-up'})+'What you built is an '+term('alignment','alignment')+': the two strands one above the other, each kept in order, with gaps (–) put in so that letters stand in columns. A column with a gap marks a letter that one strand gained or the other lost: an '+term('indel','indel')+' (insertion or deletion).'},
-        {html:()=>k<par?'You found '+k+' matching columns. <b>'+par+' is possible.</b> Sliding gaps by hand is trial and error.':'You found the most matching columns possible, '+par+'. You have no proof yet that it is the best possible.'}
+        {html:()=>k<par?'You found '+k+' matching columns. <b>'+par+' is possible.</b>':'You found the most matching columns possible, '+par+'.'}
       ],{hits:k,par});
     }
   },
@@ -1171,7 +1171,7 @@ MODES.wall={
     }
     if(type==='giveup'){log('gave_up',{played:c.bot.played});clearInterval(c.timer);c.title='Stuck is the right answer';
       say('The bot would still be dealing next week.');
-      complete([],[{html:()=>'Twelve cards a deck already make '+fmt(c.total)+' different games, and the count roughly multiplies by six for every card added to both decks. Playing them all is infeasible. A practical method has to examine far fewer cases.'}],{played:c.bot.played});return;}
+      complete([],[{html:()=>'Twelve cards a deck already make '+fmt(c.total)+' different games, and the count roughly multiplies by six for every card added to both decks. Playing them all is infeasible.'}],{played:c.bot.played});return;}
     if(type==='deal'){c.g=newGame();render();return;}
     if(type==='move'&&!gameOver(c.g,v,w)){applyMove(c.g,v,w,d);log('card',{move:d});
       if(gameOver(c.g,v,w))say('Your game: '+plural(c.g.score,'point')+'. One game of '+fmt(c.total)+'.');render();}
@@ -1261,7 +1261,7 @@ MODES.tourist={
       say('Switch on: '+r24()+'.','good');
       complete(['mtp','dp'],[
         {html:()=>'The tourist’s puzzle, the richest route through a grid of one-way streets, is the '+term('mtp','Manhattan Tourist Problem')+'. The best route here sees '+m.best+' sights. Walking the richer street at every corner sees only '+city.greedy+'.'},
-        {html:'You did not try any route. Each corner’s number came from the numbers already written at the corners before it, and was worked out only once. Solving every smaller problem once, in order, and keeping the answers in a table is '+term('dp','dynamic programming')+'. With its switch on, the bot did the same: '+binom(8,4)+' routes became 24 corners, and the 12-card decks’ '+fmt(countGames(12,12))+' games would become 169 corners.',src:['bellman']}
+        {html:'Each corner’s number came from the numbers already written at the corners before it, and was worked out only once. Solving every smaller problem once, in order, and keeping the answers in a table is '+term('dp','dynamic programming')+'. With its switch on, the bot did the same: '+binom(8,4)+' routes became 24 corners, and the 12-card decks’ '+fmt(countGames(12,12))+' games would become 169 corners.',src:['bellman']}
       ],{wrong:c.wrong||0,byHand:c.g.byHand});
     }
   },
@@ -1543,7 +1543,7 @@ MODES.code={
       const missing=sweepTerms().filter(id=>!S.badges.includes(id));
       say(same+' of '+c.r.top.length+' columns hold the same amino acid.','good');
       complete(missing,[{html:()=>'The two fragments line up with one indel at each end, and '+same+' of their '+c.r.top.length+' columns hold the same amino acid. These are stretches of two adenylation domains, the parts of two antibiotic-building enzymes that choose which amino acid to add; both choose phenylalanine. Lining up domains like these, position by position, is how the “code” that predicts a domain’s choice from its sequence was worked out.',src:['stach']},
-        {html:'Sequences: UniProt '+PROTEINS.a.acc+' ('+PROTEINS.a.name+') and UniProt '+PROTEINS.b.acc+' ('+PROTEINS.b.name+'), residue numbers as in UniProt.'+(missing.length?' Terms named here because no earlier level named them for you: '+missing.map(x=>term(x)).join(', ')+'.':'')}],{same});
+        {html:'Sequences: UniProt '+PROTEINS.a.acc+' ('+PROTEINS.a.name+') and UniProt '+PROTEINS.b.acc+' ('+PROTEINS.b.name+'), residue numbers as in UniProt.'+(missing.length?' Terms not named in earlier levels: '+missing.map(x=>term(x)).join(', ')+'.':'')}],{same});
     }
   },
   skip:c=>c.phase==='ready'?{label:'Pencil the city',act:['fill']}:c.phase==='filled'?{label:'Follow the arrows home',act:['back']}:null
