@@ -241,23 +241,15 @@ footer input{font:inherit;width:9em;padding:5px 8px;border:1px solid var(--line)
       <ellipse cx="-5" cy="-8" rx="4" ry="9" fill="#ffd6a0" opacity=".45"/>
     </g>
     <g id="a-dealer">
-      <!-- seated dealer: indigo coat, topknot, bare forearms holding a cup -->
-      <path d="M-62,70Q-60,8 -30,-2L30,-2Q60,8 62,70Z" fill="#283a63"/>
-      <path d="M-30,-2L0,40L30,-2" fill="none" stroke="#f1ead8" stroke-width="6"/>
-      <path d="M-6,-2L0,40L6,-2Z" fill="#c9a37a"/>
-      <path d="M-50,30Q-40,62 -8,58" fill="none" stroke="#c9a37a" stroke-width="13" stroke-linecap="round"/>
-      <path d="M50,30Q40,62 8,58" fill="none" stroke="#c9a37a" stroke-width="13" stroke-linecap="round"/>
-      <path d="M-58,20Q-60,40 -48,46" fill="none" stroke="#283a63" stroke-width="22" stroke-linecap="round"/>
-      <path d="M58,20Q60,40 48,46" fill="none" stroke="#283a63" stroke-width="22" stroke-linecap="round"/>
-      <rect x="-9" y="-16" width="18" height="16" fill="#c9a37a"/>
-      <ellipse cx="0" cy="-36" rx="22" ry="25" fill="#d8b38a"/>
-      <path d="M-22,-40Q-20,-64 0,-62Q20,-64 22,-40Q14,-54 0,-52Q-14,-54 -22,-40Z" fill="#1b1410"/>
-      <path d="M-4,-62Q0,-74 4,-62Z" fill="#1b1410"/><rect x="-3" y="-72" width="6" height="12" rx="2" fill="#1b1410"/>
-      <path d="M-10,-38q3,-2 6,0M4,-38q3,-2 6,0" stroke="#1b1410" stroke-width="2" fill="none" stroke-linecap="round"/>
-      <path d="M-5,-24q5,3 10,0" stroke="#7a4a32" stroke-width="2" fill="none" stroke-linecap="round"/>
-      <path d="M-26,-30q0,6 4,8M26,-30q0,6 -4,8" stroke="#c9a37a" stroke-width="3" fill="none"/>
-      <path d="M-12,-49q6,2 10,0" stroke="#fff" stroke-width="5" opacity=".9"/>
-      <path d="M-30,-50Q0,-44 30,-50" stroke="#f1ead8" stroke-width="6" fill="none"/>
+      <!-- the dealer's booth: an indigo door curtain on a rod. The calls come from behind it. -->
+      <rect x="-68" y="-71" width="136" height="6" rx="3" fill="#5b3b1f"/><circle cx="-68" cy="-68" r="4" fill="#3a2412"/><circle cx="68" cy="-68" r="4" fill="#3a2412"/>
+      <path d="M-54,-72v9M-36,-72v9M-10,-72v9M10,-72v9M36,-72v9M54,-72v9" stroke="#1e2c4d" stroke-width="8"/>
+      <g fill="#283a63" stroke="#1b2847" stroke-width="1" stroke-linejoin="round">
+        <path d="M-63,-64H-22V46Q-32,51 -42,46T-63,46Z"/><path d="M-20,-64H20V48Q10,53 0,48T-20,48Z"/><path d="M22,-64H63V46Q53,51 42,46T22,46Z"/>
+      </g>
+      <path d="M-50,-62V44M-33,-62V46M-8,-62V20M9,-62V46M34,-62V46M51,-62V44" stroke="#1b2847" stroke-width="1.2" opacity=".45"/>
+      <path d="M-63,-52H-22M-20,-52H20M22,-52H63" stroke="#f1ead8" stroke-width="3.500"/>
+      <path transform="translate(0,-8) scale(1.05)" d="M0,-15l7,7-7,7-7-7zM0,1l7,7-7,7-7-7zM-8,-7l7,7-7,7-7-7zM8,-7l7,7-7,7-7-7z" fill="#f1ead8"/>
     </g>
     <g id="a-cup">
       <!-- woven cup, mouth down -->
@@ -266,24 +258,26 @@ footer input{font:inherit;width:9em;padding:5px 8px;border:1px solid var(--line)
       <ellipse cx="0" cy="24" rx="26" ry="5"/>
     </g>
     <g id="a-keeper">
-      <!-- the bookkeeper: spectacles, brush, a ledger on a low desk -->
-      <path d="M-40,60Q-38,6 -18,0L18,0Q38,6 40,60Z" fill="#5d4a3a"/>
-      <path d="M-18,0L0,26L18,0" fill="none" stroke="#e9dfc8" stroke-width="5"/>
-      <rect x="-7" y="-12" width="14" height="13" fill="#d8b38a"/>
-      <ellipse cx="0" cy="-30" rx="18" ry="21" fill="#e0bf98"/>
-      <path d="M-18,-34Q-16,-54 0,-52Q16,-54 18,-34Q10,-44 0,-43Q-10,-44 -18,-34Z" fill="#8e8a84"/>
-      <circle cx="-7" cy="-30" r="5" fill="none" stroke="#1f2328" stroke-width="1.6"/><circle cx="7" cy="-30" r="5" fill="none" stroke="#1f2328" stroke-width="1.6"/>
-      <path d="M-2,-30h4" stroke="#1f2328" stroke-width="1.6"/>
-      <path d="M-5,-18q5,2 10,0" stroke="#7a4a32" stroke-width="1.8" fill="none"/>
-      <rect x="-56" y="44" width="112" height="16" rx="3" fill="#6a3f1f"/>
-      <path d="M-44,44L-4,36L-4,44ZM4,36L44,44L4,44Z" fill="#fbf4e2" stroke="#cdbf9a"/>
-      <path d="M-36,41l24,-4M12,37l24,4" stroke="#9a8a6a" stroke-width="1"/>
-      <path d="M28,20L44,38" stroke="#2a1a10" stroke-width="3" stroke-linecap="round"/><path d="M42,36L47,42" stroke="#111" stroke-width="4" stroke-linecap="round"/>
+      <!-- the bookkeeper's desk: an abacus, an open ledger and a brush -->
+      <rect x="-52" y="49" width="8" height="12" fill="#5b3418"/><rect x="44" y="49" width="8" height="12" fill="#5b3418"/><rect x="-52" y="49" width="104" height="4" fill="#4a2a12"/>
+      <rect x="-58" y="40" width="116" height="9" rx="3" fill="#7a4a24" stroke="#4a2a12" stroke-width="1"/>
+      <g transform="translate(-24,22)">
+        <rect x="-27" y="-17" width="54" height="34" rx="2.500" fill="#f3e6c8" stroke="#4a2a10" stroke-width="3.500"/>
+        <path d="M-18,-15V15M-9,-15V15M0,-15V15M9,-15V15M18,-15V15" stroke="#8a6a3a" stroke-width="1"/>
+        <path d="M-27,-6.500H27" stroke="#4a2a10" stroke-width="2.600"/>
+        <g fill="#b23a2a" stroke="#6a1f14" stroke-width=".6"><ellipse cx="-18" cy="-12" rx="3.600" ry="2.300"/><ellipse cx="-9" cy="-9.800" rx="3.600" ry="2.300"/><ellipse cx="0" cy="-12" rx="3.600" ry="2.300"/><ellipse cx="9" cy="-12" rx="3.600" ry="2.300"/><ellipse cx="18" cy="-9.800" rx="3.600" ry="2.300"/></g>
+        <g fill="#a8792f" stroke="#6e4c18" stroke-width=".6"><ellipse cx="-18" cy="-2.600" rx="3.600" ry="2.300"/><ellipse cx="-18" cy="2" rx="3.600" ry="2.300"/><ellipse cx="-18" cy="12.500" rx="3.600" ry="2.300"/><ellipse cx="-9" cy="3.300" rx="3.600" ry="2.300"/><ellipse cx="-9" cy="7.900" rx="3.600" ry="2.300"/><ellipse cx="-9" cy="12.500" rx="3.600" ry="2.300"/><ellipse cx="0" cy="-2.600" rx="3.600" ry="2.300"/><ellipse cx="0" cy="7.900" rx="3.600" ry="2.300"/><ellipse cx="0" cy="12.500" rx="3.600" ry="2.300"/><ellipse cx="9" cy="-2.600" rx="3.600" ry="2.300"/><ellipse cx="9" cy="2" rx="3.600" ry="2.300"/><ellipse cx="9" cy="6.600" rx="3.600" ry="2.300"/><ellipse cx="18" cy="3.300" rx="3.600" ry="2.300"/><ellipse cx="18" cy="7.900" rx="3.600" ry="2.300"/><ellipse cx="18" cy="12.500" rx="3.600" ry="2.300"/></g>
+      </g>
+      <path d="M10,40L14,21Q23,18 32,23V40ZM32,40V23Q41,18 50,21L54,40Z" fill="#fbf4e2" stroke="#b9a97e" stroke-width="1" stroke-linejoin="round"/>
+      <path d="M17,25.500V36M21.500,24.800V36M26,25V32M38,25V36M42.500,24.800V30M47,25.500V36" stroke="#6a5a3a" stroke-width="1.100" stroke-dasharray="3 1.500"/>
+      <path d="M38,6L52,30" stroke="#3a2412" stroke-width="2.600" stroke-linecap="round"/><path d="M51.200,28.600L54.500,35" stroke="#111" stroke-width="3.400" stroke-linecap="round"/>
     </g>
     <g id="a-walker">
-      <circle cx="0" cy="-22" r="7" fill="#e0bf98" stroke="#1f2328" stroke-width="1.2"/>
-      <path d="M-8,-14Q0,-17 8,-14L10,6H-10Z" fill="currentColor" stroke="#1f2328" stroke-width="1.2"/>
-      <path d="M-5,6L-6,18M5,6L6,18" stroke="#1f2328" stroke-width="3" stroke-linecap="round"/>
+      <!-- a newcomer's paper umbrella, in the newcomer's colour -->
+      <path d="M0,-26V15q0,3.500 -3.500,3.500" fill="none" stroke="#3a2412" stroke-width="1.700" stroke-linecap="round"/>
+      <path d="M-12,-11Q0,-33 12,-11Q9,-14 6,-11Q3,-14 0,-11Q-3,-14 -6,-11Q-9,-14 -12,-11Z" fill="currentColor" stroke="#1f2328" stroke-width="1.100" stroke-linejoin="round"/>
+      <path d="M0,-26L-6,-11.500M0,-26V-11.500M0,-26L6,-11.500" stroke="#1f2328" stroke-width=".7" opacity=".5"/>
+      <path d="M0,-29.500V-26" stroke="#3a2412" stroke-width="1.700" stroke-linecap="round"/>
     </g>
   </defs>
 </svg>
