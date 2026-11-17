@@ -1077,7 +1077,7 @@ MODES.decks={
 };
 
 /* ---------- level 3: two games, one table ---------- */
-const CHOICES=['The moves made so far','The score so far','Only the cards still in the two decks'];
+const CHOICES=['The moves made so far','The score so far','Only the cards still on each table'];
 function histChips(v,w,moves,start){
   let [i,j]=start||[0,0];
   return moves.map(d=>{const s=d==='D'?'pair '+v[i]+'·'+w[j]+(v[i]===w[j]?' +1':''):d==='S'?'threw away '+v[i]+' (deck 1)':'threw away '+w[j]+' (deck 2)';
@@ -1131,7 +1131,7 @@ MODES.table={
     }
     if(type==='corner'&&c.phase==='dots'){
       const i=+a,j=+b,tp=c.tp;log('dot',{at:[i,j],right:i===tp.i&&j===tp.j});
-      if(i!==tp.i||j!==tp.j){c.miss=[i,j];stage('That dot leaves '+(c.inst.v.length-i)+' cards in deck 1 and '+(c.inst.w.length-j)+' in deck 2. The tables have '+(c.inst.v.length-tp.i)+' and '+(c.inst.w.length-tp.j)+'.','warn');render();c.miss=null;return;}
+      if(i!==tp.i||j!==tp.j){c.miss=[i,j];stage('That dot leaves '+(c.inst.v.length-i)+' cards on the table from deck 1 and '+(c.inst.w.length-j)+' from deck 2. The tables have '+(c.inst.v.length-tp.i)+' and '+(c.inst.w.length-tp.j)+'.','warn');render();c.miss=null;return;}
       c.stage=null;say('Both tables stand on this dot: '+tp.i+' cards gone from deck 1, '+tp.j+' from deck 2.','good');
       complete(['graph','path'],[{html:'Each dot stands for one state of the table, which is determined by how many cards have gone from each deck. In Bridge Walker you called dots like these <b>nodes</b> and the steps between them <b>edges</b>; the same words apply here. This grid of nodes and edges is the '+term('graph','alignment graph')+' of the two decks. A step south throws away from deck 1, a step east from deck 2, a step south-east takes both.'},
         {html:'One complete game is a '+term('path','path')+' from the top-left node to the bottom-right one, and every path is a game.'}]);
