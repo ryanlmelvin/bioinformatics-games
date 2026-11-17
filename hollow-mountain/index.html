@@ -224,12 +224,14 @@ footer input{font:inherit;width:9em;padding:5px 8px;border:1px solid var(--line)
         <radialGradient id="gLamp"><stop offset="0" stop-color="#fff3b0" stop-opacity=".55"/><stop offset="1" stop-color="#fff3b0" stop-opacity="0"/></radialGradient>
         <clipPath id="clipM"><path id="mtnClip"/></clipPath>
         <g id="a-surveyor">
-          <path class="sv-beam" d="M2,-30 L40,-46 L40,-14Z"/>
-          <ellipse class="sv-coat" cx="0" cy="-8" rx="7" ry="10"/>
-          <circle class="sv-skin" cx="0" cy="-23" r="6"/>
-          <path class="sv-hat" d="M-7,-25 a7,6 0 0 1 14,0 z"/><circle class="sv-lamp" cx="5" cy="-28" r="2.6"/>
-          <circle class="sv-coil" cx="-7" cy="-6" r="5"/>
-          <path d="M-4,1 l-2,8 M4,1 l2,8" stroke="#2a1d12" stroke-width="3" stroke-linecap="round"/>
+          <!-- the surveyor's kit: a lamp on a tripod and a coil of rope -->
+          <path class="sv-beam" d="M6,-25 L40,-44 L40,-10Z"/>
+          <path d="M0,-16L-9,9M0,-16L1,9M0,-16L10,9" stroke="#2a1d12" stroke-width="2.400" stroke-linecap="round"/>
+          <path d="M-5,-2H6" stroke="#2a1d12" stroke-width="1.400"/>
+          <rect class="sv-hat" x="-6" y="-32" width="12" height="16" rx="2" stroke="#7a5a10" stroke-width="1"/>
+          <path d="M-7,-32H7L4,-36H-4Z" fill="#7a5a10"/><path d="M-3,-36a3,3.500 0 0 1 6,0" fill="none" stroke="#7a5a10" stroke-width="1.200"/>
+          <circle class="sv-lamp" cx="5" cy="-25" r="3.400" stroke="#7a5a10" stroke-width="1"/>
+          <circle class="sv-coil" cx="-9" cy="4" r="4.500"/><circle class="sv-coil" cx="-9" cy="4" r="2" style="stroke-width:1.500"/>
         </g>
       </defs>
       <rect width="760" height="460" fill="url(#gSky)"/>
@@ -823,7 +825,7 @@ function jName(t,v){return 'J'+(v-t.n+1);}
 function nodeName(t,v,names){return v<t.n?(names||LET)[v]:jName(t,v);}
 function edgeName(t,i,names){const e=t.edges[i];return nodeName(t,e.a,names)+'–'+nodeName(t,e.b,names);}
 function setSurveyor(p,ang){const g=$('#surveyor');if(!p){g.setAttribute('visibility','hidden');return;}
-  /* The surveyor waits on the ground at the mountain's foot, on the side of the entrance in use, clear of every label. */
+  /* The surveyor's lamp stands on the ground at the mountain's foot, on the side of the entrance in use, clear of every label. */
   const right=Math.cos((ang===undefined?90:ang)*Math.PI/180)<-0.01?false:Math.cos((ang===undefined?90:ang)*Math.PI/180)>0.01;
   g.setAttribute('visibility','visible');g.setAttribute('transform','translate('+(right?684:76)+',441) scale('+(right?'-1.3,1.3':'1.3')+')');}
 function shade(kind){$('#shade').setAttribute('class',kind==='lit'?'m-lit':'m-dark');}
