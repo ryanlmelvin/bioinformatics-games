@@ -348,7 +348,7 @@ footer input{font:inherit;width:9em;padding:5px 8px;border:1px solid var(--line)
   </details>
 
   <div class="savebar" id="savebar">
-    <p><b>Keep your vocabulary.</b> Every level is open, in any order. The terms are the part you earn, by finishing levels. This browser remembers them, and so does your progress link: copy it and keep it somewhere you will find it again (email it to yourself). Opening the link in any browser, on any device, brings back your earned terms and finished levels. The <a href="../#keep">front page of the book</a> has one link that covers every chapter.</p>
+    <p><b>Progress link.</b> Your earned terms and finished levels are saved in this browser. Copy this link and keep it. Opening it in any browser restores them. The <a href="../#keep">front page</a> has one link for every chapter.</p>
     <div class="saverow"><input id="saveLink" readonly aria-label="Your progress link"><button id="copyLink">Copy progress link</button></div>
     <p class="savenote" id="saveNote" role="status"></p>
     <div data-bk-app></div>
@@ -682,7 +682,7 @@ const BLOCKS={
   inout:{html:'The counter under each node has proper names. The number of edges entering a node is its '+term('inout','indegree')+'; the number leaving it is its '+term('inout','outdegree')+'.'},
   roundtrip:{html:()=>'Every node now has indegree equal to outdegree: each one is a '+term('balanced','balanced node')+'. That is exactly when a round trip over every edge exists, an '+term('cycle','Eulerian cycle')+'. <b>That’s '+term('balance','Euler’s theorem')+'.</b> You needed '+cur.inst.need+' new edges because each one repairs one node that was short an edge out and one that was short an edge in. The table under the map is the graph’s '+term('adj','adjacency list')+'.'},
   debruijn:{src:['debruijn'],html:'You drew it yourself: a node for every 3-letter prefix or suffix, an edge for every read. <b>That map is called a '+term('debruijn','de Bruijn graph')+'.</b> Reads of length k always give nodes of length k − 1.'},
-  nomap:{html:'You found the start without a map. A node’s outdegree is simply the number of reads that start with it, and its indegree is the number that end with it. '+ANT+' must start where outdegree − indegree = 1: '+term('balance','Euler’s theorem')+' again, this time for a path.'},
+  nomap:{html:'You found the start without a map. A node’s outdegree is the number of reads that start with it, and its indegree is the number that end with it. '+ANT+' must start where outdegree − indegree = 1: '+term('balance','Euler’s theorem')+' again, this time for a path.'},
   balance:{html:'You set '+ANT+' down on the right node first time, twice. <b>That’s '+term('balance','Euler’s theorem')+'.</b> Start where one more edge leaves than arrives; you will finish where one more arrives than leaves. Every other node has as many in as out.'},
   hier:{src:['hierholzer'],html:'No backing up: when stranded, '+ANT+' went to a node with unused edges and spliced in a loop. <b>That’s '+term('hier','Hierholzer’s algorithm')+'.</b> It touches each edge once, so it works for millions of reads.'},
   nohier:{html:ANT+' was never stranded, by care or by luck, so one piece of vocabulary is still hidden. Try a new puzzle and let '+ANT+' get stranded once: the glowing nodes are the point.'},
@@ -757,7 +757,7 @@ function writeLink(){
   if(TRANSIENT||!S||!S.done)return;
   const rel=progressLink();if(rel===lastLink)return;lastLink=rel;
   const box=$('#saveLink');if(box)box.value=(location.origin||'')+rel;
-  if(linkLive)topNote('Your progress link has changed. Copy it again before you leave, so your backup is up to date.',true);
+  if(linkLive)topNote('Your progress link has changed. Copy it again before you leave.',true);
 }
 function topNote(text,withButton){$('#linkNoteText').textContent=text;$('#copyLinkTop').hidden=!withButton;$('#linkNote').hidden=false;}
 /* where to pick up: the first level not yet finished */
@@ -765,7 +765,7 @@ function resumeLevel(){const l=LEVELS.find(l=>!S.done.includes(l.id));return l?l
 function useLink(){
   if(TRANSIENT||!linkText)return;
   const p=decodeProgress(linkText);
-  if(!p){linkNote='That progress link is incomplete or has been changed, so nothing was restored from it. Copy the whole link and open it again.';return;}
+  if(!p){linkNote='That progress link is incomplete or was altered, so nothing was restored. Copy the whole link and open it again.';return;}
   if(p.seed!==S.seed){
     const mine=S.badges.length+S.done.length;
     if(!mine||typeof confirm!=='function'||confirm('This link carries progress for puzzle code '+p.seed+' ('+Object.keys(p.earnedAt).length+' terms).\n\nThis browser already has progress for puzzle code '+S.seed+' ('+S.badges.length+' terms).\n\nOK: switch to the link. This browser’s progress for '+S.seed+' is replaced.\nCancel: keep this browser’s progress.'))S=withDone(freshState(p.seed));
@@ -1606,7 +1606,7 @@ function renderPanel(){
   const missing=VOCAB.filter(x=>!S.badges.includes(x.id)).length;
   if(cur.L.id<LEVELS.length)h+='<button class="primary advance" id="next">Next level →</button>';
   else h+='<p>'+(missing?plural(missing,'vocabulary term')+' still hidden. Try a new puzzle on levels 6 to 11.'
-     :'You have earned the whole vocabulary. Your field guide, below, lists every term with its source.')+'</p>';
+     :'You have earned every term. The field guide below lists each one with its source.')+'</p>';
   $('#panel').innerHTML=h+'</div>';
 }
 
@@ -1819,9 +1819,9 @@ else{
   $('#saveLink').onclick=()=>{const b=$('#saveLink');if(b.select)b.select();};
   $('#copyLink').onclick=$('#copyLinkTop').onclick=()=>{
     const b=$('#saveLink'),tell=(text,again)=>{$('#saveNote').textContent=text;topNote(text,again);},
-      ok=()=>tell('Copied. Paste it somewhere you will find it again. It changes each time you earn a term, so copy it again when you stop.',false),
+      ok=()=>tell('Copied. The link changes when you earn a term, so copy it again before you leave.',false),
       byHand=()=>{if(b.select)b.select();let done=false;try{done=document.execCommand('copy');}catch(e){}
-        if(done)ok();else tell('Could not copy for you. Select the link in the box at the bottom of this page and copy it by hand.',true);};
+        if(done)ok();else tell('Could not copy. Select the link in the box at the bottom of this page and copy it by hand.',true);};
     if(typeof navigator!=='undefined'&&navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(b.value).then(ok,byHand);else byHand();
   };
   window.addEventListener&&window.addEventListener('hashchange',()=>{if(/^#save=/.test(location.hash))location.reload();});

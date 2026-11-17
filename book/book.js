@@ -116,8 +116,7 @@ function piece(x,kind,s,col,i){
 let toastEl=null,toastT=0;
 function toast(title,lines){
   if(!toastEl){toastEl=el('div','bk-toast');toastEl.setAttribute('aria-hidden','true');document.body.append(toastEl);}
-  toastEl.innerHTML='<svg viewBox="0 0 24 24"><path d="M12 2l2.9 6.3 6.9.8-5.100 4.700 1.400 6.800L12 17.200 5.900 20.600l1.400-6.800L2.200 9.100l6.900-.8z" fill="currentColor"/></svg><div><b>'+esc(title)+'</b>'+
-    (lines.length?'<span>'+lines.map(esc).join(' · ')+'</span>':'')+'</div>';
+  toastEl.innerHTML='<b>'+esc(title)+'</b>'+(lines.length?'<span>'+lines.map(esc).join(', ')+'</span>':'');
   toastEl.classList.remove('show');void toastEl.offsetWidth;toastEl.classList.add('show');
   clearTimeout(toastT);toastT=setTimeout(()=>toastEl.classList.remove('show'),3800);
 }
@@ -140,13 +139,13 @@ function gamePage(){
   if(fresh){
     const o=el('div','bk-cover');o.setAttribute('role','dialog');o.setAttribute('aria-modal','true');o.setAttribute('aria-labelledby','bkCoverT');
     o.innerHTML='<div class="bk-cover-card"><img src="'+base+'book/art/'+G.dir+'.svg" alt=""><div class="bk-cover-body">'+
-      '<p class="bk-eyebrow"><span>'+(side?'Side quest · Chapter '+ch.n:'Chapter '+ch.n)+'</span>'+esc(ch.topic)+'</p>'+
+      '<p class="bk-eyebrow"><span>'+(side?'Side quest, chapter '+ch.n:'Chapter '+ch.n)+'</span>'+esc(ch.topic)+'</p>'+
       '<h2 id="bkCoverT">'+esc(G.game)+'</h2><p class="bk-hook">'+esc(G.hook)+'</p>'+
-      (G.levels?'<p class="bk-meta">'+G.levels+' levels · '+G.terms+' terms to earn · every level is open, and your progress link keeps what you earn</p>':'')+
+      (G.levels?'<p class="bk-meta">'+G.levels+' levels, '+G.terms+' terms. Levels can be played in any order.</p>':'')+
       '<div class="bk-cover-go"><button type="button" class="bk-begin">Begin</button><a href="'+base+'">Back to the contents</a></div></div></div>';
     document.body.append(o);document.body.classList.add('bk-locked');
     const go=$('.bk-begin',o);go.focus();
-    const close=()=>{store.set('book:seen:'+G.dir,true);o.classList.add('out');document.body.classList.remove('bk-locked');play('good');setTimeout(()=>o.remove(),calm?0:420);document.removeEventListener('keydown',key);};
+    const close=()=>{store.set('book:seen:'+G.dir,true);o.remove();document.body.classList.remove('bk-locked');play('good');document.removeEventListener('keydown',key);};
     const key=e=>{if(e.key==='Escape'||e.key==='Enter'){e.preventDefault();close();}};
     go.onclick=close;document.addEventListener('keydown',key);
   }
@@ -159,13 +158,7 @@ function gamePage(){
     const m=/^\s*(Level\s+\d+)\s*[:.]\s*(.+)$/s.exec(title.textContent);if(!m)return '';
     title.innerHTML='<span class="bk-lv">'+esc(m[1])+'</span>'+esc(m[2]);return m[1];
   }
-  let lastLevel='';
-  function onTitle(){
-    const lv=dressTitle();if(!lv)return;       // '' when the change was our own
-    if(lastLevel&&lv!==lastLevel&&!calm){wrap.classList.remove('bk-turn');void wrap.offsetWidth;wrap.classList.add('bk-turn');}
-    lastLevel=lv;
-  }
-  if(title){onTitle();new MutationObserver(onTitle).observe(title,{childList:true,characterData:true,subtree:true});}
+  if(title){dressTitle();new MutationObserver(dressTitle).observe(title,{childList:true,characterData:true,subtree:true});}
 
   // vocabulary: remember what has been earned, and mark the ones earned just now
   const badges=$('#badges'),freshUntil={};
@@ -188,7 +181,7 @@ function gamePage(){
   const panel=$('#panel');let hadReveal=!!(panel&&panel.querySelector('.reveal'));
   const events={terms:[],level:''};let ft=0;
   function flush(){clearTimeout(ft);ft=setTimeout(()=>{
-    if(events.level){play('level');confetti();toast(events.level,events.terms.map(t=>'+ '+t));}
+    if(events.level){play('level');confetti();toast(events.level,events.terms);}
     else if(events.terms.length){play('term');toast(events.terms.length>1?'New terms':'New term',events.terms);}
     events.terms=[];events.level='';},60);}
   if(panel)new MutationObserver(()=>{
@@ -220,12 +213,12 @@ function gamePage(){
   const foot=$('footer',wrap);
   const i=BOOK.chapters.indexOf(ch),next=BOOK.chapters[i+1];
   const after=el('section','bk-after');after.setAttribute('aria-labelledby','bkAfterT');
-  let h='<h2 id="bkAfterT">'+(side?'Back to the chapter':'After you play')+'</h2><div class="bk-after-grid">';
-  if(side)h+='<a class="bk-nextch" href="'+base+ch.dir+'/"><img src="'+base+'book/art/'+ch.dir+'.svg" alt=""><span><small>Chapter '+ch.n+' · '+esc(ch.topic)+'</small><b>'+esc(ch.game)+'</b></span></a>';
+  let h='<h2 id="bkAfterT">'+(side?'Back to the chapter':'After the game')+'</h2><div class="bk-after-grid">';
+  if(side)h+='<a class="bk-nextch" href="'+base+ch.dir+'/"><img src="'+base+'book/art/'+ch.dir+'.svg" alt=""><span><small>Chapter '+ch.n+', '+esc(ch.topic)+'</small><b>'+esc(ch.game)+'</b></span></a>';
   else{
-    h+='<div class="bk-docs">'+BOOK.resources.map(r=>'<a href="'+base+'materials/'+ch.slug+'-'+r[0]+'.docx">'+ICON.doc+'<span>'+r[1]+'<small>Word document</small></span></a>').join('')+'</div>';
-    h+=next?'<a class="bk-nextch" href="'+base+next.dir+'/"><img src="'+base+'book/art/'+next.dir+'.svg" alt=""><span><small>Next · Chapter '+next.n+' · '+esc(next.short||next.topic)+'</small><b>'+esc(next.game)+' →</b></span></a>'
-           :'<a class="bk-nextch" href="'+base+'#glossary"><img src="'+base+'book/art/'+ch.dir+'.svg" alt=""><span><small>The last chapter</small><b>See your whole glossary →</b></span></a>';
+    h+='<ul class="bk-docs">'+BOOK.resources.map(r=>'<li><a href="'+base+'materials/'+ch.slug+'-'+r[0]+'.docx">'+r[1]+'</a> (Word)</li>').join('')+'</ul>';
+    h+=next?'<a class="bk-nextch" href="'+base+next.dir+'/"><img src="'+base+'book/art/'+next.dir+'.svg" alt=""><span><small>Next: chapter '+next.n+', '+esc(next.short||next.topic)+'</small><b>'+esc(next.game)+'</b></span></a>'
+           :'<a class="bk-nextch" href="'+base+'#glossary"><img src="'+base+'book/art/'+ch.dir+'.svg" alt=""><span><small>This was the last chapter</small><b>Your glossary</b></span></a>';
   }
   after.innerHTML=h+'</div>';
   if(foot)foot.before(after);else wrap.append(after);
@@ -245,10 +238,10 @@ function app(){
   let offer=null,kept=null,refused=false,justInstalled=false;
   function draw(){
     let h='<p class="bk-app-line">';
-    if(!can)h+='This browser cannot promise to keep saved progress, so rely on your progress link.';
-    else if(kept)h+='<b class="bk-app-ok">Kept.</b> This browser has agreed not to clear your progress from this device to free up space.';
+    if(!can)h+='This browser cannot guarantee saved progress, so rely on your progress link.';
+    else if(kept)h+='<b class="bk-app-ok">Kept.</b> This browser will not clear your progress to free up space.';
     else h+='Browsers can clear what a site has saved when space runs low or after a long time away. '+
-      (refused?'<b>The browser did not agree this time.</b> It is more likely to once the book is installed or bookmarked, so try again after that. Your progress link works either way.'
+      (refused?'<b>The browser declined.</b> It is more likely to agree once the book is installed or bookmarked. Your progress link works either way.'
         :'You can ask this one not to.')+'</p><p class="bk-app-line"><button type="button" data-bk-do="keep">Ask this browser to keep my progress</button>';
     h+='</p><p class="bk-app-line">';
     if(installed||justInstalled)h+='<b class="bk-app-ok">Installed.</b> The book opens in its own window and works offline.';

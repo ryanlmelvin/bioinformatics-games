@@ -527,7 +527,7 @@ function hintFor(){
     case 1:return 'Pick a scrap to start with, then look for one that overlaps it by two letters.';
     case 2:return 'One press can finish one code and start the next.';
     case 3:return 'A struck-through press re-opened a locker. Watch the display: what was the lock still holding?';
-    case 4:case 5:return `A dead end is not the end. Click a ${wDot()} that still has a light lit and type from there until you are back on it.`;
+    case 4:case 5:return `Click a ${wDot()} that still has a light lit and type from there until you are back on it.`;
     case 6:return `Walk until you dead-end. Then stitch a ${wLoop()} in wherever a light is still lit, and keep doing that until none are.`;
     case 7:return 'Where the tape begins matters now. Is there a locker that no other locker leads to?';
     default:return 'Find the locker that nothing leads to, and start there.';
@@ -824,7 +824,7 @@ function deadHTML(s,A,t){
 }
 function cardHTML(A,t){
   const L=I.L,s=t.join(''),N=I.codes.length,nFound=FINDS.filter(F=>S.found[F.id]).length;
-  if(L.id===1)return `<div class="card"><h3>You rebuilt it</h3><p><code>${s}</code>: ${N} scraps, each used once. That took trial and error. Keep the feeling in mind.</p><button class="primary" type="button" data-a="next">Next &rarr;</button></div>`;
+  if(L.id===1)return `<div class="card"><h3>You rebuilt it</h3><p><code>${s}</code>: ${N} scraps, each used once. That took trial and error.</p><button class="primary" type="button" data-a="next">Next &rarr;</button></div>`;
   let h=`<div class="card"><h3>Perfect tape</h3><p>${t.length} presses, ${N} lockers, nothing wasted. One ${has('seq')&&!news.includes('seq')?'k-mer':'code'} at a time would take ${I.naive}.`;
   if(L.id===2)h+=` No tape can be shorter: the first press cannot open anything, and each of the other ${N} opened a different locker.`;
   h+='</p>';

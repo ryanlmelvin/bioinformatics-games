@@ -198,7 +198,7 @@ def shared(output):
     d.add_paragraph('Use the games to explore an algorithm, connect its actions to technical vocabulary, and test your understanding with small examples and code. These resources support independent study, discussion groups and teaching.')
     d.add_heading('A suggested path',1)
     for _,slug,heading,topic,game,gamepath in UNITS:
-        d.add_paragraph(f'{heading}: {game} — {BASE}{gamepath}/',style='List Bullet')
+        d.add_paragraph(f'{heading}: {game}, {BASE}{gamepath}/',style='List Bullet')
     d.add_heading('Working through a topic',1)
     for text in [
       'Play the game and use its exploration guide to connect the game, the algorithm and the biological problem. Explain the terms in your own words.',

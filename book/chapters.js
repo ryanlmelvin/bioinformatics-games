@@ -7,7 +7,7 @@ window.BOOK={
      hue:'#b0324a',hook:'Ten genes switch on together. Somewhere upstream of each one sits the same short word, a little misspelled every time. Where is it?'},
     {n:2,slug:'genome-assembly',dir:'bridge-walker',key:'bridgewalker:v4',topic:'Genome assembly',game:'Bridge Walker',levels:12,terms:21,burst:'leaves',sfx:[['.node','step'],['.card','flick']],
      hue:'#1f8a9c',hook:'A genome leaves the sequencer as a heap of short, overlapping shreds. How do you put them back in order?',
-     side:{dir:'lockpick',key:'lockpick:v1',game:'Lockpick',burst:'keys',sfx:[['[data-k=A]','nA'],['[data-k=C]','nC'],['[data-k=G]','nG'],['[data-k=T]','nT']],keys:{a:'nA',c:'nC',g:'nG',t:'nT'},hook:'Side quest: one keypad, a wall of lockers, and no Enter key.'}},
+     side:{dir:'lockpick',key:'lockpick:v1',game:'Lockpick',burst:'keys',sfx:[['[data-k=A]','nA'],['[data-k=C]','nC'],['[data-k=G]','nG'],['[data-k=T]','nT']],keys:{a:'nA',c:'nC',g:'nG',t:'nT'},hook:'One keypad, a wall of lockers, and no Enter key.'}},
     {n:3,slug:'alignment',dir:'toll-city',key:'tollcity:v1',topic:'Sequence alignment',game:'Toll City',levels:11,terms:13,burst:'tickets',sfx:[['.stage svg','step']],
      hue:'#cf6a1c',hook:'Two sequences drifted apart, letter by letter. Which letters still belong opposite each other?'},
     {n:4,slug:'hmm',dir:'cho-han-night',key:'chohan:v1',topic:'Hidden Markov models',game:'Cho-Han Night',levels:11,terms:14,burst:'dice',sfx:[['.stage svg','clack']],
