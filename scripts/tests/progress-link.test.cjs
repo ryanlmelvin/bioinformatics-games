@@ -16,7 +16,7 @@ function boot(game,{search='?debug=1',hash='',saved=null,confirm}={}){
   vm.createContext(context);
   for(const [,code] of html.matchAll(/<script id="(?:engine|ui)">([\s\S]*?)<\/script>/g))vm.runInContext(code,context);
   const api=context.window[Object.keys(context.window).find(k=>k.startsWith('__'))];
-  return {api,el,writes,urls,persisted:()=>JSON.parse(storage),hash:()=>urls.length?urls[urls.length-1].slice(urls[urls.length-1].indexOf('#')):''};
+  return {api,el,writes,urls,persisted:()=>JSON.parse(storage),hash:()=>{const v=el('#saveLink').value;return v.slice(v.indexOf('#'));}};
 }
 /* a save as a student might leave it: the first half of the terms, levels 1, 2 and the last one finished */
 function someProgress(game,seed='MY CODE/7'){
@@ -32,7 +32,7 @@ for(const game of GAMES){
     for(let id=n;id>=1;id--){ui.api.loadLevel(id);assert.equal(ui.api.state().L.id,id);}
     assert.equal(ui.api.saved().badges.length,0);assert.deepEqual(plain(ui.api.saved().done),[]);
   });
-  test(game+': the address carries the progress, and opening it in an empty browser restores it',()=>{
+  test(game+': the progress link restores an empty browser, and the address is left clean',()=>{
     const {saved,n}=someProgress(game),home=boot(game,{saved}),link=home.hash();
     assert.match(link,/^#save=1\.[0-9a-z]+\.[01]+\.[0-9a-z]+\..+$/);
     assert.equal(home.el('#saveLink').value,'https://example.test/'+game+'/?debug=1'+link);
@@ -43,6 +43,7 @@ for(const game of GAMES){
     assert.equal(away.el('#linkNote').hidden,false);
     assert(S.log.some(e=>e.ev==='restore'&&e.terms.length===saved.badges.length));
     assert.equal(away.hash(),link,'the restored page offers the same link');
+    assert.deepEqual(away.urls,['/'+game+'/?debug=1'],'the link is taken out of the address once read');assert.equal(home.urls.length,0);assert.equal(S.link,link.slice(6),'the save records its own link for the front page');
     assert.equal(away.api.state().L.id,3,'opens on the first unfinished level');assert.equal(away.el('#copyLinkTop').hidden,true);
     away.el('#copyLinkTop').hidden=true;away.api.saved().done.push(3);away.el('#restart').click();
     assert.match(away.el('#linkNoteText').textContent,/progress link has changed/);assert.equal(away.el('#copyLinkTop').hidden,false);
@@ -88,8 +89,8 @@ for(const game of GAMES){
     const ui=boot(game,{search:'?debug=1&level=2',hash:link});
     assert.equal(ui.api.saved().badges.length,0);assert.equal(ui.urls.length,0);assert.equal(ui.writes.length,0);assert.equal(ui.el('#savebar').hidden,true);
   });
-  test(game+': ?seed= starts that puzzle code and then moves it into the progress link',()=>{
+  test(game+': ?seed= starts that puzzle code, and the progress link carries it',()=>{
     const ui=boot(game,{search:'?debug=1&seed=CLASS'});
-    assert.equal(ui.api.saved().seed,'CLASS');assert.match(ui.urls[ui.urls.length-1],/^\/[a-z-]+\/\?debug=1#save=.*\.CLASS$/);
+    assert.equal(ui.api.saved().seed,'CLASS');assert.match(ui.el('#saveLink').value,/\/[a-z-]+\/\?debug=1#save=.*\.CLASS$/);assert.equal(ui.urls.length,0);
   });
 }

@@ -197,6 +197,9 @@ footer input{font:inherit;width:9em;padding:5px 8px;border:1px solid var(--line)
 </style>
 <link rel="icon" href="../book/favicon.svg" type="image/svg+xml">
 <link rel="stylesheet" href="../book/book.css">
+<link rel="manifest" href="../manifest.webmanifest">
+<meta name="theme-color" content="#1d2a3a">
+<link rel="apple-touch-icon" href="../book/icon-180.png">
 </head>
 <body>
 <div class="wrap" id="app">
@@ -259,9 +262,10 @@ footer input{font:inherit;width:9em;padding:5px 8px;border:1px solid var(--line)
   </details>
 
   <div class="savebar" id="savebar">
-    <p><b>Keep your vocabulary.</b> Every level is open, in any order. The terms are the part you earn, by finishing levels. This browser remembers them, and so does your progress link: copy it and keep it somewhere you will find it again (email it to yourself). Opening the link in any browser, on any device, brings back your earned terms and finished levels.</p>
+    <p><b>Keep your vocabulary.</b> Every level is open, in any order. The terms are the part you earn, by finishing levels. This browser remembers them, and so does your progress link: copy it and keep it somewhere you will find it again (email it to yourself). Opening the link in any browser, on any device, brings back your earned terms and finished levels. The <a href="../#keep">front page of the book</a> has one link that covers every chapter.</p>
     <div class="saverow"><input id="saveLink" readonly aria-label="Your progress link"><button id="copyLink">Copy progress link</button></div>
     <p class="savenote" id="saveNote" role="status"></p>
+    <div data-bk-app></div>
   </div>
   <footer>
     <label for="seed">Puzzle code</label>
@@ -634,12 +638,13 @@ const requestedLevel=Number(params.get('level'));
 const previewLevel=Number.isInteger(requestedLevel)&&requestedLevel>=1&&requestedLevel<=LEVELS.length?requestedLevel:0;
 const BENCH=params.get('bench')==='1';
 function load(){try{return JSON.parse(localStorage.getItem(KEY))||{};}catch(e){return {};}}
-function save(){if(previewLevel||BENCH)return;try{localStorage.setItem(KEY,JSON.stringify(S));}catch(e){}writeLink();}
+function save(){if(previewLevel||BENCH)return;if(S&&S.done)S.link=encodeProgress(S);try{localStorage.setItem(KEY,JSON.stringify(S));}catch(e){}writeLink();}
 function freshState(seed){return {seed,unlocked:1,done:[],badges:[],earnedAt:{},variants:{},log:[]};}
 function randomCode(){const c='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';let s='';for(let i=0;i<6;i++)s+=c[Math.floor(Math.random()*c.length)];return s;}
 /* ---------- progress link ----------
-   Every level is open; only the vocabulary is earned. Earned terms and finished levels ride in the address as
-   #save=1.<terms>.<levels>.<check>.<puzzle code>, so a copied link restores them in any browser.
+   Every level is open; only the vocabulary is earned. The progress link is this page's address plus
+   #save=1.<terms>.<levels>.<check>.<puzzle code>; opening it restores the earned terms and finished levels in any browser.
+   The page's own address stays clean, so that sharing the address of the game never hands over someone's progress.
    <terms> has one character per VOCAB entry, in VOCAB order: 0 for not earned, otherwise the level it was earned in (base 36).
    <levels> has one 0 or 1 per level. Old links depend on those orders: add new terms and levels at the end. */
 const TRANSIENT=!!(previewLevel||BENCH||params.get('bench'));
@@ -691,7 +696,6 @@ function progressLink(){
 function writeLink(){
   if(TRANSIENT||!S||!S.done)return;
   const rel=progressLink();if(rel===lastLink)return;lastLink=rel;
-  try{if(typeof history!=='undefined'&&history.replaceState)history.replaceState(null,'',rel);}catch(e){}
   const box=$('#saveLink');if(box)box.value=(location.origin||'')+rel;
   if(linkLive)topNote('Your progress link has changed. Copy it again before you leave, so your backup is up to date.',true);
 }
@@ -1412,16 +1416,18 @@ $('#skip').onclick=()=>act('skip');
 if(TRANSIENT)$('#savebar').hidden=true;
 else{
   if(linkNote)topNote(linkNote,false);
+  /* the link has been read: take it (and any ?seed= it overrode) out of the address */
+  if(linkText){try{const q=new URLSearchParams(location.search);q.delete('seed');const qs=q.toString();history.replaceState(null,'',location.pathname+(qs?'?'+qs:''));}catch(e){}}
   linkLive=true;
   $('#saveLink').onclick=()=>{const b=$('#saveLink');if(b.select)b.select();};
   $('#copyLink').onclick=$('#copyLinkTop').onclick=()=>{
     const b=$('#saveLink'),tell=(text,again)=>{$('#saveNote').textContent=text;topNote(text,again);},
       ok=()=>tell('Copied. Paste it somewhere you will find it again. It changes each time you earn a term, so copy it again when you stop.',false),
       byHand=()=>{if(b.select)b.select();let done=false;try{done=document.execCommand('copy');}catch(e){}
-        if(done)ok();else tell('Could not copy for you. Copy the address of this page instead: it is the same link.',true);};
+        if(done)ok();else tell('Could not copy for you. Select the link in the box at the bottom of this page and copy it by hand.',true);};
     if(typeof navigator!=='undefined'&&navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(b.value).then(ok,byHand);else byHand();
   };
-  window.addEventListener&&window.addEventListener('hashchange',()=>{if(location.pathname+location.search+location.hash!==lastLink)location.reload();});
+  window.addEventListener&&window.addEventListener('hashchange',()=>{if(/^#save=/.test(location.hash))location.reload();});
 }
 $('#seed').value=S.seed;
 $('#setSeed').onclick=()=>{const v=$('#seed').value.trim();if(!v||v===S.seed)return;S=freshState(v);save();cur=null;loadLevel(previewLevel||1);};

@@ -179,3 +179,14 @@ button.bk-begin:focus-visible{outline:3px solid var(--bk-gold);outline-offset:3p
   .bk-toast,body.bk-game button,body.bk-game .pips button{transition:none}
 }
 @media print{.bk-bar,.bk-after,.bk-cover,.bk-toast,.bk-confetti{display:none!important}}
+
+/* the book as an app: install and keep-my-progress, wherever a page leaves a data-bk-app slot */
+.bk-app{margin-top:12px;padding-top:10px;border-top:1px dashed var(--line,var(--bk-line));font-size:.9rem;color:var(--muted,var(--bk-dim))}
+.bk-app-line{margin:0 0 8px}
+.bk-app-line:last-child{margin-bottom:0}
+.bk-app b{color:var(--ink,var(--bk-ink))}
+.bk-app .bk-app-ok{color:#2e7d4f}
+@media (prefers-color-scheme:dark){.bk-app .bk-app-ok{color:#6fcf97}}
+.bk-app button{font:inherit;font-weight:600;margin-right:8px;padding:7px 13px;border-radius:9px;cursor:pointer;border:1px solid var(--line,var(--bk-line));background:var(--panel,var(--bk-card));color:var(--ink,var(--bk-ink))}
+.bk-app button:hover{border-color:var(--accent,var(--bk-link))}
+@media print{.bk-app{display:none}}

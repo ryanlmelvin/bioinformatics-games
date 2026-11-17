@@ -1,0 +1,16 @@
+{
+  "name": "Bioinformatics Algorithms: a playable textbook",
+  "short_name": "Bio Algorithms",
+  "description": "Seven chapters, seven games. Meet a real problem from genomics, work out the algorithm yourself, and only then learn its name.",
+  "id": "./",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#1d2a3a",
+  "theme_color": "#1d2a3a",
+  "icons": [
+    {"src": "book/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any"},
+    {"src": "book/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any"},
+    {"src": "book/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable"}
+  ]
+}

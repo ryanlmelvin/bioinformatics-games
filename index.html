@@ -7,6 +7,9 @@
 <meta name="description" content="Seven chapters, seven games. Meet a real problem from genomics, work out the algorithm yourself, and only then learn its name.">
 <link rel="icon" href="book/favicon.svg" type="image/svg+xml">
 <link rel="stylesheet" href="book/book.css">
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#1d2a3a">
+<link rel="apple-touch-icon" href="book/icon-180.png">
 <style>
 *{box-sizing:border-box}
 body{margin:0;background:var(--bk-paper);color:var(--bk-ink);font:17px/1.6 var(--bk-sans)}
@@ -87,6 +90,19 @@ section{padding:46px 0}
 .gtools{display:flex;flex-wrap:wrap;gap:12px;align-items:center;margin-bottom:16px}
 .gtools input{font:inherit;min-width:min(320px,100%);padding:9px 14px;border:1px solid var(--bk-line);border-radius:10px;background:var(--bk-card);color:var(--bk-ink)}
 .gcount{color:var(--bk-dim);font-size:.9rem}
+.keep{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px}
+.kcard{padding:18px;border:1px solid var(--bk-line);border-radius:14px;background:var(--bk-card);font-size:.93rem;min-width:0}
+.kcard h3{font-size:1.15rem;margin-bottom:8px}
+.kcard p{margin:0 0 10px;color:var(--bk-dim)}
+.krow{display:flex;flex-wrap:wrap;gap:8px}
+.krow input{flex:1 1 12em;min-width:0;font:inherit;font-size:.85rem;padding:8px 10px;border:1px solid var(--bk-line);border-radius:9px;background:var(--bk-paper);color:var(--bk-ink)}
+.krow button{font:inherit;font-weight:600;padding:8px 14px;border-radius:9px;cursor:pointer;border:1px solid var(--bk-link);background:var(--bk-link);color:#fff}
+.knote{margin:10px 0 0!important;color:var(--bk-ink)!important}
+.knote:empty{display:none}
+.kcard .bk-app{margin-top:0;padding-top:0;border-top:0;font-size:inherit}
+.restoring{margin:0 0 18px;padding:12px 16px;border:1px solid #2e7d4f;border-radius:12px;background:var(--bk-card)}
+.restoring[hidden]{display:none}
+@media print{#keep{display:none}}
 .ggroup{margin:0 0 22px}
 .ggroup h3{font-size:1.15rem;margin-bottom:8px;display:flex;align-items:center;gap:10px}
 .ggroup h3 i{width:10px;height:10px;border-radius:3px;background:var(--h);transform:rotate(45deg)}
@@ -137,13 +153,27 @@ footer{padding:26px 0 50px;border-top:1px solid var(--bk-line);color:var(--bk-di
   <noscript><p>The contents list needs JavaScript. The games are at motif-slots/, bridge-walker/, toll-city/, cho-han-night/, hollow-mountain/, paint-by-k/ and the-loom/.</p></noscript>
 </section>
 
+<section id="keep" aria-labelledby="keepT">
+  <div class="sechead"><h2 id="keepT">Keep your place</h2><p>What you earn is saved in this browser. Here is how to make sure it stays there, and how to take it with you.</p></div>
+  <p class="restoring" id="restoring" role="status" hidden></p>
+  <div class="keep">
+    <div class="kcard"><h3>Your book link</h3><p id="bookText"></p>
+      <div class="krow" id="bookRow"><input id="bookLink" readonly aria-label="Your book link"><button type="button" id="copyBook">Copy book link</button></div>
+      <p class="knote" id="bookNote" role="status"></p></div>
+    <div class="kcard"><h3>Bring progress here</h3><p>Paste a book link, or one chapter’s progress link, to add what it holds to this browser. Nothing already here is removed.</p>
+      <div class="krow"><input id="pasteLink" aria-label="A book link or a progress link" placeholder="Paste a link" autocomplete="off" spellcheck="false"><button type="button" id="usePaste">Restore</button></div>
+      <p class="knote" id="pasteNote" role="status"></p></div>
+    <div class="kcard"><h3>On this device</h3><div data-bk-app></div></div>
+  </div>
+</section>
+
 <section id="glossary" aria-labelledby="glT">
-  <div class="sechead"><h2 id="glT">Your glossary</h2><p>Every term here is one you earned in a game. It lives in this browser and grows as you play.</p></div>
+  <div class="sechead"><h2 id="glT">Your glossary</h2><p>Every term here is one you earned in a game. It grows as you play, and your book link brings it back in any browser.</p></div>
   <div id="gloss"></div>
 </section>
 </div>
 </main>
-<footer><div class="page">Your progress and your glossary are stored only in this browser, on this device. Each game also keeps a puzzle code and a move log you can download.</div></footer>
+<footer><div class="page">Your progress and your glossary are stored in this browser, on this device; your book link, under Keep your place, carries them to any other. Each game also keeps a puzzle code and a move log you can download.</div></footer>
 
 <script src="book/chapters.js"></script>
 <script src="book/book.js"></script>
@@ -161,7 +191,7 @@ const state=B.chapters.map(c=>{
   const got=s&&Array.isArray(s.badges)?Math.min(s.badges.length,c.terms):0;
   // levels are open in any order, so the reader's place is how many they have finished (older saves only say how far they had reached)
   const fin=!s?0:Math.min(c.levels,Array.isArray(s.done)?s.done.length:Math.max(0,(s.unlocked||1)-1));
-  return {c,started:!!s,got,fin,done:got>=c.terms,terms};
+  return {c,started:!!s,got,fin,done:got>=c.terms,terms,link:s&&typeof s.link==='string'&&(got||fin)?s.link:''};
 });
 
 $('#shelf').innerHTML=doc('materials/learning-guide.docx','Learning guide')+doc('materials/suggested-investigations.docx','Suggested investigations')+doc('materials/presentation-checklist.docx','Presenting an algorithm');
@@ -187,6 +217,52 @@ $('#overall').textContent=got?got+' of '+total+' terms earned across the book.':
 const last=read('book:last',null),lastSt=last&&state.find(s=>s.c.dir===last.dir&&s.started&&!s.done);
 const nextUp=lastSt||state.find(s=>s.started&&!s.done)||state.find(s=>!s.started);
 if(nextUp&&got){const r=$('#resume');r.href=nextUp.c.dir+'/';r.textContent=nextUp.started?'Continue '+nextUp.c.game:'Start chapter '+nextUp.c.n+': '+nextUp.c.game;}
+
+// one link for the whole book: each game's save records its own progress link, and the book link strings them together
+// as #book=1/<game folder>:<that game's link>/... Opening it hands each part to its game, which checks and adds it.
+const mark=(key,body)=>{const s=key+'|'+body;let h=2166136261>>>0;for(let i=0;i<s.length;i++){h^=s.charCodeAt(i);h=Math.imul(h,16777619);}return (h>>>0).toString(36);};
+function sound(c,enc){const m=/^1\.([0-9a-z]+)\.([01]+)\.([0-9a-z]+)\.(.+)$/.exec(enc||'');if(!m)return false;
+  let seed;try{seed=decodeURIComponent(m[4]);}catch(e){return false;}return mark(c.key,'1.'+m[1]+'.'+m[2]+'.'+seed)===m[3];}
+const held=()=>B.chapters.reduce((n,c)=>{const s=read(c.key,null);return n+(s&&Array.isArray(s.badges)?s.badges.length:0)+(s&&Array.isArray(s.done)?s.done.length:0);},0);
+const parts=state.filter(s=>s.link).map(s=>s.c.dir+':'+s.link);
+if(parts.length){$('#bookLink').value=location.origin+location.pathname+'#book=1/'+parts.join('/');
+  $('#bookText').textContent='One link for everything you have earned, in '+(parts.length===1?'the one chapter':'all '+parts.length+' chapters')+' you have played. Copy it and keep it somewhere you will find it again (email it to yourself). It changes as you earn more, so copy it again when you stop.';}
+else{$('#bookRow').hidden=true;$('#bookText').textContent='Nothing to back up yet. Finish a level in any chapter and your link appears here.';}
+$('#bookLink').onclick=()=>$('#bookLink').select();
+$('#copyBook').onclick=()=>{const b=$('#bookLink'),ok=()=>{$('#bookNote').textContent='Copied. Paste it somewhere you will find it again.';},
+  byHand=()=>{b.select();let done=false;try{done=document.execCommand('copy');}catch(e){}if(done)ok();else $('#bookNote').textContent='Could not copy for you: the link is selected, so copy it by hand.';};
+  if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(b.value).then(ok,byHand);else byHand();};
+function restoreBook(text,say){
+  const want=[];let bad=0;
+  text.split('/').filter(Boolean).forEach(p=>{const i=p.indexOf(':'),c=B.chapters.find(c=>c.dir===p.slice(0,i)),enc=p.slice(i+1);if(c&&sound(c,enc))want.push({c,enc});else bad++;});
+  if(!want.length){say('That link is incomplete or has been changed, so nothing was restored from it. Copy the whole link and try again.');return;}
+  const before=held(),lastRead=localStorage.getItem('book:last');let i=0;
+  (function next(){
+    if(i>=want.length){
+      try{if(lastRead==null)localStorage.removeItem('book:last');else localStorage.setItem('book:last',lastRead);}catch(e){}
+      const n=held()-before;
+      try{sessionStorage.setItem('book:restored',(n?'Restored from your link: '+n+' new term'+(n===1?'':'s')+' and finished level'+(n===1?'':'s')+' added to this browser.':'That link held nothing this browser did not already have.')+
+        (bad?' '+(bad===1?'One part of the link was damaged and was skipped.':bad+' parts of the link were damaged and were skipped.'):''));}catch(e){}
+      history.replaceState(null,'',location.pathname+location.search+'#keep');location.reload();return;
+    }
+    const w=want[i++],f=document.createElement('iframe');let over=false;
+    say('Restoring chapter '+w.c.n+': '+w.c.game+' …');
+    const go=()=>{if(over)return;over=true;clearTimeout(t);f.remove();next();},t=setTimeout(go,12000);
+    f.setAttribute('aria-hidden','true');f.tabIndex=-1;f.style.cssText='position:fixed;left:-9999px;top:0;width:900px;height:700px;border:0;visibility:hidden';
+    f.onload=()=>setTimeout(go,60);f.src=w.c.dir+'/#save='+w.enc;document.body.appendChild(f);
+  })();
+}
+const banner=text=>{const r=$('#restoring');r.textContent=text;r.hidden=false;};
+// a pasted link is only ever read for its progress: the page never goes to the address in it
+$('#usePaste').onclick=()=>{const v=$('#pasteLink').value.trim(),say=text=>{$('#pasteNote').textContent=text;};
+  const bk=/#book=1\/(.+)$/.exec(v),one=/\/([a-z-]+)\/(?:index\.html)?(?:\?[^#]*)?#save=(.+)$/.exec(v);
+  if(bk)restoreBook(bk[1],say);else if(one)restoreBook(one[1]+':'+one[2],say);
+  else say(v?'That does not look like a link from this book. Paste the whole link, from https to the end.':'Paste a link first.');};
+$('#pasteLink').addEventListener('keydown',e=>{if(e.key==='Enter')$('#usePaste').click();});
+try{const told=sessionStorage.getItem('book:restored');if(told){sessionStorage.removeItem('book:restored');banner(told);}}catch(e){}
+const opened=/^#book=1\/(.+)$/.exec(location.hash);
+if(opened)restoreBook(opened[1],banner);
+window.addEventListener('hashchange',()=>{const m=/^#book=1\/(.+)$/.exec(location.hash);if(m)restoreBook(m[1],banner);});
 
 // the glossary
 function gloss(q){

@@ -231,6 +231,49 @@ function gamePage(){
   if(foot)foot.before(after);else wrap.append(after);
 }
 
-function start(){bar();if(!home)gamePage();document.documentElement.classList.add('bk-ready');}
+/* ---------- the book as an app: offline copy, install, and a promise from the browser to keep saved progress ----------
+   Any element marked data-bk-app is filled with the reader's options on this device. Nothing here reads a game's state. */
+function app(){
+  if(window.top!==window)return;                       // a page loaded inside another (the front page restoring a link) stays quiet
+  const local=/^(localhost|127\.0\.0\.1|\[::1\])$/.test(location.hostname);
+  if('serviceWorker' in navigator&&(location.protocol==='https:'||local))navigator.serviceWorker.register(base+'sw.js').catch(()=>{});
+  const slots=[...document.querySelectorAll('[data-bk-app]')];if(!slots.length)return;
+  const ua=navigator.userAgent,ios=/iPad|iPhone|iPod/.test(ua)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1),
+    safari=/^((?!chrome|chromium|android|crios|fxios|edg).)*safari/i.test(ua),
+    installed=matchMedia('(display-mode: standalone)').matches||navigator.standalone===true,
+    can=!!(navigator.storage&&navigator.storage.persist&&navigator.storage.persisted);
+  let offer=null,kept=null,refused=false,justInstalled=false;
+  function draw(){
+    let h='<p class="bk-app-line">';
+    if(!can)h+='This browser cannot promise to keep saved progress, so rely on your progress link.';
+    else if(kept)h+='<b class="bk-app-ok">Kept.</b> This browser has agreed not to clear your progress from this device to free up space.';
+    else h+='Browsers can clear what a site has saved when space runs low or after a long time away. '+
+      (refused?'<b>The browser did not agree this time.</b> It is more likely to once the book is installed or bookmarked, so try again after that. Your progress link works either way.'
+        :'You can ask this one not to.')+'</p><p class="bk-app-line"><button type="button" data-bk-do="keep">Ask this browser to keep my progress</button>';
+    h+='</p><p class="bk-app-line">';
+    if(installed||justInstalled)h+='<b class="bk-app-ok">Installed.</b> The book opens in its own window and works offline.';
+    else if(offer)h+='<button type="button" data-bk-do="install">Install the book as an app</button> It opens in its own window and works offline.';
+    else if(ios)h+='<b>To install on an iPhone or iPad:</b> tap Share, then Add to Home Screen. The installed book starts empty, so copy your book link first and paste it into the installed book’s front page.';
+    else if(safari)h+='<b>To install in Safari on a Mac:</b> File menu, then Add to Dock. The installed book starts empty, so copy your book link first and paste it into the installed book’s front page.';
+    else h+='If your browser’s menu offers Install or Add to Home Screen, the book can be installed and used offline.';
+    h+='</p>';
+    slots.forEach(s=>{s.classList.add('bk-app');s.innerHTML=h;});
+  }
+  function keep(byHand){
+    if(!can)return;
+    navigator.storage.persist().then(ok=>{kept=ok;if(byHand)refused=!ok;draw();},()=>{if(byHand){refused=true;draw();}});
+  }
+  document.addEventListener('click',ev=>{
+    const b=ev.target.closest&&ev.target.closest('[data-bk-do]');if(!b)return;
+    if(b.dataset.bkDo==='keep')keep(true);
+    else if(b.dataset.bkDo==='install'&&offer){const o=offer;offer=null;o.prompt();Promise.resolve(o.userChoice).then(()=>draw(),()=>draw());}
+  });
+  window.addEventListener('beforeinstallprompt',ev=>{ev.preventDefault();offer=ev;draw();});
+  window.addEventListener('appinstalled',()=>{offer=null;justInstalled=true;draw();keep(false);});
+  draw();
+  if(can)navigator.storage.persisted().then(v=>{kept=v;draw();if(!v&&installed)keep(false);},()=>{});
+}
+
+function start(){bar();if(!home)gamePage();app();document.documentElement.classList.add('bk-ready');}
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',start);else start();
 })();
