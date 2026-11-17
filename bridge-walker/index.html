@@ -592,7 +592,7 @@ const LEVELS=[
   {id:7,mode:'eul',k:3,n:16,minB:3,title:'Archipelago',
    brief:'Sixteen reads, sixteen one-way edges. Where '+ANT+' starts matters, and so does what '+ANT+' does when stranded.'},
   {id:8,mode:'balance',title:'Round trip',
-   brief:'No DNA this time: a small graph with numbered nodes. '+ANT+' wants a round trip that crosses every edge once and ends where it began. For that, every node needs as many edges arriving as leaving. Add the fewest new edges that achieve this. Click the node a new edge should leave, then the node it should enter.'},
+   brief:'No DNA this time: a small graph with numbered nodes. '+ANT+' wants a round trip that crosses every edge once and ends where it began. For that, every node needs as many edges arriving as leaving. Add the fewest new edges that achieve this.'},
   {id:9,mode:'eul',k:4,n:10,minB:2,build:true,title:'Draw the map yourself',
    brief:'Ten reads, four letters each. Until now the game drew the edge map for you. This time you draw it. Each read is one edge, from the node named by its first three letters to the node named by its last three. Pick a read, then click where its edge starts and where it ends: an existing node, or open water to raise a new one.'},
   {id:10,mode:'eul',k:4,n:12,minB:2,nomap:true,title:'No map',
@@ -890,10 +890,10 @@ function loadLevel(id){
     }
   }
   if(L.intro&&!S.intros.includes(L.id))cur.phase='pre';
-  if(L.mode==='cards'){cur.chain=[];say('Click a read to start your chain.');}
+  if(L.mode==='cards'){cur.chain=[];say('');}
   else if(L.mode==='ham'){
     cur.path=[];
-    say(cur.phase==='pre'?'Your eight shredded reads.':startMsg());
+    say(cur.phase==='pre'?'':startMsg());
     if(L.id===4)cur.skipTimer=setTimeout(()=>{cur.skipOK=true;renderControls();},45000);
   }else if(L.mode==='balance'){
     say('Click the node a new edge should leave from.');
@@ -936,7 +936,7 @@ function cardClick(i){
 function settleCards(moved){
   const r=cur.inst.reads,n=r.length,c=cur.chain;
   if(c.length===n)return complete();
-  if(!c.length)return say('Click a read to start your chain.');
+  if(!c.length)return say('');
   const last=r[c[c.length-1]];
   if(!r.some((x,i)=>!c.includes(i)&&fits(last,x))){
     if(moved){cur.strands++;log('dead_end',{at:last,placed:c.length});}

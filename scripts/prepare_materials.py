@@ -246,6 +246,7 @@ def shared(output):
       'Work the discussion questions, preferably with a group. Some of the optional activities need a partner or a board game.',
       'Code the suggested Rosalind problems, using their input and output formats. Each topic also lists easier warm-ups and a harder extension.',
       'Do each pen-and-paper task before running your code on the same input. If the results differ, find out why. Some problems have more than one correct answer.',
+      'Review the vocabulary with the Pictionary cards, which have one card for each term in the game. Print them and cut them apart. One person draws a term without letters, numbers or symbols, and the group guesses it. A wrong guess shows which terms the group confuses.',
       'Present one algorithm to someone else, following the presentation checklist.'
     ]: d.add_paragraph(text,style='List Bullet')
     d.add_heading('Investigations',1)

@@ -19,5 +19,7 @@ window.BOOK={
     {n:7,slug:'burrows-wheeler',dir:'the-loom',key:'theloom:v1',topic:'Read mapping with the Burrows–Wheeler transform',short:'Read mapping',game:'The Loom',levels:11,terms:11,burst:'threads',sfx:[['.stage svg','pluck'],['.strip','pluck']],
      hue:'#a4472f',hook:'Find where a read occurs in a genome of three billion letters without scanning the genome.'}
   ],
-  resources:[['play-guide','Exploration guide'],['discussion-questions','Discussion questions'],['coding-and-paper-tasks','Coding and pen-and-paper tasks']]
+  resources:[['play-guide','Exploration guide'],['discussion-questions','Discussion questions'],['coding-and-paper-tasks','Coding and pen-and-paper tasks'],
+    // a third entry is a sentence shown beside the link on the chapter page
+    ['pictionary-cards','Pictionary cards','One card for each term in the game. Print them and cut them apart. One person draws a term without letters, numbers or symbols, and the group guesses it.']]
 };

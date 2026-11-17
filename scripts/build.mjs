@@ -6,7 +6,7 @@ const root=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..');
 const output=path.join(root,'_site');
 // Only these reviewed learning resources are public. Never copy whole material folders.
 const units=['motifs','genome-assembly','alignment','hmm','evolutionary-trees','clustering','burrows-wheeler'];
-const resources=['play-guide','discussion-questions','coding-and-paper-tasks'];
+const resources=['play-guide','discussion-questions','coding-and-paper-tasks','pictionary-cards'];
 const publicFiles=['index.html','motif-slots/index.html','bridge-walker/index.html','toll-city/index.html','hollow-mountain/index.html',
   'paint-by-k/index.html','the-loom/index.html','cho-han-night/index.html','lockpick/index.html',
   ...units.flatMap(unit=>resources.map(resource=>`materials/${unit}-${resource}.docx`)),
