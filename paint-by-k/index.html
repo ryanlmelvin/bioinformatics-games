@@ -156,6 +156,8 @@ footer input{font:inherit;width:9em;padding:5px 8px;border:1px solid var(--line)
   .guide summary,#printGuide{display:none}
 }
 </style>
+<link rel="icon" href="../book/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="../book/book.css">
 </head>
 <body>
 <div class="wrap">
@@ -1289,5 +1291,7 @@ if(params.get('debug'))window.__pk={state:()=>cur,saved:()=>S,loadLevel,levels:(
  vocab:()=>VOCAB.map(v=>({id:v.id,name:v.name})),earned:()=>S.badges.slice(),log:()=>S.log.slice(),act,go:goNext,undo,preview:()=>previewLevel};
 })();
 </script>
+<script src="../book/chapters.js"></script>
+<script src="../book/book.js"></script>
 </body>
 </html>

@@ -181,7 +181,11 @@ footer input{font:inherit;width:9em;padding:5px 8px;border:1px solid var(--line)
   .guide summary,#printGuide{display:none}
   .guide a{color:#000}
 }
+/* ambient life in the scenery; never needed to play */
+@media (prefers-reduced-motion:no-preference){.star{animation:twinkle 3.4s ease-in-out infinite}.star:nth-of-type(3n){animation-delay:-1.2s}.star:nth-of-type(4n+1){animation-duration:4.6s;animation-delay:-2.3s}.star:nth-of-type(5n+2){animation-duration:2.4s}@keyframes twinkle{50%{opacity:.25}}}
 </style>
+<link rel="icon" href="../book/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="../book/book.css">
 </head>
 <body>
 <div class="wrap" id="app">
@@ -1324,5 +1328,7 @@ if(params.get('debug'))window.__hm={state:()=>cur,saved:()=>S,loadLevel,act,leve
   vocab:()=>VOCAB.map(v=>({id:v.id,name:v.name})),earned:()=>S.badges.slice(),log:()=>S.log.slice(),render};
 })();
 </script>
+<script src="../book/chapters.js"></script>
+<script src="../book/book.js"></script>
 </body>
 </html>

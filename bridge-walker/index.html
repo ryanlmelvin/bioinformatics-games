@@ -214,7 +214,11 @@ footer input{font:inherit;width:9em;padding:5px 8px;border:1px solid var(--line)
   .guide a{color:#000}
   .gmeta{color:#333}
 }
+/* ambient life in the scenery; never needed to play */
+@media (prefers-reduced-motion:no-preference){.wv{animation:swell 5s ease-in-out infinite alternate}.wv2{animation:swell 3.6s ease-in-out -1.5s infinite alternate}@keyframes swell{from{transform:translate(-5px,1px)}to{transform:translate(6px,-2px)}}}
 </style>
+<link rel="icon" href="../book/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="../book/book.css">
 </head>
 <body>
 <div class="wrap">
@@ -1704,5 +1708,7 @@ if(params.get('debug'))window.__bw={state:()=>cur,saved:()=>S,nodeClick,cardClic
   buildPick,buildClick,candClick,balRemove,choosePairAnswer,pairSplitFrame,skip:()=>$('#skip').click()};
 })();
 </script>
+<script src="../book/chapters.js"></script>
+<script src="../book/book.js"></script>
 </body>
 </html>

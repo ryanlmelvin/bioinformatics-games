@@ -19,7 +19,7 @@ Also here:
 
 The public handouts are adapted editions of the current teaching masters, which remain outside this repository. Course numbers, dates, grading, submission instructions, and enrollment-specific requirements are removed; exercises, figures, examples and problem links are retained. Group activities include enough instructions to use them independently. Do not replace public editions with raw classroom files.
 
-To regenerate the handouts and topic index, install `python-docx` in an authoring environment and run:
+To regenerate the handouts, install `python-docx` in an authoring environment and run:
 
 ```sh
 python scripts/prepare_materials.py /path/to/GameFirstImplementation /path/to/bioinformatics_games
@@ -27,11 +27,13 @@ python scripts/prepare_materials.py /path/to/GameFirstImplementation /path/to/bi
 
 The script reads only the exploration, group-discussion and code-and-paper masters for the seven named topic folders. The three shared documents are maintained in the script. Check regenerated documents for course-specific language and render every page to inspect layout before publishing; source changes can require updating the adaptation rules.
 
-Every game is one self-contained `index.html` (inline styles and artwork, an `engine` script with the puzzle generators and solvers, and a `ui` script), with its tests beside it in `tests/`. A puzzle code can be supplied with `?seed=`, `?level=N` opens a fresh practice session that never touches saved progress, `?bench=1` opens the game's workbench (the six newer games), and `?debug=1` exposes the test handle.
+The site reads as a playable textbook. `index.html` is the front page: a table of contents with a cover for every chapter, the reader's progress, and a glossary of the terms they have earned (both read from the browser's own storage). `book/` holds the shell every page shares: `chapters.js` (the contents: order, titles, hooks, level and term counts, each game's storage key), `book.css` and `book.js` (the chapter bar, the chapter cover shown before a first play, level and vocabulary styling, synthesised sound with a mute button, and the celebration when a level is completed), and `art/` (one hand-drawn SVG cover per game). The shell only watches the page; it never reads or changes a game's state, and a game still plays if the shell fails to load. Chapter hooks ask the question only, because the games name the algorithms.
+
+Every game is one `index.html` (inline styles and artwork, an `engine` script with the puzzle generators and solvers, and a `ui` script), with its tests beside it in `tests/`. A puzzle code can be supplied with `?seed=`, `?level=N` opens a fresh practice session that never touches saved progress, `?bench=1` opens the game's workbench (the six newer games), and `?debug=1` exposes the test handle.
 
 Run `node --test */tests/*.test.cjs` and `node scripts/build.mjs` to check and prepare `_site/`. Serve that folder with any static HTTP server. The games and site build have no package dependencies; Python is only needed to regenerate the Word downloads.
 
-Push to `main` to test and publish through the GitHub Pages workflow. Verify the successful workflow and live page after publishing. To add a game or material, add its link to the home-page generator in `scripts/prepare_materials.py` and its public files to `scripts/build.mjs`.
+Push to `main` to test and publish through the GitHub Pages workflow. Verify the successful workflow and live page after publishing. To add a game or material, add it to `book/chapters.js`, draw its cover in `book/art/`, link the shell from the game's `<head>` and end of `<body>` as the other games do, and add its public files to `scripts/build.mjs`. If a game's level or term count changes, update `book/chapters.js` to match.
 
 Instructor keys, runs of show, assessment plans, quizzes and hand checks stay outside this repository. `.gitignore` and the explicit public-file list in `scripts/build.mjs` guard against publishing them by accident. The build never copies the source-materials directory or the repository wholesale.
 
