@@ -1,6 +1,6 @@
 /* Open levels and the progress link, checked the same way in every game. */
 const test=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('node:vm'),path=require('node:path');
-const GAMES=['bridge-walker','motif-slots','toll-city','hollow-mountain','paint-by-k','the-loom','cho-han-night'];
+const GAMES=['bridge-walker','motif-slots','toll-city','hollow-mountain','paint-by-k','the-loom','cho-han-night','long-distance'];
 function boot(game,{search='?debug=1',hash='',saved=null,confirm}={}){
   const html=fs.readFileSync(path.join(__dirname,'../..',game,'index.html'),'utf8');
   const elements=new Map(),writes=[],urls=[];

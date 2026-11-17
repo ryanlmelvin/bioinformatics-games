@@ -8,13 +8,13 @@ const output=path.join(root,'_site');
 const units=['motifs','genome-assembly','alignment','hmm','evolutionary-trees','clustering','burrows-wheeler'];
 const resources=['play-guide','discussion-questions','coding-and-paper-tasks','pictionary-cards'];
 const publicFiles=['index.html','motif-slots/index.html','bridge-walker/index.html','toll-city/index.html','hollow-mountain/index.html',
-  'paint-by-k/index.html','the-loom/index.html','cho-han-night/index.html','lockpick/index.html',
+  'paint-by-k/index.html','the-loom/index.html','cho-han-night/index.html','long-distance/index.html','lockpick/index.html',
   ...units.flatMap(unit=>resources.map(resource=>`materials/${unit}-${resource}.docx`)),
   // the shared book shell: bar, covers, sound and celebrations
   'book/book.css','book/book.js','book/chapters.js','book/favicon.svg',
   // the installable app: manifest, icons and the offline worker
   'manifest.webmanifest','sw.js','book/icon-180.png','book/icon-192.png','book/icon-512.png','book/icon-maskable-512.png',
-  ...['motif-slots','bridge-walker','toll-city','hollow-mountain','paint-by-k','the-loom','cho-han-night','lockpick'].map(g=>`book/art/${g}.svg`),
+  ...['motif-slots','bridge-walker','toll-city','hollow-mountain','paint-by-k','the-loom','cho-han-night','long-distance','lockpick'].map(g=>`book/art/${g}.svg`),
   'materials/learning-guide.docx','materials/suggested-investigations.docx','materials/presentation-checklist.docx'];
 const aliases={'bridge-walker/level-12/index.html':'bridge-walker/index.html'};
 await rm(output,{recursive:true,force:true});

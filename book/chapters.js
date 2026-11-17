@@ -17,7 +17,10 @@ window.BOOK={
     {n:6,slug:'clustering',dir:'paint-by-k',key:'paintbyk:v1',topic:'Clustering',game:'Paint by k',levels:10,terms:14,burst:'drops',sfx:[['.stage svg','bloop']],
      hue:'#b8327a',hook:'Print a picture of a thousand colours from a few pots of ink by deciding which pixels share a pot.'},
     {n:7,slug:'burrows-wheeler',dir:'the-loom',key:'theloom:v1',topic:'Read mapping with the Burrows–Wheeler transform',short:'Read mapping',game:'The Loom',levels:11,terms:11,burst:'threads',sfx:[['.stage svg','pluck'],['.strip','pluck']],
-     hue:'#a4472f',hook:'Find where a read occurs in a genome of three billion letters without scanning the genome.'}
+     hue:'#a4472f',hook:'Find where a read occurs in a genome of three billion letters without scanning the genome.'},
+    // docs:false: this chapter has no Word handouts yet, so the shell lists none
+    {n:8,slug:'transformers',dir:'long-distance',key:'longdistance:v1',topic:'Transformers',game:'Long Distance',levels:10,terms:17,burst:'threads',sfx:[['.stage svg','pluck']],docs:false,
+     hue:'#1f6f54',hook:'Predict whether a gene is switched on from its DNA, when the sequence that decides it can lie thousands of letters from the gene.'}
   ],
   resources:[['play-guide','Exploration guide'],['discussion-questions','Discussion questions'],['coding-and-paper-tasks','Coding and pen-and-paper tasks'],
     // a third entry is a sentence shown beside the link on the chapter page

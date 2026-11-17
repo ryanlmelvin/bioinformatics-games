@@ -1,0 +1,1185 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Long Distance</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 system-ui,-apple-system,"Segoe UI",sans-serif}
+.wrap{max-width:900px;margin:0 auto;padding:20px 16px 40px}
+header{display:flex;flex-wrap:wrap;align-items:center;gap:12px 20px;margin-bottom:8px}
+h1{font-size:1.35rem;margin:0;display:flex;align-items:center;gap:8px}
+h1 svg{width:40px;height:40px}
+h1 a{color:inherit;text-decoration:none}
+h2{font-size:1.1rem;margin:18px 0 4px}
+p{margin:4px 0 12px}
+.mono,.strip,.cell,svg text{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+button{font:inherit;color:var(--ink);background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:6px 12px;cursor:pointer}
+button:hover:not(:disabled){border-color:var(--accent)}
+button:disabled{opacity:.45;cursor:default}
+button.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent);font-weight:600}
+button.advance{display:block;width:fit-content;max-width:100%;min-height:44px;margin-top:14px;padding:10px 18px;text-align:left}
+a{color:var(--accent)}
+input[type=text],input[type=number],textarea{font:inherit;color:var(--ink);background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:5px 8px}
+.pips{display:flex;flex-wrap:wrap;gap:6px}
+.pips button{width:32px;height:32px;padding:0;border-radius:50%}
+.pips button.on{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.vocabhead{font-size:.75rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-top:8px}
+.badges{display:flex;flex-wrap:wrap;gap:6px;margin:4px 0;position:relative}
+.badge{font-size:.8rem;border:1px dashed var(--line);color:var(--muted);border-radius:999px;padding:2px 10px}
+.badge.got{border:1px solid var(--good);color:var(--good);font-weight:600}
+.term{cursor:help;position:relative}
+span.term:not(.badge){border-bottom:1px dotted currentColor;font-weight:600}
+.tip{display:none;position:absolute;left:0;top:calc(100% + 6px);z-index:20;width:min(360px,84vw);padding:9px 11px;border-radius:8px;
+  background:var(--ink);color:var(--bg);font:400 .82rem/1.45 system-ui,sans-serif;letter-spacing:0;text-transform:none;text-align:left;box-shadow:0 4px 14px rgba(0,0,0,.25)}
+.tip b{display:block;margin-bottom:2px;color:inherit}
+.term:hover>.tip,.term:focus>.tip{display:block}
+.rule{display:inline-flex;align-items:center;gap:8px;font-size:.9rem;font-weight:600;padding:3px 12px;border-radius:999px;background:var(--chip);margin-bottom:8px}
+.stage{border:1px solid var(--line);border-radius:12px;overflow:hidden;background:var(--cloth);color:#1f2328;padding:12px 14px}
+.stage .sub{font-size:.75rem;text-transform:uppercase;letter-spacing:.08em;color:#6b6250;margin:10px 0 3px}
+.stage .sub:first-child{margin-top:0}
+.stage p{font-size:.95rem}
+.stage button{background:#fffdf8;color:#1f2328;border-color:#cdbf9a}
+.stage button.primary{background:#c2410c;color:#fff;border-color:#c2410c}
+.stage input{background:#fffdf8;color:#1f2328;border-color:#cdbf9a}
+svg.loom{width:100%;height:auto;display:block;touch-action:none;user-select:none;-webkit-user-select:none}
+.status{min-height:1.6em;margin:10px 2px 0;font-weight:500}
+.status.warn{color:var(--warn)} .status.good{color:var(--good)}
+.controls{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:12px}
+#skip:not([hidden]) + .controls{margin-top:20px;padding-top:14px;border-top:1px solid var(--line)}
+.L-A{color:#2e7d4f}.L-C{color:#2b5fb3}.L-G{color:#9a6b00}.L-T{color:#b83a4b}.L-\${color:#6b7078}
+.text{display:flex;flex-wrap:wrap;gap:2px 0;font:700 1.05rem/1 ui-monospace,SFMono-Regular,Menlo,monospace}
+.cell{display:inline-flex;flex-direction:column;align-items:center;justify-content:center;width:1.45em;min-height:1.9em;padding:2px 0;border:0;border-radius:4px;background:transparent;font:inherit;cursor:pointer}
+.cell small{font-size:.55em;font-weight:400;color:#857b66;line-height:1}
+.cell.hit{background:#ffe2a8}.cell.bad{background:#ffd3cf;color:#8a1010}.cell.ok{background:#cfeedd}.cell.done{background:#e6dcc0}
+.cell.sel{outline:2px solid #c2410c}
+button.cell:hover{background:#fff3d6}
+.cell.gap{width:.6em;cursor:default}
+.rowbreak{flex-basis:100%;height:6px}
+.mini{border-collapse:collapse;font:700 .95rem/1.2 ui-monospace,SFMono-Regular,Menlo,monospace;margin:6px 0}
+.mini td{padding:2px 5px;text-align:center}
+.mini th{padding:2px 4px}
+.mini th button{font-size:.75rem;padding:2px 6px}
+.tscroll{overflow-x:auto}
+.reveal{border:1px solid var(--good);border-radius:12px;padding:14px 16px;margin-top:14px;background:var(--panel)}
+.reveal h3{margin:0 0 8px;font-size:1.05rem}
+.called{margin:10px 0 4px;padding-left:12px;border-left:3px solid var(--good)}
+.called p{margin:0;position:relative}
+.called b{color:var(--good)}
+.src{margin:4px 0 10px 15px;padding:8px 12px;border-radius:8px;background:var(--chip);font-size:.9rem}
+.src .tag{display:block;font-size:.7rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted)}
+.src a{font-weight:600}
+.wild{margin:12px 0 10px;padding:10px 14px;border-radius:8px;border:1px dashed var(--line)}
+.guide{margin-top:22px;border:1px solid var(--line);border-radius:12px;padding:10px 14px;background:var(--panel)}
+.guide summary{cursor:pointer;font-weight:600}
+.gentry{padding:8px 0;border-top:1px solid var(--line)}
+.gentry h4{margin:0;font-size:1rem}
+.gentry p{margin:2px 0;font-size:.92rem}
+.gmeta{color:var(--muted);font-size:.9rem}
+footer{margin-top:26px;padding-top:12px;border-top:1px solid var(--line);display:flex;flex-wrap:wrap;gap:10px;align-items:center;font-size:.9rem;color:var(--muted)}
+footer input{font:inherit;width:9em;padding:5px 8px;border:1px solid var(--line);border-radius:8px;background:var(--panel);color:var(--ink)}
+.bench textarea{width:100%;min-height:4em;font-family:ui-monospace,Menlo,monospace}
+.bench table{border-collapse:collapse;font-family:ui-monospace,Menlo,monospace}
+.bench td,.bench th{border:1px solid var(--line);padding:2px 6px;text-align:center}
+[hidden]{display:none!important}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+@media print{
+  body{background:#fff;color:#000}
+  .wrap>*:not(#guide){display:none!important}
+  .guide{border:0;padding:0;margin:0}
+  .guide summary,#printGuide{display:none}
+}
+
+.pips button.fin{position:relative;border-color:var(--good);box-shadow:inset 0 0 0 1px var(--good)}
+.pips button.fin::after{content:'✓';position:absolute;top:-5px;right:-5px;width:14px;height:14px;border-radius:50%;background:var(--good);color:var(--bg);font-size:10px;line-height:14px;font-weight:700;text-align:center}
+.linknote{display:flex;flex-wrap:wrap;gap:8px 12px;align-items:center;margin:10px 0 0;padding:8px 12px;border:1px solid var(--good);border-radius:8px;background:var(--panel);font-size:.92rem}
+.savebar{margin-top:26px;padding:12px 14px;border:1px solid var(--line);border-radius:10px;background:var(--panel);font-size:.92rem}
+.savebar p{margin:0 0 8px}
+.savebar .saverow{display:flex;flex-wrap:wrap;gap:8px}
+.savebar input{flex:1 1 16em;min-width:0;font:inherit;font-size:.85rem;padding:6px 8px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--muted)}
+.savebar .savenote{margin:8px 0 0;color:var(--muted)}
+.savebar .savenote:empty{display:none}
+.linknote[hidden]{display:none}
+@media print{.savebar,.linknote{display:none}}
+:root{
+  --bg:#f6f4ee; --panel:#fffdf8; --ink:#1f2328; --muted:#6b7078; --line:#d9d4c7;
+  --accent:#1f6f54; --accent-ink:#ffffff; --good:#2e7d4f; --warn:#b4541a; --chip:#e1efe8;
+  /* the switchboard is an illustration: one palette in both themes */
+  --cloth:#efe9dc; --paper:#fffdf5;
+}
+@media (prefers-color-scheme:dark){
+  :root{--bg:#15181c; --panel:#1d2126; --ink:#e8e6e1; --muted:#9aa0a8; --line:#343a42;
+    --accent:#6fd0a8; --accent-ink:#04261a; --good:#6fcf97; --warn:#f0a36b; --chip:#1c3a30;}
+}
+.boards{display:flex;flex-direction:column;gap:6px;min-width:560px}
+svg.board{display:block;width:100%;height:auto;user-select:none;-webkit-user-select:none}
+svg.board text{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+svg.board g[data-act]{cursor:pointer;outline:none}
+svg.board g[data-act]:hover rect.pl,svg.board g[data-act]:focus-visible rect.pl{stroke:#1f6f54;stroke-width:2.6}
+svg.board rect.pick{fill:#ffe2a8}svg.board rect.good{fill:#cfeedd}svg.board rect.bad{fill:#ffd3cf}
+.cord{fill:none;stroke-linecap:round;opacity:.9}
+.slip{line-height:2.1;margin:8px 0 0;padding:8px 12px;background:var(--paper);border:1px solid #cdbf9a;border-radius:3px;box-shadow:1px 2px 0 #d9cfb4;font-size:.95rem}
+.slip.on{border-color:#1f6f54;box-shadow:1px 2px 0 #1f6f54}
+b.w{font:700 1rem/1 ui-monospace,SFMono-Regular,Menlo,monospace;letter-spacing:.06em;padding:3px 6px;background:#f1e7c9;border-radius:3px;white-space:nowrap;display:inline-flex;align-items:center;gap:3px}
+i.riv{display:inline-block;width:9px;height:9px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#f6dc8a,#c9952a 55%,#7a5510)}
+.stage button.chip{padding:3px 10px;font-size:.9rem;border-radius:6px}
+.stage button.chip.sel{background:#1f6f54;color:#fff;border-color:#1f6f54}
+.stage button.chip b.w{background:transparent;padding:0}
+.stage button.chip.sel b.w span{color:#fff!important}
+.step{display:inline-flex;align-items:center;gap:4px;white-space:nowrap}
+.step b{min-width:2em;text-align:center}
+.hint{font-size:.85rem;color:#6b6250}
+.strand{display:flex;align-items:center;gap:8px;margin:5px 0}
+.strand .text{flex:1}
+.stag{font-weight:700;width:1em;color:#5a5140}
+.lampi{flex:none;width:20px;height:20px;border-radius:50%;border:1.5px solid #6b6250;background:#d8d2c2}
+.lampi.on{background:#ffc93c;box-shadow:0 0 10px 3px #ffd76a}
+.lampi.q{border-style:dashed}
+.cell.jack{border-bottom:3px solid #c9952a;border-radius:4px 4px 0 0}
+.ask{margin:2px 0 10px 1.6em}
+.text.grid{display:grid;grid-template-columns:repeat(var(--per),minmax(0,1fr));gap:1px;max-width:calc(var(--per)*1.7rem)}
+.text.grid .cell{width:auto}
+@media (max-width:600px){.text.grid{grid-template-columns:repeat(var(--pp),minmax(0,1fr))}}
+.stage button.primary{background:#1f6f54;color:#fff;border-color:#1f6f54}
+.slip .chip{margin:0 2px}
+
+</style>
+<link rel="icon" href="../book/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="../book/book.css">
+<link rel="manifest" href="../manifest.webmanifest">
+<meta name="theme-color" content="#1d2a3a">
+<link rel="apple-touch-icon" href="../book/icon-180.png">
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <!-- ===== ARTWORK: the rail, the brass and the lamp. Edit these to restyle the game ===== -->
+    <linearGradient id="gWood" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#8a5a2b"/><stop offset=".5" stop-color="#6e4520"/><stop offset="1" stop-color="#4a2c12"/></linearGradient>
+    <radialGradient id="gBrass" cx=".35" cy=".3" r=".8"><stop offset="0" stop-color="#f6dc8a"/><stop offset=".55" stop-color="#c9952a"/><stop offset="1" stop-color="#7a5510"/></radialGradient>
+    <radialGradient id="gGlow"><stop offset="0" stop-color="#ffd76a" stop-opacity=".9"/><stop offset="1" stop-color="#ffd76a" stop-opacity="0"/></radialGradient>
+  </defs>
+</svg>
+<div class="wrap">
+  <header>
+    <h1><a href="../" title="All games" aria-label="All games"><svg viewBox="-30 -30 60 60" aria-hidden="true"><circle r="30" fill="#efe9dc"/><rect x="-24" y="2" width="48" height="13" rx="4" fill="url(#gWood)"/><path d="M-14,10 C-14,30 14,30 14,10" fill="none" stroke="#b83a4b" stroke-width="3" stroke-linecap="round"/><circle cx="-14" cy="8" r="5" fill="url(#gBrass)" stroke="#5a3d10"/><circle cx="14" cy="8" r="5" fill="url(#gBrass)" stroke="#5a3d10"/><circle cx="14" cy="-12" r="9" fill="#ffc93c" stroke="#6b6250" stroke-width="1.5"/><rect x="11" y="-4" width="6" height="7" fill="#8a7a55"/></svg></a>Long Distance</h1>
+    <div class="pips" id="pips" aria-label="Levels"></div>
+  </header>
+  <p class="linknote" id="linkNote" role="status" hidden><span id="linkNoteText"></span> <button id="copyLinkTop" hidden>Copy progress link</button></p>
+  <div class="vocabhead">Vocabulary you have earned <span style="text-transform:none;letter-spacing:0">(hover for the definition)</span></div>
+  <div class="badges" id="badges"></div>
+
+  <h2 id="title"></h2>
+  <p id="brief"></p>
+  <div class="rule" id="rule"></div>
+
+  <div class="stage" id="stage"></div>
+
+  <div class="status" id="status" role="status"></div>
+
+  <button id="skip" class="primary advance" hidden></button>
+
+  <div class="controls">
+    <button id="undo">Undo</button>
+    <button id="restart">Restart</button>
+    <button id="fresh">New puzzle</button>
+  </div>
+
+  <div id="panel"></div>
+
+  <details class="guide" id="guide">
+    <summary>Field guide: your glossary and sources (<span id="gcount"></span>)</summary>
+    <div id="guideBody"></div>
+  </details>
+
+  <div class="savebar" id="savebar">
+    <p><b>Progress link.</b> Progress is saved in this browser. This link restores it in any other. The <a href="../#keep">front page</a> has one link for all chapters.</p>
+    <div class="saverow"><input id="saveLink" readonly aria-label="Your progress link"><button id="copyLink">Copy progress link</button></div>
+    <p class="savenote" id="saveNote" role="status"></p>
+    <div data-bk-app></div>
+  </div>
+  <footer>
+    <button id="dl">Download move log</button>
+    <a href="?bench=1">Workbench</a>
+  </footer>
+</div>
+
+<script id="engine">
+/* Pure puzzle logic: no DOM. A board is a row of jacks, each with a four-letter plate. The gene's jack sits to the right of the last one,
+   so on a board of n jacks the gene asks from index n and jack j is n - j places from it. */
+function hashStr(s){let h=2166136261>>>0;for(let i=0;i<s.length;i++){h^=s.charCodeAt(i);h=Math.imul(h,16777619);}return h>>>0;}
+function rng(seed){let a=seed>>>0;return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
+function shuffled(arr,rand){const a=arr.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(rand()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+const pick=(arr,rand)=>arr[Math.floor(rand()*arr.length)];
+const between=(lo,hi,rand)=>lo+Math.floor(rand()*(hi-lo+1));
+/* A generator that runs out of tries builds the puzzle for a key from its pool instead. TRIES.limit is for tests only. */
+const TRIES={limit:null,strict:false},maxTries=n=>TRIES.limit===null?n:TRIES.limit;
+function fallback(name,key,pool,make){
+  if(TRIES.strict)throw new Error(name+' ran out of tries for '+key);
+  TRIES.fell=(TRIES.fell||0)+1;
+  const t=TRIES.limit;TRIES.strict=true;TRIES.limit=null;
+  try{return make(pool[hashStr(key)%pool.length]);}finally{TRIES.strict=false;TRIES.limit=t;}
+}
+const F4=['fallback-0','fallback-1','fallback-2','fallback-3'],POOLS={makeL1:F4,makeL5:F4,makeL10:F4};
+function keyOf(code,id,variant){return code+'|'+id+'|'+(variant||0);}
+
+/* The words that matter. ACT is the site in the enhancer, SIL a silencer site, BOX the box beside the gene's start,
+   PAR the partner site that must sit next to ACT, WEAK a one-letter-off copy of ACT. */
+const ACT='GATA',SIL='CTCC',BOX='TATA',PAR='CAGC',WEAK='GATT',SPECIAL=[ACT,SIL,BOX,PAR,WEAK],N=10;
+/* the score of a plate against a wanted word: letters that agree, place by place */
+function same(a,b){let n=0;for(let i=0;i<4;i++)if(a[i]===b[i])n++;return n;}
+function word(rand){let w='';for(let i=0;i<4;i++)w+='ACGT'[Math.floor(rand()*4)];return w;}
+/* a plate that cannot be mistaken for a site: at least two letters different from every special word, and not one letter four times */
+function plain(rand,used){for(;;){const w=word(rand);if(new Set(w).size<2||used.includes(w)||SPECIAL.some(s=>same(w,s)>2))continue;used.push(w);return w;}}
+/* a plate with an exact score against ACT (level 5) */
+function scored(rand,s,used){for(;;){const w=word(rand);if(new Set(w).size<2||used.includes(w)||SPECIAL.includes(w)||same(w,ACT)!==s)continue;used.push(w);return w;}}
+function makeBoard(rand,places,used,n){const labels=Array(n||N).fill(null);Object.keys(places).forEach(i=>labels[i]=places[i]);
+  for(let i=0;i<labels.length;i++)if(!labels[i])labels[i]=plain(rand,used);return labels;}
+function swapped(labels,i,j){const a=labels.slice();[a[i],a[j]]=[a[j],a[i]];return a;}
+function count4(s,w){let c=0;for(let i=0;i+4<=s.length;i++)if(s.startsWith(w,i))c++;return c;}
+function kset(s){const o=new Set();for(let i=0;i+4<=s.length;i++)o.add(s.slice(i,i+4));return o;}
+function tokens(s){const o=[];for(let i=0;i+4<=s.length;i+=4)o.push(s.slice(i,i+4));return o;}
+
+/* ---------- the exchange ---------- */
+/* Exact matching. A slip is {want:[plates], dist:null or a number of places}. Returns the jacks that answer the asker. */
+function answers(labels,asker,slip){
+  const o=[];if(!slip||!slip.want)return o;
+  for(let j=0;j<labels.length;j++){
+    if(j===asker||!slip.want.includes(labels[j]))continue;
+    if(slip.dist!=null&&Math.abs(asker-j)!==slip.dist)continue;
+    o.push(j);
+  }
+  return o;
+}
+/* The asker's current is shared equally among the jacks that answer; each sends its value (1 unless a card says otherwise). */
+function headOut(labels,asker,slip,values){
+  const a=answers(labels,asker,slip);let out=0;
+  a.forEach(j=>{out+=(values&&labels[j] in values?values[labels[j]]:1)/a.length;});
+  return {cords:a,out};
+}
+/* Every jack pulls: one unit, doubled for each letter that agrees with the wanted word. Shares are pull over total. */
+function soft(labels,want){
+  const sc=labels.map(l=>same(l,want)),pull=sc.map(s=>Math.pow(2,s)),tot=pull.reduce((a,b)=>a+b,0);
+  return {sc,pull,tot,w:pull.map(p=>p/tot)};
+}
+function softOut(labels,want,values){const s=soft(labels,want);return s.w.reduce((a,w,j)=>a+w*(values[labels[j]]||0),0);}
+/* Round 1 of a two-round exchange: each jack with plate r.who asks for r.want at r.dist; a jack that is answered gains a rivet ('+'). */
+function round1(labels,r){
+  const links=[];
+  const out=labels.map((l,i)=>{
+    if(!r||!r.who||l!==r.who)return l;
+    const a=answers(labels,i,{want:[r.want],dist:r.dist});if(!a.length)return l;
+    a.forEach(j=>links.push([i,j]));return l+'+';
+  });
+  return {labels:out,links};
+}
+/* The finished exchange of levels 8 and 10: round 1 rivets a GATA next to a CAGC; in round 2 the gene asks two questions. */
+function runFull(labels){
+  const r=round1(labels,{who:ACT,want:PAR,dist:1}),n=labels.length;
+  const h1=answers(r.labels,n,{want:[BOX],dist:1}),h2=answers(r.labels,n,{want:[ACT+'+'],dist:null});
+  return {labels:r.labels,links:r.links,h1,h2,on:h1.length>0&&h2.length>0};
+}
+function applyVar(labels,v){const s=labels.join('');return tokens(s.slice(0,v.pos)+v.alt+s.slice(v.pos+1));}
+/* For every letter: how many of its three possible changes switch the gene off. */
+function scan(labels){
+  const s=labels.join(''),base=runFull(labels).on,out=[];
+  for(let p=0;p<s.length;p++){let c=0;for(const a of 'ACGT'){if(a===s[p])continue;if(runFull(applyVar(labels,{pos:p,alt:a})).on!==base)c++;}out.push(c);}
+  return out;
+}
+
+/* ---------- levels ---------- */
+/* Level 1: seven strands of 40 letters. Four hold GATA once, at a plate boundary, each at a different distance from the gene.
+   No other four-letter word is shared by the three strands whose lamps are shown lit. */
+function makeL1(key){
+  const rand=rng(hashStr(key));
+  for(let tr=0;tr<maxTries(6000);tr++){
+    const at=shuffled([1,2,3,4,5,6,7],rand).slice(0,4);
+    const mk=t=>{let labels;do{labels=makeBoard(rand,t==null?{}:{[t]:ACT},[]);}while(count4(labels.join(''),ACT)!==(t==null?0:1));
+      return {labels,seq:labels.join(''),on:t!=null,at:t==null?null:t*4,tok:t};};
+    const known=[mk(at[0]),mk(null),mk(at[1]),mk(null),mk(at[2])],unknown=shuffled([mk(at[3]),mk(null)],rand);
+        const on=known.filter(x=>x.on).map(x=>kset(x.seq));
+    if([...on[0]].filter(w=>on[1].has(w)&&on[2].has(w)).length!==1)continue;
+    return {known,unknown};
+  }
+  return fallback('makeL1',key,POOLS.makeL1,makeL1);
+}
+/* Level 2: a 12-letter strand whose GATA is three rounds from the gene, then the first lit strand of level 1. */
+function makeL2(code,variant){
+  const rand=rng(hashStr(keyOf(code,2,variant)));let seq;
+  do{seq='';for(let i=0;i<12;i++)seq+=i>=6&&i<10?ACT[i-6]:'ACGT'[Math.floor(rand()*4)];}while(count4(seq,ACT)!==1);
+  return {mini:{seq,at:6},big:makeL1(keyOf(code,1,variant)).known[0],rounds:3};
+}
+/* Level 3: level 1's strands as boards: its three lit strands and one unlit one. */
+function makeL3(code,variant){const k=makeL1(keyOf(code,1,variant)).known;return {boards:[k[0],k[1],k[2],k[4]].map(x=>({labels:x.labels,on:x.on,at:x.tok}))};}
+function spots(rand,k,lo,hi){return shuffled(Array.from({length:hi-lo+1},(_,i)=>lo+i),rand).slice(0,k);}
+/* Level 4: six boards. The gene is on when GATA plates outnumber CTCC plates. */
+function makeL4(key){
+  const rand=rng(hashStr(key)),used=[];
+  return {boards:[[ACT],[ACT,SIL],[],[SIL],[ACT,ACT,SIL],[ACT,SIL,SIL]].map(set=>{
+    const p=spots(rand,set.length,0,N-2),places={};set.forEach((w,i)=>places[p[i]]=w);
+    return {labels:makeBoard(rand,places,used),on:set.filter(w=>w===ACT).length>set.filter(w=>w===SIL).length};
+  })};
+}
+/* Level 5: three boards of six jacks whose pulls add up to 32, 16 and 32. */
+function makeL5(key){
+  const rand=rng(hashStr(key)),values={[ACT]:1,[WEAK]:1};
+  for(let tr=0;tr<maxTries(200);tr++){
+    const used=[],mk=sc=>{const labels=shuffled(sc,rand).map(s=>s===4?ACT:s===3?WEAK:scored(rand,s,used));return {labels,out:softOut(labels,ACT,values)};};
+    const A=mk([4,3,1,1,1,1]),B=mk([3,1,1,1,0,0]),C=mk([4,2,2,2,1,1]);
+    if(soft(A.labels,ACT).tot!==32||soft(B.labels,ACT).tot!==16||soft(C.labels,ACT).tot!==32)continue;
+    return {A,B,C,values,want:ACT};
+  }
+  return fallback('makeL5',key,POOLS.makeL5,makeL5);
+}
+/* Level 6: A and B hold the same plates in a different order; only a TATA one place from the gene switches it on. */
+function makeL6(key){
+  const rand=rng(hashStr(key)),used=[];
+  const A=makeBoard(rand,{[N-1]:BOX},used),B=swapped(A,N-1,N-between(4,8,rand)),C=makeBoard(rand,{},used),
+    D=makeBoard(rand,{[N-1]:BOX},used),E=makeBoard(rand,{[N-between(2,3,rand)]:BOX},used);
+  return {boards:[A,B,C,D,E].map(labels=>({labels,on:labels[N-1]===BOX}))};
+}
+/* Level 7: on only with a TATA one place from the gene and a GATA anywhere. */
+function makeL7(key){
+  const rand=rng(hashStr(key)),used=[],g=spots(rand,3,0,N-4);   /* the two lit boards hold their GATA at different distances */
+  const sets=[{[N-1]:BOX,[g[0]]:ACT},{[N-1]:BOX},{[g[2]]:ACT},{[N-between(4,6,rand)]:BOX,[between(0,2,rand)]:ACT},{[N-1]:BOX,[g[1]]:ACT}];
+  return {boards:sets.map(p=>{const labels=makeBoard(rand,p,used);return {labels,on:labels[N-1]===BOX&&labels.includes(ACT)};})};
+}
+/* Level 8: on only when a GATA and a CAGC sit side by side. Boards 1 and 3 hold the same plates. */
+function makeL8(key){
+  const rand=rng(hashStr(key)),used=[];
+  const p=between(1,N-3,rand),one=makeBoard(rand,{[p]:ACT,[p+1]:PAR},used);
+  const far=shuffled([...Array(N).keys()].filter(i=>Math.abs(i-p)>=2&&i!==p+1),rand)[0],three=swapped(one,p+1,far);
+  const q=between(1,N-3,rand);
+  const boards=[one,makeBoard(rand,{[between(0,N-1,rand)]:ACT},used),three,makeBoard(rand,{[between(0,N-1,rand)]:PAR},used),makeBoard(rand,{[q]:PAR,[q+1]:ACT},used)];
+  return {boards:boards.map(labels=>({labels,on:labels.some((l,i)=>l===ACT&&(labels[i-1]===PAR||labels[i+1]===PAR))}))};
+}
+/* Level 9: one plate is covered on each board. On two boards a run of three plates occurs twice and the covered plate is in the second copy. */
+function makeL9(key){
+  const rand=rng(hashStr(key)),used=[];
+  const rep=off=>{const labels=makeBoard(rand,{},used),p=between(0,2,rand),q=between(p+4,N-3,rand);
+    for(let i=0;i<3;i++)labels[q+i]=labels[p+i];return {labels,cover:q+off,src:p+off};};
+  const c=makeBoard(rand,{},used);
+  return {boards:[rep(1),rep(2),{labels:c,cover:between(2,N-2,rand),src:null}]};
+}
+/* Level 10: a lit board with a riveted pair, a lone GATA and three variants. Only the variant in the partner plate switches the gene off. */
+function makeL10(key){
+  const rand=rng(hashStr(key));
+  for(let tr=0;tr<maxTries(400);tr++){
+    const used=[],p=between(0,3,rand),flip=rand()<.5,d=between(p+3,N-3,rand);
+    const labels=makeBoard(rand,{[N-1]:BOX,[p]:flip?PAR:ACT,[p+1]:flip?ACT:PAR,[d]:ACT},used);
+    const par=flip?p:p+1,bgs=[...Array(N).keys()].filter(i=>!SPECIAL.includes(labels[i])),bg=pick(bgs,rand);
+    const mk=(tok,kind)=>{const pos=tok*4+between(0,3,rand),ref=labels[tok][pos%4];return {pos,ref,alt:pick('ACGT'.replace(ref,''),rand),kind};};
+    const vars=[mk(par,'partner'),mk(d,'lone'),mk(bg,'plain')].sort((a,b)=>a.pos-b.pos);
+    if(vars.some(v=>{const t=applyVar(labels,v),w=t[Math.floor(v.pos/4)];return SPECIAL.includes(w)||runFull(t).on!==(v.kind!=='partner');}))continue;
+    if(!runFull(labels).on)continue;
+    const track=scan(labels);if(track.filter(c=>c===3).length!==12||track.some(c=>c!==0&&c!==3))continue;
+    return {labels,vars,track,pair:[p,p+1],lone:d};
+  }
+  return fallback('makeL10',key,POOLS.makeL10,makeL10);
+}
+function makeLevel(code,id,variant){
+  const key=keyOf(code,id,variant);
+  return id===1?makeL1(key):id===2?makeL2(code,variant):id===3?makeL3(code,variant):id===4?makeL4(key):id===5?makeL5(key):
+    id===6?makeL6(key):id===7?makeL7(key):id===8?makeL8(key):id===9?makeL9(key):id===10?makeL10(key):{};
+}
+/* the workbench: cut a strand into plates and share one unit of current among them for a wanted word */
+function benchReport(strand,want){
+  const s=String(strand).toUpperCase().replace(/[^ACGT]/g,''),labels=tokens(s),w=(String(want).toUpperCase().replace(/[^ACGT]/g,'')+'AAAA').slice(0,4);
+  return Object.assign({labels,want:w},soft(labels,w));
+}
+if(typeof module!=='undefined')module.exports={hashStr,rng,shuffled,keyOf,ACT,SIL,BOX,PAR,WEAK,SPECIAL,N,same,plain,scored,makeBoard,count4,kset,tokens,
+  answers,headOut,soft,softOut,round1,runFull,applyVar,scan,makeLevel,makeL1,makeL2,makeL3,makeL4,makeL5,makeL6,makeL7,makeL8,makeL9,makeL10,benchReport,TRIES,POOLS};
+</script>
+<script id="ui">
+(function(){
+const KEY='longdistance:v1';
+const $=s=>document.querySelector(s);
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const plural=(n,w)=>n+' '+w+(n===1?'':/(ch|sh|s|x)$/.test(w)?'es':'s');
+const numWord=n=>['zero','one','two','three','four','five','six','seven','eight','nine','ten','eleven','twelve'][n]||String(n);
+const fmt=n=>Math.round(n).toLocaleString('en-US');
+
+const LEVELS=[
+  {id:1,title:'Which genes are on?',rule:'Click the first letter of the shared word',
+   brief:'Each strand is the DNA upstream of one gene, with the gene at its right end. A lit lamp means the gene was measured switched on. The three lit strands share one four-letter word that the unlit strands lack. Click its first letter in each lit strand.'},
+  {id:2,title:'Pass it along',rule:'A jack hears only the jacks beside it',
+   brief:'Put a jack under every letter and wire each jack to its two neighbours. In one round every jack tells its neighbours what it has heard. The line carries three rounds. Get the news of the GATA to the gene.'},
+  {id:3,title:'A direct line',rule:'One slip for every board',
+   brief:'Each jack now stands for four letters and shows them on its plate. A cord can run from the gene’s jack to any other jack in one step. On each lit board, click the plate the gene should be wired to.'},
+  {id:4,title:'What comes down the cord',rule:'Cords share the gene’s current equally',
+   brief:'Two of these genes hold a GATA and were measured off. Find what else those boards share. Then change the query, and what each plate sends, until every lamp agrees with its measurement. Click a plate to select it.'},
+  {id:5,title:'One unit of current',rule:'Each agreeing letter doubles a jack’s pull',
+   brief:'The protein that binds GATA also binds a near copy such as GATT, less often. From now on every jack takes some of the gene’s one unit of current, and a key closer to the query takes more. A jack’s pull starts at 1 and doubles for each letter of its key that agrees with the query. Work out the gene’s reading on board A.'},
+  {id:6,title:'Shuffled',rule:'The same query on every board',
+   brief:'These measurements follow a rule about the gene’s own start. Boards A and B were measured differently. Write one query that predicts all five boards. Click a plate to put its key in the query.'},
+  {id:7,title:'Two questions',rule:'One query asks one question',
+   brief:'These genes are on only when a TATA sits one place from the gene and a GATA sits anywhere on the board. Predict all five boards. Click a query to work on it, then click a plate to put its key in.'},
+  {id:8,title:'Two rounds',rule:'Round 2 reads what round 1 wrote',
+   brief:'The protein at a GATA works only when a second protein sits at a CAGC on the plate beside it. Boards A and C hold the same ten plates. Set up two rounds that predict all five boards. Click a blank in a round, then click a plate to fill it.'},
+  {id:9,title:'Nobody measured these',rule:'The covered plate is the answer key',
+   brief:'One plate on each board is covered. Click the jack you would wire the covered jack to. That jack’s plate comes down the cord, and the cover is lifted to check it.'},
+  {id:10,title:'One letter',rule:'Change one letter · run the exchange again',
+   brief:'This board is a reference sequence. The exchange uses the two rounds of level 8 and the TATA question of level 7, and it predicts that the gene is on. In a patient the gene is off, and the patient differs from the reference at three letters. Find the letter that matters.'}
+];
+
+const SRC={
+  banerji:{cite:'Banerji, Rusconi & Schaffner, 1981',title:'Expression of a β-globin gene is enhanced by remote SV40 DNA sequences',where:'Cell 27, 299–308',
+    url:'https://doi.org/10.1016/0092-8674(81)90413-X',look:'The abstract reports 200 times more β-globin transcripts when the plasmid also carried a piece of SV40 DNA, and that the piece worked in either orientation at many positions, including 1,400 base pairs upstream or 3,300 downstream of the gene’s start. Its last two sentences announce a new class of DNA element.'},
+  ji:{cite:'Ji et al., 2021',title:'DNABERT: pre-trained Bidirectional Encoder Representations from Transformers model for DNA-language in genome',where:'Bioinformatics 37, 2112–2120',
+    url:'https://doi.org/10.1093/bioinformatics/btab083',look:'DNABERT cuts DNA into overlapping k-mers. The abstract claims that one pre-trained model predicts promoters, splice sites and transcription factor binding sites after fine-tuning on small labelled sets, and that it shows which nucleotides were important to a prediction.'},
+  bahdanau:{cite:'Bahdanau, Cho & Bengio, 2014',title:'Neural machine translation by jointly learning to align and translate',where:'arXiv:1409.0473',
+    url:'https://doi.org/10.48550/arXiv.1409.0473',look:'The abstract proposes that a translation model search the source sentence for the parts relevant to the next word instead of squeezing the sentence into one fixed-length vector. It calls the result a soft alignment. Compare that use of the word with the alignment chapter.'},
+  vaswani:{cite:'Vaswani et al., 2017',title:'Attention is all you need',where:'arXiv:1706.03762',
+    url:'https://doi.org/10.48550/arXiv.1706.03762',look:'Section 3.2 defines attention from queries, keys and values, with a softmax over the scores. The scores there are dot products of two lists of numbers. Counting agreeing letters is the same sum for plates written as 0s and 1s.'},
+  vaswani6:{cite:'Vaswani et al., 2017',title:'Attention is all you need',where:'arXiv:1706.03762',
+    url:'https://doi.org/10.48550/arXiv.1706.03762',look:'Section 3.5 says why order has to be added to the tokens and how the paper adds it.'},
+  vaswani8:{cite:'Vaswani et al., 2017',title:'Attention is all you need',where:'arXiv:1706.03762',
+    url:'https://doi.org/10.48550/arXiv.1706.03762',look:'The paper that named the Transformer. Its abstract proposes a network based only on attention, without recurrence or convolution. Figure 1 shows one layer.'},
+  vig:{cite:'Vig et al., 2020',title:'BERTology meets biology: interpreting attention in protein language models',where:'arXiv:2006.15222',
+    url:'https://doi.org/10.48550/arXiv.2006.15222',look:'The abstract reports that attention in protein language models connects amino acids that are far apart in the sequence and close in the folded structure, that it targets binding sites, and that later stages of the model attend to more complex properties.'},
+  avsec:{cite:'Avsec et al., 2021',title:'Effective gene expression prediction from sequence by integrating long-range interactions',where:'Nature Methods 18, 1196–1203',
+    url:'https://doi.org/10.1038/s41592-021-01252-x',look:'Enformer. The abstract reports better prediction of gene expression from DNA sequence by integrating information from up to 100 kb away, more accurate predictions of variant effects, and enhancer–promoter interactions predicted from the sequence alone.'},
+  devlin:{cite:'Devlin et al., 2019',title:'BERT: pre-training of deep bidirectional transformers for language understanding',where:'Proceedings of NAACL-HLT 2019, 4171–4186',
+    url:'https://doi.org/10.18653/v1/N19-1423',look:'Section 3.1 describes the masked language model task: some of the input tokens are masked at random and the model predicts them from the context on both sides.'},
+  dalla:{cite:'Dalla-Torre et al., 2025',title:'Nucleotide Transformer: building and evaluating robust foundation models for human genomics',where:'Nature Methods 22, 287–297',
+    url:'https://doi.org/10.1038/s41592-024-02523-z',look:'The abstract describes models of 50 million to 2.5 billion parameters pre-trained on 3,202 human genomes and 850 genomes of other species, and says that without supervision they learned to focus attention on key genomic elements.'},
+  canver:{cite:'Canver et al., 2015',title:'BCL11A enhancer dissection by Cas9-mediated in situ saturating mutagenesis',where:'Nature 527, 192–197',
+    url:'https://doi.org/10.1038/nature15521',look:'The laboratory version of this level. The abstract describes saturating mutagenesis of the BCL11A erythroid enhancer in its place in the genome, using libraries of Cas9 guide RNAs, which revealed the enhancer’s critical minimal features.'},
+  karollus:{cite:'Karollus, Mauermeier & Gagneur, 2023',title:'Current sequence-based models capture gene expression determinants in promoters but mostly ignore distal enhancers',where:'Genome Biology 24, 56',
+    url:'https://doi.org/10.1186/s13059-023-02899-9',look:'A test of Enformer and similar models against perturbation experiments. The abstract reports that the models capture what drives promoters and fail to capture the causal effects of enhancers at medium to long distances.'},
+  frangoul:{cite:'Frangoul et al., 2021',title:'CRISPR-Cas9 gene editing for sickle cell disease and β-thalassemia',where:'New England Journal of Medicine 384, 252–260',
+    url:'https://doi.org/10.1056/NEJMoa2031054',look:'The first two patients treated with cells in which the BCL11A erythroid enhancer had been edited.'}
+};
+
+const VOCAB=[
+  {id:'enhancer',name:'Enhancer',src:'banerji',def:'A stretch of DNA that raises the transcription of a gene when the right proteins bind it. An enhancer can lie thousands of letters upstream or downstream of the gene it controls, in either orientation.'},
+  {id:'field',name:'Receptive field',def:'The part of the input that can affect what one position computes. If each step passes information one position along, k steps give a receptive field of k positions on each side.'},
+  {id:'token',name:'Token',src:'ji',def:'The unit a sequence model reads. DNA can be cut into single letters, into k-mers or into longer stretches, and each piece becomes one token. This game uses non-overlapping 4-mers.'},
+  {id:'attention',name:'Attention',src:'bahdanau',def:'An operation in which each token gathers information from other tokens chosen by comparing their contents, so that one rule connects different positions in different sequences.'},
+  {id:'query',name:'Query',def:'What a token is looking for, computed from the token as a list of numbers. It is compared with the key of every other token.'},
+  {id:'key',name:'Key',def:'What a token can be found by, computed from the token as a list of numbers. A token attends most to the tokens whose keys best match its query.'},
+  {id:'value',name:'Value',def:'What a token sends to a token that attends to it. The receiver’s result is the sum of the values, each multiplied by its attention weight.'},
+  {id:'weight',name:'Attention weight',def:'The share of one token’s attention that goes to another token. For each asking token the weights are positive and add up to 1.'},
+  {id:'softmax',name:'Softmax',src:'vaswani',def:'The rule that turns scores into attention weights: raise a fixed base to each score, then divide by the total. Trained models use the base e, about 2.718. This game uses 2, so a score higher by one doubles the weight.'},
+  {id:'posenc',name:'Positional encoding',src:'vaswani6',def:'Position information added to each token, because attention alone gives the same result when the tokens are shuffled. It can record a token’s place in the sequence or its distance from the asking token.'},
+  {id:'head',name:'Attention head',src:'vig',def:'One set of queries, keys and values. A layer runs several heads side by side, each asking a different question, and a small network combines their results.'},
+  {id:'layer',name:'Layer',def:'One round of attention followed by an update of every token. Layers are stacked: a later layer reads what an earlier one wrote, so it can ask about relations the earlier one found.'},
+  {id:'embedding',name:'Embedding',def:'The list of numbers that stands for a token. It starts as a code for the token’s letters and position, and each layer rewrites it to include what the token has gathered from the others.'},
+  {id:'transformer',name:'Transformer',src:'avsec',def:'A model built from stacked layers of multi-head attention over tokens with positional encoding. It was introduced for translation in 2017 and is now used on DNA, RNA and protein sequences.'},
+  {id:'mlm',name:'Masked language model',src:'devlin',def:'A model trained by hiding some tokens of a sequence and asking for them back from the rest. The hidden tokens are their own answer key, so no experimental measurements are needed.'},
+  {id:'param',name:'Parameter',src:'dalla',def:'One of the numbers a model learns in training. In a transformer they are the numbers that turn an embedding into a query, a key and a value, and the numbers that update the embedding.'},
+  {id:'ism',name:'In silico mutagenesis',src:'canver',def:'Changing the letters of an input sequence one at a time and recording how the model’s prediction changes. The size of the change estimates the effect of a variant at that position.'}
+];
+const DEF={};VOCAB.forEach(v=>DEF[v.id]=v);
+function term(id,label){return '<span class="term" tabindex="0">'+label+'<span class="tip" role="tooltip"><b>'+DEF[id].name+'</b>'+DEF[id].def+'</span></span>';}
+
+/* ---------- saved state ---------- */
+const params=new URLSearchParams(location.search),urlSeed=params.get('seed');
+const requestedLevel=Number(params.get('level'));
+const previewLevel=Number.isInteger(requestedLevel)&&requestedLevel>=1&&requestedLevel<=LEVELS.length?requestedLevel:0;
+function load(){try{return JSON.parse(localStorage.getItem(KEY))||{};}catch(e){return {};}}
+function save(){if(previewLevel||bench)return;if(S&&S.done)S.link=encodeProgress(S);try{localStorage.setItem(KEY,JSON.stringify(S));}catch(e){}writeLink();}
+function freshState(seed){return {seed,unlocked:1,done:[],badges:[],earnedAt:{},variants:{},log:[]};}
+/* First-load puzzle codes. The tests play every level of each one. */
+const CODES='BW5YFT HW8RZU 5WS62H JHNYCR PKFYBS FFXJ4N CHGU9U VH7N3X 2AR5B8 PTZ4KZ H6HNTK LUQ7XU HTBQYY QR6HSU 289ZQF X3DC62 NT5WJU STQ4L4 PSSAFX FTKH67 QPEF7J QSQ8MY 9NAS3L 9NSB8W HNNWCJ VVSJKW YAG76X APVFWY FKE94G XNSS6X 79XC2A YZ35NF SDEEUS 6VH3FG UDD6VX M3FACS 3HKNS7 4H74FR QXJXBN SPN8V6 U5TBJU 9K2E3V T894MA MNSTET ECJNEE 664MJZ 6SJTM6 YB7L9J FGKRF4 MPC8MG'.split(' ');
+function randomCode(){return CODES[Math.floor(Math.random()*CODES.length)];}
+const bench=!!params.get('bench');
+/* ---------- progress link ----------
+   Every level is open; only the vocabulary is earned. The progress link is this page's address plus
+   #save=1.<terms>.<levels>.<check>.<puzzle code>; opening it restores the earned terms and finished levels in any browser.
+   The page's own address stays clean, so that sharing the address of the game never hands over someone's progress.
+   <terms> has one character per VOCAB entry, in VOCAB order: 0 for not earned, otherwise the level it was earned in (base 36).
+   <levels> has one 0 or 1 per level. Old links depend on those orders: add new terms and levels at the end. */
+const TRANSIENT=!!(previewLevel||bench||params.get('bench'));
+function linkCheck(body){const s=KEY+'|'+body;let h=2166136261>>>0;for(let i=0;i<s.length;i++){h^=s.charCodeAt(i);h=Math.imul(h,16777619);}return (h>>>0).toString(36);}
+function encodeProgress(st){
+  const body='1.'+VOCAB.map(v=>st.badges.includes(v.id)?Math.min(35,Math.max(1,st.earnedAt[v.id]|0)).toString(36):'0').join('')+
+    '.'+LEVELS.map(l=>st.done.includes(l.id)?'1':'0').join('');
+  return body+'.'+linkCheck(body+'.'+st.seed)+'.'+encodeURIComponent(st.seed);
+}
+function decodeProgress(text){
+  const m=/^1\.([0-9a-z]+)\.([01]+)\.([0-9a-z]+)\.(.+)$/.exec(text||'');
+  if(!m||m[1].length>VOCAB.length||m[2].length>LEVELS.length)return null;
+  let seed;try{seed=decodeURIComponent(m[4]);}catch(e){return null;}
+  if(linkCheck('1.'+m[1]+'.'+m[2]+'.'+seed)!==m[3])return null;
+  const earnedAt={},done=[];
+  for(let i=0;i<m[1].length;i++){const l=parseInt(m[1][i],36);if(l>LEVELS.length)return null;if(l)earnedAt[VOCAB[i].id]=l;}
+  for(let i=0;i<m[2].length;i++)if(m[2][i]==='1')done.push(LEVELS[i].id);
+  return {seed,earnedAt,done};
+}
+/* saves from before every level was open have no list of finished levels: rebuild it */
+function withDone(st){
+  if(!Array.isArray(st.badges))st.badges=[];
+  if(!st.earnedAt)st.earnedAt={};
+  if(!Array.isArray(st.log))st.log=[];
+  if(!Array.isArray(st.done)){
+    st.done=[];
+    for(let i=1;i<(st.unlocked||1)&&i<=LEVELS.length;i++)st.done.push(i);
+    st.log.forEach(e=>{if(e&&e.ev==='complete'&&e.lvl>=1&&e.lvl<=LEVELS.length&&!st.done.includes(e.lvl))st.done.push(e.lvl);});
+    st.done.sort((a,b)=>a-b);
+  }
+  return st;
+}
+/* add a link's terms and levels to a save; nothing is ever taken away */
+function absorb(st,p){
+  const terms=[],levels=[];
+  VOCAB.forEach(v=>{if(p.earnedAt[v.id]&&!st.badges.includes(v.id)){st.badges.push(v.id);st.earnedAt[v.id]=p.earnedAt[v.id];terms.push(v.id);}});
+  p.done.forEach(id=>{if(!st.done.includes(id)){st.done.push(id);levels.push(id);}});
+  st.done.sort((a,b)=>a-b);
+  if(st.done.length)st.unlocked=Math.max(st.unlocked||1,Math.min(LEVELS.length,st.done[st.done.length-1]+1));
+  return {terms,levels};
+}
+function markDone(){if(!S.done.includes(cur.L.id)){S.done.push(cur.L.id);S.done.sort((a,b)=>a-b);}}
+/* The last level names any term an earlier level failed to name, but only for a student who has finished every other level:
+   with all levels open, the finale must not hand out the vocabulary on its own. */
+function sweepTerms(){return LEVELS.every(l=>l.id===cur.L.id||S.done.includes(l.id))?VOCAB.map(v=>v.id):[];}
+const linkText=TRANSIENT?'':((String(location.hash||'').match(/^#save=(.+)$/)||[])[1]||'');
+let linkNote='',lastLink=null,linkLive=false;
+function progressLink(){
+  const q=new URLSearchParams(location.search);q.delete('seed');const qs=q.toString();
+  return location.pathname+(qs?'?'+qs:'')+'#save='+encodeProgress(S);
+}
+function writeLink(){
+  if(TRANSIENT||!S||!S.done)return;
+  const rel=progressLink();if(rel===lastLink)return;lastLink=rel;
+  const box=$('#saveLink');if(box)box.value=(location.origin||'')+rel;
+  if(linkLive)topNote('Your progress link has changed. Copy it again before you leave.',true);
+}
+function topNote(text,withButton){$('#linkNoteText').textContent=text;$('#copyLinkTop').hidden=!withButton;$('#linkNote').hidden=false;}
+/* where to pick up: the first level not yet finished */
+function resumeLevel(){const l=LEVELS.find(l=>!S.done.includes(l.id));return l?l.id:LEVELS.length;}
+function useLink(){
+  if(TRANSIENT||!linkText)return;
+  const p=decodeProgress(linkText);
+  if(!p){linkNote='That progress link is incomplete or was altered, so nothing was restored. Copy the whole link and open it again.';return;}
+  if(p.seed!==S.seed){
+    const mine=S.badges.length+S.done.length;
+    if(!mine||typeof confirm!=='function'||confirm('This link carries progress for puzzle code '+p.seed+' ('+Object.keys(p.earnedAt).length+' terms).\n\nThis browser already has progress for puzzle code '+S.seed+' ('+S.badges.length+' terms).\n\nOK: switch to the link. This browser’s progress for '+S.seed+' is replaced.\nCancel: keep this browser’s progress.'))S=withDone(freshState(p.seed));
+    else{linkNote='Kept the progress saved in this browser (puzzle code '+S.seed+'). The link you opened was for puzzle code '+p.seed+'.';return;}
+  }
+  const got=absorb(S,p);
+  if(got.terms.length||got.levels.length){
+    S.log.push({t:Date.now(),lvl:0,variant:0,ev:'restore',terms:got.terms,levels:got.levels});
+    linkNote='Restored from your progress link: '+got.terms.length+' vocabulary term'+(got.terms.length===1?'':'s')+' and '+got.levels.length+' finished level'+(got.levels.length===1?'':'s')+'.';
+  }
+}
+let S=previewLevel||bench?freshState(urlSeed||randomCode()):load();
+if(urlSeed&&urlSeed!==S.seed)S=freshState(urlSeed);
+if(!S.seed)S=freshState(randomCode());
+withDone(S);
+useLink();
+save();
+
+let cur=null;
+function log(ev,data){
+  S.log.push(Object.assign({t:Date.now(),lvl:cur?cur.L.id:0,variant:cur?cur.variant:0,ev},data||{}));
+  if(S.log.length>8000)S.log.splice(0,S.log.length-8000);
+  save();
+}
+function say(text,kind){cur.msg={text,kind:kind||''};}
+
+const LV={};
+function loadLevel(id){
+  if(cur&&cur.timer)clearTimeout(cur.timer);
+  const L=LEVELS[id-1],variant=S.variants[id]||0;
+  cur={L,id,variant,done:false,blocks:[],msg:{text:'',kind:''},t0:Date.now(),hist:[],sel:null};
+  cur.inst=makeLevel(S.seed,id,variant);
+  cur.st=LV[id].init(cur.inst);
+  log('load');render();
+}
+function snap(){cur.hist.push(JSON.stringify(cur.st));}
+function undo(){if(cur.done||!cur.hist.length)return;cur.st=JSON.parse(cur.hist.pop());cur.sel=null;log('undo');say('One move undone.');render();}
+function restart(){if(cur.done)return;cur.st=LV[cur.id].init(cur.inst);cur.hist=[];cur.sel=null;log('restart');say('Back to the start of this level.');render();}
+
+/* ---------- completion ---------- */
+function grant(ids){let fresh=[];ids.forEach(id=>{if(!S.badges.includes(id)){S.badges.push(id);S.earnedAt[id]=cur.L.id;fresh.push(id);}});return fresh;}
+function complete(ids,block){
+  if(cur.done)return;
+  cur.done=true;cur.sel=null;
+  const fresh=grant(ids);cur.blocks.push(block);
+  markDone();if(cur.L.id<LEVELS.length)S.unlocked=Math.max(S.unlocked,cur.L.id+1);
+  log('complete',{ms:Date.now()-cur.t0,earned:fresh,undos:cur.hist.length});
+  save();
+}
+const BLOCKS={};
+function srcCard(id){const s=SRC[id];
+  return '<div class="src"><span class="tag">Primary source</span><a href="'+s.url+'" target="_blank" rel="noopener">'+s.cite+': “'+s.title+'”</a> <span class="gmeta">'+s.where+'.</span><br>'+s.look+'</div>';}
+function renderPanel(){
+  if(!cur.done){$('#panel').innerHTML='';return;}
+  let h='<div class="reveal"><h3>Level '+cur.L.id+' complete</h3>';
+  cur.blocks.forEach(id=>{const B=BLOCKS[id];if(!B)return;
+    h+='<div class="called"><p>'+(typeof B.html==='function'?B.html():B.html)+'</p></div>';
+    (B.src||[]).forEach(s=>{h+=srcCard(s);});
+    if(B.wild)h+='<div class="wild">'+(typeof B.wild==='function'?B.wild():B.wild)+'</div>';
+  });
+  const missing=VOCAB.filter(x=>!S.badges.includes(x.id)).length;
+  if(cur.L.id<LEVELS.length)h+='<button class="primary advance" id="next">Next level →</button>';
+  else h+='<p>'+(missing?plural(missing,'vocabulary term')+' still hidden. Finish the levels without a ✓ to earn them.':'You have earned every term.')+'</p>';
+  $('#panel').innerHTML=h+'</div>';
+}
+
+/* ---------- chrome ---------- */
+function renderHeader(){
+  $('#pips').innerHTML=LEVELS.map(l=>'<button data-lvl="'+l.id+'"'+' class="'+(l.id===cur.L.id?'on':'')+(S.done.includes(l.id)?' fin':'')+'"'+(l.id===cur.L.id?' aria-current="true"':'')+
+    ' aria-label="Level '+l.id+(S.done.includes(l.id)?' (finished)':'')+'">'+l.id+'</button>').join('');
+  $('#badges').innerHTML=VOCAB.map(x=>S.badges.includes(x.id)
+    ?'<span class="badge got term" tabindex="0">'+x.name+'<span class="tip" role="tooltip"><b>'+x.name+'</b>'+x.def+'</span></span>'
+    :'<span class="badge">? ? ?</span>').join('');
+}
+function renderGuide(){
+  const got=VOCAB.filter(v=>S.badges.includes(v.id));
+  $('#gcount').textContent=got.length+' of '+VOCAB.length+' terms';
+  $('#guideBody').innerHTML='<p class="gmeta">Long Distance field guide · puzzle code '+esc(S.seed)+' · '+got.length+' of '+VOCAB.length+' terms earned</p>'+
+    got.map(v=>{const s=v.src&&SRC[v.src];
+      return '<div class="gentry"><h4>'+v.name+'</h4><p>'+v.def+'</p><p class="gmeta">Met in level '+(S.earnedAt[v.id]||'?')+
+        (s?' · Source: <a href="'+s.url+'" target="_blank" rel="noopener">'+s.cite+', “'+s.title+'”</a>':'')+
+        (v.code?' · Code it: <a href="https://rosalind.info/problems/'+v.code.toLowerCase()+'/" target="_blank" rel="noopener">Rosalind '+v.code+'</a>':'')+'</p></div>';}).join('')+
+    (got.length?'<p style="margin-top:10px"><button id="printGuide">Print field guide</button></p>':'<p class="gmeta">Nothing yet. Finish level 1.</p>');
+}
+function render(){
+  const ae=document.activeElement,fid=ae&&ae.id,pos=ae&&ae.selectionStart;
+  renderHeader();
+  $('#title').textContent='Level '+cur.L.id+': '+cur.L.title;
+  $('#brief').innerHTML=LV[cur.id].brief?LV[cur.id].brief():esc(cur.L.brief);
+  $('#rule').textContent=LV[cur.id].rule?LV[cur.id].rule():cur.L.rule;
+  $('#stage').innerHTML=LV[cur.id].view();
+  $('#status').textContent=cur.msg.text;$('#status').className='status '+cur.msg.kind;
+  const sk=$('#skip'),label=!cur.done&&LV[cur.id].skipLabel?LV[cur.id].skipLabel():'';
+  sk.hidden=!label;sk.textContent=label||'';
+  $('#undo').disabled=cur.done||!cur.hist.length;$('#restart').disabled=cur.done||!cur.hist.length;
+  $('#fresh').disabled=!!LV[cur.id].fixed;
+  renderPanel();renderGuide();
+  if(fid){const e=document.getElementById(fid);if(e&&e!==document.body){e.focus();if(pos!=null&&e.setSelectionRange)try{e.setSelectionRange(pos,pos);}catch(x){}}}
+}
+
+/* ---------- pointer and keyboard ---------- */
+document.addEventListener('click',ev=>{
+  const t=ev.target.closest('[data-act],[data-lvl],#next,#printGuide');
+  if(!t||!cur)return;
+  const d=t.dataset;
+  if(d.lvl!==undefined)return loadLevel(+d.lvl);
+  if(t.id==='next'){loadLevel(cur.L.id+1);if(window.scrollTo)window.scrollTo(0,0);return;}
+  if(t.id==='printGuide'){$('#guide').open=true;window.print();return;}
+  if(cur.done||t.disabled)return;
+  LV[cur.id].act(d.act,d);
+});
+document.addEventListener('keydown',ev=>{
+  const t=ev.target.closest&&ev.target.closest('g[data-act]');
+  if(t&&(ev.key==='Enter'||ev.key===' ')){ev.preventDefault();t.dispatchEvent(new MouseEvent('click',{bubbles:true}));}
+});
+['input','change'].forEach(type=>document.addEventListener(type,ev=>{
+  const t=ev.target;if(!cur||cur.done||!t.dataset||t.dataset.inp===undefined||!LV[cur.id].input)return;
+  LV[cur.id].input(t.dataset.inp,t.value,t.dataset,type==='change');
+}));
+
+/* ---------- drawing: one board ---------- */
+const DNAC={A:'#2e7d4f',C:'#2b5fb3',G:'#9a6b00',T:'#b83a4b'},CORDC=['#b83a4b','#2b5fb3','#2e7d4f'];
+const BWID=648,GX=596,PX=36,PY=42,RY=78,TAGS='ABCDEFG';
+const jx=(j,n)=>j>=n?GX:PX+(GX-64-PX)*(n>1?j/(n-1):0);
+const onOff=v=>typeof v==='number'?v.toFixed(2):v?'on':'off';
+function lt(c){return '<span style="color:'+DNAC[c]+'">'+c+'</span>';}
+function colour(w){return '<b class="w">'+[...w.slice(0,4)].map(lt).join('')+(w.length>4?'<i class="riv"></i>':'')+'</b>';}
+/* o: labels, b (board number), tag, meas, lamp, sets [{cords:[{from,to,w}],color}], top [note per jack], hl {jack:class}, act, cover, agree (word), track, marks [letter positions], verdict */
+function boardSvg(o){
+  const L=o.labels,n=L.length;let sag=0,cords='',h='';
+  (o.sets||[]).forEach((set,si)=>(set.cords||[]).forEach(c=>{
+    const a=jx(c.from,n),b=jx(c.to,n),s=16+Math.abs(c.from-c.to)*(n>6?5:9)+si*7,y=RY+6;sag=Math.max(sag,s);
+    cords+='<path class="cord'+(o.fresh?' new':'')+'" d="M'+a.toFixed(1)+','+y+' C'+a.toFixed(1)+','+(y+s)+' '+b.toFixed(1)+','+(y+s)+' '+b.toFixed(1)+','+y+'" stroke="'+(set.color||CORDC[si%3])+
+      '" stroke-width="'+(1.5+5.5*(c.w==null?.5:c.w)).toFixed(1)+'"/><circle cx="'+a.toFixed(1)+'" cy="'+y+'" r="3.5" fill="#2a1c10"/><circle cx="'+b.toFixed(1)+'" cy="'+y+'" r="3.5" fill="#2a1c10"/>';
+  }));
+  const H=Math.round(Math.max(104,RY+18+sag*.78));
+  h+='<rect x="8" y="'+(RY-12)+'" width="'+(BWID-16)+'" height="24" rx="6" fill="url(#gWood)"/><path d="M14,'+(RY-9)+'H'+(BWID-14)+'" stroke="#d9a26a" stroke-width="1" opacity=".6"/>';
+  if(o.tag||o.title)h+='<text x="10" y="13" font-size="12" font-weight="700" fill="#5a5140">'+(o.title||'Board '+o.tag)+
+    (o.verdict===true?'<tspan fill="#2e7d4f"> ✓ agrees</tspan>':o.verdict===false?'<tspan fill="#b83a4b"> ✗ predicted '+onOff(o.lamp)+'</tspan>':'')+'</text>';
+  if(o.meas!==undefined)h+='<text x="'+(BWID-10)+'" y="13" font-size="12" text-anchor="end" fill="#5a5140">measured: <tspan font-weight="700">'+onOff(o.meas)+'</tspan></text>';
+  for(let j=0;j<n;j++){
+    const x=jx(j,n),cls=(o.hl&&o.hl[j])||'',cov=o.cover===j,w=L[j];
+    let g='<rect class="pl '+cls+'" x="'+(x-23).toFixed(1)+'" y="'+(PY-12)+'" width="46" height="23" rx="3" fill="'+(cov?'#4a4334':'#fbf6e6')+'" stroke="#8a7a55" stroke-width="1.2"/>';
+    if(cov)g+='<text x="'+x.toFixed(1)+'" y="'+(PY+5)+'" font-size="14" font-weight="700" text-anchor="middle" fill="#cfc8b8">?</text>';
+    else g+='<text y="'+(PY+5)+'" font-size="14" font-weight="700">'+[...w.slice(0,4)].map((c,k)=>'<tspan x="'+(x-16+k*8.6).toFixed(1)+'" fill="'+(o.agree&&o.agree[k]!==c?'#b9af99':DNAC[c])+'">'+c+'</tspan>').join('')+'</text>';
+    if(!cov&&w.length>4)g+='<circle cx="'+(x+19).toFixed(1)+'" cy="'+(PY-10)+'" r="4.5" fill="url(#gBrass)" stroke="#5a3d10" stroke-width="1"/>';
+    if(o.top&&o.top[j]!=null&&o.top[j]!=='')g+='<text x="'+x.toFixed(1)+'" y="'+(PY-16)+'" font-size="11" text-anchor="middle" fill="#5a5140">'+o.top[j]+'</text>';
+    h+=o.act&&!cov?'<g data-act="'+o.act+'" data-b="'+(o.b||0)+'" data-i="'+j+'" tabindex="0" role="button" aria-label="Board '+(o.tag||'')+', jack '+(j+1)+', plate '+w+'">'+g+'</g>':g;
+    h+='<circle cx="'+x.toFixed(1)+'" cy="'+RY+'" r="7.5" fill="url(#gBrass)" stroke="#5a3d10" stroke-width="1"/><circle cx="'+x.toFixed(1)+'" cy="'+RY+'" r="3.2" fill="#2a1c10"/>';
+  }
+  (o.marks||[]).forEach(p=>{h+='<rect x="'+(jx(Math.floor(p/4),n)-17+(p%4)*8.6).toFixed(1)+'" y="'+(PY+12)+'" width="8.6" height="3" fill="#1f2328"/>';});
+  if(o.track)o.track.forEach((c,p)=>{if(c)h+='<rect x="'+(jx(Math.floor(p/4),n)-16.5+(p%4)*8.6).toFixed(1)+'" y="'+(PY+13)+'" width="7.6" height="'+(c*3.5)+'" fill="#b83a4b"/>';});
+  /* the gene's jack and its lamp */
+  h+='<circle cx="'+GX+'" cy="'+RY+'" r="10" fill="url(#gBrass)" stroke="#5a3d10" stroke-width="1.2"/><circle cx="'+GX+'" cy="'+RY+'" r="4.2" fill="#2a1c10"/>'+
+    '<text x="'+(GX+15)+'" y="'+(RY+4)+'" font-size="11" fill="#f3ead6">gene</text>';
+  if(o.lamp!==undefined){
+    const a=o.lamp===null?0:typeof o.lamp==='number'?Math.max(0,Math.min(1,o.lamp)):o.lamp?1:0;
+    h+='<rect x="'+(GX-5)+'" y="'+(PY+12)+'" width="10" height="'+(RY-PY-23)+'" fill="#8a7a55"/>'+
+      (a>0?'<circle cx="'+GX+'" cy="'+PY+'" r="23" fill="url(#gGlow)" opacity="'+a.toFixed(2)+'"/>':'')+
+      '<circle cx="'+GX+'" cy="'+PY+'" r="13" fill="#d8d2c2" stroke="#6b6250" stroke-width="1.5"'+(o.lamp===null?' stroke-dasharray="3 3"':'')+'/>'+
+      (a>0?'<circle cx="'+GX+'" cy="'+PY+'" r="12.2" fill="#ffc93c" opacity="'+a.toFixed(2)+'"/>':'')+
+      (o.lamp===null?'<text x="'+GX+'" y="'+(PY+5)+'" font-size="13" text-anchor="middle" fill="#6b6250">?</text>':'')+
+      (typeof o.lamp==='number'?'<text x="'+(GX+17)+'" y="'+(PY+4)+'" font-size="12" font-weight="700" fill="#1f2328">'+o.lamp.toFixed(2)+'</text>':'');
+  }
+  return '<svg class="board" viewBox="0 0 '+BWID+' '+H+'" role="img" aria-label="'+esc(o.aria||('Board '+(o.tag||'')))+'">'+cords+h+'</svg>';
+}
+const boardsHtml=(list,cap)=>(cap===false?'':'<div class="sub">'+(cap||'Each lamp shows what the exchange predicts')+'</div>')+'<div class="tscroll"><div class="boards">'+list.join('')+'</div></div>';
+const chip=(html,act,attrs,cls)=>'<button class="chip '+(cls||'')+'" data-act="'+act+'"'+(attrs||'')+'>'+html+'</button>';
+const blank=w=>w?colour(w):'<b class="w">· · · ·</b>';
+const fromGene=(js,n,w)=>js.map(j=>({from:n,to:j,w:w==null?1/js.length:w}));
+function distChip(d,act){return '<span class="step">'+chip('−',act,' data-d="-1" aria-label="Nearer"')+'<b>'+(d==null?'any':d)+'</b>'+chip('+',act,' data-d="1" aria-label="Farther"')+'</span>';}
+function stepDist(d,by){const v=(d==null?0:d)+by;return v<=0?null:Math.min(9,v);}
+function runButton(st){return '<p><button class="primary" data-act="run">Run on every board</button></p>';}
+/* compare predictions with measurements; returns the index of the first board that disagrees, or -1 */
+function firstWrong(boards,pred){return boards.findIndex((b,i)=>pred[i]!==b.on);}
+function num(v){v=String(v).trim();const m=/^(-?\d*\.?\d+)\s*\/\s*(\d*\.?\d+)$/.exec(v);if(m)return +m[1]/+m[2];return v===''||isNaN(+v)?NaN:+v;}
+const near=(a,b)=>Math.abs(a-b)<.006;
+function refocus(id){const e=document.getElementById(id);if(e&&e.focus)e.focus();}
+
+/* ---------- level 1: the plain problem ---------- */
+function strandHtml(x,s,o){
+  o=o||{};
+  return '<div class="strand"><span class="stag">'+(o.tag||'')+'</span><div class="text grid" style="--per:40;--pp:20">'+[...x.seq].map((c,i)=>{
+    const cls='cell'+(o.cls&&o.cls(i)?' '+o.cls(i):'');
+    return o.act?'<button class="'+cls+'" data-act="'+o.act+'" data-s="'+s+'" data-i="'+i+'" aria-label="'+c+', letter '+(i+1)+'">'+lt(c)+'</button>':'<span class="'+cls+'">'+lt(c)+'</span>';
+  }).join('')+'</div><span class="lampi '+(o.lamp===null?'q':o.lamp?'on':'off')+'" title="'+(o.lamp===null?'not measured':o.lamp?'measured on':'measured off')+'"></span></div>';
+}
+LV[1]={
+  init(){return {found:{},wrong:null,misses:0,ans:{},phase:'find'};},
+  view(){
+    const st=cur.st,x=cur.inst;
+    let h='<div class="sub">Five measured genes. The gene is at the right end of each strand</div>';
+    x.known.forEach((k,s)=>{h+=strandHtml(k,s,{tag:TAGS[s],lamp:k.on,act:st.phase==='find'&&k.on&&!st.found[s]?'at':null,
+      cls:i=>st.found[s]&&i>=k.at&&i<k.at+4?'ok':st.wrong&&st.wrong.s===s&&i>=st.wrong.i&&i<st.wrong.i+4?'bad':''});});
+    if(st.phase!=='find'){
+      h+='<div class="sub">Two genes nobody has measured</div>';
+      x.unknown.forEach((k,u)=>{const a=st.ans[u];
+        h+=strandHtml(k,u,{tag:TAGS[5+u],lamp:a?k.on:null,cls:i=>a&&k.on&&i>=k.at&&i<k.at+4?'ok':''})+
+          (a?'':'<p class="ask">Gene '+TAGS[5+u]+' is '+chip('on','guess',' data-u="'+u+'" data-v="on"')+' '+chip('off','guess',' data-u="'+u+'" data-v="off"')+'</p>');});
+    }
+    return h;
+  },
+  act(a,d){
+    const st=cur.st,x=cur.inst;
+    if(a==='at'&&st.phase==='find'){
+      const s=+d.s,i=+d.i,k=x.known[s];snap();
+      if(i===k.at){st.found[s]=true;st.wrong=null;log('found',{s});
+        if(Object.keys(st.found).length===3){st.phase='ask';say('GATA is in every lit strand and in no unlit one. Two more genes were never measured. Decide whether each is on or off.','good');}
+        else say('That is GATA. Find it in the other lit strands.','good');
+      }else{st.wrong={s,i};st.misses++;log('miss',{s,i});
+        const w=k.seq.slice(i,i+4);
+        say(w.length<4?'Four letters do not fit there.':st.misses>=5?w+' starts there. The shared word begins with G in every lit strand.':w+' starts there. It is not in all three lit strands.','warn');}
+      return render();
+    }
+    if(a==='guess'&&st.phase==='ask'){
+      const u=+d.u,k=x.unknown[u];snap();
+      if((d.v==='on')===k.on){st.ans[u]=d.v;log('guess',{u,ok:true});
+        if(Object.keys(st.ans).length===2){say('Both are right.','good');complete(['enhancer'],'l1');}
+        else say(k.on?'Yes. It holds a GATA.':'Yes. It has no GATA.','good');
+      }else{log('guess',{u,ok:false});say('Search strand '+TAGS[5+u]+' for GATA before you decide.','warn');}
+      return render();
+    }
+  }
+};
+BLOCKS.l1={src:['banerji'],html:()=>{const d=cur.inst.known.filter(k=>k.on).map(k=>40-k.at);
+  return 'The GATA starts '+d[0]+', '+d[1]+' and '+d[2]+' letters before its gene in the three lit strands, so there is no fixed place on a strand to check. '+
+    '<b>A sequence that raises the activity of a gene from a distance is called an '+term('enhancer','enhancer')+'.</b> GATA is the core of the site bound by the protein GATA1 in the cells that become red blood cells.';}};
+
+/* ---------- level 2: neighbours only ---------- */
+LV[2]={
+  init(){return {phase:'mini',r:0,peek:null,peeks:0};},
+  skipLabel(){return cur.st.phase==='big'?'Three rounds cannot reach this gene':'';},
+  skip(){const st=cur.st;snap();st.phase='window';log('wall');
+    say('Correct. Each round moves the news one jack. Click any jack to see which letters it has heard of after three rounds.','good');render();},
+  view(){
+    const st=cur.st,x=cur.inst,s=st.phase==='mini'?x.mini:x.big,len=s.seq.length,lo=s.at-st.r,hi=s.at+3+st.r,reached=hi>=len;
+    if(st.phase==='done')return '<div class="sub">The same strand, one plate for every four letters</div>'+boardsHtml([boardSvg({labels:x.big.labels,aria:'The strand as ten plates',hl:{[x.big.tok]:'good'}})],false);
+    let h='<div class="sub">'+(st.phase==='mini'?'A short strand':'Strand A of level 1')+'</div><div class="strand"><span class="stag"></span><div class="text grid" style="--per:'+len+';--pp:'+Math.min(20,len)+'">';
+    h+=[...s.seq].map((c,i)=>{
+      let cls='cell jack';
+      if(st.phase==='window'){if(st.peek!==null&&Math.abs(i-st.peek)<=3)cls+=i===st.peek?' sel hit':' hit';
+        return '<button class="'+cls+'" data-act="peek" data-i="'+i+'" aria-label="'+c+', letter '+(i+1)+'">'+lt(c)+'</button>';}
+      if(i>=s.at&&i<s.at+4)cls+=' ok';else if(i>=lo&&i<=hi)cls+=' hit';
+      return '<span class="'+cls+'">'+lt(c)+'</span>';
+    }).join('')+'</div><span class="lampi '+(st.phase!=='window'&&reached?'on':'off')+'"></span></div>';
+    if(st.phase==='window')h+='<p>'+(st.peek===null?'':'This jack has heard of '+plural(Math.min(len-1,st.peek+3)-Math.max(0,st.peek-3)+1,'letter')+'. ')+
+      (st.peeks?'<button class="primary" data-act="cut">Give every four letters one jack and one plate</button>':'')+'</p>';
+    else h+='<p><span class="meter">Round '+st.r+' of '+x.rounds+'</span> <button data-act="round"'+(st.r>=x.rounds||reached?' disabled':'')+'>Run one round</button>'+
+      (st.phase==='mini'&&reached?' <button class="primary" data-act="bigger">Try a real strand</button>':'')+'</p>';
+    return h;
+  },
+  act(a,d){
+    const st=cur.st,x=cur.inst;
+    if(a==='round'&&(st.phase==='mini'||st.phase==='big')&&st.r<x.rounds){
+      snap();st.r++;log('round',{r:st.r});
+      const s=st.phase==='mini'?x.mini:x.big,short=s.seq.length-(s.at+3+st.r);
+      say(short<=0?'The news has reached the gene, and its lamp lights.':st.r<x.rounds?'The news has moved one jack each way.':'Three rounds are used. The news is '+plural(short,'jack')+' short of the gene.',short<=0?'good':st.r<x.rounds?'':'warn');
+    }else if(a==='bigger'&&st.phase==='mini'){snap();st.phase='big';st.r=0;say('The same line, on strand A.');}
+    else if(a==='peek'&&st.phase==='window'){st.peek=+d.i;st.peeks++;say('');}
+    else if(a==='cut'&&st.phase==='window'){snap();st.phase='done';log('cut');say('Forty jacks have become ten.','good');complete(['field','token'],'l2');}
+    else return;
+    render();
+  }
+};
+BLOCKS.l2={src:['ji'],html:()=>{const b=cur.inst.big,need=b.seq.length-(b.at+3);
+  return 'After three rounds a jack has heard from three jacks on each side and no farther. <b>The stretch of sequence that can reach a position is its '+term('field','receptive field')+'.</b> '+
+    'Reaching this gene would take '+need+' rounds. The enhancer in level 1’s source worked from 3,300 letters away. '+
+    'Three rounds are still enough for a jack to recognise a four-letter word where it stands, so each stretch of four letters now has one jack and one plate. '+
+    '<b>The unit a model reads is called a '+term('token','token')+'.</b> DNA models cut their tokens in different ways: single letters, overlapping k-mers, or fixed stretches of a hundred letters or more.';}};
+
+/* ---------- level 3: a direct line, then one slip for every board ---------- */
+function l3pred(b,slip){const n=b.labels.length;
+  if(slip.kind==='pos'){const j=n-slip.k;return j>=0?[j]:[];}
+  return slip.kind==='lab'&&slip.lab?answers(b.labels,n,{want:[slip.lab]}):[];}
+LV[3]={
+  init(){return {phase:'hand',plug:{},slip:{kind:null,k:3,lab:null},ran:false};},
+  view(){
+    const st=cur.st,x=cur.inst;
+    const boards=x.boards.map((b,i)=>{const n=b.labels.length,hand=st.phase==='hand',js=hand?(st.plug[i]!=null?[st.plug[i]]:[]):l3pred(b,st.slip);
+      return boardSvg({labels:b.labels,b:i,tag:TAGS[i],meas:b.on,lamp:hand?(b.on&&st.plug[i]!=null?true:undefined):js.length>0,sets:[{cords:fromGene(js,n,1)}],
+        act:hand?(b.on&&st.plug[i]==null?'plug':null):'plate',verdict:st.ran?(js.length>0)===b.on:undefined});});
+    let h=boardsHtml(boards,st.phase==='hand'?'Four of the measured genes':null);
+    if(st.phase==='slip'){
+      h+='<div class="slip'+(st.slip.kind==='pos'?' on':'')+'">'+chip('Use this slip','kind',' data-k="pos"',st.slip.kind==='pos'?'sel':'')+' Wire me to the jack '+
+        '<span class="step">'+chip('−','k',' data-d="-1" aria-label="Fewer"')+'<b>'+st.slip.k+'</b>'+chip('+','k',' data-d="1" aria-label="More"')+'</span> places to my left.</div>'+
+        '<div class="slip'+(st.slip.kind==='lab'?' on':'')+'">'+chip('Use this slip','kind',' data-k="lab"',st.slip.kind==='lab'?'sel':'')+' Wire me to every jack whose plate reads '+blank(st.slip.lab)+'. <span class="hint">Click a plate to fill this in.</span></div>'+
+        (st.slip.kind?runButton():'');
+    }
+    return h;
+  },
+  act(a,d){
+    const st=cur.st,x=cur.inst;
+    if(a==='plug'&&st.phase==='hand'){
+      const b=x.boards[+d.b],i=+d.i;snap();
+      if(i===b.at){st.plug[d.b]=i;log('plug',{b:+d.b,ok:true});
+        if(Object.keys(st.plug).length===3){st.phase='slip';say('Each cord is one step long, whatever the distance. A human genome has about 20,000 genes, so nobody plugs cords by hand. The gene’s jack carries a written slip, and the same slip is used on every board. Choose a slip and fill it in.','good');}
+        else say('One step, whatever the distance.','good');
+      }else{log('plug',{b:+d.b,ok:false});say('That plate reads '+b.labels[i]+'. The lit boards share one plate.','warn');}
+      return render();
+    }
+    if(st.phase!=='slip')return;
+    if(a==='kind'){snap();st.slip.kind=d.k;st.ran=false;say('');}
+    else if(a==='k'){snap();st.slip.k=Math.max(1,Math.min(10,st.slip.k+(+d.d)));st.slip.kind='pos';st.ran=false;say('');}
+    else if(a==='plate'){snap();st.slip.lab=x.boards[+d.b].labels[+d.i];st.slip.kind='lab';st.ran=false;say('');}
+    else if(a==='run'&&st.slip.kind){
+      snap();st.ran=true;
+      const pred=x.boards.map(b=>l3pred(b,st.slip)),w=x.boards.findIndex((b,i)=>(pred[i].length>0)!==b.on||(b.on&&pred[i][0]!==b.at));
+      log('run',{slip:Object.assign({},st.slip),ok:w<0});
+      if(w<0){say('Every lamp agrees.','good');complete(['attention','query','key'],'l3');}
+      else{const b=x.boards[w];
+        say(st.slip.kind==='lab'&&!st.slip.lab?'The slip has a blank. Click a plate.':!b.on?'Board '+TAGS[w]+' was measured off, and this slip wires its gene to '+b.labels[pred[w][0]]+'.':
+          pred[w].length?'On board '+TAGS[w]+' the cord lands on '+b.labels[pred[w][0]]+'.':'On board '+TAGS[w]+' no jack answers, and its gene was measured on.','warn');}
+    }else return;
+    render();
+  }
+};
+BLOCKS.l3={src:['bahdanau'],html:()=>'The cord lands in a different place on every board because it follows what the plates say. '+
+  '<b>The slip a jack asks with is its '+term('query','query')+'. What a jack answers to, here its plate, is its '+term('key','key')+'. Wiring each jack to the jacks whose keys match its query is called '+term('attention','attention')+'.</b> '+
+  'The game uses those three words from here on.'};
+
+/* ---------- level 4: values ---------- */
+const sendText=v=>v>0?'+'+v:v<0?'−'+(-v):'0';
+function l4out(b,st){return headOut(b.labels,b.labels.length,{want:st.want},st.vals);}
+LV[4]={
+  init(){return {want:[ACT],vals:{[ACT]:1},sel:null,ran:false};},
+  view(){
+    const st=cur.st,x=cur.inst;
+    let h=boardsHtml(x.boards.map((b,i)=>{const n=b.labels.length,o=l4out(b,st),top=b.labels.map((l,j)=>o.cords.includes(j)?sendText(l in st.vals?st.vals[l]:1):'');
+      return boardSvg({labels:b.labels,b:i,tag:TAGS[i],meas:b.on,lamp:o.out>0,sets:[{cords:fromGene(o.cords,n)}],top,act:'plate',
+        hl:st.sel?Object.fromEntries(b.labels.map((l,j)=>[j,l===st.sel?'pick':''])):null,verdict:st.ran?(o.out>0)===b.on:undefined});}));
+    h+='<div class="slip on">Query: wire me to every jack whose key is '+(st.want.length?st.want.map(colour).join(' or '):blank(null))+'. The lamp lights when the reading is above 0.</div>';
+    if(st.sel){const inq=st.want.includes(st.sel),v=st.sel in st.vals?st.vals[st.sel]:1;
+      h+='<div class="slip">Plate '+colour(st.sel)+': '+chip(inq?'Take it out of the query':'Put it in the query','want')+
+        ' <span class="step">It sends '+[-1,0,1].map(k=>chip(sendText(k),'val',' data-v="'+k+'"',k===v?'sel':'')).join('')+'</span></div>';}
+    return h+runButton();
+  },
+  act(a,d){
+    const st=cur.st,x=cur.inst;
+    if(a==='plate'){st.sel=x.boards[+d.b].labels[+d.i];say('');}
+    else if(a==='want'&&st.sel){snap();st.want=st.want.includes(st.sel)?st.want.filter(w=>w!==st.sel):st.want.concat(st.sel);st.ran=false;say('');}
+    else if(a==='val'&&st.sel){snap();st.vals[st.sel]=+d.v;st.ran=false;say('');}
+    else if(a==='run'){
+      snap();st.ran=true;const outs=x.boards.map(b=>l4out(b,st)),w=firstWrong(x.boards,outs.map(o=>o.out>0));
+      log('run',{want:st.want.slice(),vals:Object.assign({},st.vals),ok:w<0});
+      if(w<0){say('Every lamp agrees.','good');complete(['value'],'l4');}
+      else{const b=x.boards[w],o=outs[w];
+        say('Board '+TAGS[w]+': '+(o.cords.length?o.cords.map(j=>b.labels[j]+' sends '+sendText(b.labels[j] in st.vals?st.vals[b.labels[j]]:1)).join(', ')+', so the reading is '+(Math.round(o.out*100)/100)+'.':'no jack answers, so the reading is 0.')+
+          ' Predicted '+onOff(o.out>0)+', measured '+onOff(b.on)+'.','warn');}
+    }else return;
+    render();
+  }
+};
+BLOCKS.l4={html:()=>{const b=cur.inst.boards[4];
+  return 'The key decides whether a jack answers. What the jack then sends is a separate matter. <b>What a jack sends down the cord is its '+term('value','value')+'.</b> '+
+    'The gene’s reading is each value times the share of current on its cord, added up. On board E that is (+1 +1 −1) ÷ 3, which is above 0, and on board F it is (+1 −1 −1) ÷ 3. '+
+    'CTCC stands here for a silencer, a site whose protein lowers the gene’s activity.';}};
+
+/* ---------- level 5: pulls, shares and the softmax ---------- */
+LV[5]={
+  init(){return {phase:'pull',pulls:{},sum:null,outs:{}};},
+  view(){
+    const st=cur.st,x=cur.inst,which=st.phase==='B'?'B':st.phase==='C'||st.phase==='done'?'C':'A';
+    const show=k=>{const b=x[k],s=soft(b.labels,x.want),n=b.labels.length,known=k!=='A'||st.sum!==null,done=st.outs[k]!==undefined;
+      return boardSvg({labels:b.labels,tag:k,agree:x.want,lamp:done?b.out:null,meas:done?b.out:undefined,
+        top:b.labels.map((l,j)=>k!=='A'||st.pulls[j]!==undefined?s.pull[j]+(x.values[l]?' · +1':''):''),
+        sets:[{cords:known?b.labels.map((l,j)=>({from:n,to:j,w:s.w[j]})):[]}]});};
+    let h='<div class="slip on">Query: '+colour(x.want)+'. Letters of a key that agree with it are shown in colour. '+colour(ACT)+' and '+colour(WEAK)+' send +1. Every other plate sends 0.</div>';
+    h+=boardsHtml(['A','B','C'].filter(k=>k==='A'||st.outs.A!==undefined&&(k==='B'||st.outs.B!==undefined)).map(show),'Above each plate: its pull, and +1 if the plate sends +1');
+    const A=x.A,sA=soft(A.labels,x.want);
+    if(st.phase==='pull'){
+      h+='<table class="mini"><tr><th>Plate</th><th>Letters that agree</th><th>Pull</th></tr>'+A.labels.map((l,j)=>'<tr><td>'+colour(l)+'</td><td>'+sA.sc[j]+'</td><td>'+
+        (st.pulls[j]!==undefined?st.pulls[j]:'<input type="text" inputmode="numeric" size="3" id="p'+j+'" data-inp="pull" data-i="'+j+'" aria-label="Pull of '+l+'">')+'</td></tr>').join('')+'</table>';
+    }else if(st.phase==='sum')h+='<p>Total pull on board A: <input type="text" inputmode="numeric" size="4" id="sum" data-inp="sum" aria-label="Total pull"></p>';
+    else if(st.phase!=='done'){
+      const k=which,s=soft(x[k].labels,x.want);
+      h+='<p>'+(k==='A'?'Each jack’s share of the current is its pull divided by '+sA.tot+'. The reading is the share that arrives at plates sending +1.':
+        k==='B'?'Board B has only the near copy. Its pulls are written above the plates and add up to '+s.tot+'.':'Board C has a full GATA. Its pulls add up to '+s.tot+'.')+
+        ' Reading of board '+k+': <input type="text" size="6" id="out'+k+'" data-inp="out" data-k="'+k+'" aria-label="Reading of board '+k+'" placeholder="0.00 or a/b"></p>';
+    }
+    return h;
+  },
+  input(n,v,d,final){
+    const st=cur.st,x=cur.inst,k=num(v);
+    if(n==='pull'&&st.phase==='pull'){
+      const j=+d.i,s=soft(x.A.labels,x.want);
+      if(k===s.pull[j]){snap();st.pulls[j]=k;log('pull',{j});
+        if(Object.keys(st.pulls).length===x.A.labels.length){st.phase='sum';say('Now add the pulls.','good');render();return refocus('sum');}
+        say(x.A.labels[j]+' pulls '+k+'.','good');render();
+        const nx=x.A.labels.findIndex((l,i)=>st.pulls[i]===undefined);return refocus('p'+nx);}
+      if(final&&!isNaN(k)){say('Start at 1 and double once for each agreeing letter: 1, 2, 4, 8, 16.','warn');render();refocus('p'+j);}
+    }else if(n==='sum'&&st.phase==='sum'){
+      const s=soft(x.A.labels,x.want);
+      if(k===s.tot){snap();st.sum=k;st.phase='A';log('sum');say('The gene has one unit of current. Each cord carries its jack’s share of it.','good');render();return refocus('outA');}
+      if(final&&!isNaN(k)){say('Add the six pulls again.','warn');render();refocus('sum');}
+    }else if(n==='out'&&st.phase===d.k){
+      const b=x[d.k];
+      if(near(k,b.out)){snap();st.outs[d.k]=k;log('out',{board:d.k});
+        if(d.k==='A'){st.phase='B';say('Board A reads '+b.out.toFixed(2)+'.','good');render();return refocus('outB');}
+        if(d.k==='B'){st.phase='C';say('Board B reads '+b.out.toFixed(2)+'.','good');render();return refocus('outC');}
+        st.phase='done';say('Board C reads '+b.out.toFixed(2)+' as well.','good');complete(['weight','softmax'],'l5');return render();}
+      if(final&&!isNaN(k)){const s=soft(b.labels,x.want);say('Add the pulls of the plates that send +1 and divide by '+s.tot+'.','warn');render();refocus('out'+d.k);}
+    }
+  },
+  act(){}
+};
+BLOCKS.l5={src:['vaswani'],html:()=>{const x=cur.inst,s=soft(x.C.labels,x.want);
+  return '<b>The share of a jack’s current that goes to another jack is an '+term('weight','attention weight')+'.</b> The weights of one asking jack add up to 1. '+
+    '<b>Turning scores into weights by raising a base to each score and dividing by the total is the '+term('softmax','softmax')+'.</b> You used base 2. Trained models use e, about 2.718. '+
+    'Board C holds a full GATA and reads the same as board B’s near copy, because three plates with two agreeing letters take 12 of its '+s.tot+' units of pull. Every jack gets some weight, so a long sequence dilutes a single site.';}};
+
+/* ---------- level 6: shuffled boards and positional encoding ---------- */
+LV[6]={
+  init(){return {phase:'try',want:null,dist:null,ran:false};},
+  skipLabel(){return cur.st.phase==='try'?'No query can tell board A from board B':'';},
+  skip(){const st=cur.st;snap();st.phase='stamp';st.ran=false;log('wall');
+    say('Correct. Cords follow keys, and a key says nothing about where its jack stands. Each plate now carries its distance from the gene, and the query can ask for a distance.','good');render();},
+  view(){
+    const st=cur.st,x=cur.inst,stamp=st.phase!=='try';
+    let h=boardsHtml(x.boards.map((b,i)=>{const n=b.labels.length,js=st.want?answers(b.labels,n,{want:[st.want],dist:stamp?st.dist:null}):[];
+      return boardSvg({labels:b.labels,b:i,tag:TAGS[i],meas:b.on,lamp:js.length>0,sets:[{cords:fromGene(js,n)}],act:'plate',top:stamp?b.labels.map((l,j)=>n-j):null,verdict:st.ran?(js.length>0)===b.on:undefined});}));
+    h+='<div class="slip on">Query: wire me to every jack whose key is '+blank(st.want)+(stamp?' and whose distance from me is '+distChip(st.dist,'dist'):'')+'.</div>';
+    return h+runButton();
+  },
+  act(a,d){
+    const st=cur.st,x=cur.inst;
+    if(a==='plate'){snap();st.want=x.boards[+d.b].labels[+d.i];st.ran=false;say('');}
+    else if(a==='dist'&&st.phase!=='try'){snap();st.dist=stepDist(st.dist,+d.d);st.ran=false;say('');}
+    else if(a==='run'){
+      snap();st.ran=true;const stamp=st.phase!=='try';
+      const pred=x.boards.map(b=>st.want?answers(b.labels,b.labels.length,{want:[st.want],dist:stamp?st.dist:null}).length>0:false),w=firstWrong(x.boards,pred);
+      log('run',{want:st.want,dist:st.dist,ok:w<0});
+      if(w<0&&stamp){say('Every lamp agrees.','good');complete(['posenc'],'l6');}
+      else if(!stamp)say('Boards A and B hold the same ten plates, so this query gives both the same reading. They were measured differently.','warn');
+      else say('Board '+TAGS[w]+' is predicted '+onOff(pred[w])+' and was measured '+onOff(x.boards[w].on)+'.','warn');
+    }else return;
+    render();
+  }
+};
+BLOCKS.l6={src:['vaswani6'],html:()=>'Attention gives the same result however the tokens are shuffled. <b>Writing position into each token before attention is '+term('posenc','positional encoding')+'.</b> '+
+  'This game writes each token’s distance from the asking jack. The paper below writes each token’s place in the sentence. '+
+  'TATA stands here for the TATA box, a site found a fixed short distance upstream of where many genes start.'};
+
+/* ---------- level 7: two heads ---------- */
+function l7pred(b,st){const n=b.labels.length,sets=st.q.map(q=>q.want?answers(b.labels,n,{want:[q.want],dist:q.dist}):[]),hit=sets.map(s=>s.length>0);
+  return {sets,on:st.q.length>1&&st.rule==='both'?hit.every(Boolean):hit.some(Boolean)};}
+LV[7]={
+  init(){return {q:[{want:null,dist:null}],active:0,rule:'either',ran:false};},
+  view(){
+    const st=cur.st,x=cur.inst;
+    let h=boardsHtml(x.boards.map((b,i)=>{const n=b.labels.length,p=l7pred(b,st);
+      return boardSvg({labels:b.labels,b:i,tag:TAGS[i],meas:b.on,lamp:p.on,sets:p.sets.map(js=>({cords:fromGene(js,n)})),act:'plate',top:b.labels.map((l,j)=>n-j),verdict:st.ran?p.on===b.on:undefined});}));
+    st.q.forEach((q,i)=>{h+='<div class="slip'+(st.active===i?' on':'')+'" style="border-left:6px solid '+CORDC[i]+'">'+chip('Query '+(i+1),'pickq',' data-q="'+i+'"',st.active===i?'sel':'')+
+      ' key '+blank(q.want)+' at distance '+distChip(q.dist,'dist" data-q="'+i)+'</div>';});
+    if(st.q.length<2)h+='<p><button data-act="addq">Add a second query with its own cords</button></p>';
+    else h+='<div class="slip">The lamp lights when '+chip('either query is answered','rule',' data-r="either"',st.rule==='either'?'sel':'')+' '+chip('both queries are answered','rule',' data-r="both"',st.rule==='both'?'sel':'')+'</div>';
+    return h+runButton();
+  },
+  act(a,d){
+    const st=cur.st,x=cur.inst;
+    if(a==='plate'){snap();st.q[st.active].want=x.boards[+d.b].labels[+d.i];st.ran=false;say('');}
+    else if(a==='pickq'){st.active=+d.q;say('');}
+    else if(a==='dist'){snap();st.active=+d.q;st.q[+d.q].dist=stepDist(st.q[+d.q].dist,+d.d);st.ran=false;say('');}
+    else if(a==='addq'&&st.q.length<2){snap();st.q.push({want:null,dist:null});st.active=1;st.ran=false;say('The second query has its own unit of current and its own cords.');}
+    else if(a==='rule'){snap();st.rule=d.r;st.ran=false;say('');}
+    else if(a==='run'){
+      snap();st.ran=true;const pred=x.boards.map(b=>l7pred(b,st).on),w=firstWrong(x.boards,pred);
+      log('run',{q:JSON.parse(JSON.stringify(st.q)),rule:st.rule,ok:w<0});
+      if(w<0){say('Every lamp agrees.','good');complete(['head'],'l7');}
+      else say('Board '+TAGS[w]+' is predicted '+onOff(pred[w])+' and was measured '+onOff(x.boards[w].on)+'.'+(st.q.length<2?' One query asks one question.':''),'warn');
+    }else return;
+    render();
+  }
+};
+BLOCKS.l7={src:['vig'],html:()=>'<b>One query with its own cords is an '+term('head','attention head')+'.</b> A single head could not do this. Its cords share one unit of current, so a board with only a TATA and a board with only a GATA give it the same reading. '+
+  'The rule you chose for the lamp stands for the small network that follows the heads in a real model and combines what they bring back.'};
+
+/* ---------- level 8: two layers ---------- */
+function l8pred(b,st){const n=b.labels.length,r=round1(b.labels,st.r1),want=st.r2.want?st.r2.want+(st.r2.riv?'+':''):null,js=want?answers(r.labels,n,{want:[want]}):[];
+  return {labels:r.labels,links:r.links,js,on:js.length>0};}
+LV[8]={
+  init(){return {r1:{who:null,want:null,dist:null},r2:{want:null,riv:false},arm:'who',ran:false};},
+  view(){
+    const st=cur.st,x=cur.inst,f=(k,w)=>chip(blank(w),'arm',' data-f="'+k+'" aria-label="Fill this blank"',st.arm===k?'sel':'');
+    let h=boardsHtml(x.boards.map((b,i)=>{const n=b.labels.length,p=l8pred(b,st);
+      return boardSvg({labels:p.labels,b:i,tag:TAGS[i],meas:b.on,lamp:p.on,sets:[{cords:fromGene(p.js,n)},{cords:p.links.map(l=>({from:l[0],to:l[1],w:.5}))}],act:'plate',verdict:st.ran?p.on===b.on:undefined});}));
+    h+='<div class="slip" style="border-left:6px solid '+CORDC[1]+'"><b>Round 1.</b> Every jack whose key is '+f('who',st.r1.who)+' asks for key '+f('want',st.r1.want)+' at distance '+distChip(st.r1.dist,'dist')+'. A jack that is answered gains a rivet.</div>'+
+      '<div class="slip" style="border-left:6px solid '+CORDC[0]+'"><b>Round 2.</b> The gene asks for key '+f('r2',st.r2.want)+' '+chip(st.r2.riv?'with a rivet':'with or without a rivet','riv','',st.r2.riv?'sel':'')+'.</div>';
+    return h+runButton();
+  },
+  act(a,d){
+    const st=cur.st,x=cur.inst;
+    if(a==='arm'){st.arm=d.f;say('Click a plate to fill the blank.');}
+    else if(a==='plate'){snap();const w=x.boards[+d.b].labels[+d.i];
+      if(st.arm==='r2')st.r2.want=w;else st.r1[st.arm]=w;
+      st.arm=st.arm==='who'&&!st.r1.want?'want':st.arm==='want'&&!st.r2.want?'r2':st.arm;st.ran=false;say('');}
+    else if(a==='dist'){snap();st.r1.dist=stepDist(st.r1.dist,+d.d);st.ran=false;say('');}
+    else if(a==='riv'){snap();st.r2.riv=!st.r2.riv;st.ran=false;say('');}
+    else if(a==='run'){
+      snap();st.ran=true;const pred=x.boards.map(b=>l8pred(b,st).on),w=firstWrong(x.boards,pred);
+      log('run',{r1:Object.assign({},st.r1),r2:Object.assign({},st.r2),ok:w<0});
+      if(w<0){say('Every lamp agrees.','good');complete(['layer','embedding','transformer'],'l8');}
+      else say('Board '+TAGS[w]+' is predicted '+onOff(pred[w])+' and was measured '+onOff(x.boards[w].on)+'.'+(w===2||w===0?' The gene cannot see from its own jack whether two other jacks are neighbours.':''),'warn');
+    }else return;
+    render();
+  }
+};
+BLOCKS.l8={src:['vaswani8','avsec'],html:()=>'In round 1 the jacks ask each other, and the gene is not involved. In round 2 the gene reads what round 1 wrote. '+
+  '<b>A round of attention followed by an update of every jack is a '+term('layer','layer')+'.</b> '+
+  '<b>What a jack carries from one layer to the next is its '+term('embedding','embedding')+'.</b> Here it is four letters, a distance and perhaps a rivet. In a real model it is a list of several hundred numbers. '+
+  '<b>A model made of tokens, embeddings with positional encoding, several heads in each layer and layers one after another is a '+term('transformer','transformer')+'.</b>'};
+
+/* ---------- level 9: covered plates ---------- */
+LV[9]={
+  init(){return {b:0,got:{},shown:false};},
+  skipLabel(){return cur.st.b<3?'Nothing on board '+TAGS[cur.st.b]+' tells me':'';},
+  skip(){
+    const st=cur.st,x=cur.inst,b=x.boards[st.b];snap();
+    if(b.src===null){st.got[st.b]=-1;st.b=3;log('cannot',{ok:true});
+      say('Correct. The plate was '+b.labels[b.cover]+', and nothing else on the board says so.','good');complete(['mlm','param'],'l9');}
+    else{log('cannot',{ok:false});say('Look again. A run of plates on this board occurs twice.','warn');}
+    render();
+  },
+  view(){
+    const st=cur.st,x=cur.inst;
+    return boardsHtml(x.boards.map((b,i)=>{const open=st.got[i]!==undefined,act=i===st.b;
+      return i>st.b?'':boardSvg({labels:b.labels,b:i,tag:TAGS[i],cover:open?undefined:b.cover,act:act?'src':null,
+        hl:open?{[b.cover]:'good',[st.got[i]]:'good'}:null,sets:open&&st.got[i]>=0?[{cords:[{from:b.cover,to:st.got[i],w:.6}]}]:[]});}),false);
+  },
+  act(a,d){
+    const st=cur.st,x=cur.inst;if(a!=='src'||+d.b!==st.b)return;
+    const b=x.boards[st.b],i=+d.i;snap();
+    if(b.src===i){st.got[st.b]=i;log('src',{b:st.b,ok:true});st.b++;
+      say('Under the cover is '+b.labels[b.cover]+', the plate that came down the cord.'+(st.b===1?' Now board B.':' Now board C.'),'good');}
+    else{log('src',{b:st.b,ok:false});
+      say('That jack sends '+b.labels[i]+'. Under the cover is something else.'+(b.src!==null?' Compare the plates beside the cover with the rest of the board.':''),'warn');}
+    render();
+  }
+};
+BLOCKS.l9={src:['devlin','dalla'],html:()=>'On boards A and B a run of plates occurred twice, and the covered jack found its place in the earlier copy and took the plate from there. Nearly half of the human genome is made of repeats, and models trained on DNA fill them in this way. '+
+  '<b>A model trained by covering tokens and asking for them back is a '+term('mlm','masked language model')+'.</b> The sequence is its own answer key, so no gene has to be measured. '+
+  'In levels 3 to 8 you set each query and value by comparing lamps with measurements and changing something after every miss. Training does the same thing by arithmetic, many millions of times. '+
+  '<b>The numbers it sets are the model’s '+term('param','parameters')+'.</b> The largest model in the second paper below has 2.5 billion.'};
+
+/* ---------- level 10: variants and in silico mutagenesis ---------- */
+function fullSets(labels){const r=runFull(labels),n=labels.length;
+  return {r,sets:[{cords:fromGene(r.h2,n)},{cords:r.links.map(l=>({from:l[0],to:l[1],w:.5}))},{cords:fromGene(r.h1,n)}]};}
+LV[10]={
+  init(){return {phase:'test',on:null,tried:{},scan:false};},
+  view(){
+    const st=cur.st,x=cur.inst,v=st.on===null?null:x.vars[st.on],labels=v?applyVar(x.labels,v):x.labels,f=fullSets(labels);
+    let h=boardsHtml([boardSvg({labels:f.r.labels,title:v?'Reference with letter '+(v.pos+1)+' changed':'Reference sequence',lamp:f.r.on,sets:f.sets,marks:st.scan?null:x.vars.map(q=>q.pos),track:st.scan?x.track:null,
+      aria:'The exchange run on the '+(v?'changed':'reference')+' sequence'})]);
+    if(st.phase==='test')h+='<div class="sub">The patient’s three differences. Apply one at a time</div>'+x.vars.map((q,i)=>'<div class="slip'+(st.on===i?' on':'')+'">Letter '+(q.pos+1)+', in plate '+colour(x.labels[Math.floor(q.pos/4)])+': '+lt(q.ref)+' → '+lt(q.alt)+' '+
+      chip(st.on===i?'Undo':'Apply','apply',' data-v="'+i+'"',st.on===i?'sel':'')+(st.on===i?' '+chip('This is the letter that switches the gene off','blame',' data-v="'+i+'"'):'')+'</div>').join('');
+    else if(!st.scan)h+='<p><button class="primary" data-act="scan">Change every letter in turn, three ways each</button></p>';
+    else h+='<p class="hint">A bar under a letter shows how many of its three possible changes switch the gene off.</p>';
+    return h;
+  },
+  act(a,d){
+    const st=cur.st,x=cur.inst;
+    if(a==='apply'&&st.phase==='test'){snap();const i=+d.v;st.on=st.on===i?null:i;
+      if(st.on!==null){st.tried[i]=true;const on=runFull(applyVar(x.labels,x.vars[i])).on;log('apply',{v:i,on});say('With letter '+(x.vars[i].pos+1)+' changed, the exchange predicts the gene is '+onOff(on)+'.',on?'':'good');}
+      else say('Back to the reference.');}
+    else if(a==='blame'&&st.phase==='test'){snap();const i=+d.v,ok=x.vars[i].kind==='partner';log('blame',{v:i,ok});
+      if(ok){st.phase='scan';st.on=null;say('Correct. The other two changes leave the prediction as it was, and one of them is inside a GATA. Three letters have been tested. The board has forty.','good');}
+      else say('With that change alone the exchange still predicts on.','warn');}
+    else if(a==='scan'&&st.phase==='scan'){snap();st.scan=true;log('scan');say('That was 120 changes and 120 runs of the exchange.','good');complete(['ism'].concat(sweepTerms()),'l10');}
+    else return;
+    render();
+  }
+};
+BLOCKS.l10={src:['canver','karollus','frangoul'],html:()=>{const x=cur.inst;
+  return 'The twelve letters that matter are the TATA beside the gene and the CAGC and GATA that sit together. The GATA at plate '+(x.lone+1)+' has no partner, so its letters can change freely. '+
+    '<b>Changing an input one letter at a time and recording the prediction is '+term('ism','in silico mutagenesis')+'.</b> It is how a sequence model is used to score a variant that nobody has studied. '+
+    'The score is a statement about the model. It says something about the patient only as far as the model has learned how real enhancers work, and the second paper below tests that.';},
+  wild:()=>'<span class="sub">In the wild</span><p>An enhancer of the gene BCL11A is active only in the cells that become red blood cells, and common variants inside it change how much fetal haemoglobin a person makes. '+
+    'Canver and colleagues cut that enhancer with Cas9 at every place they could and measured the effect of each cut, which is this level done in living cells. '+
+    'A treatment for sickle cell disease that edits the same enhancer was approved in 2023. Frangoul and colleagues describe its first two patients.</p>'};
+/*LEVELS-END*/
+
+/* ---------- the workbench ---------- */
+function renderBench(){
+  document.title='Long Distance: workbench';
+  $('.wrap').innerHTML='<header><h1><a href="./">Long Distance</a>: workbench</h1></header><div class="bench">'+
+    '<p>Type a strand and a four-letter query. The strand is cut into plates of four letters, and one unit of current is shared among them: a plate’s pull is 1, doubled for each letter that agrees with the query.</p>'+
+    '<p><label>Strand<br><textarea id="bs">TTGGGATACAGCGATTACGTTATA</textarea></label></p><p><label>Query <input type="text" id="bq" value="GATA" maxlength="4" size="6"></label></p><div id="bo"></div></div>';
+  const draw=()=>{const r=benchReport($('#bs').value,$('#bq').value);
+    $('#bo').innerHTML=r.labels.length?'<table><tr><th>Plate</th><th>Letters that agree</th><th>Pull</th><th>Weight</th></tr>'+r.labels.map((l,j)=>'<tr><td>'+l+'</td><td>'+r.sc[j]+'</td><td>'+r.pull[j]+'</td><td>'+r.pull[j]+'/'+r.tot+' = '+r.w[j].toFixed(3)+'</td></tr>').join('')+'</table>':'<p>The strand needs at least four letters.</p>';};
+  $('#bs').oninput=$('#bq').oninput=draw;draw();
+}
+
+$('#undo').onclick=undo;
+$('#restart').onclick=restart;
+$('#fresh').onclick=()=>{S.variants[cur.id]=(S.variants[cur.id]||0)+1;log('new_puzzle');save();loadLevel(cur.id);};
+$('#skip').onclick=()=>{if(!cur.done&&LV[cur.id].skip)LV[cur.id].skip();};
+/* progress link: the box, the copy buttons, and a pasted link in a tab that is already open */
+if(TRANSIENT)$('#savebar').hidden=true;
+else{
+  if(linkNote)topNote(linkNote,false);
+  /* the link has been read: take it (and any ?seed= it overrode) out of the address */
+  if(linkText){try{const q=new URLSearchParams(location.search);q.delete('seed');const qs=q.toString();history.replaceState(null,'',location.pathname+(qs?'?'+qs:''));}catch(e){}}
+  linkLive=true;
+  $('#saveLink').onclick=()=>{const b=$('#saveLink');if(b.select)b.select();};
+  $('#copyLink').onclick=$('#copyLinkTop').onclick=()=>{
+    const b=$('#saveLink'),tell=(text,again)=>{$('#saveNote').textContent=text;topNote(text,again);},
+      ok=()=>tell('Copied. The link changes when you earn a term, so copy it again before you leave.',false),
+      byHand=()=>{if(b.select)b.select();let done=false;try{done=document.execCommand('copy');}catch(e){}
+        if(done)ok();else tell('Could not copy. Select the link in the box at the bottom of this page and copy it by hand.',true);};
+    if(typeof navigator!=='undefined'&&navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(b.value).then(ok,byHand);else byHand();
+  };
+  window.addEventListener&&window.addEventListener('hashchange',()=>{if(/^#save=/.test(location.hash))location.reload();});
+}
+$('#dl').onclick=()=>{
+  const blob=new Blob([JSON.stringify({game:'long-distance',version:1,seed:S.seed,exported:new Date().toISOString(),
+    unlocked:S.unlocked,finished:S.done,vocabulary:S.badges,earnedAt:S.earnedAt,events:S.log},null,1)],{type:'application/json'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='long-distance-'+S.seed.replace(/[^\w-]/g,'_')+'.json';
+  document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),1000);
+};
+if(bench)renderBench();
+else loadLevel(previewLevel||resumeLevel());
+/* Test handle, only with ?debug=1 in the address. */
+if(params.get('debug'))window.__ld={state:()=>cur,saved:()=>S,codes:()=>CODES.slice(),fell:()=>TRIES.fell||0,loadLevel,levels:()=>LEVELS.map(l=>({id:l.id,title:l.title})),
+  vocab:()=>VOCAB.map(v=>({id:v.id,name:v.name})),earned:()=>S.badges.slice(),log:()=>S.log.slice(),
+  act:(a,d)=>{LV[cur.id].act(a,d||{});},input:(n,v,d)=>{LV[cur.id].input(n,String(v),d||{},true);},skip:()=>$('#skip').click(),render:()=>render()};
+})();
+</script>
+
+<script src="../book/chapters.js"></script>
+<script src="../book/book.js"></script>
+</body>
+</html>

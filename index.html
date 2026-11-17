@@ -84,7 +84,7 @@ section{padding-top:38px}
 <section id="contents" aria-labelledby="tocT">
   <div class="sechead"><h2 id="tocT">Contents</h2><p id="overall"></p></div>
   <ol class="toc" id="toc"></ol>
-  <noscript><p>The contents list needs JavaScript. The games are at motif-slots/, bridge-walker/, toll-city/, cho-han-night/, hollow-mountain/, paint-by-k/ and the-loom/.</p></noscript>
+  <noscript><p>The contents list needs JavaScript. The games are at motif-slots/, bridge-walker/, toll-city/, cho-han-night/, hollow-mountain/, paint-by-k/, the-loom/ and long-distance/.</p></noscript>
 </section>
 
 <section aria-labelledby="howT">
@@ -144,7 +144,7 @@ $('#toc').innerHTML=state.map(st=>{const c=st.c;
     '<a class="art" href="'+c.dir+'/" tabindex="-1" aria-hidden="true"><img src="book/art/'+c.dir+'.svg" alt="" loading="lazy"></a>'+
     '<div class="text"><h3><a href="'+c.dir+'/">'+esc(c.topic)+'</a></h3><p class="hook">'+esc(c.hook)+'</p>'+
     '<p class="meta"><a class="play" href="'+c.dir+'/">'+(st.done?'Replay ':st.started?'Continue ':'Play ')+esc(c.game)+'</a> · '+where+'</p>'+
-    '<p class="meta">Handouts (Word): '+B.resources.map(r=>doc('materials/'+c.slug+'-'+r[0]+'.docx',r[1])).join(', ')+'</p>'+
+    (c.docs===false?'':'<p class="meta">Handouts (Word): '+B.resources.map(r=>doc('materials/'+c.slug+'-'+r[0]+'.docx',r[1])).join(', ')+'</p>')+
     (c.side?'<p class="meta">Side quest: <a href="'+c.side.dir+'/">'+esc(c.side.game)+'</a>. '+esc(c.side.hook)+'</p>':'')+
     '</div></li>';}).join('');
 

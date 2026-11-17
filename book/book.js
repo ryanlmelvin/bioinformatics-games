@@ -216,7 +216,7 @@ function gamePage(){
   let h='<h2 id="bkAfterT">'+(side?'Back to the chapter':'After the game')+'</h2><div class="bk-after-grid">';
   if(side)h+='<a class="bk-nextch" href="'+base+ch.dir+'/"><img src="'+base+'book/art/'+ch.dir+'.svg" alt=""><span><small>Chapter '+ch.n+', '+esc(ch.topic)+'</small><b>'+esc(ch.game)+'</b></span></a>';
   else{
-    h+='<ul class="bk-docs">'+BOOK.resources.map(r=>'<li><a href="'+base+'materials/'+ch.slug+'-'+r[0]+'.docx">'+r[1]+'</a> (Word)'+(r[2]?'. '+esc(r[2]):'')+'</li>').join('')+'</ul>';
+    if(ch.docs!==false)h+='<ul class="bk-docs">'+BOOK.resources.map(r=>'<li><a href="'+base+'materials/'+ch.slug+'-'+r[0]+'.docx">'+r[1]+'</a> (Word)'+(r[2]?'. '+esc(r[2]):'')+'</li>').join('')+'</ul>';
     h+=next?'<a class="bk-nextch" href="'+base+next.dir+'/"><img src="'+base+'book/art/'+next.dir+'.svg" alt=""><span><small>Next: chapter '+next.n+', '+esc(next.short||next.topic)+'</small><b>'+esc(next.game)+'</b></span></a>'
            :'<a class="bk-nextch" href="'+base+'#glossary"><img src="'+base+'book/art/'+ch.dir+'.svg" alt=""><span><small>This was the last chapter</small><b>Your glossary</b></span></a>';
   }

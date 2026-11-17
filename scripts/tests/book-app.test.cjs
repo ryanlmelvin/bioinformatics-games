@@ -17,7 +17,7 @@ function gameLink(c){
 test('the front page checks a chapter’s link exactly as the chapter’s game writes it',()=>{
   const src=/const mark=[^\n]+\nfunction sound\(c,enc\)\{[^\n]+\n[^\n]+\}/.exec(home);assert(src,'front page still has mark() and sound()');
   const sound=vm.runInNewContext(src[0]+';sound');
-  assert.equal(book.BOOK.chapters.length,7);
+  assert.equal(book.BOOK.chapters.length,8);
   for(const c of book.BOOK.chapters){
     const link=gameLink(c);assert.match(link,/^1\.[0-9a-z]+\.[01]+\.[0-9a-z]+\.BOOK%2F1$/,c.dir);
     assert.equal(link.split('.')[1].length,c.terms,c.dir+': term count in chapters.js');assert.equal(link.split('.')[2].length,c.levels,c.dir+': level count in chapters.js');
@@ -36,7 +36,7 @@ test('every page offers the app, and the manifest and worker are ready for the b
   for(const f of ['manifest.webmanifest','sw.js','book/icon-180.png',...m.icons.map(i=>i.src)])assert(build.includes("'"+f+"'"),f+' is published');
   const sw=read('sw.js');assert(sw.includes("const VERSION='dev';")&&sw.includes('const FILES=[];'),'build placeholders');
   assert.match(home,/<link rel="manifest" href="manifest\.webmanifest">/);assert.match(home,/data-bk-app/);
-  for(const g of ['motif-slots','bridge-walker','toll-city','hollow-mountain','paint-by-k','the-loom','cho-han-night','lockpick'])
+  for(const g of ['motif-slots','bridge-walker','toll-city','hollow-mountain','paint-by-k','the-loom','cho-han-night','long-distance','lockpick'])
     assert.match(read(g+'/index.html'),/<link rel="manifest" href="\.\.\/manifest\.webmanifest">/,g);
   for(const c of book.BOOK.chapters)assert.match(read(c.dir+'/index.html'),/<div data-bk-app><\/div>/,c.dir);
   const shell=read('book/book.js');assert.match(shell,/navigator\.storage\.persist\(\)/);assert.match(shell,/beforeinstallprompt/);assert.match(shell,/serviceWorker\.register\(base\+'sw\.js'\)/);
