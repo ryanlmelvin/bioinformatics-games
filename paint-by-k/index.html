@@ -226,6 +226,15 @@ function hashStr(s){let h=2166136261>>>0;for(let i=0;i<s.length;i++){h^=s.charCo
 function rng(seed){let a=seed>>>0;return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
 function shuffled(n,rand){const a=[...Array(n).keys()];for(let i=n-1;i>0;i--){const j=Math.floor(rand()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
 const clampInk=x=>Math.max(0,Math.min(10,x));
+/* A generator that runs out of tries builds the puzzle for a key from its pool instead. TRIES.limit is for tests only. */
+const TRIES={limit:null,strict:false},maxTries=n=>TRIES.limit===null?n:TRIES.limit;
+function fallback(name,key,pool,make){
+  if(TRIES.strict)throw new Error(name+' ran out of tries for '+key);
+  const t=TRIES.limit;TRIES.strict=true;TRIES.limit=null;
+  try{return make(pool[hashStr(key)%pool.length]);}finally{TRIES.strict=false;TRIES.limit=t;}
+}
+const F4=['fallback-0','fallback-1','fallback-2','fallback-3'];
+const POOLS={cards:F4,3:F4,4:F4,5:F4,6:['fallback-4','fallback-5','fallback-8','fallback-12'],7:F4,9:['fallback-9','fallback-12','fallback-18','fallback-20'],10:F4};
 
 /* ---------- geometry of points in any number of dimensions ---------- */
 function dist2(a,b){let s=0;for(let i=0;i<a.length;i++){const d=a[i]-b[i];s+=d*d;}return s;}
@@ -352,7 +361,7 @@ const GEN={};
 /* Level 1 and 8: twelve cards, four of each of three patterns, two of them hybrids of two patterns. */
 GEN.cards=function(key){
   const names=['rise','fall','pulse'];
-  for(let t=0;t<500;t++){
+  for(let t=0;t<maxTries(500);t++){
     const rand=rng(hashStr(key+'|cards|'+t)),cards=[];
     names.forEach((nm,g)=>{for(let i=0;i<4;i++)cards.push({v:noisy(PATTERNS[nm],rand),group:g,hybrid:null});});
     // two hybrids: the last card of two groups is pulled halfway toward another pattern
@@ -379,7 +388,7 @@ GEN.cards=function(key){
     if(!coord)continue;
     return {deck,data,start,hand,coord,lloyd:L};
   }
-  throw new Error('cards');
+  return fallback('cards',key,POOLS.cards,GEN.cards);
 };
 /* The second sorting shown in level 1: the given piles with each hybrid moved to the pile of its other parent. */
 function otherSorting(deck,piles){
@@ -408,7 +417,7 @@ GEN[2]=function(key){
 };
 /* Level 3: fish. Pots are mixed to match pixels; the first is pixel 0. */
 GEN[3]=function(key){
-  for(let t=0;t<200;t++){
+  for(let t=0;t<maxTries(200);t++){
     const pic=makePicture(key+'|'+t,'fish'),D=pic.px,ff=farthestFirst(D,3,0),best=maxDistance(D,ff.centers);
     // decoy 1: the three commonest inks; decoy 2: the first pot and two pixels chosen at random
     const cnt={};D.forEach(p=>{const s=p.join(',');cnt[s]=(cnt[s]||0)+1;});
@@ -418,11 +427,11 @@ GEN[3]=function(key){
     decoys.forEach(d=>d.max=maxDistance(D,d.centers));
     if(decoys.every(d=>best<d.max-1e-9))return {pic,ff,best,decoys,k:3};
   }
-  throw new Error('fish');
+  return fallback('fish',key,POOLS[3],GEN[3]);
 };
 /* Level 4: mushroom with one stray pixel. */
 GEN[4]=function(key){
-  for(let t=0;t<200;t++){
+  for(let t=0;t<maxTries(200);t++){
     const pic=makePicture(key+'|'+t,'mushroom'),D=pic.px,ff=farthestFirst(D,3,0);
     const stray=pic.region.indexOf('x');
     if(!ff.idx.includes(stray))continue;
@@ -437,11 +446,11 @@ GEN[4]=function(key){
     const sq=six.map(i=>dist2(D[i],ff.centers[nearest(D[i],ff.centers)]));
     return {pic,ff,stray,fftErr,good,target,six,sq,k:3,fftMax:maxDistance(D,ff.centers)};
   }
-  throw new Error('mushroom');
+  return fallback('mushroom',key,POOLS[4],GEN[4]);
 };
 /* Level 5: heart. The red region's average and the four-pixel highlight's average are whole numbers. */
 GEN[5]=function(key){
-  for(let t=0;t<200;t++){
+  for(let t=0;t<maxTries(200);t++){
     const pic=makePicture(key+'|'+t,'heart'),A=regionIds(pic,'a'),B=regionIds(pic,'b');
     if(!fixMean(pic,A)||!fixMean(pic,B))continue;
     const a=centroid(A.map(i=>pic.px[i])),b=centroid(B.map(i=>pic.px[i]));
@@ -450,11 +459,11 @@ GEN[5]=function(key){
     if(new Set(B.map(i=>pic.px[i].join())).size<3)continue;
     return {pic,A,B,meanA:a,meanB:b};
   }
-  throw new Error('heart');
+  return fallback('heart',key,POOLS[5],GEN[5]);
 };
 /* Level 6: sailboat, scripted start. */
 GEN[6]=function(key){
-  for(let t=0;t<400;t++){
+  for(let t=0;t<maxTries(400);t++){
     const pic=makePicture(key+'|'+t,'boat'),D=pic.px,rand=rng(hashStr(key+'|start6|'+t));
     // scripted start: three pots a few units off, so the loop has work to do
     const start=[[5+Math.floor(rand()*2),3],[3,5+Math.floor(rand()*2)],[1+Math.floor(rand()*2),9]];
@@ -473,11 +482,11 @@ GEN[6]=function(key){
     if(row<0)continue;
     return {pic,start,lloyd:L,row,handPot};
   }
-  throw new Error('boat');
+  return fallback('boat',key,POOLS[6],GEN[6]);
 };
 /* Level 7: house. A bad start (two pots almost the same colour) against the level 3 start. */
 GEN[7]=function(key){
-  for(let t=0;t<200;t++){
+  for(let t=0;t<maxTries(200);t++){
     const pic=makePicture(key+'|'+t,'house'),D=pic.px,rand=rng(hashStr(key+'|bad|'+t));
     const roof=pic.base.a,sky=pic.base.c;
     // two pots on the roof, one between the sky and the wall: the wall never escapes to a pot of its own
@@ -487,12 +496,12 @@ GEN[7]=function(key){
     if(B.rounds>8||G.rounds>8)continue;
     return {pic,bad,badRun:B,ff,goodRun:G};
   }
-  throw new Error('house');
+  return fallback('house',key,POOLS[7],GEN[7]);
 };
 /* Level 8 uses GEN.cards with the same key as level 1. */
 /* Level 9: eight cards, a whole-number distance matrix, no tied merge. */
 GEN[9]=function(key){
-  for(let t=0;t<2000;t++){
+  for(let t=0;t<maxTries(2000);t++){
     const rand=rng(hashStr(key+'|tree|'+t)),groups=[0,0,0,1,1,1,2,2],names=['rise','fall','pulse'];
     const order=shuffled(8,rand),cards=order.map(i=>({v:noisy(PATTERNS[names[groups[i]]],rand),group:groups[i]}));
     const D=cards.map(a=>cards.map(b=>Math.round(dist(a.v,b.v))));
@@ -506,11 +515,11 @@ GEN[9]=function(key){
     const m0=M[0],other=[...Array(8).keys()].find(i=>!m0.members.includes(i));
     return {cards,D,merges:M,cut,hand:{group:m0.members,other,value:(D[m0.a[0]][other]+D[m0.b[0]][other])/2}};
   }
-  throw new Error('tree');
+  return fallback('tree',key,POOLS[9],GEN[9]);
 };
 /* Level 10: illustrative yeast genes at seven times around the shift (hour 0). */
 GEN[10]=function(key){
-  for(let t=0;t<200;t++){
+  for(let t=0;t<maxTries(200);t++){
     const rand=rng(hashStr(key+'|shift|'+t)),genes=[];
     ['on','off','flat'].forEach((nm,g)=>{for(let i=0;i<8;i++)genes.push({v:noisy(PATTERNS[nm],rand),group:g});});
     const order=shuffled(genes.length,rand),deck=order.map(i=>genes[i]),data=deck.map(g=>g.v);
@@ -519,7 +528,7 @@ GEN[10]=function(key){
     if(!ok||L.rounds>6)continue;
     return {deck,data,ff,lloyd:L};
   }
-  throw new Error('shift');
+  return fallback('shift',key,POOLS[10],GEN[10]);
 };
 function makeLevel(seed,n){
   const key=seed+'|L'+n;
@@ -539,7 +548,7 @@ function bench(points,k,start){
     lloyd:{start:st,steps:L.steps,centers:L.centers,max:maxDistance(points,L.centers),err:distortion(points,L.centers),rounds:L.rounds}};
 }
 if(typeof module!=='undefined')module.exports={hashStr,rng,shuffled,dist,dist2,nearest,assign,maxDistance,worstIndex,distortion,labelError,centroid,
-  farthestFirst,moveCenters,lloyd,groupDist,hierarchical,cutTree,inkRGB,PICTURES,makePicture,fixMean,regionIds,PATTERNS,GEN,otherSorting,pileError,makeLevel,parsePoints,bench};
+  farthestFirst,moveCenters,lloyd,groupDist,hierarchical,cutTree,inkRGB,PICTURES,makePicture,fixMean,regionIds,PATTERNS,GEN,otherSorting,pileError,makeLevel,parsePoints,bench,TRIES,POOLS};
 </script>
 <script id="ui">
 (function(){

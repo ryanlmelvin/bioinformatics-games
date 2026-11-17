@@ -366,6 +366,14 @@ footer input{font:inherit;width:9em;padding:5px 8px;border:1px solid var(--line)
 function hashStr(s){let h=2166136261>>>0;for(let i=0;i<s.length;i++){h^=s.charCodeAt(i);h=Math.imul(h,16777619);}return h>>>0;}
 function rng(seed){let a=seed>>>0;return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
 function shuffled(n,rand){const a=[...Array(n).keys()];for(let i=n-1;i>0;i--){const j=Math.floor(rand()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+/* A generator that runs out of tries builds the puzzle for a key from its pool instead. TRIES.limit is for tests only. */
+const TRIES={limit:null,strict:false},maxTries=n=>TRIES.limit===null?n:TRIES.limit;
+function fallback(name,key,pool,make){
+  if(TRIES.strict)throw new Error(name+' ran out of tries for '+key);
+  const t=TRIES.limit;TRIES.strict=true;TRIES.limit=null;
+  try{return make(pool[hashStr(key)%pool.length]);}finally{TRIES.strict=false;TRIES.limit=t;}
+}
+const POOLS={makeInstance:['fallback-0','fallback-3','fallback-4','fallback-5'],makeBalance:['fallback-1','fallback-2','fallback-3','fallback-4']};
 
 function analyse(genome,k){
   const reads=[];for(let i=0;i+k<=genome.length;i++)reads.push(genome.slice(i,i+k));
@@ -388,16 +396,15 @@ function analyse(genome,k){
 /* spec: {k, n (number of reads), minB, maxB} */
 function makeInstance(key,spec){
   const rand=rng(hashStr(key)),L=spec.n+spec.k-1;
-  let last=null;
-  for(let t=0;t<200000;t++){
+  for(let t=0;t<maxTries(200000);t++){
     let g='';for(let i=0;i<L;i++)g+='ACGT'[Math.floor(rand()*4)];
-    const a=analyse(g,spec.k);last=a;
+    const a=analyse(g,spec.k);
     if(a.selfLoops||a.start===a.end||a.maxPar>2)continue;
     if(a.branching<(spec.minB||0))continue;
     if(spec.maxB!==undefined&&a.branching>spec.maxB)continue;
     return a;
   }
-  return last;
+  return fallback('makeInstance',key,POOLS.makeInstance,k=>makeInstance(k,spec));
 }
 
 /* Overlap graph: a node per read, an edge i -> j wherever read i's suffix is read j's prefix. */
@@ -445,7 +452,7 @@ function pairedGraph(pairs,k){
 const PAIR_FALLBACK='TGTTCGGGTTGCCGTTACCCTCC';
 function makePairs(key){
   const rand=rng(hashStr(key)),base=()=>'ACGT'[Math.floor(rand()*4)],bases=n=>Array.from({length:n},base).join('');
-  const k=4,d=1,INNER=3,TAIL=7,LOOP=INNER+3,READS=1+2*LOOP+TAIL,LAST=60000;
+  const k=4,d=1,INNER=3,TAIL=7,LOOP=INNER+3,READS=1+2*LOOP+TAIL,LAST=maxTries(60000);
   for(let attempt=0;attempt<=LAST;attempt++){
     const repeat=bases(3);
     // A validated fallback bounds generation time without relaxing any invariant.
@@ -480,7 +487,7 @@ function makePairs(key){
    exactly three more edges before every node is balanced, with one node short by two. */
 function makeBalance(key){
   const rand=rng(hashStr(key)),n=6;
-  for(let t=0;t<200000;t++){
+  for(let t=0;t<maxTries(200000);t++){
     const m=9+Math.floor(rand()*3),edges=[],seen=new Set();let ok=true;
     for(let i=0;i<m;i++){
       const a=Math.floor(rand()*n);let b=Math.floor(rand()*(n-1));if(b>=a)b++;
@@ -499,7 +506,7 @@ function makeBalance(key){
     if(reach.size!==n)continue;
     return {nodes:['1','2','3','4','5','6'],edges,out,inn,need,reads:[],k:0,genome:''};
   }
-  return null;
+  return fallback('makeBalance',key,POOLS.makeBalance,makeBalance);
 }
 
 /* Hierholzer's algorithm: an Eulerian cycle through edges [{from,to}], as a list of edge indexes.
@@ -560,7 +567,7 @@ function layout(n,linkList,rand,W,H,R){
   }
   return p;
 }
-if(typeof module!=='undefined')module.exports={hashStr,rng,shuffled,analyse,makeInstance,overlapEdges,makeBalance,eulerCycle,layout,eulerWalks,spellWalk,pairPositions,pairedGraph,makePairs};
+if(typeof module!=='undefined')module.exports={hashStr,rng,shuffled,analyse,makeInstance,overlapEdges,makeBalance,eulerCycle,layout,eulerWalks,spellWalk,pairPositions,pairedGraph,makePairs,TRIES,POOLS};
 </script>
 
 <script id="ui">

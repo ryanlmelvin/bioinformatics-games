@@ -72,6 +72,27 @@ test('property 5: levels 8-10 family: five members, 8-10 columns, exactly one co
   }
 });
 
+function checkFamily(f,code){
+  assert.equal(f.aln.length,5);assert(f.n>=8&&f.n<=10);f.aln.forEach(r=>assert.equal(r.length,f.n));
+  assert.equal(X.roomsOf(f.aln,X.DEFAULT_GAPS).filter(x=>!x).length,1);
+  const s=X.familyScores(f);
+  assert(s.str>0);assert(s.rel>=100*s.str,'relative x100 stranger '+code);
+  assert.equal(s.sec0,0);assert(s.sec1>s.str1);
+  assert(!f.aln.some(r=>r[f.slipCol]===f.unseen));
+  assert(X.familyOK(f),'family passes its own acceptance check '+code);
+}
+function withTries(opts,f){Object.assign(X.TRIES,opts);try{return f();}finally{X.TRIES.limit=null;X.TRIES.strict=false;}}
+test('every fallback family key generates directly',()=>{
+  withTries({strict:true},()=>{for(const key of X.POOLS.makeFamily)checkFamily(X.makeFamily(key),key);});
+});
+test('makeFamily returns a valid family from its pool when it runs out of tries',()=>{
+  withTries({limit:0},()=>{
+    const keys=new Set();
+    for(let i=0;i<12;i++){const f=X.makeFamily('NO-TRIES|fam|'+i);checkFamily(f,'NO-TRIES '+i);assert(X.POOLS.makeFamily.includes(f.key));keys.add(f.key);}
+    assert(keys.size>1);
+  });
+  assert.equal(X.TRIES.limit,null);assert.equal(X.TRIES.strict,false);
+});
 test('seed reproducibility',()=>{
   assert.deepEqual(plain(X.makeFamily('SAME')),plain(X.makeFamily('SAME')));
   assert.deepEqual(plain(X.nightFor('SAME')),plain(X.nightFor('SAME')));

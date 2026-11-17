@@ -12,48 +12,46 @@ const N=500,codes=Array.from({length:N},(_,i)=>'PROP'+i);
 const whole=x=>Math.abs(x-Math.round(x))<1e-9;
 const near=(a,b,eps)=>Math.abs(a-b)<=(eps||1e-9);
 
-test('property 1: pictures are designed 12x12 pixel art with three ink regions, seeded jitter, whole inks 0..10',()=>{
- const levels={2:'tulip',3:'fish',4:'mushroom',5:'heart',6:'boat',7:'house'};
- const seen={};
- for(const code of codes)for(const [n,design] of Object.entries(levels)){
-  const pic=E.makeLevel(code,+n).pic;
-  assert.equal(pic.design,design);assert.equal(pic.px.length,144);
-  const regs=new Set(pic.region.filter(r=>r!=='x'));assert.equal(regs.size,3);
-  pic.px.forEach((p,i)=>{
-   assert(p.every(v=>Number.isInteger(v)&&v>=0&&v<=10));
-   if(pic.region[i]!=='x'){const b=pic.base[pic.region[i]];assert(Math.abs(p[0]-b[0])<=1&&Math.abs(p[1]-b[1])<=1);}
-  });
-  (seen[n]=seen[n]||new Set()).add(JSON.stringify(pic.px));
- }
- for(const n in seen)assert(seen[n].size>N*0.9,'jitter varies with the puzzle code');
- // the same code gives the same picture
- assert.deepEqual(JSON.stringify(E.makeLevel('X',3)),JSON.stringify(E.makeLevel('X',3)));
-});
-
-test('property 2: level 3 farthest-first pots beat both decoy placements on the worst pixel',()=>{
- for(const code of codes){
-  const L=E.makeLevel(code,3);
+/* The properties each generated level must have. The property tests and the fallback tests share them. */
+const DESIGNS={2:'tulip',3:'fish',4:'mushroom',5:'heart',6:'boat',7:'house'};
+function checkPicture(pic,design){
+ assert.equal(pic.design,design);assert.equal(pic.px.length,144);
+ const regs=new Set(pic.region.filter(r=>r!=='x'));assert.equal(regs.size,3);
+ pic.px.forEach((p,i)=>{
+  assert(p.every(v=>Number.isInteger(v)&&v>=0&&v<=10));
+  if(pic.region[i]!=='x'){const b=pic.base[pic.region[i]];assert(Math.abs(p[0]-b[0])<=1&&Math.abs(p[1]-b[1])<=1);}
+ });
+}
+const check={
+ 1(C){
+  check[8](C);
+  const piles=C.deck.map(c=>c.group),o=E.otherSorting(C.deck,piles);
+  const diff=piles.map((p,i)=>p!==o[i]?i:-1).filter(i=>i>=0);
+  assert.deepEqual(diff.map(i=>C.deck[i].hybrid!==null),diff.map(()=>true));assert.equal(diff.length,2);
+ },
+ 2(L){checkPicture(L.pic,DESIGNS[2]);assert.equal(L.pots.length,3);assert.equal(L.strip.length,8);},
+ 3(L){
+  checkPicture(L.pic,DESIGNS[3]);
   assert.equal(L.ff.idx[0],0);assert.equal(L.decoys.length,2);
   assert(near(L.best,E.maxDistance(L.pic.px,L.ff.centers)));
   for(const d of L.decoys)assert(L.best<E.maxDistance(L.pic.px,d.centers)-1e-9);
- }
-});
-
-test('property 3: level 4 farthest-first spends one of its first three pots on the stray, and ends 1.5x worse than the loop',()=>{
- for(const code of codes){
-  const L=E.makeLevel(code,4),D=L.pic.px;
+ },
+ 4(L){
+  checkPicture(L.pic,DESIGNS[4]);const D=L.pic.px;
   assert.equal(L.pic.region.filter(r=>r==='x').length,1);
   assert(L.ff.idx.slice(0,3).includes(L.stray));
   assert(E.distortion(D,L.ff.centers)>=1.5*L.good.err);
   // the student's target lies strictly between, and whole-number pots can reach it
   assert(L.target<L.fftErr&&E.distortion(D,L.good.centers.map(c=>c.map(Math.round)))<=L.target+1e-9);
   assert.equal(L.six.length,6);L.sq.forEach(v=>assert(Number.isInteger(v)));
- }
-});
-
-test('property 4: level 6 loop settles within six rounds and the error falls at every half-step',()=>{
- for(const code of codes){
-  const L=E.makeLevel(code,6),R=E.lloyd(L.pic.px,L.start);
+ },
+ 5(L){
+  checkPicture(L.pic,DESIGNS[5]);assert.equal(L.B.length,4);
+  assert(L.meanA.every(whole)&&L.meanB.every(whole));
+  assert(new Set(L.B.map(i=>L.pic.px[i].join())).size>=3);
+ },
+ 6(L){
+  checkPicture(L.pic,DESIGNS[6]);const R=E.lloyd(L.pic.px,L.start);
   assert(R.rounds<=6);
   const last=R.steps[R.steps.length-1];assert.equal(last.changed,false);
   const errs=R.steps.filter(s=>s.changed).map(s=>s.err);
@@ -62,21 +60,15 @@ test('property 4: level 6 loop settles within six rounds and the error falls at 
   // the pot averaged by hand has a whole-number average after the first repaint
   const lab=R.steps[0].labels,mine=L.pic.px.filter((_,i)=>lab[i]===L.handPot);
   assert(E.centroid(mine).every(whole));
- }
-});
-
-test('property 5: level 7 bad start stops at least 1.3x worse than the level 3 start',()=>{
- for(const code of codes){
-  const L=E.makeLevel(code,7),D=L.pic.px;
+ },
+ 7(L){
+  checkPicture(L.pic,DESIGNS[7]);const D=L.pic.px;
   assert(E.dist(L.bad[0],L.bad[1])<=1.5,'two pots almost the same colour');
   const B=E.lloyd(D,L.bad),G=E.lloyd(D,E.farthestFirst(D,3,0).centers);
   assert(B.err>=1.3*G.err);
- }
-});
-
-test('property 6: level 8 cards form three groups, the loop settles in five rounds, hand work is whole numbers',()=>{
- for(const code of codes){
-  const C=E.makeLevel(code,8),R=E.lloyd(C.data,C.start.map(i=>C.data[i]));
+ },
+ 8(C){
+  const R=E.lloyd(C.data,C.start.map(i=>C.data[i]));
   assert(R.rounds<=5);
   assert.equal(C.data.length,12);C.data.forEach(v=>{assert.equal(v.length,7);assert(v.every(x=>Number.isInteger(x)&&x>=0&&x<=10));});
   for(let g=0;g<3;g++){const piles=new Set(C.deck.map((c,i)=>c.group===g&&c.hybrid===null?R.labels[i]:-1).filter(x=>x>=0));assert.equal(piles.size,1);}
@@ -84,14 +76,9 @@ test('property 6: level 8 cards form three groups, the loop settles in five roun
   for(const i of C.hand)for(const c of centers)assert(Number.isInteger(E.dist2(C.data[i],c)));
   const lab=E.assign(C.data,centers),mine=C.data.filter((_,i)=>lab[i]===C.coord.center);
   assert(whole(E.centroid(mine)[C.coord.hour]));assert.equal(E.centroid(mine)[C.coord.hour],C.coord.value);
-  // level 1 and level 8 share the same cards
-  assert.deepEqual(JSON.stringify(E.makeLevel(code,1).data),JSON.stringify(C.data));
- }
-});
-
-test('property 7: level 9 has no tied merge',()=>{
- for(const code of codes){
-  const L=E.makeLevel(code,9),D=L.D;
+ },
+ 9(L){
+  const D=L.D;
   // independently: at each step the closest pair of groups is unique
   let groups=D.map((_,i)=>[i]);
   for(const m of L.merges){
@@ -102,19 +89,85 @@ test('property 7: level 9 has no tied merge',()=>{
   }
   D.forEach((r,i)=>r.forEach((v,j)=>{assert(Number.isInteger(v));assert.equal(v,D[j][i]);}));
   assert.equal(L.cut.length,3);
+ },
+ 10(L){assert.equal(L.data.length,24);assert(L.lloyd.rounds<=6);}
+};
+function withTries(opts,f){Object.assign(E.TRIES,opts);try{return f();}finally{E.TRIES.limit=null;E.TRIES.strict=false;}}
+
+test('property 1: pictures are designed 12x12 pixel art with three ink regions, seeded jitter, whole inks 0..10',()=>{
+ const levels={2:'tulip',3:'fish',4:'mushroom',5:'heart',6:'boat',7:'house'};
+ const seen={};
+ for(const code of codes)for(const [n,design] of Object.entries(levels)){
+  const pic=E.makeLevel(code,+n).pic;checkPicture(pic,design);
+  (seen[n]=seen[n]||new Set()).add(JSON.stringify(pic.px));
+ }
+ for(const n in seen)assert(seen[n].size>N*0.9,'jitter varies with the puzzle code');
+ // the same code gives the same picture
+ assert.deepEqual(JSON.stringify(E.makeLevel('X',3)),JSON.stringify(E.makeLevel('X',3)));
+});
+
+test('property 2: level 3 farthest-first pots beat both decoy placements on the worst pixel',()=>{
+ for(const code of codes){
+  check[3](E.makeLevel(code,3));
+ }
+});
+
+test('property 3: level 4 farthest-first spends one of its first three pots on the stray, and ends 1.5x worse than the loop',()=>{
+ for(const code of codes){
+  check[4](E.makeLevel(code,4));
+ }
+});
+
+test('property 4: level 6 loop settles within six rounds and the error falls at every half-step',()=>{
+ for(const code of codes){
+  check[6](E.makeLevel(code,6));
+ }
+});
+
+test('property 5: level 7 bad start stops at least 1.3x worse than the level 3 start',()=>{
+ for(const code of codes){
+  check[7](E.makeLevel(code,7));
+ }
+});
+
+test('property 6: level 8 cards form three groups, the loop settles in five rounds, hand work is whole numbers',()=>{
+ for(const code of codes){
+  const C=E.makeLevel(code,8);check[8](C);
+  // level 1 and level 8 share the same cards
+  assert.deepEqual(JSON.stringify(E.makeLevel(code,1).data),JSON.stringify(C.data));
+ }
+});
+
+test('property 7: level 9 has no tied merge',()=>{
+ for(const code of codes){
+  check[9](E.makeLevel(code,9));
  }
 });
 
 test('level 10 genes: the loop from farthest-first pots recovers the three illustrative patterns',()=>{
- for(const code of codes.slice(0,200)){const L=E.makeLevel(code,10);assert.equal(L.data.length,24);assert(L.lloyd.rounds<=6);}
+ for(const code of codes.slice(0,200))check[10](E.makeLevel(code,10));
 });
 
 test('level 1: the second sorting differs from the student piles only on the two hybrid cards',()=>{
  for(const code of codes.slice(0,200)){
-  const C=E.makeLevel(code,1),piles=C.deck.map(c=>c.group),o=E.otherSorting(C.deck,piles);
-  const diff=piles.map((p,i)=>p!==o[i]?i:-1).filter(i=>i>=0);
-  assert.deepEqual(diff.map(i=>C.deck[i].hybrid!==null),diff.map(()=>true));assert.equal(diff.length,2);
+  check[1](E.makeLevel(code,1));
  }
+});
+
+test('every fallback key generates directly without running out of tries',()=>{
+ assert.deepEqual(Object.keys(E.POOLS).sort(),['10','3','4','5','6','7','9','cards']);
+ withTries({strict:true},()=>{
+  for(const k of E.POOLS.cards){const C=E.GEN.cards(k);check[1](C);check[8](C);}
+  for(const n of [3,4,5,6,7,9,10])for(const k of E.POOLS[n])check[n](E.GEN[n](k));
+ });
+});
+test('a generator that runs out of tries returns a valid level from its pool',()=>{
+ withTries({limit:0},()=>{
+  for(let i=0;i<10;i++)for(let n=1;n<=10;n++)check[n](rawMake('NO-TRIES-'+i,n));
+  // levels 1 and 8 still share their cards
+  for(let i=0;i<10;i++)assert.deepEqual(JSON.stringify(rawMake('NO-TRIES-'+i,1)),JSON.stringify(rawMake('NO-TRIES-'+i,8)));
+ });
+ assert.equal(E.TRIES.limit,null);assert.equal(E.TRIES.strict,false);
 });
 
 /* ---------- Rosalind samples ---------- */

@@ -319,6 +319,14 @@ function hashStr(s){let h=2166136261>>>0;for(let i=0;i<s.length;i++){h^=s.charCo
 function rng(seed){let a=seed>>>0;return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
 const DNA='ACGT';
 function randStr(rand,n,alpha){let s='';for(let i=0;i<n;i++)s+=(alpha||DNA)[Math.floor(rand()*(alpha||DNA).length)];return s;}
+/* A generator that runs out of tries builds the puzzle for a key from its pool instead. TRIES.limit is for tests only. */
+const TRIES={limit:null,strict:false},maxTries=n=>TRIES.limit===null?n:TRIES.limit;
+function fallback(name,key,pool,make){
+  if(TRIES.strict)throw new Error(name+' ran out of tries for '+key);
+  const t=TRIES.limit;TRIES.strict=true;TRIES.limit=null;
+  try{return make(pool[hashStr(key)%pool.length]);}finally{TRIES.strict=false;TRIES.limit=t;}
+}
+const F4=['fallback-0','fallback-1','fallback-2','fallback-3'],POOLS={makeDecks:F4,makeCity:F4,makeLocal:F4,makeOverlap:F4};
 
 /* Scoring matrices, as printed on Rosalind's glossary pages (rows and columns in AA order). */
 const AA='ACDEFGHIKLMNPQRSTVWY';
@@ -474,8 +482,8 @@ function checkDecks(v,w){
 }
 function makeDecks(key){
   const rand=rng(hashStr(key+'|decks'));
-  for(let t=0;t<200000;t++){const r=checkDecks(randStr(rand,7),randStr(rand,8));if(r)return r;}
-  return checkDecks('AGTCACG','GTACTGAC');
+  for(let t=0;t<maxTries(200000);t++){const r=checkDecks(randStr(rand,7),randStr(rand,8));if(r)return r;}
+  return fallback('makeDecks',key,POOLS.makeDecks,makeDecks);
 }
 /* Level 3: a corner part-way through, a best way of getting there (history A) and all discards (history B). */
 function tablePuzzle(d){
@@ -497,15 +505,16 @@ function makeCity(key){
   const rand=rng(hashStr(key+'|city')),cell=()=>Math.floor(rand()*5);
   const grid=(n,m)=>({down:Array.from({length:n},()=>Array.from({length:m+1},cell)),right:Array.from({length:n+1},()=>Array.from({length:m},cell))});
   let small=null,big=null;
-  for(let t=0;t<100000&&!small;t++){const g=grid(2,2),r=manhattan(g.down,g.right);if(r.count===1)small=Object.assign(g,{best:r.best});}
-  for(let t=0;t<100000&&!big;t++){const g=grid(4,4),r=manhattan(g.down,g.right),gr=manhattanGreedy(g.down,g.right);
+  for(let t=0;t<maxTries(100000)&&!small;t++){const g=grid(2,2),r=manhattan(g.down,g.right);if(r.count===1)small=Object.assign(g,{best:r.best});}
+  for(let t=0;t<maxTries(100000)&&!big;t++){const g=grid(4,4),r=manhattan(g.down,g.right),gr=manhattanGreedy(g.down,g.right);
     if(r.count===1&&gr.score<r.best)big=Object.assign(g,{best:r.best,greedy:gr.score});}
+  if(!small||!big)return fallback('makeCity',key,POOLS.makeCity,makeCity);
   return {small,big};
 }
 /* Level 9: two strings that share one short stretch and little else. */
 function makeLocal(key){
   const rand=rng(hashStr(key+'|local'));
-  for(let t=0;t<200000;t++){
+  for(let t=0;t<maxTries(200000);t++){
     const core=randStr(rand,5+Math.floor(rand()*2)),a=Math.floor(rand()*4),b=Math.floor(rand()*4);
     const v=randStr(rand,a)+core+randStr(rand,10-a-core.length),w=randStr(rand,b+1)+core+randStr(rand,10-b-core.length);
     if(v.length!==10||w.length!==11)continue;
@@ -513,12 +522,12 @@ function makeLocal(key){
     if(L.count!==1||L.best<4||G.best>=0)continue;
     return {v,w,local:L,global:G};
   }
-  throw new Error('Could not generate a local puzzle');
+  return fallback('makeLocal',key,POOLS.makeLocal,makeLocal);
 }
 /* Level 10: two reads; the end of the first is the start of the second, six or seven letters, with one typo. */
 function makeOverlap(key){
   const rand=rng(hashStr(key+'|overlap'));
-  for(let t=0;t<200000;t++){
+  for(let t=0;t<maxTries(200000);t++){
     const len=6+Math.floor(rand()*2),v=randStr(rand,10);
     let shared=v.slice(10-len).split('');const at=1+Math.floor(rand()*(len-2));
     shared[at]=DNA.replace(shared[at],'')[Math.floor(rand()*3)];
@@ -529,7 +538,7 @@ function makeOverlap(key){
     if(O.moves.some(d=>d!=='D')||(cols!==6&&cols!==7)||mis!==1)continue;
     return {v,w,overlap:O,len:cols,typo:at};
   }
-  throw new Error('Could not generate an overlap puzzle');
+  return fallback('makeOverlap',key,POOLS.makeOverlap,makeOverlap);
 }
 /* Level 11: real protein fragments (UniProt), aligned with BLOSUM62 and indel penalty 5 as in Rosalind BA5E. */
 const PROTEINS={
@@ -556,7 +565,7 @@ function* everyGame(n,m){
 }
 if(typeof module!=='undefined')module.exports={hashStr,rng,randStr,MATRICES,TOLLS,PAIRS,pairScore,align,backtrack,alignRows,routeCorners,routeScore,
   matchesOn,allLCS,greedy,countGames,countGamesDigits,binom,manhattan,manhattanGreedy,routeSights,allRoutes,checkDecks,makeDecks,tablePuzzle,makeTwelve,makeCity,
-  makeLocal,makeOverlap,PROTEINS,codeBreakers,bench,everyGame};
+  makeLocal,makeOverlap,PROTEINS,codeBreakers,bench,everyGame,TRIES,POOLS};
 </script>
 
 <script id="ui">

@@ -81,60 +81,84 @@ test('property 3: level 6, unweaving returns the original word, for every word i
   }
   for(const code of CODES){const x=E.makeLevel(code,6,0);assert.notEqual(x.word,E.makeLevel(code,5,0).word);assert.equal(E.unweave(x.L).text,x.text);}
 });
+/* The properties each generated level must have. The property tests and the fallback tests share them. */
+const check={
+ 1(x){
+  assert.equal(x.short.text.length,40);assert.equal(x.long.text.length,200);
+  assert.equal(x.short.reads.length,3);assert.equal(x.long.reads.length,10);
+  for(const s of [x.short,x.long])s.reads.forEach(r=>assert.deepEqual(plain(E.occurrences(s.text,r.read)),[r.pos]));
+  const total=x.long.reads.reduce((a,r)=>a+E.naiveScan(x.long.text,r.read).comps,0);assert(total>1000);
+ },
+ 8(x){
+  assert.equal(E.occurrences(x.body,x.first).length,2);
+  assert.equal(x.reads.length,4);x.reads.forEach(r=>assert.equal(E.occurrences(x.body,r.read).length,1));
+  const all=x.walks.flat();
+  all.forEach(w=>{assert(w.steps<=3);assert.equal(x.text.slice(w.pos).slice(0,1),x.text[x.sa[w.path[0]]]);});
+  // each walk ends at the right place in the text
+  [x.first,...x.reads.map(r=>r.read)].forEach((p,i)=>assert.deepEqual(x.walks[i].map(w=>w.pos).sort((a,b)=>a-b),E.occurrences(x.body,p)));
+  assert(all.some(w=>w.steps===3));
+  Object.values(x.labels).forEach(p=>assert.equal(p%4,0));
+ },
+ 9(x){
+  assert.equal(x.L.length,32);
+  const b=E.bandSteps(x.L,x.pattern);assert.deepEqual(plain(b.band),plain(x.band));
+  assert(x.top%4>=2&&(x.bottom+1)%4>=2);
+  const fromBoard=i=>x.boards[i-i%4][x.sym]+E.countAbove(x.L.slice(i-i%4),x.sym,i%4);
+  assert.equal(fromBoard(x.top),x.above);assert.equal(fromBoard(x.bottom+1),x.upto);
+  assert.equal(E.betterBWMatching(x.L,x.pattern),x.band[1]-x.band[0]+1);
+ },
+ 10(x){
+  assert.equal(E.occurrences(x.text,x.read).length,0);
+  assert.deepEqual(plain(E.approxBrute(x.text,x.read,1)),[x.at]);
+  assert.equal(E.mismatches(x.text.slice(x.at,x.at+8),x.read),1);
+  assert(x.halves.some(h=>x.text.slice(x.at+h.off,x.at+h.off+4)===h.piece));
+  // the decoy: some exact hit of a half lies where the whole read has two or more mismatches
+  assert(x.hits.some(h=>h.start!==x.at&&E.mismatches(x.text.slice(h.start,h.start+8),x.read)>=2));
+  assert.deepEqual(plain(E.approxOccurrences(x.text,x.read,1)),[x.at]);
+ },
+ 11(x){
+  const cover=x.reads.filter(r=>r.start<=x.v&&x.v<r.start+10);assert(cover.length>=4);
+  cover.forEach(r=>assert.equal(r.read[x.v-r.start],x.alt));
+  const at=x.reads.filter(r=>r.start<=x.err&&x.err<r.start+10),bad=at.filter(r=>r.read[x.err-r.start]!==x.ref[x.err]);
+  assert.equal(bad.length,1);assert(at.length>=3);
+  x.reads.forEach(r=>assert.deepEqual(plain(E.approxOccurrences(x.ref,r.read,1)),[r.start]));
+ }
+};
+function withTries(opts,f){Object.assign(E.TRIES,opts);try{return f();}finally{E.TRIES.limit=null;E.TRIES.strict=false;}}
+
 test('property 4: level 8, with every fourth position labelled, every match is placed in at most three steps',()=>{
   for(const code of CODES){
-    const x=E.makeLevel(code,8,0);
-    assert.equal(E.occurrences(x.body,x.first).length,2);
-    assert.equal(x.reads.length,4);x.reads.forEach(r=>assert.equal(E.occurrences(x.body,r.read).length,1));
-    const all=x.walks.flat();
-    all.forEach(w=>{assert(w.steps<=3);assert.equal(x.text.slice(w.pos).slice(0,1),x.text[x.sa[w.path[0]]]);});
-    // each walk ends at the right place in the text
-    [x.first,...x.reads.map(r=>r.read)].forEach((p,i)=>assert.deepEqual(x.walks[i].map(w=>w.pos).sort((a,b)=>a-b),E.occurrences(x.body,p)));
-    assert(all.some(w=>w.steps===3));
-    Object.values(x.labels).forEach(p=>assert.equal(p%4,0));
+    check[8](E.makeLevel(code,8,0));
   }
 });
 test('property 5: level 10, the read occurs nowhere exactly, once with one mismatch, and one half matches exactly there',()=>{
   for(const code of CODES){
-    const x=E.makeLevel(code,10,0);
-    assert.equal(E.occurrences(x.text,x.read).length,0);
-    assert.deepEqual(plain(E.approxBrute(x.text,x.read,1)),[x.at]);
-    assert.equal(E.mismatches(x.text.slice(x.at,x.at+8),x.read),1);
-    assert(x.halves.some(h=>x.text.slice(x.at+h.off,x.at+h.off+4)===h.piece));
-    // the decoy: some exact hit of a half lies where the whole read has two or more mismatches
-    assert(x.hits.some(h=>h.start!==x.at&&E.mismatches(x.text.slice(h.start,h.start+8),x.read)>=2));
-    assert.deepEqual(plain(E.approxOccurrences(x.text,x.read,1)),[x.at]);
+    check[10](E.makeLevel(code,10,0));
   }
 });
 test('level 1: every read occurs exactly once, and a scan of ten reads costs well over a thousand comparisons',()=>{
   for(const code of CODES){
-    const x=E.makeLevel(code,1,0);
-    assert.equal(x.short.text.length,40);assert.equal(x.long.text.length,200);
-    assert.equal(x.short.reads.length,3);assert.equal(x.long.reads.length,10);
-    for(const s of [x.short,x.long])s.reads.forEach(r=>assert.deepEqual(plain(E.occurrences(s.text,r.read)),[r.pos]));
-    const total=x.long.reads.reduce((a,r)=>a+E.naiveScan(x.long.text,r.read).comps,0);assert(total>1000);
+    check[1](E.makeLevel(code,1,0));
   }
 });
 test('level 9: the band step needs counting past a board, and the boards give the same answer as scanning',()=>{
   for(const code of CODES){
-    const x=E.makeLevel(code,9,0);
-    assert.equal(x.L.length,32);
-    const b=E.bandSteps(x.L,x.pattern);assert.deepEqual(plain(b.band),plain(x.band));
-    assert(x.top%4>=2&&(x.bottom+1)%4>=2);
-    const fromBoard=i=>x.boards[i-i%4][x.sym]+E.countAbove(x.L.slice(i-i%4),x.sym,i%4);
-    assert.equal(fromBoard(x.top),x.above);assert.equal(fromBoard(x.bottom+1),x.upto);
-    assert.equal(E.betterBWMatching(x.L,x.pattern),x.band[1]-x.band[0]+1);
+    check[9](E.makeLevel(code,9,0));
   }
 });
 test('level 11: reads place uniquely with one mismatch allowed; the variant column is unanimous, the error column is not',()=>{
   for(const code of CODES){
-    const x=E.makeLevel(code,11,0);
-    const cover=x.reads.filter(r=>r.start<=x.v&&x.v<r.start+10);assert(cover.length>=4);
-    cover.forEach(r=>assert.equal(r.read[x.v-r.start],x.alt));
-    const at=x.reads.filter(r=>r.start<=x.err&&x.err<r.start+10),bad=at.filter(r=>r.read[x.err-r.start]!==x.ref[x.err]);
-    assert.equal(bad.length,1);assert(at.length>=3);
-    x.reads.forEach(r=>assert.deepEqual(plain(E.approxOccurrences(x.ref,r.read,1)),[r.start]));
+    check[11](E.makeLevel(code,11,0));
   }
+});
+test('every fallback key generates directly without running out of tries',()=>{
+  const gens={makeL1:1,makeL8:8,makeL9:9,makeL10:10,makeL11:11};
+  assert.deepEqual(Object.keys(E.POOLS).sort(),Object.keys(gens).sort());
+  withTries({strict:true},()=>{for(const [f,lv] of Object.entries(gens))for(const k of E.POOLS[f])check[lv](E[f](k));});
+});
+test('a generator that runs out of tries returns a valid level from its pool',()=>{
+  withTries({limit:0},()=>{for(let i=0;i<20;i++)for(const lv of [1,8,9,10,11])check[lv](E.makeLevel('NO-TRIES-'+i,lv,i%3));});
+  assert.equal(E.TRIES.limit,null);assert.equal(E.TRIES.strict,false);
 });
 test('puzzles are reproducible and a new variant changes them',()=>{
   for(const id of [1,2,4,7,8,9,10,11]){

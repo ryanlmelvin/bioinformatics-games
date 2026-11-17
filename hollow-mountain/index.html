@@ -286,6 +286,14 @@ const ri=(rand,lo,hi)=>lo+Math.floor(rand()*(hi-lo+1));
 const range=n=>[...Array(n).keys()];
 const near=(a,b)=>Math.abs(a-b)<1e-9;
 const whole=x=>Number.isInteger(x);
+/* A generator that runs out of tries builds the puzzle for a key from its pool instead. TRIES.limit is for tests only. */
+const TRIES={limit:null,strict:false},maxTries=n=>TRIES.limit===null?n:TRIES.limit;
+function fallback(name,key,pool,make){
+  if(TRIES.strict)throw new Error(name+' ran out of tries for '+key);
+  const t=TRIES.limit;TRIES.strict=true;TRIES.limit=null;
+  try{return make(pool[hashStr(key)%pool.length]);}finally{TRIES.strict=false;TRIES.limit=t;}
+}
+const F4=['fallback-0','fallback-1','fallback-2','fallback-3'],POOLS={makeViruses:F4,makeGrow:F4,makeClock:F4,makeFast:F4,makeJoin5:F4,makeSwap:F4};
 
 function cloneT(t){const c={n:t.n,N:t.N,edges:t.edges.map(e=>({a:e.a,b:e.b,w:e.w}))};if(t.root!==undefined)c.root=t.root;if(t.H)c.H=t.H.slice();return c;}
 function adjOf(t){const A=Array.from({length:t.N},()=>[]);t.edges.forEach((e,i)=>{A[e.a].push({v:e.b,w:e.w,i});A[e.b].push({v:e.a,w:e.w,i});});return A;}
@@ -448,7 +456,7 @@ function attachPoint(t,D,j){const among=presentLeaves(t),rows=limbRows(D,j,among
 /* Levels 1 and 6: four viruses. Columns 0-11 (level 1) change once each along one tunnel of a hidden cave
    ((s0,s1),(s2,s3)); columns 12-19 (level 6) add changes, one or two of them made twice, independently, in s0 and s2. */
 function makeViruses(key){const rand=rng(hashStr(key+'|virus'));
-  for(let t=0;t<20000;t++){
+  for(let t=0;t<maxTries(20000);t++){
     const s=shuffled(4,rand),root=range(20).map(()=>'ACGT'[ri(rand,0,3)]),seq=range(4).map(()=>root.slice());
     const alt=p=>{let c;do c='ACGT'[ri(rand,0,3)];while(c===root[p]);return c;};
     const groups=[[s[0]],[s[1]],[s[2]],[s[3]],[s[2],s[3]]],cnt=[ri(rand,1,2),ri(rand,1,2),ri(rand,1,2),ri(rand,1,2),ri(rand,3,5)];
@@ -468,23 +476,23 @@ function makeViruses(key){const rand=rng(hashStr(key+'|virus'));
     const sisters=[s[0],s[1]].sort(),across=[s[0],s[2]].sort();
     return {seqs,short:seqs.map(x=>x.slice(0,12)),D1,D6,pairs:[sisters,[s[2],s[3]].sort()],hand:[sisters,across],Y:cave,attach:at};
   }
-  throw new Error('virus generator failed');}
+  return fallback('makeViruses',key,POOLS.makeViruses,makeViruses);}
 
 function makeLit(key){const rand=rng(hashStr(key+'|lit'));const t=randomTree(rand,4,1,9),D=leafDist(t);
   const A=adjOf(t),a=0,sis=range(4).find(j=>j!==0&&isCherry(t,0,j)),other=range(4).find(j=>j!==0&&j!==sis);
   return {tree:t,D,hand:[[0,sis],[0,other]]};}
 function makeStar(key){const rand=rng(hashStr(key+'|star'));const t=randomTree(rand,3,1,9);return {tree:t,D:leafDist(t)};}
 function makeGrow(key,n){const rand=rng(hashStr(key+'|grow'+n));
-  for(let k=0;k<5000;k++){const t=randomTree(rand,n,1,9),D=leafDist(t),start=n===4?induced(t,[0,1,2]):induced(t,[0,1]);
+  for(let k=0;k<maxTries(5000);k++){const t=randomTree(rand,n,1,9),D=leafDist(t),start=n===4?induced(t,[0,1,2]):induced(t,[0,1]);
     let ok=true,cave=start;
     for(let j=presentLeaves(start).length;j<n;j++){const at=attachPoint(cave,D,j);
       if(at.onNode!==undefined||!whole(at.L)||!whole(at.x)||at.L<1){ok=false;break;}
       cave=hang(cave,at.ei,at.off,at.from,j,at.L);}
     if(!ok||!sameMatrix(leafDist(cave),D))continue;
     return {tree:t,D,start};}
-  throw new Error('grow generator failed');}
+  return fallback('makeGrow',key,POOLS.makeGrow,k=>makeGrow(k,n));}
 function makeClock(key){const rand=rng(hashStr(key+'|clock'));
-  for(let k=0;k<20000;k++){let cl=range(4).map(i=>({id:i,h:0})),h=0,ok=true;const t={n:4,N:4,edges:[],root:-1,H:[0,0,0,0]};
+  for(let k=0;k<maxTries(20000);k++){let cl=range(4).map(i=>({id:i,h:0})),h=0,ok=true;const t={n:4,N:4,edges:[],root:-1,H:[0,0,0,0]};
     while(cl.length>1){const i=ri(rand,0,cl.length-1);let j;do j=ri(rand,0,cl.length-1);while(j===i);
       h+=ri(rand,1,4);const A=cl[i],B=cl[j],m=t.N++;t.H[m]=h;
       if(h-A.h>9||h-B.h>9)ok=false;
@@ -493,29 +501,29 @@ function makeClock(key){const rand=rng(hashStr(key+'|clock'));
     if(u.ties||!sameMatrix(leafDist(u.tree),D))continue;
     if(u.joins.some(J=>Object.values(J.row).some(v=>!whole(v)))||u.joins.some(J=>!whole(J.h)))continue;
     return {tree:t,D,up:u};}
-  throw new Error('clock generator failed');}
+  return fallback('makeClock',key,POOLS.makeClock,makeClock);}
 function makeFast(key){const rand=rng(hashStr(key+'|fast'));
-  for(let k=0;k<50000;k++){const t=randomTree(rand,4,1,9),D=leafDist(t),mp=minPair(D);
+  for(let k=0;k<maxTries(50000);k++){const t=randomTree(rand,4,1,9),D=leafDist(t),mp=minPair(D);
     if(!mp.unique||isCherry(t,mp.pair[0],mp.pair[1]))continue;
     const u=upgma(D);if(u.ties||sameShape(u.tree,t))continue;
     const r=nj(D),r0=r.rounds[0];
     if(r.ties||r0.mins.some(p=>p[0]===mp.pair[0]&&p[1]===mp.pair[1]))continue;
     if(!sameMatrix(leafDist(r.tree),D))continue;
     return {tree:t,D,up:u,nj:r,closest:mp.pair};}
-  throw new Error('fast generator failed');}
+  return fallback('makeFast',key,POOLS.makeFast,makeFast);}
 function makeJoin5(key){const rand=rng(hashStr(key+'|nj5'));
-  for(let k=0;k<50000;k++){const t=randomTree(rand,5,1,9),D=leafDist(t),r=nj(D);
+  for(let k=0;k<maxTries(50000);k++){const t=randomTree(rand,5,1,9),D=leafDist(t),r=nj(D);
     if(r.ties||!sameMatrix(leafDist(r.tree),D))continue;
     const r0=r.rounds[0];if(!whole(r0.li)||!whole(r0.lj)||r0.merged.some(x=>!whole(x)))continue;
     return {tree:t,D,nj:r};}
-  throw new Error('nj5 generator failed');}
+  return fallback('makeJoin5',key,POOLS.makeJoin5,makeJoin5);}
 function makeSwap(key){const rand=rng(hashStr(key+'|swap'));
-  for(let k=0;k<100000;k++){const t=randomTree(rand,6,1,9),D=leafDist(t),u=upgma(D);
+  for(let k=0;k<maxTries(100000);k++){const t=randomTree(rand,6,1,9),D=leafDist(t),u=upgma(D);
     if(u.ties)continue;const start=unroot(u.tree);if(sameShape(start,t))continue;
     const max=quads(6).length,opts=nniOptions(start),best=opts.filter(o=>quartetScore(o.tree,D)===max);
     if(best.length!==1||!sameShape(best[0].tree,t))continue;
     return {tree:t,D,start,max,score:quartetScore(start,D)};}
-  throw new Error('swap generator failed');}
+  return fallback('makeSwap',key,POOLS.makeSwap,makeSwap);}
 
 /* Level 11: an illustrative chart (not measured data) with the shape reported by Guan 2003 and Li 2005. */
 const SARS={names:['Human, Guangzhou','Human, Hong Kong','Civet, Guangdong','Bat, Hong Kong','Bat, Hubei','Bat, Guangxi'],
@@ -537,7 +545,7 @@ function additiveCheck(D){return quads(D.length).every(q=>near(fourPointGap(D,q)
 if(typeof module!=='undefined')module.exports={hashStr,rng,shuffled,range,cloneT,adjOf,leafDist,presentLeaves,pathNodes,pathEdges,edgeIndex,
   splitEdge,canHang,hang,limbRows,limbLength,additivePhylogeny,upgma,nj,unroot,induced,splitsOf,sameShape,quads,fourSums,fourPointGap,
   chartPairing,shapePairing,quartetScore,nniOptions,subLeaves,sameMatrix,adjacencyList,parseAdjacency,randomTree,minPair,isCherry,attachPoint,
-  makeViruses,makeLit,makeStar,makeGrow,makeClock,makeFast,makeJoin5,makeSwap,SARS,parseChart,additiveCheck,compact};
+  makeViruses,makeLit,makeStar,makeGrow,makeClock,makeFast,makeJoin5,makeSwap,SARS,parseChart,additiveCheck,compact,TRIES,POOLS};
 </script>
 <script id="ui">
 (function(){

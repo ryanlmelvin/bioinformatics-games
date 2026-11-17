@@ -5,7 +5,7 @@ const vm=require('node:vm');
 const html=fs.readFileSync(require('node:path').join(__dirname,'../index.html'),'utf8');
 const engine=html.match(/<script id="engine">([\s\S]*?)<\/script>/)[1];
 const sandbox={module:{exports:{}}};vm.runInNewContext(engine,sandbox);
-const {analyse,makeInstance,makePairs,eulerWalks,spellWalk,pairPositions,pairedGraph}=sandbox.module.exports;
+const {analyse,makeInstance,makePairs,makeBalance,eulerWalks,spellWalk,pairPositions,pairedGraph,TRIES,POOLS}=sandbox.module.exports;
 const plain=x=>JSON.parse(JSON.stringify(x));
 function verifyPuzzle(inst){
  assert.equal(inst.reads.length,20);
@@ -90,5 +90,47 @@ test('existing sequence generator still supplies valid Eulerian maps',()=>{
   const inst=makeInstance('regression',spec);assert.equal(inst.reads.length,spec.n);
   assert.equal(spellWalk(inst,inst.edges.map(e=>e.id)),inst.genome);
  }
+});
+// Every spec the game passes to makeInstance, read from the level list.
+const specs=[...html.matchAll(/\{id:\d+,mode:'\w+',k:(\d+),n:(\d+),minB:(\d+)(?:,maxB:(\d+))?/g)]
+ .map(m=>m[4]===undefined?{k:+m[1],n:+m[2],minB:+m[3]}:{k:+m[1],n:+m[2],minB:+m[3],maxB:+m[4]});
+function checkInstance(inst,spec){
+ assert.equal(inst.reads.length,spec.n);assert.equal(inst.k,spec.k);
+ assert.equal(inst.selfLoops,0);assert.notEqual(inst.start,inst.end);assert(inst.maxPar<=2);
+ assert(inst.branching>=spec.minB);if(spec.maxB!==undefined)assert(inst.branching<=spec.maxB);
+ assert.equal(spellWalk(inst,inst.edges.map(e=>e.id)),inst.genome);
+}
+function checkBalance(inst){
+ const n=inst.nodes.length,diff=inst.out.map((o,v)=>o-inst.inn[v]);
+ assert.equal(n,6);assert(inst.out.every((o,v)=>o>=1&&inst.inn[v]>=1));
+ assert.equal(new Set(inst.edges.map(e=>e.from+'>'+e.to)).size,inst.edges.length);
+ assert.equal(diff.reduce((s,d)=>s+Math.max(0,d),0),3);assert.equal(Math.max(...diff.map(Math.abs)),2);
+ const reach=new Set([0]),q=[0];
+ while(q.length){const v=q.pop();for(const e of inst.edges){const w=e.from===v?e.to:e.to===v?e.from:-1;if(w>=0&&!reach.has(w)){reach.add(w);q.push(w);}}}
+ assert.equal(reach.size,n);
+}
+function withTries(opts,f){Object.assign(TRIES,opts);try{return f();}finally{TRIES.limit=null;TRIES.strict=false;}}
+test('every fallback key generates directly, for every spec the game uses',()=>{
+ assert.equal(specs.length,6);
+ withTries({strict:true},()=>{
+  for(const key of POOLS.makeInstance)for(const spec of specs)checkInstance(makeInstance(key,spec),spec);
+  for(const key of POOLS.makeBalance)checkBalance(makeBalance(key));
+ });
+});
+test('a generator that runs out of tries returns a valid puzzle from its pool',()=>{
+ withTries({limit:0},()=>{
+  for(let i=0;i<20;i++){
+   for(const spec of specs)checkInstance(makeInstance('NO-TRIES|'+i,spec),spec);
+   checkBalance(makeBalance('NO-TRIES|8|'+i));
+   verifyPuzzle(makePairs('NO-TRIES|12|'+i));
+  }
+  const picked=new Set(Array.from({length:40},(_,i)=>makeBalance('NO-TRIES|'+i).edges.map(e=>e.from+'>'+e.to).join()));
+  assert(picked.size>1);
+ });
+ assert.equal(TRIES.limit,null);assert.equal(TRIES.strict,false);
+});
+test('normally generated puzzles pass the same checks',()=>{
+ for(const spec of specs)checkInstance(makeInstance('regression',spec),spec);
+ checkBalance(makeBalance('regression'));
 });
 new vm.Script(html.match(/<script id="ui">([\s\S]*?)<\/script>/)[1]);

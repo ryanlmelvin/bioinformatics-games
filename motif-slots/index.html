@@ -256,6 +256,16 @@ function revcomp(s){let o='';for(let i=s.length-1;i>=0;i--)o+=COMP[s[i]];return 
 function kmersOf(text,k){const o=[];for(let i=0;i+k<=text.length;i++)o.push(text.slice(i,i+k));return o;}
 function mutate(word,positions,rand){const a=[...word];positions.forEach(p=>{const alt=BASES.replace(a[p],'');a[p]=alt[Math.floor(rand()*3)];});return a.join('');}
 function put(s,p,w){return s.slice(0,p)+w+s.slice(p+w.length);}
+/* A generator that runs out of tries builds the puzzle for a key from its pool instead. TRIES.limit is for tests only. */
+const TRIES={limit:null,strict:false},maxTries=n=>TRIES.limit===null?n:TRIES.limit;
+function fallback(name,key,pool,make){
+  if(TRIES.strict)throw new Error(name+' ran out of tries for '+key);
+  const t=TRIES.limit;TRIES.strict=true;TRIES.limit=null;
+  try{return make(pool[hashStr(key)%pool.length]);}finally{TRIES.strict=false;TRIES.limit=t;}
+}
+// genL4, genL5 and genL11 share one pool, so levels 5 and 11 still use the level 4 strips when all three fall back.
+const F4=['fallback-0','fallback-1','fallback-2','fallback-3'];
+const POOLS={genL1:F4,genL2:F4,genL3:F4,genL4:F4,genL5:F4,genL6:F4,genL7:F4,genL9:F4,genL11:F4};
 /* every k-mer within d mismatches of p (BA1N) */
 function neighbors(p,d){
   if(d===0)return [p];
@@ -378,18 +388,19 @@ function spread(rand,n,count,k,gap){
 /* Level 1: one 80-letter strip; one 5-mer occurs four times, no other more than twice. */
 function genL1(code){
   const rand=rng(hashStr(code+'|L1')),word=DNAA5[Math.floor(rand()*5)];
-  for(;;){
+  for(let attempt=0;attempt<maxTries(10000);attempt++){
     let s=randSeq(80,rand);const at=spread(rand,80,4,5,3);if(!at)continue;
     at.forEach(p=>s=put(s,p,word));
     const t=tally([s],5,0,false);
     if(t[0].word!==word||t[0].lit!==4||t[1].lit>2)continue;
     return {k:5,text:s,word,sites:at};
   }
+  return fallback('genL1',code,POOLS.genL1,genL1);
 }
 /* Level 2: five copies, each with one letter changed (a different letter each time); nothing repeats. */
 function genL2(code){
   const rand=rng(hashStr(code+'|L2')),word=DNAA5[Math.floor(rand()*5)];
-  for(;;){
+  for(let attempt=0;attempt<maxTries(5000);attempt++){
     let s=randSeq(80,rand);const at=spread(rand,80,5,5,2);if(!at)continue;
     const order=shuffled(5,rand);at.forEach((p,i)=>s=put(s,p,mutate(word,[order[i]],rand)));
     if(countD(s,word,0))continue;
@@ -398,11 +409,12 @@ function genL2(code){
     const cmp=shuffled(5,rand).slice(0,3).map(i=>at[i]).sort((a,b)=>a-b);
     return {k:5,text:s,word,sites:at,compare:cmp,exactTop:ex[0].lit};
   }
+  return fallback('genL2',code,POOLS.genL2,genL2);
 }
 /* Level 3: three changed copies on this strand and three on the partner strand. */
 function genL3(code){
   const rand=rng(hashStr(code+'|L3')),word=DNAA5[Math.floor(rand()*5)],rc=revcomp(word);
-  for(;;){
+  for(let attempt=0;attempt<maxTries(5000);attempt++){
     let s=randSeq(80,rand);const at=spread(rand,80,6,5,2);if(!at)continue;
     const order=shuffled(6,rand),mpos=shuffled(5,rand).concat(shuffled(5,rand));
     const rev=order.slice(0,3).sort((a,b)=>a-b);
@@ -414,13 +426,14 @@ function genL3(code){
     const fwd=tally([s],5,1,false).find(x=>x.word===word).lit;
     return {k:5,text:s,word,rc,sites:at,reverse:rev.map(i=>at[i]),handAt:at[rev[0]],forwardLit:fwd,bothLit:t[0].lit};
   }
+  return fallback('genL3',code,POOLS.genL3,genL3);
 }
 /* Level 4: ten 24-letter strips; AATATC with one change on four of them and two on the rest, and a decoy copied eight times on three strips. */
 const L4CACHE=new Map();
 function genL4(code){if(!L4CACHE.has(code))L4CACHE.set(code,makeL4(code));return L4CACHE.get(code);}
 function makeL4(code){
   const rand=rng(hashStr(code+'|L4')),T=SWITCH6,k=6;
-  for(let attempt=0;;attempt++){
+  for(let attempt=0;attempt<maxTries(1000);attempt++){
     let D;do D=randSeq(6,rand);while(hamming(D,T)<5||kmersOf(D+D,6).slice(1,6).includes(D));
     const decoyStrips=shuffled(10,rand).slice(0,3).sort((a,b)=>a-b),copies=[3,3,2],light=new Set(shuffled(10,rand).slice(0,4));
     const strips=[],sites=[];
@@ -444,6 +457,7 @@ function makeL4(code){
     return {k,strips,sites,word:T,decoy:win,planted:D,decoyStrips,decoyLit:t[0].lit,wordLit:tl,
       allTen:onEvery(strips,k,2),medianDist:md};
   }
+  return fallback('genL4',code,POOLS.genL4,genL4);
 }
 /* Level 5: four of the level 4 strips (none with the decoy) become reels. */
 function genL5(code){
@@ -451,24 +465,26 @@ function genL5(code){
   const idx=[...Array(10).keys()].filter(i=>!L4.decoyStrips.includes(i)).slice(0,4);
   const reels=idx.map(i=>L4.strips[i]),sites=idx.map(i=>L4.sites[i]);
   const target=scoreAt(reels,sites,6);
-  let start;do start=randomStart(reels,6,rand);while(scoreAt(reels,start,6)<target+6);
+  let start,draws=0;
+  do{start=randomStart(reels,6,rand);if(++draws>maxTries(100000))return fallback('genL5',code,POOLS.genL5,genL5);}while(scoreAt(reels,start,6)<target+6);
   return {k:6,reels,sites,idx,target,start};
 }
 /* Level 6, by hand: three 6-letter reels, k = 3, two words to try. */
 function genL6(code){
   const rand=rng(hashStr(code+'|L6'));
-  for(;;){
+  for(let attempt=0;attempt<maxTries(10000);attempt++){
     const reels=[0,1,2].map(()=>randSeq(6,rand)),words=[randSeq(3,rand),randSeq(3,rand)];
     const tot=words.map(w=>distToDna(w,reels));
     if(words[0]===words[1]||tot[0]===tot[1]||Math.min(...tot)<2||Math.max(...tot)>6)continue;
     if(reels.some(r=>words.every(w=>distToText(w,r)===0)))continue;
     return {k:3,reels,words,totals:tot};
   }
+  return fallback('genL6',code,POOLS.genL6,genL6);
 }
 /* Levels 7 and 8: five reels of nine letters, k = 4. */
 function genL7(code){
   const rand=rng(hashStr(code+'|L7')),k=4,n=9,t=5;
-  for(;;){
+  for(let attempt=0;attempt<maxTries(5000);attempt++){
     const M=randSeq(k,rand),sites=[],dna=[];
     for(let i=0;i<t;i++){const v=rand()<.6?mutate(M,[Math.floor(rand()*k)],rand):M,p=Math.floor(rand()*(n-k+1));dna.push(put(randSeq(n,rand),p,v));sites.push(p);}
     const planted=scoreAt(dna,sites,k),mot=motifsAt(dna,sites,k);
@@ -488,11 +504,12 @@ function genL7(code){
     if(col<0)continue;
     return {k,dna,sites,planted,motif:M,handCol:col,greedyNo:g0,greedyNoScore:scoreAt(dna,g0,k),fromNo:f0,fromNoScore:scoreAt(dna,f0,k)};
   }
+  return fallback('genL7',code,POOLS.genL7,genL7);
 }
 /* Levels 9 and 10: six reels of fifteen letters, k = 5. */
 function genL9(code){
   const rand=rng(hashStr(code+'|L9')),k=5,n=15,t=6;
-  for(;;){
+  for(let attempt=0;attempt<maxTries(1000);attempt++){
     const M=randSeq(k,rand),sites=[],dna=[];
     for(let i=0;i<t;i++){const v=rand()<.7?mutate(M,[Math.floor(rand()*k)],rand):M,p=Math.floor(rand()*(n-k+1));dna.push(put(randSeq(n,rand),p,v));sites.push(p);}
     const planted=scoreAt(dna,sites,k);
@@ -517,16 +534,19 @@ function genL9(code){
     if(gseed<0)continue;
     return {k,dna,sites,planted,motif:M,starts,stall:gstall,gseed};
   }
+  // gseed only works with the code it was found for, so a fallback puzzle carries that code
+  return fallback('genL9',code,POOLS.genL9,k=>Object.assign(genL9(k),{code:k}));
 }
 /* Level 11: the level 4 strips, each site overwritten by the evening element with one letter changed (illustrative). */
 function genL11(code){
   const L4=genL4(code),rand=rng(hashStr(code+'|L11')),k=9;
-  for(;;){
+  for(let attempt=0;attempt<maxTries(200);attempt++){
     const sites=[],strips=L4.strips.map((s,i)=>{const q=Math.max(0,Math.min(24-k,L4.sites[i]-2));sites.push(q);return put(s,q,mutate(EVENING,[Math.floor(rand()*k)],rand));});
     const sub=rng(hashStr(code+'|L11run')),run=randomizedSearch(strips,k,60,sub);
     if(consensusOf(motifsAt(strips,run.best,k))!==EVENING)continue;
     return {k,strips,sites,run};
   }
+  return fallback('genL11',code,POOLS.genL11,genL11);
 }
 const GEN={1:genL1,2:genL2,3:genL3,4:genL4,5:genL5,6:genL6,7:genL7,8:genL7,9:genL9,10:genL9,11:genL11};
 /* Workbench: four methods on pasted strings */
@@ -542,7 +562,7 @@ function benchRun(dna,k,seed){
 if(typeof module!=='undefined')module.exports={hashStr,rng,shuffled,hamming,revcomp,kmersOf,neighbors,litPositions,countD,litCounts,frequentWords,tally,stripsLit,onEvery,
   distTable,uniqueMedian,medianString,closestPos,distToText,distToDna,motifsAt,countsOf,profileOf,prob,mostProbablePos,mostProbable,consensusOf,scoreOf,scoreAt,
   greedyFrom,greedy,restop,randomStart,randomizedRun,randomizedSearch,leaveOneOut,drawIndex,gibbsStep,gibbsRun,gibbsSearch,looStall,isLooStall,
-  genL1,genL2,genL3,genL4,genL5,genL6,genL7,genL9,genL11,GEN,benchRun,DNAA,DNAA5,EVENING,SWITCH6};
+  genL1,genL2,genL3,genL4,genL5,genL6,genL7,genL9,genL11,GEN,benchRun,DNAA,DNAA5,EVENING,SWITCH6,TRIES,POOLS};
 </script>
 <script id="ui">
 (function(){
@@ -1358,7 +1378,7 @@ LV[10]={
       const i=cur.lifted,w=leaveOneOut(I.dna,5,cur.pos,i);let b=0;w.forEach((x,j)=>{if(x>w[b]*(1+1e-9))b=j;});
       cur.pos[i]=b;if(!cur.tried.includes(i))cur.tried.push(i);log('best_restop',{reel:i,pos:b});
       say('Reel '+(i+1)+' lands back on stop '+(b+1)+'. Nothing changes.','warn');cur.lifted=-1;
-      if(cur.tried.length>=2){cur.step='wheel';cur.g=rng(hashStr(codeFor(10)+'|L10|'+I.gseed));log('handover');}
+      if(cur.tried.length>=2){cur.step='wheel';cur.g=rng(hashStr((I.code||codeFor(10))+'|L10|'+I.gseed));log('handover');}
     }
     if((a==='spinwheel'||a==='auto')&&cur.step==='wheel'){
       const one=()=>{const st=gibbsStep(I.dna,5,cur.pos,cur.g);cur.pos=st.pos;cur.n++;const s=scoreAt(I.dna,cur.pos,5);cur.hist.push(s);cur.wheel={w:st.w,at:st.at,i:st.i};log('wheel',{reel:st.i,pos:st.at,misses:s});return s;};

@@ -257,6 +257,14 @@ function rng(seed){let a=seed>>>0;return function(){a|=0;a=a+0x6D2B79F5|0;let t=
 function shuffled(n,rand){const a=[...Array(n).keys()];for(let i=n-1;i>0;i--){const j=Math.floor(rand()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
 const pick=(arr,rand)=>arr[Math.floor(rand()*arr.length)];
 const dna=(n,rand)=>Array.from({length:n},()=>'ACGT'[Math.floor(rand()*4)]).join('');
+/* A generator that runs out of tries builds the puzzle for a key from its pool instead. TRIES.limit is for tests only. */
+const TRIES={limit:null,strict:false},maxTries=n=>TRIES.limit===null?n:TRIES.limit;
+function fallback(name,key,pool,make){
+  if(TRIES.strict)throw new Error(name+' ran out of tries for '+key);
+  const t=TRIES.limit;TRIES.strict=true;TRIES.limit=null;
+  try{return make(pool[hashStr(key)%pool.length]);}finally{TRIES.strict=false;TRIES.limit=t;}
+}
+const F4=['fallback-0','fallback-1','fallback-2','fallback-3'],POOLS={makeL1:F4,makeL8:F4,makeL9:F4,makeL10:F4,makeL11:F4};
 
 /* The curated word list (property 1): 6- and 7-letter words with one letter at least three times. */
 const WORDS7=['possess','baggage','cantata','referee','alfalfa','entente','bananas','tsetses'];
@@ -373,12 +381,12 @@ function uniqueReads(text,len,count,rand,gap){gap=gap||len;
 }
 function makeL1(key){
   const rand=rng(hashStr(key));
-  for(let t=0;t<5000;t++){
+  for(let t=0;t<maxTries(5000);t++){
     const a=dna(40,rand),ra=uniqueReads(a,4,3,rand);if(!ra)continue;
     const b=dna(200,rand),rb=uniqueReads(b,6,10,rand);if(!rb)continue;
     return {short:{text:a,reads:ra},long:{text:b,reads:rb}};
   }
-  throw new Error('level 1');
+  return fallback('makeL1',key,POOLS.makeL1,makeL1);
 }
 function wordWithPattern(list,k,rand){
   const w=pick(list,rand),c=kmerCounts(w,k),cands=Object.keys(c).filter(p=>c[p]>=2&&c[p]<=4).sort();
@@ -403,7 +411,7 @@ function makeWordLevel(code,id,variant){
 }
 function makeL8(key){
   const rand=rng(hashStr(key)),K=4;
-  for(let tr=0;tr<20000;tr++){
+  for(let tr=0;tr<maxTries(20000);tr++){
     const body=dna(15,rand),t=body+'$',L=bwt(t),labels=labelMap(t,K);
     const c3=kmerCounts(body,3),twice=Object.keys(c3).filter(p=>c3[p]===2).sort();if(!twice.length)continue;
     const first=pick(twice,rand);
@@ -414,11 +422,11 @@ function makeL8(key){
     if(all.filter(w=>w.steps>=2).length<2||all.every(w=>w.steps!==3))continue;
     return {text:t,body,L,F:firstColumn(L),K,labels,first,reads,walks,sa:suffixArray(t)};
   }
-  throw new Error('level 8');
+  return fallback('makeL8',key,POOLS.makeL8,makeL8);
 }
 function makeL9(key){
   const rand=rng(hashStr(key)),C=4;
-  for(let tr=0;tr<20000;tr++){
+  for(let tr=0;tr<maxTries(20000);tr++){
     const body=dna(31,rand),t=body+'$',L=bwt(t),fo=firstOccurrence(L);
     const y=pick('ACGT',rand),s=pick('ACGT',rand);
     if(!(y in fo))continue;
@@ -429,11 +437,11 @@ function makeL9(key){
     const nt=fo[s]+above,nb=fo[s]+upto-1;
     return {text:t,body,L,F,C,boards:checkpoints(L,C),fo,pattern:s+y,first:y,sym:s,top,bottom,above,upto,band:[nt,nb]};
   }
-  throw new Error('level 9');
+  return fallback('makeL9',key,POOLS.makeL9,makeL9);
 }
 function makeL10(key){
   const rand=rng(hashStr(key)),n=24,m=8,h=m/2;
-  for(let tr=0;tr<50000;tr++){
+  for(let tr=0;tr<maxTries(50000);tr++){
     const arr=[...dna(n,rand)],p=Math.floor(rand()*(n-m+1)),j=Math.floor(rand()*m);
     const read=[...arr.slice(p,p+m)];read[j]=pick('ACGT'.replace(read[j],''),rand);
     // plant a decoy: a copy of one half somewhere the whole read does not fit
@@ -452,11 +460,11 @@ function makeL10(key){
     if(new Set(hits.map(x=>x.start)).size!==hits.length)continue;
     return {text,read:r,at,miss,halves,hits:hits.sort((a,b)=>a.pos-b.pos)};
   }
-  throw new Error('level 10');
+  return fallback('makeL10',key,POOLS.makeL10,makeL10);
 }
 function makeL11(key){
   const rand=rng(hashStr(key)),n=32,m=10;
-  for(let tr=0;tr<50000;tr++){
+  for(let tr=0;tr<maxTries(50000);tr++){
     const ref=dna(n,rand),v=10+Math.floor(rand()*12),alt=pick('ACGT'.replace(ref[v],''),rand);
     const patient=ref.slice(0,v)+alt+ref.slice(v+1);
     const starts=[0,3,6,9,12,15,18,22].map(s=>Math.min(n-m,s+Math.floor(rand()*3)));
@@ -469,7 +477,7 @@ function makeL11(key){
     if(!reads.every(r=>{const o=approxOccurrences(ref,r.read,1);return o.length===1&&o[0]===r.start;}))continue;
     return {ref,v,alt,patient,reads,err:e};
   }
-  throw new Error('level 11');
+  return fallback('makeL11',key,POOLS.makeL11,makeL11);
 }
 /* an illustrative text for level 3's run meter */
 const RUNTEXT='TAGATAGATAGACAT$';
@@ -493,7 +501,7 @@ function benchReport(text,patterns){
 if(typeof module!=='undefined')module.exports={hashStr,rng,shuffled,WORDS,WORDS6,WORDS7,WORDS3,occurrences,kmerCounts,runs,suffixArray,endings,rotations,sortedRotations,
   bwt,firstColumn,lastToFirst,ranks,unweave,inverseBwt,bandSteps,bwMatching,firstOccurrence,countAbove,betterBWMatching,checkpoints,partialSuffixArray,
   walkToLabel,labelMap,locateAll,multiplePatternMatching,mismatches,seedPieces,approxOccurrences,approximateMatching,approxBrute,naiveScan,tryAt,
-  keyOf,makeLevel,makeL1,makeWordLevel,makeL8,makeL9,makeL10,makeL11,RUNTEXT,benchReport};
+  keyOf,makeLevel,makeL1,makeWordLevel,makeL8,makeL9,makeL10,makeL11,RUNTEXT,benchReport,TRIES,POOLS};
 </script>
 <script id="ui">
 (function(){

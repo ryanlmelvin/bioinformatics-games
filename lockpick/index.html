@@ -338,8 +338,9 @@ function spellings(codes,k,limit){
   return out;
 }
 /* a strip whose 3-letter scraps are all different, can be put together in exactly two ways,
-   and whose first scrap nothing leads into */
-function makeStrip(key){
+   and whose first scrap nothing leads into. Out of tries, it is the strip of a key from STRIP_POOL. */
+const STRIP_POOL=['fallback-0','fallback-1','fallback-2','fallback-3'];
+function makeStrip(key,pooled){
   const r=rng(key);
   for(let n=0;n<60000;n++){
     let s='';for(let i=0;i<STRIP_LEN;i++)s+='ACGT'[Math.floor(r()*4)];
@@ -350,7 +351,8 @@ function makeStrip(key){
     if(sp.length!==2)continue;
     return{text:s,alt:sp[0]===s?sp[1]:sp[0]};
   }
-  return{text:'CATGGATCTATT',alt:'CATCTATGGATT'};
+  if(pooled)throw new Error('makeStrip ran out of tries for '+key);
+  return makeStrip(STRIP_POOL[xmur3(key)()%STRIP_POOL.length],true);
 }
 /* Hierholzer, used only by the debug hook */
 function solve(codes,k){

@@ -34,60 +34,85 @@ function everyTaxi(v,w,sc,mode){
   return {best,ways};
 }
 
+/* The properties each generated puzzle must have. The property tests and the fallback tests share them. */
+function checkDecks(d,key){
+  assert.equal(d.v.length,7);assert.equal(d.w.length,8);
+  const l=E.allLCS(d.v,d.w);
+  assert(l.length>=4,key);assert.equal(l.strings.length,1,key);assert.equal(d.lcs,l.strings[0]);assert.equal(d.par,l.length);
+  assert.equal(E.align(d.v,d.w,E.PAIRS,'global').best,d.par);
+  const g=E.greedy(d.v,d.w);assert(g.score<d.par,key);
+  assert.equal(E.matchesOn(d.v,d.w,[0,0],g.moves),g.score);
+}
+function checkTolls(d,key,brute){
+  const t=E.align(d.v,d.w,E.TOLLS,'global');
+  assert.equal(t.count,1,key);
+  assert(E.matchesOn(d.v,d.w,t.start,t.moves)<d.par,key);
+  assert.equal(E.routeScore(d.v,d.w,E.TOLLS,t.start,t.moves),t.best);
+  if(brute){const b=bruteGlobal(d.v,d.w,E.TOLLS);assert.equal(b.best,t.best);assert.equal(b.ways,1);}
+}
+function checkTable(d){
+  const t=E.tablePuzzle(d),end=m=>E.routeCorners([0,0],m).pop().join(',');
+  assert.equal(end(t.histA),t.i+','+t.j);assert.equal(end(t.histB),t.i+','+t.j);
+  assert(t.scoreA>t.scoreB);assert.equal(E.matchesOn(d.v,d.w,[0,0],t.histA),t.scoreA);
+  assert.equal(t.scoreA+t.finishScore,d.par);assert(t.finishScore>=2);
+}
+function checkCity({small,big},key){
+  assert.equal(big.down.length,4);assert.equal(big.right[0].length,4);
+  const totals=E.allRoutes(4,4).map(r=>E.routeSights(big.down,big.right,r));
+  assert.equal(totals.length,70);
+  const best=Math.max(...totals);
+  assert.equal(totals.filter(t=>t===best).length,1,key);
+  assert.equal(E.manhattan(big.down,big.right).best,best);
+  assert(E.manhattanGreedy(big.down,big.right).score<best,key);
+  assert.equal(E.allRoutes(2,2).length,6);
+  const st=E.allRoutes(2,2).map(r=>E.routeSights(small.down,small.right,r));
+  assert.equal(st.filter(t=>t===Math.max(...st)).length,1);
+}
+function checkLocal(p,key,brute){
+  assert.equal(p.v.length,10);assert.equal(p.w.length,11);
+  assert.equal(p.local.count,1,key);assert(p.local.best>=4);assert(p.global.best<0);
+  assert.equal(E.routeScore(p.v,p.w,E.TOLLS,p.local.start,p.local.moves),p.local.best);
+  if(brute){const b=everyTaxi(p.v,p.w,E.TOLLS,'local');assert.equal(b.best,p.local.best);assert.equal(b.ways,1);}
+}
+function checkOverlap(p,key){
+  const o=p.overlap;
+  assert.equal(o.count,1,key);
+  assert(o.top.length===6||o.top.length===7);
+  assert(!o.top.includes('-')&&!o.bottom.includes('-'));
+  assert.equal([...o.top].filter((c,k)=>c!==o.bottom[k]).length,1);
+  assert.equal(o.start[1],0);assert.equal(o.end[0],p.v.length);
+  assert(p.v.endsWith(o.top)&&p.w.startsWith(o.bottom));
+  {const b=everyTaxi(p.v,p.w,E.TOLLS,'overlap');assert.equal(b.best,o.best);assert.equal(b.ways,1);}
+}
+function checkAll(key){
+  const d=E.makeDecks(key);checkDecks(d,key);checkTolls(d,key,true);checkTable(d);
+  checkCity(E.makeCity(key),key);checkLocal(E.makeLocal(key),key,true);checkOverlap(E.makeOverlap(key),key);
+}
+function withTries(opts,f){Object.assign(E.TRIES,opts);try{return f();}finally{E.TRIES.limit=null;E.TRIES.strict=false;}}
+
 test('property 1: levels 1, 2 and 7 have a unique longest common subsequence of length at least 4, and greedy scores below par (500 codes)',()=>{
   for(const key of CODES){
-    const d=E.makeDecks(key);
-    assert.equal(d.v.length,7);assert.equal(d.w.length,8);
-    const l=E.allLCS(d.v,d.w);
-    assert(l.length>=4,key);assert.equal(l.strings.length,1,key);assert.equal(d.lcs,l.strings[0]);assert.equal(d.par,l.length);
-    assert.equal(E.align(d.v,d.w,E.PAIRS,'global').best,d.par);
-    const g=E.greedy(d.v,d.w);assert(g.score<d.par,key);
-    assert.equal(E.matchesOn(d.v,d.w,[0,0],g.moves),g.score);
+    checkDecks(E.makeDecks(key),key);
   }
 });
 test('property 2: level 5 has a unique best route and the richer-street walker gets strictly less (500 codes)',()=>{
   for(const key of CODES){
-    const {small,big}=E.makeCity(key);
-    assert.equal(big.down.length,4);assert.equal(big.right[0].length,4);
-    const totals=E.allRoutes(4,4).map(r=>E.routeSights(big.down,big.right,r));
-    assert.equal(totals.length,70);
-    const best=Math.max(...totals);
-    assert.equal(totals.filter(t=>t===best).length,1,key);
-    assert.equal(E.manhattan(big.down,big.right).best,best);
-    assert(E.manhattanGreedy(big.down,big.right).score<best,key);
-    assert.equal(E.allRoutes(2,2).length,6);
-    const st=E.allRoutes(2,2).map(r=>E.routeSights(small.down,small.right,r));
-    assert.equal(st.filter(t=>t===Math.max(...st)).length,1);
+    checkCity(E.makeCity(key),key);
   }
 });
 test('property 3: level 8 has a unique best route under tolls, and it is not a best route for counting pairs, so it differs from level 7 (500 codes)',()=>{
   CODES.forEach((key,n)=>{
-    const d=E.makeDecks(key),t=E.align(d.v,d.w,E.TOLLS,'global');
-    assert.equal(t.count,1,key);
-    assert(E.matchesOn(d.v,d.w,t.start,t.moves)<d.par,key);
-    assert.equal(E.routeScore(d.v,d.w,E.TOLLS,t.start,t.moves),t.best);
-    if(n<40){const b=bruteGlobal(d.v,d.w,E.TOLLS);assert.equal(b.best,t.best);assert.equal(b.ways,1);}
+    checkTolls(E.makeDecks(key),key,n<40);
   });
 });
 test('property 4: level 9 has a unique best local alignment scoring at least 4, and the best global score is negative (500 codes)',()=>{
   CODES.forEach((key,n)=>{
-    const p=E.makeLocal(key);
-    assert.equal(p.v.length,10);assert.equal(p.w.length,11);
-    assert.equal(p.local.count,1,key);assert(p.local.best>=4);assert(p.global.best<0);
-    assert.equal(E.routeScore(p.v,p.w,E.TOLLS,p.local.start,p.local.moves),p.local.best);
-    if(n<60){const b=everyTaxi(p.v,p.w,E.TOLLS,'local');assert.equal(b.best,p.local.best);assert.equal(b.ways,1);}
+    checkLocal(E.makeLocal(key),key,n<60);
   });
 });
 test('property 5: level 10 has a unique best overlap of six or seven letters with exactly one mismatch (500 codes)',()=>{
   CODES.forEach((key,n)=>{
-    const p=E.makeOverlap(key),o=p.overlap;
-    assert.equal(o.count,1,key);
-    assert(o.top.length===6||o.top.length===7);
-    assert(!o.top.includes('-')&&!o.bottom.includes('-'));
-    assert.equal([...o.top].filter((c,k)=>c!==o.bottom[k]).length,1);
-    assert.equal(o.start[1],0);assert.equal(o.end[0],p.v.length);
-    assert(p.v.endsWith(o.top)&&p.w.startsWith(o.bottom));
-    {const b=everyTaxi(p.v,p.w,E.TOLLS,'overlap');assert.equal(b.best,o.best);assert.equal(b.ways,1);}
+    checkOverlap(E.makeOverlap(key),key);
   });
 });
 test('Rosalind BA5B sample: the longest Manhattan path is 34',()=>{
@@ -121,11 +146,7 @@ test('level 4: twelve-card decks have 251,595,969 complete games, and the brute-
 });
 test('level 3: the two histories leave the same cards with different scores, and the finish is the same best finish',()=>{
   for(const key of CODES.slice(0,100)){
-    const d=E.makeDecks(key),t=E.tablePuzzle(d);
-    const end=m=>E.routeCorners([0,0],m).pop().join(',');
-    assert.equal(end(t.histA),t.i+','+t.j);assert.equal(end(t.histB),t.i+','+t.j);
-    assert(t.scoreA>t.scoreB);assert.equal(E.matchesOn(d.v,d.w,[0,0],t.histA),t.scoreA);
-    assert.equal(t.scoreA+t.finishScore,d.par);assert(t.finishScore>=2);
+    checkTable(E.makeDecks(key));
   }
 });
 test('level 11: the protein fragments are real and the finished method aligns them',()=>{
@@ -137,6 +158,19 @@ test('level 11: the protein fragments are real and the finished method aligns th
 test('scoring matrices are symmetric and match spot values from Rosalind',()=>{
   for(const k of ['BLOSUM62','PAM250']){const M=E.MATRICES[k];for(const p in M)assert.equal(M[p],M[p[1]+p[0]]);}
   assert.equal(E.MATRICES.BLOSUM62.WW,11);assert.equal(E.MATRICES.PAM250.WW,17);assert.equal(E.MATRICES.BLOSUM62.AR,-1);
+});
+test('every fallback key generates directly without running out of tries',()=>{
+  assert.deepEqual(Object.keys(E.POOLS).sort(),['makeCity','makeDecks','makeLocal','makeOverlap']);
+  withTries({strict:true},()=>{
+    for(const k of E.POOLS.makeDecks){const d=E.makeDecks(k);checkDecks(d,k);checkTolls(d,k,true);checkTable(d);}
+    for(const k of E.POOLS.makeCity)checkCity(E.makeCity(k),k);
+    for(const k of E.POOLS.makeLocal)checkLocal(E.makeLocal(k),k,true);
+    for(const k of E.POOLS.makeOverlap)checkOverlap(E.makeOverlap(k),k);
+  });
+});
+test('a generator that runs out of tries returns a valid puzzle from its pool',()=>{
+  withTries({limit:0},()=>{for(let i=0;i<20;i++)checkAll('NO-TRIES|'+i);});
+  assert.equal(E.TRIES.limit,null);assert.equal(E.TRIES.strict,false);
 });
 test('puzzles are reproducible from the code and change with a new puzzle',()=>{
   assert.deepEqual(plain(E.makeDecks('CLASS|0')),plain(E.makeDecks('CLASS|0')));

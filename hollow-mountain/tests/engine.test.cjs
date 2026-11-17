@@ -15,6 +15,82 @@ function tunnelsOK(t){t.edges.forEach(e=>{assert(whole(e.w),'whole tunnel');asse
 const parseMatrix=s=>s.trim().split('\n').map(l=>l.trim().split(/\s+/).map(Number));
 const close=(A,B,tol)=>A.every((r,i)=>r.every((x,j)=>Math.abs(x-B[i][j])<(tol||1e-3)));
 
+// The properties each generated puzzle must have. The property tests below and the fallback tests share them.
+function checkViruses(v){
+ chartOK(v.D1);chartOK(v.D6);
+ assert(E.fourPointGap(v.D6,[0,1,2,3])>=2);
+ assert(!E.additiveCheck(v.D6));
+ assert(E.additiveCheck(v.D1),'level 1 stretch fits a cave');
+ // level 1 pairing by eye is clear: the sister pairing has the smallest sum, strictly
+ const p=v.pairs.find(x=>x[0]===0),s=E.fourSums(v.D1,[0,1,2,3]),want=p[1]===1?0:p[1]===2?1:2;
+ assert.equal(s.indexOf(Math.min(...s)),want);assert.equal(s.filter(x=>x===Math.min(...s)).length,1);
+ // the building attempt in level 6 stays whole: Y lengths and the formula's hang point
+ assert.deepEqual(plain(E.presentLeaves(v.Y)),[0,1,2]);assert(v.Y.edges.every(e=>e.a!==3&&e.b!==3),'D is not yet in the Y');
+ assert(E.sameMatrix(E.leafDist(v.Y).slice(0,3).map(r=>r.slice(0,3)),v.D6.slice(0,3).map(r=>r.slice(0,3))),'the Y fits A, B, C');
+ v.Y.edges.forEach(e=>assert(whole(e.w)&&e.w>=1));assert(whole(v.attach.L)&&whole(v.attach.off));
+ // whatever cave is built, it cannot reproduce a chart that breaks the four-point condition
+ const built=E.hang(v.Y,v.attach.ei,v.attach.off,v.attach.from,3,v.attach.L);
+ assert(!E.sameMatrix(E.leafDist(built),v.D6));
+ // two letters at most per column, so every triangle sum is even
+ for(let c=0;c<20;c++)assert(new Set(v.seqs.map(x=>x[c])).size<=2);
+}
+function checkGrow(g,n){
+ tunnelsOK(g.tree);chartOK(g.D);assert.equal(g.D.length,n);assert(E.additiveCheck(g.D));
+ let cave=g.start;
+ for(let j=E.presentLeaves(cave).length;j<n;j++){
+  E.limbRows(g.D,j,E.presentLeaves(cave)).forEach(r=>assert(whole(r.v)));
+  const at=E.attachPoint(cave,g.D,j);
+  assert(whole(at.L)&&at.L>=1&&whole(at.x)&&whole(at.off)&&at.ei!==undefined,'hangs inside a tunnel at a whole distance');
+  assert(E.canHang(cave,at.ei,at.off,at.from,at.L));
+  cave=E.hang(cave,at.ei,at.off,at.from,j,at.L);
+ }
+ assert(E.sameMatrix(E.leafDist(cave),g.D),'the rebuilt cave reproduces the chart');
+}
+function checkClock(c){
+ tunnelsOK(c.tree);chartOK(c.D);
+ // every entrance is equally far from the first chamber
+ const A=E.adjOf(c.tree),dist=Array(c.tree.N).fill(null);dist[c.tree.root]=0;const st=[c.tree.root];
+ while(st.length){const u=st.pop();for(const y of A[u])if(dist[y.v]===null){dist[y.v]=dist[u]+y.w;st.push(y.v);}}
+ assert.equal(new Set(dist.slice(0,4)).size,1);
+ assert.equal(c.up.ties,false);
+ assert(E.sameMatrix(E.leafDist(c.up.tree),c.D));
+ c.up.joins.forEach(J=>{assert(whole(J.h));Object.values(J.row).forEach(x=>assert(whole(x)));});
+}
+function checkFast(f){
+ tunnelsOK(f.tree);chartOK(f.D);
+ assert(E.additiveCheck(f.D));
+ const mp=E.minPair(f.D);assert(mp.unique);assert(!E.isCherry(f.tree,mp.pair[0],mp.pair[1]));
+ assert(!E.sameShape(f.up.tree,f.tree));
+ assert(!E.sameMatrix(E.leafDist(f.up.tree),f.D),'closest-pair cave fails the walk test');
+ // With four entrances D*(i,j) = D*(k,l) for complementary pairs, so "unique" means: the smallest value sits on exactly
+ // one complementary pair of pairs, and both are neighbors.
+ const r0=f.nj.rounds[0];assert.equal(r0.ties,false);assert.equal(r0.mins.length,2);
+ r0.mins.forEach(p=>{assert(E.isCherry(f.tree,p[0],p[1]));assert.notDeepEqual(plain(p),plain(mp.pair));});
+ assert(E.isCherry(f.tree,r0.a,r0.b),'discounted chart picks true neighbors');
+ [r0.li,r0.lj,r0.delta,...r0.total,...r0.merged].forEach(x=>assert(whole(x)));
+ assert(E.sameMatrix(E.leafDist(f.nj.tree),f.D));
+}
+function checkJoin5(j){
+ tunnelsOK(j.tree);chartOK(j.D);
+ assert.equal(j.nj.ties,false);j.nj.rounds.forEach(r=>assert.equal(r.ties,false));
+ assert(E.sameMatrix(E.leafDist(j.nj.tree),j.D));
+ const r0=j.nj.rounds[0];[r0.li,r0.lj,...r0.merged].forEach(x=>assert(whole(x)));
+}
+function checkSwap(w){
+ tunnelsOK(w.tree);chartOK(w.D);
+ assert(!E.sameShape(w.start,w.tree));
+ const opts=E.nniOptions(w.start);assert.equal(opts.length,6);
+ assert.equal(opts.filter(o=>E.sameShape(o.tree,w.tree)).length,1);
+ const scores=opts.map(o=>E.quartetScore(o.tree,w.D));
+ assert.equal(scores.filter(s=>s===w.max).length,1);assert.equal(w.max,15);
+ assert(w.score<w.max);assert.equal(E.quartetScore(w.tree,w.D),15);
+}
+function checkAll(k){
+ checkViruses(E.makeViruses(k));checkGrow(E.makeGrow(k,4),4);checkGrow(E.makeGrow(k,5),5);
+ checkClock(E.makeClock(k));checkFast(E.makeFast(k));checkJoin5(E.makeJoin5(k));checkSwap(E.makeSwap(k));
+}
+function withTries(opts,f){Object.assign(E.TRIES,opts);try{return f();}finally{E.TRIES.limit=null;E.TRIES.strict=false;}}
+
 test('property 1: tunnel lengths are whole numbers from 1 to 9; every chart is symmetric with a zero diagonal',()=>{
  for(let i=0;i<CODES;i++){
   const v=E.makeViruses(key(i,1));chartOK(v.D1);chartOK(v.D6);
@@ -34,79 +110,31 @@ test('property 2: levels 3 to 5 charts fit a cave exactly and every limb length 
   const s=E.makeStar(key(i,3));assert(E.additiveCheck(s.D));
   for(let j=0;j<3;j++)E.limbRows(s.D,j).forEach(r=>assert(whole(r.v)&&r.v>=1));
   assert(E.sameMatrix(E.leafDist(E.additivePhylogeny(s.D)),s.D));
-  for(const [n,l] of [[4,4],[5,5]]){
-   const g=E.makeGrow(key(i,l),n);assert(E.additiveCheck(g.D));
-   let cave=g.start;
-   for(let j=E.presentLeaves(cave).length;j<n;j++){
-    E.limbRows(g.D,j,E.presentLeaves(cave)).forEach(r=>assert(whole(r.v)));
-    const at=E.attachPoint(cave,g.D,j);
-    assert(whole(at.L)&&at.L>=1&&whole(at.x)&&whole(at.off)&&at.ei!==undefined,'hangs inside a tunnel at a whole distance');
-    assert(E.canHang(cave,at.ei,at.off,at.from,at.L));
-    cave=E.hang(cave,at.ei,at.off,at.from,j,at.L);
-   }
-   assert(E.sameMatrix(E.leafDist(cave),g.D),'the rebuilt cave reproduces the chart');
-  }
+  for(const [n,l] of [[4,4],[5,5]])checkGrow(E.makeGrow(key(i,l),n),n);
  }
 });
 
 test('property 3: level 6 chart has a foursome that misses the four-point condition by 2 or more',()=>{
  for(let i=0;i<CODES;i++){
-  const v=E.makeViruses(key(i,6));
-  assert(E.fourPointGap(v.D6,[0,1,2,3])>=2);
-  assert(!E.additiveCheck(v.D6));
-  assert(E.additiveCheck(v.D1),'level 1 stretch fits a cave');
-  // level 1 pairing by eye is clear: the sister pairing has the smallest sum, strictly
-  const p=v.pairs.find(x=>x[0]===0),s=E.fourSums(v.D1,[0,1,2,3]),want=p[1]===1?0:p[1]===2?1:2;
-  assert.equal(s.indexOf(Math.min(...s)),want);assert.equal(s.filter(x=>x===Math.min(...s)).length,1);
-  // the building attempt in level 6 stays whole: Y lengths and the formula's hang point
-  assert.deepEqual(plain(E.presentLeaves(v.Y)),[0,1,2]);assert(v.Y.edges.every(e=>e.a!==3&&e.b!==3),'D is not yet in the Y');
-  assert(E.sameMatrix(E.leafDist(v.Y).slice(0,3).map(r=>r.slice(0,3)),v.D6.slice(0,3).map(r=>r.slice(0,3))),'the Y fits A, B, C');
-  v.Y.edges.forEach(e=>assert(whole(e.w)&&e.w>=1));assert(whole(v.attach.L)&&whole(v.attach.off));
-  // whatever cave is built, it cannot reproduce a chart that breaks the four-point condition
-  const built=E.hang(v.Y,v.attach.ei,v.attach.off,v.attach.from,3,v.attach.L);
-  assert(!E.sameMatrix(E.leafDist(built),v.D6));
-  // two letters at most per column, so every triangle sum is even
-  for(let c=0;c<20;c++)assert(new Set(v.seqs.map(x=>x[c])).size<=2);
+  checkViruses(E.makeViruses(key(i,6)));
  }
 });
 
 test('property 4: level 7 chart comes from a steady-rate cave, UPGMA reproduces it exactly, no join is tied',()=>{
  for(let i=0;i<CODES;i++){
-  const c=E.makeClock(key(i,7)),d=E.leafDist(c.tree).length&&(()=>{const A=E.adjOf(c.tree);return null;})();
-  // every entrance is equally far from the first chamber
-  const fromRoot=[];(function walk(){const A=E.adjOf(c.tree),dist=Array(c.tree.N).fill(null);dist[c.tree.root]=0;const st=[c.tree.root];
-   while(st.length){const u=st.pop();for(const y of A[u])if(dist[y.v]===null){dist[y.v]=dist[u]+y.w;st.push(y.v);}}
-   for(let l=0;l<4;l++)fromRoot.push(dist[l]);})();
-  assert.equal(new Set(fromRoot).size,1);
-  assert.equal(c.up.ties,false);
-  assert(E.sameMatrix(E.leafDist(c.up.tree),c.D));
-  c.up.joins.forEach(J=>{assert(whole(J.h));Object.values(J.row).forEach(x=>assert(whole(x)));});
+  checkClock(E.makeClock(key(i,7)));
  }
 });
 
 test('property 5: level 8 fits a cave; closest pair not neighbors; UPGMA shape differs; smallest discounted entry unique and elsewhere',()=>{
  for(let i=0;i<CODES;i++){
-  const f=E.makeFast(key(i,8));
-  assert(E.additiveCheck(f.D));
-  const mp=E.minPair(f.D);assert(mp.unique);assert(!E.isCherry(f.tree,mp.pair[0],mp.pair[1]));
-  assert(!E.sameShape(f.up.tree,f.tree));
-  assert(!E.sameMatrix(E.leafDist(f.up.tree),f.D),'closest-pair cave fails the walk test');
-  // With four entrances D*(i,j) = D*(k,l) for complementary pairs, so "unique" means: the smallest value sits on exactly
-  // one complementary pair of pairs, and both are neighbors.
-  const r0=f.nj.rounds[0];assert.equal(r0.ties,false);assert.equal(r0.mins.length,2);
-  r0.mins.forEach(p=>{assert(E.isCherry(f.tree,p[0],p[1]));assert.notDeepEqual(plain(p),plain(mp.pair));});
-  assert(E.isCherry(f.tree,r0.a,r0.b),'discounted chart picks true neighbors');
-  [r0.li,r0.lj,r0.delta,...r0.total,...r0.merged].forEach(x=>assert(whole(x)));
-  assert(E.sameMatrix(E.leafDist(f.nj.tree),f.D));
+  checkFast(E.makeFast(key(i,8)));
  }
 });
 
 test('property 6: level 9 neighbor joining reproduces the exact chart and no round has a tie',()=>{
  for(let i=0;i<CODES;i++){
-  const j=E.makeJoin5(key(i,9));
-  assert.equal(j.nj.ties,false);j.nj.rounds.forEach(r=>assert.equal(r.ties,false));
-  assert(E.sameMatrix(E.leafDist(j.nj.tree),j.D));
-  const r0=j.nj.rounds[0];[r0.li,r0.lj,...r0.merged].forEach(x=>assert(whole(x)));
+  checkJoin5(E.makeJoin5(key(i,9)));
   // and it still returns a cave on level 6's lying chart
   const v=E.makeViruses(key(i,6)),lie=E.nj(v.D6);assert.equal(lie.tree.edges.length,5);
  }
@@ -114,13 +142,7 @@ test('property 6: level 9 neighbor joining reproduces the exact chart and no rou
 
 test('property 7: level 10 start is one interchange from the true shape; exactly one swap reaches the top foursome score',()=>{
  for(let i=0;i<CODES;i++){
-  const w=E.makeSwap(key(i,10));
-  assert(!E.sameShape(w.start,w.tree));
-  const opts=E.nniOptions(w.start);assert.equal(opts.length,6);
-  assert.equal(opts.filter(o=>E.sameShape(o.tree,w.tree)).length,1);
-  const scores=opts.map(o=>E.quartetScore(o.tree,w.D));
-  assert.equal(scores.filter(s=>s===w.max).length,1);assert.equal(w.max,15);
-  assert(w.score<w.max);assert.equal(E.quartetScore(w.tree,w.D),15);
+  checkSwap(E.makeSwap(key(i,10)));
  }
 });
 
@@ -169,6 +191,22 @@ test('puzzles are reproducible from the code and vary with it',()=>{
  assert.deepEqual(plain(E.makeFast('A|8|0')),plain(E.makeFast('A|8|0')));
  assert.notDeepEqual(plain(E.makeSwap('A|10|0').D),plain(E.makeSwap('A|10|1').D));
  assert.notDeepEqual(plain(E.makeViruses('A|1|0').seqs),plain(E.makeViruses('B|1|0').seqs));
+});
+test('every fallback key generates directly, for both sizes makeGrow is called with',()=>{
+ const pools=['makeViruses','makeGrow','makeClock','makeFast','makeJoin5','makeSwap'];
+ assert.deepEqual(Object.keys(E.POOLS).sort(),pools.sort());
+ withTries({strict:true},()=>{
+  for(const k of E.POOLS.makeViruses)checkViruses(E.makeViruses(k));
+  for(const k of E.POOLS.makeGrow){checkGrow(E.makeGrow(k,4),4);checkGrow(E.makeGrow(k,5),5);}
+  for(const k of E.POOLS.makeClock)checkClock(E.makeClock(k));
+  for(const k of E.POOLS.makeFast)checkFast(E.makeFast(k));
+  for(const k of E.POOLS.makeJoin5)checkJoin5(E.makeJoin5(k));
+  for(const k of E.POOLS.makeSwap)checkSwap(E.makeSwap(k));
+ });
+});
+test('a generator that runs out of tries returns a valid puzzle from its pool',()=>{
+ withTries({limit:0},()=>{for(let i=0;i<20;i++)checkAll('NO-TRIES|'+i+'|0');});
+ assert.equal(E.TRIES.limit,null);assert.equal(E.TRIES.strict,false);
 });
 test('the interface script parses',()=>{
  const m=html.match(/<script id="ui">([\s\S]*?)<\/script>/);if(m)new vm.Script(m[1]);
