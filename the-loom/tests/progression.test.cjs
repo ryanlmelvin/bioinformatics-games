@@ -74,7 +74,7 @@ test('a fresh save plays every level and ends with every term earned, in order, 
   assert.equal(ui.el('#gcount').textContent,'11 of 11 terms');
   const done=ui.api.log().filter(e=>e.ev==='complete').map(e=>e.lvl);
   assert.deepEqual(JSON.parse(JSON.stringify([...new Set(done)])),JSON.parse(JSON.stringify(levels.map(l=>l.id))));
-  const saved=ui.persisted();assert.equal(saved.unlocked,11);assert.equal(saved.badges.length,11);
+  const saved=ui.persisted();assert.equal(saved.unlocked,11);assert.deepEqual(saved.done,Array.from(ui.api.levels(),l=>l.id));assert.equal(saved.badges.length,11);
 });
 test('many puzzle codes: every level can be finished the way the student plays it',()=>{
   for(let k=0;k<25;k++){

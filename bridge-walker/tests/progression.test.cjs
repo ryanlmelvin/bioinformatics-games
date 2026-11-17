@@ -28,7 +28,7 @@ function settle(ui){
 }
 test('level 11 retains its finale and unlocks level 12 in existing saved progress',()=>{
  const ui=boot(null);assert.equal(ui.api.state().L.id,11);walk(ui);
- assert(ui.api.state().done);assert(ui.api.state().blocks.includes('finale'));assert.equal(ui.persisted().unlocked,12);
+ assert(ui.api.state().done);assert(ui.api.state().blocks.includes('finale'));assert.equal(ui.persisted().unlocked,12);assert.deepEqual(ui.persisted().done,Array.from({length:11},(_,i)=>i+1));
  const resumed=boot(null,true,ui.persisted());assert.equal(resumed.api.state().L.id,12);assert(resumed.api.saved().badges.includes('debruijn'));
 });
 test('either Eulerian walk leads to pair checking, not premature completion',()=>{
@@ -94,7 +94,7 @@ test('practice completion, navigation, and puzzle changes never alter saved cour
  const ui=boot(null,true,null,{pathname:'/bridge-walker/level-12/'}),prior=ui.persisted();
  walk(ui);const c=ui.api.state();settle(ui);ui.el('#skip').click();
  assert(c.done);assert(ui.api.saved().badges.includes('pairedgraph'));
- ui.api.loadLevel(1);assert.match(ui.el('#pips').innerHTML,/<button data-lvl="12" aria-label/);
+ ui.api.loadLevel(1);assert.match(ui.el('#pips').innerHTML,/<button data-lvl="12" class=" fin" aria-label/);
  ui.el('#seed').value='FRESHPAIR';ui.el('#setSeed').click();
  assert.equal(ui.api.state().L.id,12);assert.equal(ui.api.saved().badges.length,0);
  ui.el('#fresh').click();assert.equal(ui.api.state().phase,'play');
@@ -102,10 +102,11 @@ test('practice completion, navigation, and puzzle changes never alter saved cour
  const reloaded=boot(null,true,prior,{pathname:'/bridge-walker/level-12/'});
  assert.equal(reloaded.api.state().L.id,12);assert.equal(reloaded.api.saved().badges.length,0);
 });
-test('invalid direct levels fall back to normal saved progress',()=>{
+test('invalid direct levels fall back to normal saved progress, with every level open',()=>{
  for(const value of ['0','13','1.5','abc']){
   const ui=boot(null,true,null,{search:'?debug=1&level='+value});
   assert.equal(ui.api.state().L.id,11);assert(ui.api.saved().badges.includes('debruijn'));
-  assert.match(ui.el('#pips').innerHTML,/<button data-lvl="12" disabled/);
+  assert.doesNotMatch(ui.el('#pips').innerHTML,/ disabled/);assert.match(ui.el('#pips').innerHTML,/<button data-lvl="12" class="" aria-label="Level 12"/);
+  ui.api.loadLevel(12);assert.equal(ui.api.state().L.id,12);
  }
 });

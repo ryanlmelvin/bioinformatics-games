@@ -52,7 +52,7 @@ test('a fresh save plays every level and ends with every term earned, in order, 
  assert.deepEqual(plain(ui.api.earned()).sort(),plain(ui.api.vocab().map(v=>v.id)).sort());
  const lg=ui.api.log();for(let n=1;n<=10;n++)assert(lg.some(e=>e.ev==='complete'&&e.lvl===n),'completion of level '+n+' logged');
  const order=plain(ui.api.earned());assert.deepEqual(order.slice(0,6),['expvec','clustering','point','center','cluster','euclid']);
- assert.equal(ui.persisted().unlocked,10);assert.match(ui.el('#count').innerHTML,/14 of 14 terms/);
+ assert.equal(ui.persisted().unlocked,10);assert.deepEqual(ui.persisted().done,Array.from(ui.api.levels(),l=>l.id));assert.match(ui.el('#count').innerHTML,/14 of 14 terms/);
  // level 8 scores the student's own level 1 piles
  assert.equal(ui.persisted().piles1.length,12);
 });

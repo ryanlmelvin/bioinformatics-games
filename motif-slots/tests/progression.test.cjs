@@ -41,13 +41,20 @@ test('a fresh save plays every level in order and ends with every term earned',(
     SOLVE[id](u);
     assert(u.api.state().done,'level '+id+' completes');
     assert(u.api.log().some(e=>e.ev==='complete'&&e.lvl===id),'move log records level '+id);
-    assert.equal(u.persisted().unlocked,Math.min(id+1,11));
+    assert.equal(u.persisted().unlocked,Math.min(id+1,11));assert.deepEqual(u.persisted().done,Array.from({length:id},(_,i)=>i+1));
     if(id<11)u.api.loadLevel(id+1);
   }
   assert.deepEqual(u.api.earned().slice().sort(),u.api.vocab().map(v=>v.id).sort());
   assert.match(u.el('#hmeta').textContent,/18 of 18 terms/);
   // every level but the last earns its own terms, so the last finds nothing left to grant
   const earnedAt=u.persisted().earnedAt;assert(Object.values(earnedAt).every(l=>l<=10));
+});
+test('jumping straight to the last level earns nothing; it names leftover terms only once every other level is finished',()=>{
+  const u=boot('?debug=1&seed=JUMP');u.api.loadLevel(11);SOLVE[11](u);
+  assert(u.api.state().done);assert.equal(u.api.earned().length,0);assert.deepEqual(u.persisted().done,[11]);
+  assert.match(u.el('#panel').innerHTML,/18 vocabulary terms still hidden/);
+  const all={seed:'JUMP',unlocked:11,done:[1,2,3,4,5,6,7,8,9,10],badges:['kmer'],earnedAt:{kmer:1},variants:{},log:[]};
+  const v=boot('?debug=1',all);assert.equal(v.api.state().L.id,11);SOLVE[11](v);assert.equal(v.api.earned().length,18);
 });
 test('each level earns the terms its section names',()=>{
   const want={1:['kmer','freq'],2:['ham'],3:['rc','dnaa','ori'],4:['motif','mf'],5:['mm','cons','score'],6:['median'],7:['profile','pmp','greedy'],8:['pseudo'],9:['rand'],10:['gibbs']};

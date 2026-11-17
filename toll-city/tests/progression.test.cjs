@@ -107,12 +107,13 @@ test('a fresh save plays through every level and earns every term, and the move 
   assert.match(ui.el('#hdrinfo').innerHTML,/13 of 13 terms/);
   const done=ui.api.log().filter(e=>e.ev==='complete').map(e=>e.lvl);
   for(let n=1;n<=11;n++)assert(done.includes(n),'log has level '+n);
-  assert.equal(saved.unlocked,11);
+  assert.equal(saved.unlocked,11);assert.deepEqual(saved.done,Array.from(ui.api.levels(),l=>l.id));
   assert.match(ui.el('#guideBody').innerHTML,/Rosalind BA5B/);
 });
-test('levels are locked until earned, and saved progress resumes',()=>{
-  const ui=boot();ui.api.act('lvl',5);assert.equal(st(ui).L.id,1);
-  play[1](ui);const again=boot(ui.persisted());assert.equal(st(again).L.id,2);assert(again.api.earned().includes('alignment'));
+test('every level is open from the start, only finished levels are marked, and saved progress resumes',()=>{
+  const ui=boot();assert.doesNotMatch(ui.el('#pips').innerHTML,/ disabled| fin/);
+  ui.api.act('lvl',5);assert.equal(st(ui).L.id,5);assert.equal(ui.api.earned().length,0);
+  ui.api.act('lvl',1);play[1](ui);assert.deepEqual(ui.persisted().done,[1]);assert.match(ui.el('#pips').innerHTML,/data-a="1" class="on fin"/);const again=boot(ui.persisted());assert.equal(st(again).L.id,2);assert(again.api.earned().includes('alignment'));
 });
 test('?level=N is a fresh practice session that never reads or writes saved progress',()=>{
   const saved={seed:'SAVED',unlocked:3,badges:['alignment','indel','lcs'],earnedAt:{},variants:{},games:{},arrows:{},routes:{},log:[]};

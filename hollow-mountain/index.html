@@ -181,6 +181,17 @@ footer input{font:inherit;width:9em;padding:5px 8px;border:1px solid var(--line)
   .guide summary,#printGuide{display:none}
   .guide a{color:#000}
 }
+.pips button.fin{position:relative;border-color:var(--good);box-shadow:inset 0 0 0 1px var(--good)}
+.pips button.fin::after{content:'✓';position:absolute;top:-5px;right:-5px;width:14px;height:14px;border-radius:50%;background:var(--good);color:var(--bg);font-size:10px;line-height:14px;font-weight:700;text-align:center}
+.linknote{display:flex;flex-wrap:wrap;gap:8px 12px;align-items:center;margin:10px 0 0;padding:8px 12px;border:1px solid var(--good);border-radius:8px;background:var(--panel);font-size:.92rem}
+.savebar{margin-top:26px;padding:12px 14px;border:1px solid var(--line);border-radius:10px;background:var(--panel);font-size:.92rem}
+.savebar p{margin:0 0 8px}
+.savebar .saverow{display:flex;flex-wrap:wrap;gap:8px}
+.savebar input{flex:1 1 16em;min-width:0;font:inherit;font-size:.85rem;padding:6px 8px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--muted)}
+.savebar .savenote{margin:8px 0 0;color:var(--muted)}
+.savebar .savenote:empty{display:none}
+.linknote[hidden]{display:none}
+@media print{.savebar,.linknote{display:none}}
 </style>
 </head>
 <body>
@@ -189,6 +200,7 @@ footer input{font:inherit;width:9em;padding:5px 8px;border:1px solid var(--line)
     <h1><svg viewBox="0 0 60 60" aria-hidden="true"><rect width="60" height="60" rx="12" fill="#26314f"/><path d="M4,52 L22,20 L28,28 L36,12 L56,52Z" fill="#7b6a58"/><path d="M36,12 L41,22 L36,20 L32,23Z" fill="#f3f1ea"/><path d="M24,52 v-7 a6,6 0 0 1 12,0 v7z" fill="#120c08" stroke="#9c7a52" stroke-width="2"/></svg><a href="../" title="All games">Hollow Mountain</a></h1>
     <div class="pips" id="pips" aria-label="Levels"></div>
   </header>
+  <p class="linknote" id="linkNote" role="status" hidden><span id="linkNoteText"></span> <button id="copyLinkTop" hidden>Copy progress link</button></p>
   <div class="vocabhead">Vocabulary you have earned <span style="text-transform:none;letter-spacing:0">(hover for the definition)</span></div>
   <div class="badges" id="badges"></div>
 
@@ -242,6 +254,11 @@ footer input{font:inherit;width:9em;padding:5px 8px;border:1px solid var(--line)
     <div id="guideBody"></div>
   </details>
 
+  <div class="savebar" id="savebar">
+    <p><b>Keep your vocabulary.</b> Every level is open, in any order. The terms are the part you earn, by finishing levels. This browser remembers them, and so does your progress link: copy it and keep it somewhere you will find it again (email it to yourself). Opening the link in any browser, on any device, brings back your earned terms and finished levels.</p>
+    <div class="saverow"><input id="saveLink" readonly aria-label="Your progress link"><button id="copyLink">Copy progress link</button></div>
+    <p class="savenote" id="saveNote" role="status"></p>
+  </div>
   <footer>
     <label for="seed">Puzzle code</label>
     <input id="seed" autocomplete="off" spellcheck="false">
@@ -613,12 +630,90 @@ const requestedLevel=Number(params.get('level'));
 const previewLevel=Number.isInteger(requestedLevel)&&requestedLevel>=1&&requestedLevel<=LEVELS.length?requestedLevel:0;
 const BENCH=params.get('bench')==='1';
 function load(){try{return JSON.parse(localStorage.getItem(KEY))||{};}catch(e){return {};}}
-function save(){if(previewLevel||BENCH)return;try{localStorage.setItem(KEY,JSON.stringify(S));}catch(e){}}
-function freshState(seed){return {seed,unlocked:1,badges:[],earnedAt:{},variants:{},log:[]};}
+function save(){if(previewLevel||BENCH)return;try{localStorage.setItem(KEY,JSON.stringify(S));}catch(e){}writeLink();}
+function freshState(seed){return {seed,unlocked:1,done:[],badges:[],earnedAt:{},variants:{},log:[]};}
 function randomCode(){const c='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';let s='';for(let i=0;i<6;i++)s+=c[Math.floor(Math.random()*c.length)];return s;}
+/* ---------- progress link ----------
+   Every level is open; only the vocabulary is earned. Earned terms and finished levels ride in the address as
+   #save=1.<terms>.<levels>.<check>.<puzzle code>, so a copied link restores them in any browser.
+   <terms> has one character per VOCAB entry, in VOCAB order: 0 for not earned, otherwise the level it was earned in (base 36).
+   <levels> has one 0 or 1 per level. Old links depend on those orders: add new terms and levels at the end. */
+const TRANSIENT=!!(previewLevel||BENCH||params.get('bench'));
+function linkCheck(body){const s=KEY+'|'+body;let h=2166136261>>>0;for(let i=0;i<s.length;i++){h^=s.charCodeAt(i);h=Math.imul(h,16777619);}return (h>>>0).toString(36);}
+function encodeProgress(st){
+  const body='1.'+VOCAB.map(v=>st.badges.includes(v.id)?Math.min(35,Math.max(1,st.earnedAt[v.id]|0)).toString(36):'0').join('')+
+    '.'+LEVELS.map(l=>st.done.includes(l.id)?'1':'0').join('');
+  return body+'.'+linkCheck(body+'.'+st.seed)+'.'+encodeURIComponent(st.seed);
+}
+function decodeProgress(text){
+  const m=/^1\.([0-9a-z]+)\.([01]+)\.([0-9a-z]+)\.(.+)$/.exec(text||'');
+  if(!m||m[1].length>VOCAB.length||m[2].length>LEVELS.length)return null;
+  let seed;try{seed=decodeURIComponent(m[4]);}catch(e){return null;}
+  if(linkCheck('1.'+m[1]+'.'+m[2]+'.'+seed)!==m[3])return null;
+  const earnedAt={},done=[];
+  for(let i=0;i<m[1].length;i++){const l=parseInt(m[1][i],36);if(l>LEVELS.length)return null;if(l)earnedAt[VOCAB[i].id]=l;}
+  for(let i=0;i<m[2].length;i++)if(m[2][i]==='1')done.push(LEVELS[i].id);
+  return {seed,earnedAt,done};
+}
+/* saves from before every level was open have no list of finished levels: rebuild it */
+function withDone(st){
+  if(!Array.isArray(st.badges))st.badges=[];
+  if(!st.earnedAt)st.earnedAt={};
+  if(!Array.isArray(st.log))st.log=[];
+  if(!Array.isArray(st.done)){
+    st.done=[];
+    for(let i=1;i<(st.unlocked||1)&&i<=LEVELS.length;i++)st.done.push(i);
+    st.log.forEach(e=>{if(e&&e.ev==='complete'&&e.lvl>=1&&e.lvl<=LEVELS.length&&!st.done.includes(e.lvl))st.done.push(e.lvl);});
+    st.done.sort((a,b)=>a-b);
+  }
+  return st;
+}
+/* add a link's terms and levels to a save; nothing is ever taken away */
+function absorb(st,p){
+  const terms=[],levels=[];
+  VOCAB.forEach(v=>{if(p.earnedAt[v.id]&&!st.badges.includes(v.id)){st.badges.push(v.id);st.earnedAt[v.id]=p.earnedAt[v.id];terms.push(v.id);}});
+  p.done.forEach(id=>{if(!st.done.includes(id)){st.done.push(id);levels.push(id);}});
+  st.done.sort((a,b)=>a-b);
+  if(st.done.length)st.unlocked=Math.max(st.unlocked||1,Math.min(LEVELS.length,st.done[st.done.length-1]+1));
+  return {terms,levels};
+}
+function markDone(){if(!S.done.includes(cur.L.id)){S.done.push(cur.L.id);S.done.sort((a,b)=>a-b);}}
+const linkText=TRANSIENT?'':((String(location.hash||'').match(/^#save=(.+)$/)||[])[1]||'');
+let linkNote='',lastLink=null,linkLive=false;
+function progressLink(){
+  const q=new URLSearchParams(location.search);q.delete('seed');const qs=q.toString();
+  return location.pathname+(qs?'?'+qs:'')+'#save='+encodeProgress(S);
+}
+function writeLink(){
+  if(TRANSIENT||!S||!S.done)return;
+  const rel=progressLink();if(rel===lastLink)return;lastLink=rel;
+  try{if(typeof history!=='undefined'&&history.replaceState)history.replaceState(null,'',rel);}catch(e){}
+  const box=$('#saveLink');if(box)box.value=(location.origin||'')+rel;
+  if(linkLive)topNote('Your progress link has changed. Copy it again before you leave, so your backup is up to date.',true);
+}
+function topNote(text,withButton){$('#linkNoteText').textContent=text;$('#copyLinkTop').hidden=!withButton;$('#linkNote').hidden=false;}
+/* where to pick up: the first level not yet finished */
+function resumeLevel(){const l=LEVELS.find(l=>!S.done.includes(l.id));return l?l.id:LEVELS.length;}
+function useLink(){
+  if(TRANSIENT||!linkText)return;
+  const p=decodeProgress(linkText);
+  if(!p){linkNote='That progress link is incomplete or has been changed, so nothing was restored from it. Copy the whole link and open it again.';return;}
+  if(p.seed!==S.seed){
+    const mine=S.badges.length+S.done.length;
+    if(!mine||typeof confirm!=='function'||confirm('This link carries progress for puzzle code '+p.seed+' ('+Object.keys(p.earnedAt).length+' terms).\n\nThis browser already has progress for puzzle code '+S.seed+' ('+S.badges.length+' terms).\n\nOK: switch to the link. This browser’s progress for '+S.seed+' is replaced.\nCancel: keep this browser’s progress.'))S=withDone(freshState(p.seed));
+    else{linkNote='Kept the progress saved in this browser (puzzle code '+S.seed+'). The link you opened was for puzzle code '+p.seed+'.';return;}
+  }
+  const got=absorb(S,p);
+  if(got.terms.length||got.levels.length){
+    S.log.push({t:Date.now(),lvl:0,variant:0,ev:'restore',terms:got.terms,levels:got.levels});
+    linkNote='Restored from your progress link: '+got.terms.length+' vocabulary term'+(got.terms.length===1?'':'s')+' and '+got.levels.length+' finished level'+(got.levels.length===1?'':'s')+'.';
+  }
+}
 let S=previewLevel||BENCH?freshState(urlSeed||randomCode()):load();
 if(urlSeed&&urlSeed!==S.seed)S=freshState(urlSeed);
 if(!S.seed)S=freshState(randomCode());
+withDone(S);
+useLink();
 save();
 
 let cur=null;
@@ -1198,7 +1293,7 @@ function complete(ids,block,text){
   cur.done=true;cur.focus=null;
   if(ids&&ids.length)grant(ids);
   if(block)cur.blocks.push(block);
-  if(cur.L.id<LEVELS.length)S.unlocked=Math.max(S.unlocked,cur.L.id+1);
+  markDone();if(cur.L.id<LEVELS.length)S.unlocked=Math.max(S.unlocked,cur.L.id+1);
   say(text||'Level complete.','good');
   log('complete',{ms:Date.now()-cur.t0,wrong:cur.wrong,walks:cur.walks,earned:ids||[]});
 }
@@ -1214,8 +1309,8 @@ function renderPanel(){
   $('#panel').innerHTML=h+'</div>';
 }
 function renderHeader(){
-  $('#pips').innerHTML=LEVELS.map(l=>'<button data-lvl="'+l.id+'"'+(!previewLevel&&l.id>S.unlocked?' disabled':'')+
-    (l.id===cur.L.id?' class="on" aria-current="true"':'')+' aria-label="Level '+l.id+'">'+l.id+'</button>').join('');
+  $('#pips').innerHTML=LEVELS.map(l=>'<button data-lvl="'+l.id+'"'+' class="'+(l.id===cur.L.id?'on':'')+(S.done.includes(l.id)?' fin':'')+'"'+(l.id===cur.L.id?' aria-current="true"':'')+
+    ' aria-label="Level '+l.id+(S.done.includes(l.id)?' (finished)':'')+'">'+l.id+'</button>').join('');
   $('#badges').innerHTML=VOCAB.map(x=>knows(x.id)
     ?'<span class="badge got term" tabindex="0">'+x.name+'<span class="tip" role="tooltip"><b>'+x.name+'</b>'+x.def+'</span></span>'
     :'<span class="badge">? ? ?</span>').join('');
@@ -1309,16 +1404,31 @@ $('#restart').onclick=()=>act('restart');
 $('#fresh').onclick=()=>act('fresh');
 $('#walk').onclick=()=>act('walk');
 $('#skip').onclick=()=>act('skip');
+/* progress link: the box, the copy buttons, and a pasted link in a tab that is already open */
+if(TRANSIENT)$('#savebar').hidden=true;
+else{
+  if(linkNote)topNote(linkNote,false);
+  linkLive=true;
+  $('#saveLink').onclick=()=>{const b=$('#saveLink');if(b.select)b.select();};
+  $('#copyLink').onclick=$('#copyLinkTop').onclick=()=>{
+    const b=$('#saveLink'),tell=(text,again)=>{$('#saveNote').textContent=text;topNote(text,again);},
+      ok=()=>tell('Copied. Paste it somewhere you will find it again. It changes each time you earn a term, so copy it again when you stop.',false),
+      byHand=()=>{if(b.select)b.select();let done=false;try{done=document.execCommand('copy');}catch(e){}
+        if(done)ok();else tell('Could not copy for you. Copy the address of this page instead: it is the same link.',true);};
+    if(typeof navigator!=='undefined'&&navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(b.value).then(ok,byHand);else byHand();
+  };
+  window.addEventListener&&window.addEventListener('hashchange',()=>{if(location.pathname+location.search+location.hash!==lastLink)location.reload();});
+}
 $('#seed').value=S.seed;
 $('#setSeed').onclick=()=>{const v=$('#seed').value.trim();if(!v||v===S.seed)return;S=freshState(v);save();cur=null;loadLevel(previewLevel||1);};
 $('#dl').onclick=()=>{
   const blob=new Blob([JSON.stringify({game:'hollow-mountain',version:1,seed:S.seed,exported:new Date().toISOString(),
-    unlocked:S.unlocked,vocabulary:S.badges,earnedAt:S.earnedAt,events:S.log},null,1)],{type:'application/json'});
+    unlocked:S.unlocked,finished:S.done,vocabulary:S.badges,earnedAt:S.earnedAt,events:S.log},null,1)],{type:'application/json'});
   const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='hollow-mountain-'+S.seed.replace(/[^\w-]/g,'_')+'.json';
   document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),1000);
 };
 
-if(BENCH)bench();else loadLevel(previewLevel||Math.min(S.unlocked,LEVELS.length));
+if(BENCH)bench();else loadLevel(previewLevel||resumeLevel());
 /* Test handle, only with ?debug=1 in the address. */
 if(params.get('debug'))window.__hm={state:()=>cur,saved:()=>S,loadLevel,act,levels:()=>LEVELS.map(l=>({id:l.id,title:l.title})),
   vocab:()=>VOCAB.map(v=>({id:v.id,name:v.name})),earned:()=>S.badges.slice(),log:()=>S.log.slice(),render};

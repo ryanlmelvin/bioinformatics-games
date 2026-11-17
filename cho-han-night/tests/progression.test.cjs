@@ -47,7 +47,7 @@ test('a fresh save plays every level in order and ends with every term earned',(
   }
   assert.deepEqual(plain(ui.api.earned()).sort(),plain(ui.api.vocab().map(v=>v.id)).sort());
   assert.match(ui.el('#hstat').innerHTML,/14 of 14 terms/);
-  const saved=ui.persisted();assert.equal(saved.unlocked,11);assert.equal(saved.badges.length,14);
+  const saved=ui.persisted();assert.equal(saved.unlocked,11);assert.deepEqual(saved.done,Array.from(ui.api.levels(),l=>l.id));assert.equal(saved.badges.length,14);
   // the move log records each level's completion
   const done=ui.api.log().filter(e=>e.ev==='complete').map(e=>e.lvl);
   for(let n=1;n<=11;n++)assert(done.includes(n),'log has level '+n);
