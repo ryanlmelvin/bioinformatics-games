@@ -1,6 +1,6 @@
 # Bioinformatics Algorithms
 
-Interactive games and general learning resources, published at [Bioinformatics Algorithms](https://ryanlmelvin.github.io/bioinformatics-games/).
+Interactive games and general learning resources, published at [Bioinformatics Algorithms](https://bioinformatics.ryanlmelvin.com/).
 
 The topic index follows a suggested learning path:
 

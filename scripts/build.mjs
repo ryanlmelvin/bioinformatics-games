@@ -4,6 +4,7 @@ import path from 'node:path';
 import {createHash} from 'node:crypto';
 const root=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..');
 const output=path.join(root,'_site');
+const canonicalBase='https://bioinformatics.ryanlmelvin.com/';
 // Only these reviewed learning resources are public. Never copy whole material folders.
 const units=['motifs','genome-assembly','alignment','hmm','evolutionary-trees','clustering','burrows-wheeler','transformers'];
 const resources=['play-guide','discussion-questions','coding-and-paper-tasks','pictionary-cards'];
@@ -22,6 +23,12 @@ for(const file of publicFiles){await mkdir(path.dirname(path.join(output,file)),
 for(const [dest,src] of Object.entries(aliases)){await mkdir(path.dirname(path.join(output,dest)),{recursive:true});
   // an alias sits one folder deeper, so its links to the shared shell and the contents page need one more step up
   const html=await readFile(path.join(root,src),'utf8');await writeFile(path.join(output,dest),html.replaceAll('"../','"../../'));}
+// Every published page identifies its permanent address, including the deeper practice page.
+for(const file of [...publicFiles,...Object.keys(aliases)].filter(f=>f.endsWith('.html'))){
+  const html=await readFile(path.join(output,file),'utf8');
+  const url=new URL(file.replace(/index\.html$/,''),canonicalBase).href;
+  await writeFile(path.join(output,file),html.replace('</head>',`<link rel="canonical" href="${url}">\n</head>`));
+}
 // the offline worker learns which pages to keep (everything but the Word files, which it keeps once opened) and a version that changes with them
 const keep=[...publicFiles,...Object.keys(aliases)].filter(f=>!f.endsWith('.docx')&&f!=='sw.js');
 const hash=createHash('sha256');for(const f of keep)hash.update(await readFile(path.join(output,f)));

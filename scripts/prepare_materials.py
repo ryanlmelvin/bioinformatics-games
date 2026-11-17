@@ -30,7 +30,7 @@ SOURCES = [
  ('3_Class1_GroupSheet.docx','discussion-questions','Discussion questions'),
  ('4_Homework_CodeAndPaper.docx','coding-and-paper-tasks','Suggested coding and pen and paper tasks'),
 ]
-BASE='https://ryanlmelvin.github.io/bioinformatics-games/'
+BASE='https://bioinformatics.ryanlmelvin.com/'
 # Prefer the publisher or creator, or a non-commercial reference for traditional
 # games and discontinued puzzles. Keep sources inline with the optional activity.
 ACTIVITY_SOURCES = {
