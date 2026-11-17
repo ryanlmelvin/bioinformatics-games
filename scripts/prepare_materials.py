@@ -245,43 +245,8 @@ def shared(output):
     finish(d,output/'presentation-checklist.docx')
 
 
-def homepage(repo):
-    sections=[]
-    for _,slug,heading,topic,game,gamepath in UNITS:
-        games=f'<a href="{gamepath}/">Play {escape(game)}</a>'
-        if slug=='genome-assembly':games+=' · <a href="lockpick/">Play Lockpick</a>'
-        links=[('play-guide','Exploration guide'),('discussion-questions','Discussion questions'),('coding-and-paper-tasks','Suggested coding and pen-and-paper tasks')]
-        items='\n'.join(f'<li><a href="materials/{slug}-{suffix}.docx">{label} (Word)</a></li>' for suffix,label in links)
-        sections.append(f'<section aria-labelledby="{slug}">\n<h2 id="{slug}">{escape(heading)}</h2>\n<p>{games}</p>\n<ul>\n{items}\n</ul>\n</section>')
-    html='''<!doctype html>
-<html lang="en">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Bioinformatics Algorithms</title>
-<style>
-:root{color-scheme:light dark;font:17px/1.6 system-ui,sans-serif;background:#f6f4ee;color:#1f2328}
-body{max-width:900px;margin:0 auto;padding:24px 18px}
-h1{font-size:1.5rem;margin:0 0 18px}h2{font-size:1.12rem;margin:0}
-section{padding:16px 0;border-top:1px solid #a6a49c}
-a{color:#a7390b;text-underline-offset:3px}p{margin:6px 0 0}
-ul{margin:6px 0 0;padding-left:22px}
-nav{margin-bottom:20px}nav ul{margin:0}
-@media(prefers-color-scheme:dark){:root{background:#15181c;color:#e8e6e1}a{color:#ff9b5e}}
-</style>
-</head>
-<body>
-<main>
-<h1>Bioinformatics Algorithms</h1>
-<nav aria-label="General learning resources">
-<ul>
-<li><a href="materials/learning-guide.docx">Learning guide (Word)</a></li>
-<li><a href="materials/suggested-investigations.docx">Suggested investigations (Word)</a></li>
-<li><a href="materials/presentation-checklist.docx">Presenting an algorithm (Word)</a></li>
-</ul>
-</nav>
-'''+ '\n'.join(sections)+ '\n</main>\n</body>\n</html>\n'
-    (repo/'index.html').write_text(html)
+# The home page is no longer generated here: index.html is the book's front page and draws its
+# contents from book/chapters.js. Add a new topic there.
 
 
 def main():
@@ -294,7 +259,6 @@ def main():
         for filename,kind,title in SOURCES:
             adapt(args.source/unit[0]/filename,output/f'{unit[1]}-{kind}.docx',unit,kind,title)
     shared(output)
-    homepage(args.repository)
-    print('Prepared 24 general learning documents and the topic index.')
+    print('Prepared 24 general learning documents.')
 
 if __name__=='__main__': main()

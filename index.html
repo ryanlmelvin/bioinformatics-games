@@ -3,91 +3,221 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Bioinformatics Algorithms</title>
+<title>Bioinformatics Algorithms · A playable textbook</title>
+<meta name="description" content="Seven chapters, seven games. Meet a real problem from genomics, work out the algorithm yourself, and only then learn its name.">
+<link rel="icon" href="book/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="book/book.css">
 <style>
-:root{color-scheme:light dark;font:17px/1.6 system-ui,sans-serif;background:#f6f4ee;color:#1f2328}
-body{max-width:900px;margin:0 auto;padding:24px 18px}
-h1{font-size:1.5rem;margin:0 0 18px}h2{font-size:1.12rem;margin:0}
-section{padding:16px 0;border-top:1px solid #a6a49c}
-a{color:#a7390b;text-underline-offset:3px}p{margin:6px 0 0}
-ul{margin:6px 0 0;padding-left:22px}
-nav{margin-bottom:20px}nav ul{margin:0}
-@media(prefers-color-scheme:dark){:root{background:#15181c;color:#e8e6e1}a{color:#ff9b5e}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bk-paper);color:var(--bk-ink);font:17px/1.6 var(--bk-sans)}
+a{color:var(--bk-link);text-underline-offset:3px}
+.page{max-width:1080px;margin:0 auto;padding:0 20px}
+h1,h2,h3{font-family:var(--bk-serif);line-height:1.15;margin:0}
+.eyebrow{font:700 .76rem/1.2 var(--bk-sans);letter-spacing:.14em;text-transform:uppercase;color:var(--bk-link);margin:0 0 12px}
+
+/* hero */
+.hero{position:relative;overflow:hidden;background:
+  radial-gradient(900px 420px at 85% 10%,color-mix(in srgb,#1f8a9c 22%,transparent),transparent 70%),
+  radial-gradient(700px 400px at 5% 100%,color-mix(in srgb,#c2410c 16%,transparent),transparent 70%)}
+.hero .page{display:grid;grid-template-columns:1.05fr .95fr;gap:30px;align-items:center;padding-top:56px;padding-bottom:30px}
+.hero h1{font-size:clamp(2.4rem,5.4vw,3.9rem);letter-spacing:-.02em}
+.hero h1 em{font-style:italic;color:var(--bk-link)}
+.lede{font:400 1.22rem/1.55 var(--bk-serif);margin:18px 0 26px;max-width:34em}
+.cta{display:flex;flex-wrap:wrap;gap:12px;align-items:center}
+.btn{display:inline-flex;align-items:center;gap:8px;min-height:48px;padding:0 24px;border-radius:12px;font-weight:700;text-decoration:none;transition:transform .15s,box-shadow .15s}
+.btn.go{background:var(--bk-link);color:#fff;box-shadow:0 12px 22px -12px var(--bk-link)}
+@media (prefers-color-scheme:dark){.btn.go{color:#2b1200}}
+.btn.ghost{color:var(--bk-ink);border:1px solid var(--bk-line);background:var(--bk-card)}
+.btn:hover{transform:translateY(-2px)}
+.fan{position:relative;height:330px}
+.fan a{position:absolute;left:50%;top:50%;width:62%;border-radius:14px;overflow:hidden;border:4px solid var(--bk-card);box-shadow:0 26px 40px -22px rgba(0,0,0,.6);
+  transform:translate(-50%,-50%) rotate(var(--r)) translate(var(--x),var(--y));transition:transform .35s cubic-bezier(.2,1.2,.3,1);animation:deal .8s cubic-bezier(.2,1.1,.3,1) both;animation-delay:var(--d)}
+.fan a:hover,.fan a:focus-visible{transform:translate(-50%,-50%) rotate(0deg) translate(var(--x),calc(var(--y) - 14px)) scale(1.06);z-index:5}
+.fan img{display:block;width:100%;aspect-ratio:16/10}
+@keyframes deal{from{opacity:0;transform:translate(-50%,-20%) rotate(0deg) scale(.8)}}
+#helix{display:block;width:100%;height:74px;margin-top:6px}
+
+/* how a chapter works */
+section{padding:46px 0}
+.sechead{display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-between;gap:8px 20px;margin-bottom:22px}
+.sechead h2{font-size:1.9rem}
+.sechead p{margin:0;color:var(--bk-dim);max-width:36em}
+.steps{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;counter-reset:s;padding:0;margin:0;list-style:none}
+.steps li{position:relative;padding:18px 18px 16px;border:1px solid var(--bk-line);border-radius:14px;background:var(--bk-card);counter-increment:s}
+.steps li::before{content:counter(s);display:grid;place-items:center;width:30px;height:30px;border-radius:50%;margin-bottom:10px;background:var(--bk-ink);color:var(--bk-paper);font:700 .9rem/1 var(--bk-sans)}
+.steps h3{font-size:1.2rem;margin-bottom:4px}
+.steps p{margin:0;font-size:.93rem;color:var(--bk-dim)}
+.shelf{display:flex;flex-wrap:wrap;gap:10px;margin-top:16px}
+.doc{display:inline-flex;align-items:center;gap:8px;padding:7px 13px 7px 9px;border:1px solid var(--bk-line);border-radius:10px;background:var(--bk-card);color:var(--bk-ink);
+  font-size:.88rem;font-weight:600;text-decoration:none;transition:transform .15s,border-color .15s}
+.doc:hover{transform:translateY(-2px);border-color:var(--h,var(--bk-link))}
+.doc svg{width:19px;height:19px;color:var(--h,var(--bk-link));flex:none}
+.doc small{font-weight:400;color:var(--bk-dim)}
+
+/* contents */
+.toc{display:grid;gap:22px}
+.chap{--h:var(--bk-link);display:grid;grid-template-columns:minmax(0,340px) 1fr;border:1px solid var(--bk-line);border-radius:18px;overflow:hidden;background:var(--bk-card);
+  box-shadow:0 22px 40px -34px rgba(0,0,0,.6);transition:transform .2s,box-shadow .2s,border-color .2s;scroll-margin-top:70px}
+.chap:hover{transform:translateY(-3px);border-color:color-mix(in srgb,var(--h) 60%,var(--bk-line));box-shadow:0 30px 46px -32px rgba(0,0,0,.7)}
+.chap .art{position:relative;display:block;overflow:hidden;background:#222;min-height:100%}
+.chap .art img{display:block;width:100%;height:100%;min-height:210px;object-fit:cover;transition:transform .5s cubic-bezier(.2,.8,.3,1)}
+.chap:hover .art img{transform:scale(1.05)}
+.chap .num{position:absolute;left:14px;top:14px;display:grid;place-items:center;width:44px;height:44px;border-radius:50%;background:var(--bk-card);color:var(--bk-ink);font:700 1.35rem/1 var(--bk-serif);box-shadow:0 6px 14px -6px #000}
+.chap .done{position:absolute;right:14px;top:14px;padding:5px 10px;border-radius:999px;background:#2e7d4f;color:#fff;font:700 .72rem/1 var(--bk-sans);letter-spacing:.08em;text-transform:uppercase}
+.chap .body{padding:20px 24px 20px;display:flex;flex-direction:column;gap:10px;min-width:0}
+.chap .kicker{font:700 .74rem/1.2 var(--bk-sans);letter-spacing:.12em;text-transform:uppercase;color:var(--h);margin:0}
+@media (prefers-color-scheme:dark){.chap .kicker{color:color-mix(in srgb,var(--h) 55%,#fff)}}
+.chap h3{font-size:1.6rem}
+.chap h3 a{color:inherit;text-decoration:none}
+.chap .hook{font:400 1.05rem/1.5 var(--bk-serif);margin:0}
+.prog{display:flex;align-items:center;gap:12px;font-size:.84rem;color:var(--bk-dim)}
+.track{flex:1;max-width:220px;height:8px;border-radius:99px;background:color-mix(in srgb,var(--bk-ink) 10%,transparent);overflow:hidden}
+.track i{display:block;height:100%;border-radius:99px;background:var(--h);width:0;transition:width .9s cubic-bezier(.2,.8,.3,1)}
+.row{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.play{display:inline-flex;align-items:center;gap:8px;min-height:42px;padding:0 20px;border-radius:10px;background:var(--h);color:#fff;font-weight:700;text-decoration:none;
+  box-shadow:0 10px 18px -12px var(--h);transition:transform .15s}
+.play:hover{transform:translateY(-2px)}
+.play svg{width:14px;height:14px}
+.side{display:flex;align-items:center;gap:12px;margin-top:2px;padding:8px 12px 8px 8px;border:1px dashed var(--bk-line);border-radius:12px;color:var(--bk-ink);text-decoration:none;font-size:.9rem}
+.side:hover{border-color:var(--h)}
+.side img{width:64px;border-radius:7px;flex:none}
+.side b{display:block}
+
+/* glossary */
+.gtools{display:flex;flex-wrap:wrap;gap:12px;align-items:center;margin-bottom:16px}
+.gtools input{font:inherit;min-width:min(320px,100%);padding:9px 14px;border:1px solid var(--bk-line);border-radius:10px;background:var(--bk-card);color:var(--bk-ink)}
+.gcount{color:var(--bk-dim);font-size:.9rem}
+.ggroup{margin:0 0 22px}
+.ggroup h3{font-size:1.15rem;margin-bottom:8px;display:flex;align-items:center;gap:10px}
+.ggroup h3 i{width:10px;height:10px;border-radius:3px;background:var(--h);transform:rotate(45deg)}
+.gl{display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:10px;margin:0}
+.gl div{padding:12px 14px;border:1px solid var(--bk-line);border-left:4px solid var(--h);border-radius:10px;background:var(--bk-card)}
+.gl dt{font:700 1.02rem/1.3 var(--bk-serif)}
+.gl dd{margin:4px 0 0;font-size:.9rem;color:var(--bk-dim)}
+.empty{padding:26px;border:1px dashed var(--bk-line);border-radius:14px;color:var(--bk-dim);text-align:center}
+footer{padding:26px 0 50px;border-top:1px solid var(--bk-line);color:var(--bk-dim);font-size:.88rem}
+.rise{opacity:0;transform:translateY(18px);transition:opacity .6s,transform .6s cubic-bezier(.2,.9,.3,1)}
+.rise.in{opacity:1;transform:none}
+@media (max-width:860px){.hero .page{grid-template-columns:1fr;padding-top:36px}.fan{height:250px;order:-1}.steps{grid-template-columns:1fr 1fr}.chap{grid-template-columns:1fr}.chap .art img{min-height:0;aspect-ratio:16/9}}
+@media (max-width:480px){.steps{grid-template-columns:1fr}.fan{height:200px}}
+@media print{.rise{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){.rise{opacity:1;transform:none;transition:none}.fan a{animation:none}.track i{transition:none}}
 </style>
 </head>
-<body>
+<body data-page="home">
 <main>
-<h1>Bioinformatics Algorithms</h1>
-<nav aria-label="General learning resources">
-<ul>
-<li><a href="materials/learning-guide.docx">Learning guide (Word)</a></li>
-<li><a href="materials/suggested-investigations.docx">Suggested investigations (Word)</a></li>
-<li><a href="materials/presentation-checklist.docx">Presenting an algorithm (Word)</a></li>
-</ul>
-</nav>
-<section aria-labelledby="motifs">
-<h2 id="motifs">Finding motifs</h2>
-<p><a href="motif-slots/">Play Motif Slots</a></p>
-<ul>
-<li><a href="materials/motifs-play-guide.docx">Exploration guide (Word)</a></li>
-<li><a href="materials/motifs-discussion-questions.docx">Discussion questions (Word)</a></li>
-<li><a href="materials/motifs-coding-and-paper-tasks.docx">Suggested coding and pen-and-paper tasks (Word)</a></li>
-</ul>
+<div class="hero">
+  <div class="page">
+    <div>
+      <p class="eyebrow">A playable textbook</p>
+      <h1>Bioinformatics <em>Algorithms</em></h1>
+      <p class="lede">Seven chapters, seven games. In each one you meet a real problem from genomics, wrestle with it by hand, and work out the algorithm yourself. Only then does the book tell you its name.</p>
+      <div class="cta"><a class="btn go" id="resume" href="motif-slots/">Start chapter 1</a><a class="btn ghost" href="#contents">Browse the contents</a></div>
+    </div>
+    <div class="fan" id="fan" aria-hidden="true"></div>
+  </div>
+  <svg id="helix" viewBox="0 0 1200 74" preserveAspectRatio="none" aria-hidden="true"></svg>
+</div>
+
+<div class="page">
+<section aria-labelledby="howT">
+  <div class="sechead"><h2 id="howT">How a chapter works</h2><p>Play comes first. The reading, the talking and the code all build on what you found in the game.</p></div>
+  <ol class="steps">
+    <li class="rise"><h3>Play</h3><p>Start with the game. It opens with the plain problem and lets you get properly stuck before it helps. The exploration guide gives you things to notice as you go.</p></li>
+    <li class="rise"><h3>Talk</h3><p>Bring what you found to the discussion questions, using the vocabulary the game gave you once you had earned it.</p></li>
+    <li class="rise"><h3>Build</h3><p>Do the same moves with the scaffolding gone: code the algorithm, and work it through on paper.</p></li>
+    <li class="rise"><h3>Present</h3><p>Explain an algorithm to people who have not met it yet. If you can teach it, you own it.</p></li>
+  </ol>
+  <div class="shelf" id="shelf"></div>
 </section>
-<section aria-labelledby="genome-assembly">
-<h2 id="genome-assembly">Genome assembly</h2>
-<p><a href="bridge-walker/">Play Bridge Walker</a> · <a href="lockpick/">Play Lockpick</a></p>
-<ul>
-<li><a href="materials/genome-assembly-play-guide.docx">Exploration guide (Word)</a></li>
-<li><a href="materials/genome-assembly-discussion-questions.docx">Discussion questions (Word)</a></li>
-<li><a href="materials/genome-assembly-coding-and-paper-tasks.docx">Suggested coding and pen-and-paper tasks (Word)</a></li>
-</ul>
+
+<section id="contents" aria-labelledby="tocT">
+  <div class="sechead"><h2 id="tocT">Contents</h2><p id="overall"></p></div>
+  <div class="toc" id="toc"></div>
+  <noscript><p>The contents list needs JavaScript. The games are at motif-slots/, bridge-walker/, toll-city/, cho-han-night/, hollow-mountain/, paint-by-k/ and the-loom/.</p></noscript>
 </section>
-<section aria-labelledby="alignment">
-<h2 id="alignment">Sequence alignment</h2>
-<p><a href="toll-city/">Play Toll City</a></p>
-<ul>
-<li><a href="materials/alignment-play-guide.docx">Exploration guide (Word)</a></li>
-<li><a href="materials/alignment-discussion-questions.docx">Discussion questions (Word)</a></li>
-<li><a href="materials/alignment-coding-and-paper-tasks.docx">Suggested coding and pen-and-paper tasks (Word)</a></li>
-</ul>
+
+<section id="glossary" aria-labelledby="glT">
+  <div class="sechead"><h2 id="glT">Your glossary</h2><p>Every term here is one you earned in a game. It lives in this browser and grows as you play.</p></div>
+  <div id="gloss"></div>
 </section>
-<section aria-labelledby="hmm">
-<h2 id="hmm">Hidden Markov models</h2>
-<p><a href="cho-han-night/">Play Cho-Han Night</a></p>
-<ul>
-<li><a href="materials/hmm-play-guide.docx">Exploration guide (Word)</a></li>
-<li><a href="materials/hmm-discussion-questions.docx">Discussion questions (Word)</a></li>
-<li><a href="materials/hmm-coding-and-paper-tasks.docx">Suggested coding and pen-and-paper tasks (Word)</a></li>
-</ul>
-</section>
-<section aria-labelledby="evolutionary-trees">
-<h2 id="evolutionary-trees">Evolutionary trees</h2>
-<p><a href="hollow-mountain/">Play Hollow Mountain</a></p>
-<ul>
-<li><a href="materials/evolutionary-trees-play-guide.docx">Exploration guide (Word)</a></li>
-<li><a href="materials/evolutionary-trees-discussion-questions.docx">Discussion questions (Word)</a></li>
-<li><a href="materials/evolutionary-trees-coding-and-paper-tasks.docx">Suggested coding and pen-and-paper tasks (Word)</a></li>
-</ul>
-</section>
-<section aria-labelledby="clustering">
-<h2 id="clustering">Clustering</h2>
-<p><a href="paint-by-k/">Play Paint by k</a></p>
-<ul>
-<li><a href="materials/clustering-play-guide.docx">Exploration guide (Word)</a></li>
-<li><a href="materials/clustering-discussion-questions.docx">Discussion questions (Word)</a></li>
-<li><a href="materials/clustering-coding-and-paper-tasks.docx">Suggested coding and pen-and-paper tasks (Word)</a></li>
-</ul>
-</section>
-<section aria-labelledby="burrows-wheeler">
-<h2 id="burrows-wheeler">Read mapping with the Burrows–Wheeler transform</h2>
-<p><a href="the-loom/">Play The Loom</a></p>
-<ul>
-<li><a href="materials/burrows-wheeler-play-guide.docx">Exploration guide (Word)</a></li>
-<li><a href="materials/burrows-wheeler-discussion-questions.docx">Discussion questions (Word)</a></li>
-<li><a href="materials/burrows-wheeler-coding-and-paper-tasks.docx">Suggested coding and pen-and-paper tasks (Word)</a></li>
-</ul>
-</section>
+</div>
 </main>
+<footer><div class="page">Your progress and your glossary are stored only in this browser, on this device. Each game also keeps a puzzle code and a move log you can download.</div></footer>
+
+<script src="book/chapters.js"></script>
+<script src="book/book.js"></script>
+<script>
+(function(){
+const B=window.BOOK,I=B.icon,$=s=>document.querySelector(s);
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const read=(k,d)=>{try{const v=localStorage.getItem(k);return v==null?d:JSON.parse(v);}catch(e){return d;}};
+const doc=(href,label,hue)=>'<a class="doc" href="'+href+'"'+(hue?' style="--h:'+hue+'"':'')+'>'+I.doc+'<span>'+label+' <small>Word</small></span></a>';
+const arrow='<svg viewBox="0 0 14 14" aria-hidden="true"><path d="M3 1.500l9 5.500-9 5.500z" fill="currentColor"/></svg>';
+
+// what this browser remembers of each game
+const state=B.chapters.map(c=>{
+  const s=read(c.key,null),terms=read('book:terms:'+c.dir,[]);
+  const got=s&&Array.isArray(s.badges)?Math.min(s.badges.length,c.terms):0;
+  // levels are open in any order, so the reader's place is how many they have finished (older saves only say how far they had reached)
+  const fin=!s?0:Math.min(c.levels,Array.isArray(s.done)?s.done.length:Math.max(0,(s.unlocked||1)-1));
+  return {c,started:!!s,got,fin,done:got>=c.terms,terms};
+});
+
+$('#shelf').innerHTML=doc('materials/learning-guide.docx','Learning guide')+doc('materials/suggested-investigations.docx','Suggested investigations')+doc('materials/presentation-checklist.docx','Presenting an algorithm');
+
+$('#fan').innerHTML=[[1,-11,'-34%','6%'],[4,7,'30%','-4%'],[2,-3,'-4%','14%']].map((f,i)=>{const c=B.chapters[f[0]];
+  return '<a href="'+c.dir+'/" tabindex="-1" style="--r:'+f[1]+'deg;--x:'+f[2]+';--y:'+f[3]+';--d:'+(.12*i)+'s"><img src="book/art/'+c.dir+'.svg" alt=""></a>';}).join('');
+
+$('#toc').innerHTML=state.map(st=>{const c=st.c;
+  const pct=st.done?100:st.started?Math.round(100*(st.got/c.terms)):0;
+  const where=st.done?'All '+c.terms+' terms earned':st.started?st.fin+' of '+c.levels+' levels finished · '+st.got+' of '+c.terms+' terms':c.levels+' levels · '+c.terms+' terms to earn';
+  return '<article class="chap rise" id="'+c.slug+'" style="--h:'+c.hue+'">'+
+    '<a class="art" href="'+c.dir+'/" tabindex="-1" aria-hidden="true"><img src="book/art/'+c.dir+'.svg" alt="" loading="lazy"><span class="num">'+c.n+'</span>'+(st.done?'<span class="done">Complete</span>':'')+'</a>'+
+    '<div class="body"><p class="kicker">Chapter '+c.n+' · '+esc(c.game)+'</p><h3><a href="'+c.dir+'/">'+esc(c.topic)+'</a></h3><p class="hook">'+esc(c.hook)+'</p>'+
+    '<div class="prog"><div class="track" role="img" aria-label="'+pct+' percent of the vocabulary earned"><i data-w="'+pct+'"></i></div><span>'+where+'</span></div>'+
+    '<div class="row"><a class="play" href="'+c.dir+'/">'+arrow+(st.done?'Play again':st.started?'Continue ':'Play ')+(st.done?'':esc(c.game))+'</a></div>'+
+    '<div class="row">'+B.resources.map(r=>doc('materials/'+c.slug+'-'+r[0]+'.docx',r[1],c.hue)).join('')+'</div>'+
+    (c.side?'<a class="side" href="'+c.side.dir+'/"><img src="book/art/'+c.side.dir+'.svg" alt=""><span><b>'+esc(c.side.game)+'</b>'+esc(c.side.hook)+'</span></a>':'')+
+    '</div></article>';}).join('');
+
+// the reader's place in the book
+const total=B.chapters.reduce((n,c)=>n+c.terms,0),got=state.reduce((n,s)=>n+s.got,0);
+$('#overall').textContent=got?got+' of '+total+' terms earned across the book.':'Seven chapters. Take them in order, or start wherever your course is.';
+const last=read('book:last',null),lastSt=last&&state.find(s=>s.c.dir===last.dir&&s.started&&!s.done);
+const nextUp=lastSt||state.find(s=>s.started&&!s.done)||state.find(s=>!s.started);
+if(nextUp&&got){const r=$('#resume');r.href=nextUp.c.dir+'/';r.textContent=nextUp.started?'Continue '+nextUp.c.game:'Start chapter '+nextUp.c.n+': '+nextUp.c.game;}
+
+// the glossary
+function gloss(q){
+  q=(q||'').trim().toLowerCase();let n=0;
+  const html=state.map(st=>{const t=st.terms.filter(x=>!q||(x.name+' '+x.def).toLowerCase().includes(q));n+=t.length;
+    return t.length?'<div class="ggroup" style="--h:'+st.c.hue+'"><h3><i></i>Chapter '+st.c.n+' · '+esc(st.c.topic)+'</h3><dl class="gl">'+
+      t.map(x=>'<div><dt>'+esc(x.name)+'</dt><dd>'+esc(x.def)+'</dd></div>').join('')+'</dl></div>':'';}).join('');
+  $('#glist').innerHTML=html||'<p class="empty">No term matches that search.</p>';
+  $('#gn').textContent=n+(n===1?' term':' terms');
+}
+const have=state.some(s=>s.terms.length);
+$('#gloss').innerHTML=have?'<div class="gtools"><input id="gq" type="search" placeholder="Search your terms" aria-label="Search your terms"><span class="gcount" id="gn"></span></div><div id="glist"></div>'
+  :'<p class="empty">Nothing here yet. Finish the first level of any game and its first term will be waiting for you.</p>';
+if(have){gloss('');$('#gq').addEventListener('input',e=>gloss(e.target.value));}
+
+// a strand of DNA under the hero, slowly turning
+const hx=$('#helix'),N=46,COL=['#2e7d4f','#2b5fb3','#c9952a','#b83a4b'];
+function strand(ph){let a='',b='',r='';
+  for(let i=0;i<=N*4;i++){const x=i*1200/(N*4),t=i/(N*4)*Math.PI*9+ph,y=37+26*Math.sin(t);a+=(i?'L':'M')+x.toFixed(1)+' '+y.toFixed(1);b+=(i?'L':'M')+x.toFixed(1)+' '+(74-y).toFixed(1);}
+  for(let i=1;i<N;i++){const x=i*1200/N+6,t=(x/1200)*Math.PI*9+ph,y=37+26*Math.sin(t),d=Math.abs(Math.cos(t));
+    r+='<path d="M'+x.toFixed(1)+' '+y.toFixed(1)+'V'+(74-y).toFixed(1)+'" stroke="'+COL[(i*7)%4]+'" stroke-width="3.2" stroke-linecap="round" opacity="'+(.25+.6*d).toFixed(2)+'"/>';}
+  hx.innerHTML=r+'<path d="'+a+'" fill="none" stroke="currentColor" stroke-width="2.6" opacity=".55"/><path d="'+b+'" fill="none" stroke="currentColor" stroke-width="2.6" opacity=".3"/>';}
+hx.style.color='var(--bk-ink)';strand(0);
+if(!matchMedia('(prefers-reduced-motion:reduce)').matches){let ph=0,on=true;
+  new IntersectionObserver(e=>on=e[0].isIntersecting).observe(hx);
+  (function f(){if(on&&!document.hidden){ph+=.012;strand(ph);}requestAnimationFrame(f);})();}
+
+// things rise into place as they are reached
+const io=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting){e.target.classList.add('in');const b=e.target.querySelector('.track i');if(b)b.style.width=b.dataset.w+'%';io.unobserve(e.target);}}),{rootMargin:'0px 0px -8% 0px'});
+document.querySelectorAll('.rise').forEach(x=>io.observe(x));
+})();
+</script>
 </body>
 </html>
