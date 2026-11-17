@@ -418,7 +418,7 @@ const FINDS=[
   text:'Walk until you reach a dead end, go back to a node with a light still lit, and stitch in another cycle. Repeat until every light is out. The method visits each edge once, so it scales to a wall of a billion lockers.',
   ros:'BA3F, with this as the method',clue:'It is in how you get out of a dead end.',vis:t=>stitchHTML(t)},
  {id:'euler',name:'Euler’s theorem',lead:'That’s <b>Euler’s theorem</b>.',
-  text:'You began in the right place before trying anything. Every node here is <b>balanced</b>, with as many edges in as out, except two: the walk has to start at the one with an extra edge out and end at the one with an extra edge in. A walk like that is an <b>Eulerian path</b>.',
+  text:'Every node here is <b>balanced</b>, with as many edges in as out, except two: the walk has to start at the one with an extra edge out and end at the one with an extra edge in. A walk like that is an <b>Eulerian path</b>.',
   ros:'BA3G, Find an Eulerian Path in a Graph',clue:'It is on a fresh strip in part 7, and it depends on your very first presses.',vis:()=>balanceHTML()},
  {id:'recon',name:'Genome assembly',lead:'That’s <b>genome assembly</b>.',
   text:'You used every scrap once, each overlapping the next. The textbook calls this the String Reconstruction Problem, and real assemblers solve it the way you just did: build the de Bruijn graph of the scraps, then find a walk that uses every edge once.',
@@ -852,7 +852,7 @@ function renderMsg(A,t,p){
     if(A.done)note+=`<div class="note"><b>Everything is ${I.scraps?'used':'open'}</b>, but ${A.waste} press${A.waste===1?' was':'es were'} wasted: the struck-through one${A.waste===1?'':'s'}. It can be done with none.</div>`;
     else{const d=deadEnd(A,t);if(d!==null&&p===t.length)note+=deadHTML(d,A,t);}
     if(showHint)note+=`<div class="note hint">${hintFor()}</div>`;
-    if(lv.gave)card=`<div class="card"><h3>Good call</h3><p>${I.codes.length} scraps, and the only way to find which one comes next is trial and error. The strip returns later.</p><p>The next parts use a lock instead.</p><button class="primary" type="button" data-a="next">Next &rarr;</button></div>`;
+    if(lv.gave)card=`<div class="card"><h3>Good call</h3><p>${I.codes.length} scraps, and the only way to find which one comes next is trial and error.</p><button class="primary" type="button" data-a="next">Next &rarr;</button></div>`;
     else if(I.L.id===1&&(lv.presses>=12||lv.deads>=1||S.gaveUp))note+='<p class="aside"><button class="aux" type="button" data-a="giveup">This is hard. Set it aside &rarr;</button></p>';
   }
   put('#note',note);put('#msg',card);

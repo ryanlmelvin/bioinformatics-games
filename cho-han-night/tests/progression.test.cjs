@@ -16,9 +16,9 @@ const plain=x=>JSON.parse(JSON.stringify(x));
 /* Each player plays one level by the rules, through the same actions the page's buttons send. */
 const PLAY={
   1(ui){ui.api.act('pick','1');},
-  2(ui){const a=ui.api;for(const c of [0,1])for(let i=0;i<20;i++){a.act('shake',String(c));const o=a.state().o;a.act('tally',c+o.seq[c][o.shown[c]]);}a.act('ans','02');a.act('ans','13');},
+  2(ui){const a=ui.api;for(const c of [0,1])for(let i=0;i<24;i++){a.act('shake',String(c));const o=a.state().o;a.act('tally',c+o.seq[c][o.shown[c]]);}a.act('ans','01');a.act('ans','16');},
   3(ui){const a=ui.api;for(let i=0;i<12;i++){a.act('bead',String(i*8));a.act('lock');}a.act('skip');},
-  4(ui){const a=ui.api;for(let i=0;i<4;i++)a.act('cup',String(i));a.act('cup','2');
+  4(ui){const a=ui.api;for(let i=0;i<4;i++)a.act('pair',String(i));a.act('pair','2');
     for(const id of ['s0','t1','t2','t3','pp','e0','e1','e2','e3','pe','pb'])a.cell(id,String(a.answers().want[id]));},
   5(ui){const a=ui.api;a.act('run','4');a.act('run','12');a.act('run','100');a.act('skip');},
   6(ui){const a=ui.api,c=a.state().cols;for(const [t,k] of [[0,0],[0,1],[1,0],[1,1],[2,0],[2,1]])a.cell('c'+t+k,String(c[t][k]));},
@@ -74,8 +74,8 @@ test('invalid level numbers fall back to saved progress',()=>{
 
 test('level 2: a wrong tally and a wrong estimate are refused',()=>{
   const ui=boot('?debug=1&level=2&seed=W2'),a=ui.api;
-  a.act('tally','0C');assert.equal(a.state().o.tally[0].length,0);
-  a.act('shake','0');const o=a.state().o,real=o.seq[0][o.shown[0]];a.act('tally','0'+(real==='C'?'H':'C'));
+  a.act('tally','0S');assert.equal(a.state().o.tally[0].length,0);
+  a.act('shake','0');const o=a.state().o,real=o.seq[0][o.shown[0]];a.act('tally','0'+(real==='S'?'O':'S'));
   assert.equal(o.tally[0].length,0);assert.equal(a.state().msg.kind,'warn');
 });
 
@@ -94,16 +94,16 @@ test('level 6: a wrong entry is refused and a later column cannot be filled firs
   a.cell('c00',String(c[0][0]+1));assert.equal(a.state().lg.bad,'c00');
 });
 
-test('level 7 trap: following the round-by-round likelier cups back is refused; the kept ways lead elsewhere',()=>{
+test('level 7 trap: following the round-by-round likelier pairs back is refused; the kept ways lead elsewhere',()=>{
   for(const seed of ['T1','T2','T3','T4','T5','T6','T7','T8']){
     const ui=boot('?debug=1&level=7&seed='+seed),a=ui.api,s=a.state(),bl=s.bl;
     a.cell('c00',String(bl.cols[0][0]));a.cell('c01',String(bl.cols[0][1]));
     a.act('way','1,0,'+(1-bl.from[1][0]));assert.equal(s.b.pick['1,0'],undefined,'smaller way refused');
     for(let t=1;t<6;t++)for(const k of [0,1]){a.act('way',t+','+k+','+bl.from[t][k]);if(t<=2)a.cell('c'+t+k,String(bl.cols[t][k]));}
-    const L=ui.context.likelierCups(s.calls),st=s.bs.story;
+    const L=ui.context.likelierPairs(s.calls),st=s.bs.story;
     let refused=false;
     for(let t=5;t>=0;t--){a.act('back',t+','+L[t]);if(L[t]!==st[t]){refused=true;break;}}
-    assert(refused&&!s.done,'likelier-cup story is not the kept-way story ('+seed+')');
+    assert(refused&&!s.done,'likelier-pair story is not the kept-way story ('+seed+')');
     s.b.trail=[];for(let t=5;t>=0;t--)a.act('back',t+','+st[t]);assert(s.done);
   }
 });
@@ -131,4 +131,15 @@ test('level 11: a door line that lets a stranger in is refused',()=>{
   for(let i=0;i<7;i++)a.act('send',String(i));
   for(const r of [0,1,2,4,5]){a.act('line',String(r));assert.equal(a.state().done,false);}
   a.act('line','3');assert(a.state().done);
+});
+
+
+test('the dice model upgrade retains earned progress and clears only old bead guesses',()=>{
+  const ui=boot('?debug=1',{seed:'LEGACY',unlocked:4,done:[1,2,3],badges:['family','msa','hstate','hpath'],earnedAt:{family:1,msa:1,hstate:3,hpath:3},variants:{night:2},marks:{old:[40,60]},picked:{},log:[]});
+  assert.equal(ui.persisted().diceModel,2);
+  assert.deepEqual(plain(ui.api.earned()),['family','msa','hstate','hpath']);
+  assert.deepEqual(plain(ui.persisted().done),[1,2,3]);
+  assert.deepEqual(ui.persisted().marks,{});assert.equal(ui.persisted().variants.night,2);
+  const current={...ui.persisted(),marks:{new:[0,85]}};
+  assert.deepEqual(boot('?debug=1',current).persisted().marks,{new:[0,85]});
 });

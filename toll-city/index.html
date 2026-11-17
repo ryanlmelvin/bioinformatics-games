@@ -134,7 +134,7 @@ svg.city{display:block;width:100%;height:auto;touch-action:manipulation;backgrou
 .price{font-size:13px;font-weight:700;text-anchor:middle;dominant-baseline:central;fill:var(--m-ink);paint-order:stroke;stroke:var(--m-ground);stroke-width:4px;pointer-events:none}
 .price.neg{fill:var(--m-toll)}
 .corner{fill:#fffdf6;stroke:var(--m-street);stroke-width:2}
-.cn{cursor:pointer}
+.cn[data-act]{cursor:pointer}
 .cn.ready .corner{stroke:var(--m-accent);stroke-width:3.5}
 .cn.done .corner{fill:#fff3c4}
 .cn.here .corner{stroke:var(--m-ink);stroke-width:3.5}
@@ -583,17 +583,17 @@ const RM=()=>{try{return matchMedia('(prefers-reduced-motion: reduce)').matches;
 
 const LEVELS=[
   {id:1,mode:'strands',inst:'decks',title:'Two strands',
-   brief:'Two short DNA sequences, like the same gene in two species (these two are invented for the puzzle). Letters have been inserted and deleted over time, so matching letters no longer line up. Click a letter to put a gap before it, and click a gap to remove it. Line up as many matching letters as you can, then lock it in.'},
+   brief:'Two short DNA sequences, like the same gene in two species (these two are invented for the puzzle). Letters have been inserted and deleted over time, so matching letters no longer line up. Line up as many matching letters as you can, then lock it in.'},
   {id:2,mode:'decks',inst:'decks',title:'Two decks',
-   brief:'The same two strands, dealt as two decks of cards with the top card on the left. Each turn, take both top cards (a point if they show the same letter) or throw away the top card of one deck. A card that is taken or thrown away never comes back. Score as many points as you can.'},
-  {id:3,mode:'table',inst:'decks',title:'What does the table remember?',
+   brief:'The same two sequences as two decks of cards. The outlined card in each deck is the one in play. Each turn, take both outlined cards (a point if they show the same letter) or throw away the outlined card of one deck. A card that is taken or thrown away does not come back. Score as many points as you can.'},
+  {id:3,mode:'table',inst:'decks',title:'Two games, one table',
    brief:'Two players are part-way through the same deal. They played differently, but the same cards are left on the table.'},
   {id:4,mode:'wall',inst:'twelve',title:'Too many games',
-   brief:'Twelve cards in each deck. A bot will play every possible game in turn and keep the best score. Start it. You can also play yourself.'},
+   brief:'Each deck has twelve cards. A bot will play every possible game in turn and keep the best score. Start it. You can also play yourself.'},
   {id:5,mode:'tourist',inst:'city',title:'The tourist',
    brief:'A different city. A tourist walks from the top-left corner to the bottom-right, only east or south, never back, and counts the sights on each street they walk (the number on the street). Which route sees the most?'},
   {id:6,mode:'follow',inst:'city',title:'Follow your arrows',
-   brief:'Your pencilled city from level 5. The tourist stands at the far corner. Each arrow says which street that corner’s number arrived by. Walk back to the start along the arrows: click the corner each arrow comes from.'},
+   brief:'Your pencilled city from level 5. The tourist stands at the far corner. Each arrow says which street that corner’s number arrived by. Walk back to the start along the arrows.'},
   {id:7,mode:'deckcity',inst:'decks',title:'The decks are a city',
    brief:'Your two decks from level 2, laid along the edges of a city: deck 1 down the left side, deck 2 across the top. A step south throws away a card from deck 1, a step east throws away a card from deck 2, and a step south-east takes both. Where the two cards match, that diagonal is gold and pays 1 point.'},
   {id:8,mode:'tolls',inst:'decks',title:'Tolls',
@@ -804,7 +804,7 @@ function renderPanel(){
   const missing=VOCAB.filter(x=>!S.badges.includes(x.id)).length;
   if(cur.L.id<LEVELS.length)h+='<button class="primary advance" id="next" data-act="next">Next level →</button>';
   else h+='<p>'+(missing?plural(missing,'vocabulary term')+' still hidden: '+VOCAB.filter(x=>!S.badges.includes(x.id)).map(x=>'level '+(LEVELS.find(l=>(TERMS_AT[l.id]||[]).includes(x.id))||{id:'?'}).id).join(', ')+'.'
-     :'You have earned every term. The field guide below lists each one with its source.')+'</p>';
+     :'You have earned every term.')+'</p>';
   $('#panel').innerHTML=h+'</div>';
 }
 const TERMS_AT={1:['alignment','indel'],2:['lcs'],3:['graph','path'],5:['mtp','dp'],6:['backtrack'],8:['global','matrix','indelpen'],9:['local'],10:['overlap']};
@@ -972,7 +972,7 @@ function strandTidy(c){
   while(c.b.length&&c.b[c.b.length-1]==='-')c.b.pop();
 }
 MODES.strands={
-  init(c){c.a=[...c.inst.v];c.b=[...c.inst.w];c.hist=[];say('Click a letter to push a gap in front of it.');},
+  init(c){c.a=[...c.inst.v];c.b=[...c.inst.w];c.hist=[];say('Click a letter to put a gap before it. Click a gap to remove it.');},
   rule:()=>'Letters keep their order · a gap pushes a letter to the right',
   view(c){
     const cols=strandCols(c),row=(arr,r)=>'<div class="strand">'+cols.map(([x,y],k)=>{
@@ -999,7 +999,7 @@ MODES.strands={
       c.final={top,bot,k};
       complete(['alignment','indel'],[
         {html:()=>alignTiles(top,bot,{label:'Your line-up'})+'What you built is an '+term('alignment','alignment')+': the two strands one above the other, each kept in order, with gaps (–) put in so that letters stand in columns. A column with a gap marks a letter that one strand gained or the other lost: an '+term('indel','indel')+' (insertion or deletion).'},
-        {html:()=>k<par?'You found '+k+' matching columns. <b>'+par+' is possible.</b> Sliding gaps by hand is trial and error. The next level restates the problem as a card game.':'You found the most matching columns possible, '+par+'. You have no proof yet that it is the best possible. The next level restates the problem as a card game.'}
+        {html:()=>k<par?'You found '+k+' matching columns. <b>'+par+' is possible.</b>':'You found the most matching columns possible, '+par+'.'}
       ],{hits:k,par});
     }
   },
@@ -1025,7 +1025,7 @@ function deckRow(label,s,k,live){
   return '<div class="deckrow"><span class="decklab">'+label+'</span><div class="cards">'+[...s].map((ch,x)=>{
     if(x<k)return '';
     const top=x===k;
-    return top&&live?'<button class="tcard top" data-act="move" data-a="'+(label==='Deck 1'?'S':'E')+'" aria-label="Top card '+ch+': throw it away">'+letters(ch)+'</button>'
+    return top&&live?'<button class="tcard top" data-act="move" data-a="'+(label==='Deck 1'?'S':'E')+'" aria-label="Outlined card '+ch+': throw it away">'+letters(ch)+'</button>'
       :'<span class="tcard'+(top?' top':'')+'">'+letters(ch)+'</span>';
   }).join('')+(k>=s.length?'<span class="sub">empty</span>':'')+'</div></div>';
 }
@@ -1042,7 +1042,7 @@ function deckTable(v,w,g,live,title){
   if(live&&!gameOver(g,v,w)){
     const same=v[g.i]===w[g.j];
     h+='<div class="moves"><button class="take" data-act="move" data-a="D">Take both'+(same?' (a pair: +1)':' (no point)')+'</button>'+
-      '<button data-act="move" data-a="S">Throw away deck 1’s top card</button><button data-act="move" data-a="E">Throw away deck 2’s top card</button></div>';
+      '<button data-act="move" data-a="S">Throw away deck 1’s outlined card</button><button data-act="move" data-a="E">Throw away deck 2’s outlined card</button></div>';
   }
   h+='<div class="sub" style="margin-top:10px">Taken · '+plural(g.score,'point')+'</div><div class="pairs">'+
     pairs.map(([a,b])=>'<div class="pair '+(a===b?'match':'miss')+'"><span class="tcard">'+letters(a)+'</span><span class="tcard">'+letters(b)+'</span></div>').join('')+'</div>'+
@@ -1053,7 +1053,7 @@ function deckTable(v,w,g,live,title){
 /* ---------- level 2: two decks ---------- */
 MODES.decks={
   init(c){c.g=newGame();c.games=0;c.best=0;S.games[instKey('decks')]=S.games[instKey('decks')]||[];
-    say('Take both top cards, or throw one away.');},
+    say('');},
   rule:c=>'Take both top cards, or throw one away · nothing comes back'+(c.games||(S.games[instKey('decks')]||[]).length?' · par '+c.inst.par:''),
   view(c){
     const list=S.games[instKey('decks')]||[];
@@ -1085,8 +1085,8 @@ MODES.decks={
   skip:c=>gameOver(c.g,c.inst.v,c.inst.w)?{label:'Deal the same decks again',act:['deal']}:null
 };
 
-/* ---------- level 3: what does the table remember? ---------- */
-const CHOICES=['Every move made so far','The score so far','Only how many cards have gone from each deck'];
+/* ---------- level 3: two games, one table ---------- */
+const CHOICES=['The moves made so far','The score so far','Only the cards still on each table'];
 function histChips(v,w,moves,start){
   let [i,j]=start||[0,0];
   return moves.map(d=>{const s=d==='D'?'pair '+v[i]+'·'+w[j]+(v[i]===w[j]?' +1':''):d==='S'?'threw away '+v[i]+' (deck 1)':'threw away '+w[j]+' (deck 2)';
@@ -1103,12 +1103,13 @@ MODES.table={
   rule:c=>c.phase==='ask'?'Same cards left on both tables':'One dot for every way the table can look',
   view(c){
     const {v,w}=c.inst,tp=c.tp;
-    if(c.phase==='ask'){
-      const one=(name,hist,score)=>{const g={i:tp.i,j:tp.j,moves:[],score:0};
+    const one=(name,hist,score)=>{
         return '<div class="table"><div class="sub">Table '+name+' · '+plural(score,'point')+' so far</div><div class="hist">'+histChips(v,w,hist)+'</div>'+
           deckRow('Deck 1',v,tp.i,false)+deckRow('Deck 2',w,tp.j,false)+
           (c.shown?'<div class="sub">Best finish from here</div><div class="hist">'+histChips(v,w,tp.finish,[tp.i,tp.j])+'</div><div class="spell">'+signed(tp.finishScore)+' → '+plural(score+tp.finishScore,'point')+'</div>':'')+'</div>';};
-      return '<div class="twotables pad">'+one('A',tp.histA,tp.scoreA)+one('B',tp.histB,tp.scoreB)+'</div>'+
+    const tables='<div class="twotables pad">'+one('A',tp.histA,tp.scoreA)+one('B',tp.histB,tp.scoreB)+'</div>';
+    if(c.phase==='ask'){
+      return tables+
         '<div class="choices"><div class="sub">To finish as well as possible from here, you need to know…</div>'+
         CHOICES.map((t,k)=>'<button data-act="answer" data-a="'+k+'"'+(c.struck.includes(k)?' class="struck" disabled':'')+'>'+t+'</button>').join('')+'</div>';
     }
@@ -1116,7 +1117,7 @@ MODES.table={
     const tr=trailList(c),n=v.length,m=w.length;
     const ov=tr.list.map((mv,k)=>({corners:routeCorners([0,0],mv).slice(0,c.phase==='dots'&&!c.done?Math.max(1,c.drawn+1):99),cls:'trail',off:(k%3-1)*3,w:4}));
     const cornerTitle=(i,j)=>'Deck 1: '+(n-i)+' left'+(i<n?' ('+v.slice(i)+')':'')+'; deck 2: '+(m-j)+' left'+(j<m?' ('+w.slice(j)+')':'');
-    return '<div class="pad sub">'+(tr.mine?'Your level 2 games':'Two sample games')+' as trails · rows: cards gone from deck 1 · columns: cards gone from deck 2</div>'+
+    return tables+'<div class="pad sub">'+(tr.mine?'Your level 2 games':'Two sample games')+' as trails · rows: deck 1 cards taken or thrown away · columns: deck 2 cards taken or thrown away</div>'+
       '<div class="cityscroll">'+gridSvg({n,m,rows:v,cols:w,diag:true,P:58,maxw:620,minw:480,label:'Every position of the two decks',
       street:()=>({cls:'faint',w:3}),overlays:ov,
       corner:(i,j)=>({cls:(c.done&&i===tp.i&&j===tp.j?'pick':'')+(c.miss&&c.miss[0]===i&&c.miss[1]===j?' shake':''),hit:cornerTitle(i,j)}),
@@ -1132,16 +1133,16 @@ MODES.table={
         say('Choose again.');render();return;
       }
       c.phase='dots';c.stage=null;c.drawn=0;
-      say('Each dot is one state of the table. Your games are drawn as walks across the dots.');
+      say('Each dot stands for the number of cards taken or thrown away from each deck. Your games are drawn as walks across the dots.');
       const len=Math.max(...trailList(c).list.map(x=>x.length));
       show(len+1,260,k2=>{c.drawn=k2;},()=>{c.drawn=99;say('Click the dot where tables A and B both stand.');render();});
       render();return;
     }
     if(type==='corner'&&c.phase==='dots'){
       const i=+a,j=+b,tp=c.tp;log('dot',{at:[i,j],right:i===tp.i&&j===tp.j});
-      if(i!==tp.i||j!==tp.j){c.miss=[i,j];stage('That dot leaves '+(c.inst.v.length-i)+' cards in deck 1 and '+(c.inst.w.length-j)+' in deck 2. The tables have '+(c.inst.v.length-tp.i)+' and '+(c.inst.w.length-tp.j)+'.','warn');render();c.miss=null;return;}
-      c.stage=null;say('Both tables stand on this dot: '+tp.i+' cards gone from deck 1, '+tp.j+' from deck 2.','good');
-      complete(['graph','path'],[{html:'Each dot stands for one state of the table, which is determined by how many cards have gone from each deck. In Bridge Walker you called dots like these <b>nodes</b> and the steps between them <b>edges</b>; the same words apply here. This grid of nodes and edges is the '+term('graph','alignment graph')+' of the two decks. A step south throws away from deck 1, a step east from deck 2, a step south-east takes both.'},
+      if(i!==tp.i||j!==tp.j){c.miss=[i,j];stage('That dot leaves '+(c.inst.v.length-i)+' cards on the table from deck 1 and '+(c.inst.w.length-j)+' from deck 2. The tables have '+(c.inst.v.length-tp.i)+' and '+(c.inst.w.length-tp.j)+'.','warn');render();c.miss=null;return;}
+      c.stage=null;say('Both tables stand on this dot: '+tp.i+' cards taken or thrown away from deck 1, '+tp.j+' from deck 2.','good');
+      complete(['graph','path'],[{html:'Each dot stands for one state of the table, which is determined by how many cards have been taken or thrown away from each deck. In Bridge Walker you called dots like these <b>nodes</b> and the steps between them <b>edges</b>; the same words apply here. This grid of nodes and edges is the '+term('graph','alignment graph')+' of the two decks. A step south throws away from deck 1, a step east from deck 2, a step south-east takes both.'},
         {html:'One complete game is a '+term('path','path')+' from the top-left node to the bottom-right one, and every path is a game.'}]);
     }
   },
@@ -1180,7 +1181,7 @@ MODES.wall={
     }
     if(type==='giveup'){log('gave_up',{played:c.bot.played});clearInterval(c.timer);c.title='Stuck is the right answer';
       say('The bot would still be dealing next week.');
-      complete([],[{html:()=>'Twelve cards a deck already make '+fmt(c.total)+' different games, and the count roughly multiplies by six for every card added to both decks. Playing them all is infeasible. A practical method has to examine far fewer cases.'}],{played:c.bot.played});return;}
+      complete([],[{html:()=>'Twelve cards a deck already make '+fmt(c.total)+' different games, and the count roughly multiplies by six for every card added to both decks. Playing them all is infeasible.'}],{played:c.bot.played});return;}
     if(type==='deal'){c.g=newGame();render();return;}
     if(type==='move'&&!gameOver(c.g,v,w)){applyMove(c.g,v,w,d);log('card',{move:d});
       if(gameOver(c.g,v,w))say('Your game: '+plural(c.g.score,'point')+'. One game of '+fmt(c.total)+'.');render();}
@@ -1270,7 +1271,7 @@ MODES.tourist={
       say('Switch on: '+r24()+'.','good');
       complete(['mtp','dp'],[
         {html:()=>'The tourist’s puzzle, the richest route through a grid of one-way streets, is the '+term('mtp','Manhattan Tourist Problem')+'. The best route here sees '+m.best+' sights. Walking the richer street at every corner sees only '+city.greedy+'.'},
-        {html:'You did not try any route. Each corner’s number came from the numbers already written at the corners before it, and was worked out only once. Solving every smaller problem once, in order, and keeping the answers in a table is '+term('dp','dynamic programming')+'. With its switch on, the bot did the same: '+binom(8,4)+' routes became 24 corners, and the 12-card decks’ '+fmt(countGames(12,12))+' games would become 169 corners.',src:['bellman']}
+        {html:'Each corner’s number came from the numbers already written at the corners before it, and was worked out only once. Solving every smaller problem once, in order, and keeping the answers in a table is '+term('dp','dynamic programming')+'. With its switch on, the bot did the same: '+binom(8,4)+' routes became 24 corners, and the 12-card decks’ '+fmt(countGames(12,12))+' games would become 169 corners.',src:['bellman']}
       ],{wrong:c.wrong||0,byHand:c.g.byHand});
     }
   },
@@ -1344,14 +1345,14 @@ function deckCorner(c,hitFn){
 MODES.deckcity={
   init(c){const {v,w}=c.inst;c.phase='pre';c.g=penInit(v.length,w.length,matchW(v)(w));
     for(let j=1;j<=w.length;j++)penSet(c.g,0,j,'E');
-    say('The two decks from level 2.');},
+    say('');},
   rule:c=>c.phase==='pre'?'Deck 1 down the side · deck 2 across the top':c.phase==='row'?'Pencil row 1 by hand: the most points on arrival':c.phase==='fill'?'The pencil fills the rest':'Walk back along the arrows',
   view(c){
     const {v,w}=c.inst,n=v.length,m=w.length;
     if(c.phase==='pre')return deckTable(v,w,newGame(),false,'Deck 1 and deck 2');
     c.ready=(i,j)=>c.phase==='row'&&i===1&&penReady(c.g,i,j);
     const route=c.done?c.back:c.phase==='back'?c.back:[];
-    return '<div class="pad sub">Rows: cards gone from deck 1 · columns: cards gone from deck 2 · gold diagonal = a pair, worth 1</div>'+
+    return '<div class="pad sub">Rows: deck 1 cards taken or thrown away · columns: deck 2 cards taken or thrown away · gold diagonal = a pair, worth 1</div>'+
       '<div class="cityscroll">'+gridSvg({n,m,rows:v,cols:w,diag:true,P:56,maxw:640,minw:480,label:'The decks as a city',
       street:deckStreet(c,v,w,(i,j,d)=>c.phase==='row'&&i===1&&penReady(c.g,i,j)?{hit:'Pencil this corner from this street',cls:(d==='D'&&v[i-1]===w[j-1]?'gold':'avail')}:{}),
       overlays:route.length?[{corners:route,cls:'route',w:6}]:[],
@@ -1413,7 +1414,7 @@ MODES.tolls={
       overlays:[{corners:old,cls:'ghost',w:4}].concat(c.back&&c.back.length>1?[{corners:c.back,cls:'route',w:6}]:[]),
       corner:(i,j)=>{const base=deckCorner(c,c.phase==='back'&&!c.done?(a,b)=>'Corner '+a+','+b:null)(i,j);if(into(i,j)){base.cls+=' ready';base.num='?';}return base;},
       tourist:c.pos||null})+'</div>';
-    if(c.phase==='one')h+='<div class="entry"><label for="entry">Best arrival at the marked corner (2 cards gone from each deck):</label><input id="entry" inputmode="numeric" autocomplete="off" data-change="typed"><button class="primary" data-act="type">Pencil it</button></div>';
+    if(c.phase==='one')h+='<div class="entry"><label for="entry">Best arrival at the marked corner (2 cards taken or thrown away from each deck):</label><input id="entry" inputmode="numeric" autocomplete="off" data-change="typed"><button class="primary" data-act="type">Pencil it</button></div>';
     h+='<div class="pad gmeta">Dashed grey: your best route from level 7.</div>';
     if(c.done)h+=alignTiles(c.top,c.bot,{label:'The best route under tolls, as a line-up · score '+c.g.s[n][m]});
     return h;
@@ -1552,7 +1553,7 @@ MODES.code={
       const missing=sweepTerms().filter(id=>!S.badges.includes(id));
       say(same+' of '+c.r.top.length+' columns hold the same amino acid.','good');
       complete(missing,[{html:()=>'The two fragments line up with one indel at each end, and '+same+' of their '+c.r.top.length+' columns hold the same amino acid. These are stretches of two adenylation domains, the parts of two antibiotic-building enzymes that choose which amino acid to add; both choose phenylalanine. Lining up domains like these, position by position, is how the “code” that predicts a domain’s choice from its sequence was worked out.',src:['stach']},
-        {html:'Sequences: UniProt '+PROTEINS.a.acc+' ('+PROTEINS.a.name+') and UniProt '+PROTEINS.b.acc+' ('+PROTEINS.b.name+'), residue numbers as in UniProt.'+(missing.length?' Terms named here because no earlier level named them for you: '+missing.map(x=>term(x)).join(', ')+'.':'')}],{same});
+        {html:'Sequences: UniProt '+PROTEINS.a.acc+' ('+PROTEINS.a.name+') and UniProt '+PROTEINS.b.acc+' ('+PROTEINS.b.name+'), residue numbers as in UniProt.'+(missing.length?' Terms not named in earlier levels: '+missing.map(x=>term(x)).join(', ')+'.':'')}],{same});
     }
   },
   skip:c=>c.phase==='ready'?{label:'Pencil the city',act:['fill']}:c.phase==='filled'?{label:'Follow the arrows home',act:['back']}:null

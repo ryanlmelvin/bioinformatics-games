@@ -7,7 +7,7 @@ The topic index follows a suggested learning path:
 - `motif-slots/`: finding motifs, from frequent words to Gibbs sampling.
 - `bridge-walker/`: genome assembly through overlap, de Bruijn, and paired de Bruijn graphs.
 - `toll-city/`: sequence alignment, from two decks of cards to global, local and overlap alignment.
-- `cho-han-night/`: hidden Markov models: the forward and Viterbi algorithms, and profile HMMs.
+- `cho-han-night/`: Loaded Dice (fair dice versus an always-seven loaded pair), hidden Markov models: the forward and Viterbi algorithms, and profile HMMs.
 - `hollow-mountain/`: evolutionary trees from distance matrices: additive phylogeny, UPGMA and neighbor joining.
 - `paint-by-k/`: clustering: farthest-first traversal, the Lloyd algorithm and hierarchical clustering.
 - `the-loom/`: read mapping with the suffix array and the Burrows–Wheeler transform.
@@ -15,7 +15,7 @@ The topic index follows a suggested learning path:
 Also here:
 
 - `lockpick/`: a second genome assembly game.
-- `materials/`: 24 Word downloads for independent study, discussion groups and teaching. Each topic includes an exploration guide, discussion questions, and suggested coding and pen-and-paper tasks. Shared resources provide a learning guide, suggested investigations, and a presentation checklist. The original `*-play-guide.docx` URLs are retained for existing links.
+- `materials/`: 31 Word downloads for independent study, discussion groups and teaching. Each topic includes an exploration guide, discussion questions, suggested coding and pen-and-paper tasks, and Pictionary cards (one card for each term in the game, to print and cut apart for a drawing-and-guessing game; these are built in the teaching folder by `build-tools/pictionary-cards/make_cards.js`, not by the script below). Shared resources provide a learning guide, suggested investigations, and a presentation checklist. The original `*-play-guide.docx` URLs are retained for existing links.
 
 The public handouts are adapted editions of the current teaching masters, which remain outside this repository. Course numbers, dates, grading, submission instructions, and enrollment-specific requirements are removed; exercises, figures, examples and problem links are retained. Group activities include enough instructions to use them independently. Do not replace public editions with raw classroom files.
 

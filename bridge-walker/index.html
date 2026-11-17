@@ -572,7 +572,7 @@ if(typeof module!=='undefined')module.exports={hashStr,rng,shuffled,analyse,make
 
 <script id="ui">
 (function(){
-const KEY='bridgewalker:v4',W=760,H=500,R=19,ANT='Leo';
+const KEY='bridgewalker:v4',W=760,H=500,R=19,ANT='Mira';
 const $=s=>document.querySelector(s);
 const f1=x=>x.toFixed(1);
 const clamp=(x,a,b)=>Math.max(a,Math.min(b,x));
@@ -599,7 +599,7 @@ const LEVELS=[
   {id:7,mode:'eul',k:3,n:16,minB:3,title:'Archipelago',
    brief:'Sixteen reads, sixteen one-way edges. Where '+ANT+' starts matters, and so does what '+ANT+' does when stranded.'},
   {id:8,mode:'balance',title:'Round trip',
-   brief:'No DNA this time: a small graph with numbered nodes. '+ANT+' wants a round trip that crosses every edge once and ends where it began. For that, every node needs as many edges arriving as leaving. Add the fewest new edges that achieve this. Click the node a new edge should leave, then the node it should enter.'},
+   brief:'No DNA this time: a small graph with numbered nodes. '+ANT+' wants a round trip that crosses every edge once and ends where it began. For that, every node needs as many edges arriving as leaving. Add the fewest new edges that achieve this.'},
   {id:9,mode:'eul',k:4,n:10,minB:2,build:true,title:'Draw the map yourself',
    brief:'Ten reads, four letters each. Until now the game drew the edge map for you. This time you draw it. Each read is one edge, from the node named by its first three letters to the node named by its last three. Pick a read, then click where its edge starts and where it ends: an existing node, or open water to raise a new one.'},
   {id:10,mode:'eul',k:4,n:12,minB:2,nomap:true,title:'No map',
@@ -686,10 +686,10 @@ const BLOCKS={
   np:{pic:'ham',src:['karp'],html:'<b>Nobody knows a fast way to find a Hamiltonian path.</b> The problem is '+term('np','NP-complete')+': every added node multiplies the number of routes to try, and the search becomes infeasible long before a million reads.'},
   degree:{src:['euler'],html:'Correct, and Euler proved it. Each time '+ANT+' walks onto a node, a second edge is needed to walk off, so edges get used up in pairs. The number of edges at a node is its '+term('degree','degree')+', and <b>all four nodes here have odd degree.</b> Only the first and last node of a walk can be odd.'},
   euler:{pic:'eul',src:['pevzner89'],html:ANT+' crossed every edge exactly once. <b>That’s called an '+term('euler','Eulerian path')+'.</b> The reads moved from the nodes to the edges.'},
-  inout:{html:'The counter under each node has proper names. The number of edges entering a node is its '+term('inout','indegree')+'; the number leaving it is its '+term('inout','outdegree')+'.'},
+  inout:{html:'The number of edges entering a node is its '+term('inout','indegree')+'; the number leaving it is its '+term('inout','outdegree')+'.'},
   roundtrip:{html:()=>'Every node now has indegree equal to outdegree: each one is a '+term('balanced','balanced node')+'. That is exactly when a round trip over every edge exists, an '+term('cycle','Eulerian cycle')+'. <b>That’s '+term('balance','Euler’s theorem')+'.</b> You needed '+cur.inst.need+' new edges because each one repairs one node that was short an edge out and one that was short an edge in. The table under the map is the graph’s '+term('adj','adjacency list')+'.'},
   debruijn:{src:['debruijn'],html:'You drew a node for every 3-letter prefix or suffix and an edge for every read. <b>That map is called a '+term('debruijn','de Bruijn graph')+'.</b> Reads of length k always give nodes of length k − 1.'},
-  nomap:{html:'You found the start without a map. A node’s outdegree is the number of reads that start with it, and its indegree is the number that end with it. '+ANT+' must start where outdegree − indegree = 1: '+term('balance','Euler’s theorem')+' again, this time for a path.'},
+  nomap:{html:'A node’s outdegree is the number of reads that start with it, and its indegree is the number that end with it. '+ANT+' must start where outdegree − indegree = 1: '+term('balance','Euler’s theorem')+' again, this time for a path.'},
   balance:{html:'You set '+ANT+' down on the right node first time, twice. <b>That’s '+term('balance','Euler’s theorem')+'.</b> Start where one more edge leaves than arrives; you will finish where one more arrives than leaves. Every other node has as many in as out.'},
   hier:{src:['hierholzer'],html:'No backing up: when stranded, '+ANT+' went to a node with unused edges and spliced in a loop. <b>That’s '+term('hier','Hierholzer’s algorithm')+'.</b> It touches each edge once, so it works for millions of reads.'},
   nohier:{html:ANT+' was never stranded, so one term is still hidden. Try a new puzzle and let '+ANT+' get stranded once to earn it.'},
@@ -897,10 +897,10 @@ function loadLevel(id){
     }
   }
   if(L.intro&&!S.intros.includes(L.id))cur.phase='pre';
-  if(L.mode==='cards'){cur.chain=[];say('Click a read to start your chain.');}
+  if(L.mode==='cards'){cur.chain=[];say('');}
   else if(L.mode==='ham'){
     cur.path=[];
-    say(cur.phase==='pre'?'Your eight shredded reads.':startMsg());
+    say(cur.phase==='pre'?'':startMsg());
     if(L.id===4)cur.skipTimer=setTimeout(()=>{cur.skipOK=true;renderControls();},45000);
   }else if(L.mode==='balance'){
     say('Click the node a new edge should leave from.');
@@ -913,7 +913,7 @@ function loadLevel(id){
       cur.phase='ask';
       cur.nm={cand:null,misses:0,order:shuffled(cur.inst.nodes.length,rng(hashStr(key+'|cand')))};
       say('Which node must '+ANT+' start on?');
-    }else say(cur.phase==='pre'?'Here they are as nodes, the way you have seen them.':startMsg());
+    }else say(cur.phase==='pre'?'The reads as nodes.':startMsg());
     if(L.mode==='konig')cur.skipTimer=setTimeout(()=>{cur.skipOK=true;renderControls();},60000);
   }
   log('load',{mode:L.mode});
@@ -943,7 +943,7 @@ function cardClick(i){
 function settleCards(moved){
   const r=cur.inst.reads,n=r.length,c=cur.chain;
   if(c.length===n)return complete();
-  if(!c.length)return say('Click a read to start your chain.');
+  if(!c.length)return say('');
   const last=r[c[c.length-1]];
   if(!r.some((x,i)=>!c.includes(i)&&fits(last,x))){
     if(moved){cur.strands++;log('dead_end',{at:last,placed:c.length});}
@@ -1613,7 +1613,7 @@ function renderPanel(){
   const missing=VOCAB.filter(x=>!S.badges.includes(x.id)).length;
   if(cur.L.id<LEVELS.length)h+='<button class="primary advance" id="next">Next level →</button>';
   else h+='<p>'+(missing?plural(missing,'vocabulary term')+' still hidden. Try a new puzzle on levels 6 to 11.'
-     :'You have earned every term. The field guide below lists each one with its source.')+'</p>';
+     :'You have earned every term.')+'</p>';
   $('#panel').innerHTML=h+'</div>';
 }
 

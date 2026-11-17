@@ -555,9 +555,9 @@ const SRC={
 
 const VOCAB=[
   {id:'mapping',name:'Read mapping',code:'BA9N',def:'Finding where each sequencing read (a pattern) occurs in a reference genome (the text). With many reads this is the Multiple Pattern Matching Problem: find every position in Text where a string from Patterns occurs.'},
-  {id:'sa',name:'Suffix array',src:'manber',code:'BA9G',def:'The start positions of a text’s suffixes, listed in the alphabetical order of the suffixes. SuffixArray(“panamabananas$”) = 13, 5, 3, 1, 7, 9, 11, 6, 4, 2, 8, 10, 0, 12.'},
+  {id:'sa',name:'Suffix array',src:'manber',code:'BA9G',def:'The start positions of a text’s suffixes, listed in the alphabetical order of the suffixes. SuffixArray(“cocoacoconut$”) = 12, 4, 2, 0, 5, 7, 9, 3, 1, 6, 8, 11, 10.'},
   {id:'end',name:'End marker',def:'The symbol $, added once to the end of a text and sorted before every letter. It makes the endings of the text all different and marks where the text stops.'},
-  {id:'bwt',name:'Burrows–Wheeler transform',code:'BA9I',def:'Sort all cyclic rotations of Text into alphabetical order to form the Burrows–Wheeler matrix. BWT(Text) is the matrix’s last column. BWT(“panamabananas$”) = smnpbnnaaaaa$a.'},
+  {id:'bwt',name:'Burrows–Wheeler transform',code:'BA9I',def:'Sort all cyclic rotations of Text into alphabetical order to form the Burrows–Wheeler matrix. BWT(Text) is the matrix’s last column. BWT(“cocoacoconut$”) = too$aooccccun.'},
   {id:'rot',name:'Cyclic rotation',def:'A string formed by moving a suffix of Text to its front: the text read around a ring, starting from one of its letters. A text of length n has n cyclic rotations.'},
   {id:'fl',name:'First-last property',def:'The k-th occurrence of a symbol in the first column and the k-th occurrence of that symbol in the last column correspond to the same position of that symbol in Text.'},
   {id:'lf',name:'Last-to-first mapping',code:'BA9K',def:'LastToFirst(i) is the row, in the first column, of the symbol at row i of the last column. Following it from the row that begins with $ spells Text from right to left, which inverts the transform (BA9J).'},
@@ -779,7 +779,7 @@ function renderPanel(){
   });
   const missing=VOCAB.filter(x=>!S.badges.includes(x.id)).length;
   if(cur.L.id<LEVELS.length)h+='<button class="primary advance" id="next">Next level →</button>';
-  else h+='<p>'+(missing?plural(missing,'vocabulary term')+' still hidden. Finish the levels without a ✓ to earn them.':'You have earned every term. The field guide below lists each one with its source.')+'</p>';
+  else h+='<p>'+(missing?plural(missing,'vocabulary term')+' still hidden. Finish the levels without a ✓ to earn them.':'You have earned every term.')+'</p>';
   $('#panel').innerHTML=h+'</div>';
 }
 
@@ -942,7 +942,7 @@ LV[1]={
 BLOCKS.mapping={html:()=>{const s=cur.st.scan,per=s/(10*195);
   return 'Ten reads against 200 letters: '+s.toLocaleString('en-US')+' letter comparisons for a scanner, about '+per.toFixed(2)+' per read per letter of reference. '+
   'A human genome has three billion letters and a single run of a sequencing machine gives hundreds of millions of reads. At this rate a hundred million reads would cost about '+sci(per*3e9*1e8)+' comparisons. '+
-  '<b>Finding where every read came from is called '+term('mapping','read mapping')+'.</b> The rest of this game prepares the reference once, so that each read can be found without scanning it.';}};
+  '<b>Finding where every read came from is called '+term('mapping','read mapping')+'.</b>';}};
 /*@end l1.js*/
 /*@bench.js*/
 /* ---------- the workbench (?bench=1): plain, saves nothing ---------- */
@@ -950,8 +950,8 @@ function renderBench(){
   document.title='The Loom: workbench';
   $('.wrap').innerHTML='<header><h1><a href="./">The Loom</a>: workbench</h1></header><div class="bench">'+
     '<p>Paste a text (a $ is added at the end if it has none) and some patterns separated by spaces. The workbench shows the sorted rotations with the first, second and last columns picked out, the suffix array, and for each pattern the band after every step of backward search and where its matches start. A second text, if given, is shown beside the first with the number of leading columns the two tables share.</p>'+
-    '<label>Text<textarea id="bt" spellcheck="false">panamabananas</textarea></label>'+
-    '<label>Patterns <input type="text" id="bp" value="ana ban nab" style="width:100%"></label>'+
+    '<label>Text<textarea id="bt" spellcheck="false">cocoacoconut</textarea></label>'+
+    '<label>Patterns <input type="text" id="bp" value="coco nut xyz" style="width:100%"></label>'+
     '<label>Second text (optional) <input type="text" id="bt2" value="" style="width:100%" spellcheck="false"></label>'+
     '<p><button class="primary" id="brun">Run</button></p><div id="bout"></div></div>';
   const table=r=>'<div class="tscroll"><table><tr><th>row</th><th colspan="'+r.text.length+'">sorted rotations</th><th>suffix array</th></tr>'+
@@ -1080,7 +1080,7 @@ LV[3]={
         '<p>1. Put one new sign at the end of the text, <b class="mono">$</b>, and let it sort before every letter.</p>'+
         '<p>2. Write the text on a ring. Cut the ring before each letter in turn, so there is one strip per letter. Sort the strips.</p>'+
         '<p>3. Keep only the last column. Throw the rest away.</p>'+
-        '<p><b>They claimed that this one column is enough to recover the text and the position of every pattern in it.</b> The next five levels test that claim.</p></div>';
+        '<p><b>They claimed that this one column is enough to recover the text and the position of every pattern in it.</b></p></div>';
       const rows=x.rows.map(r=>r.rot),m=rows.length;
       h+='<div class="sub">The sorted strips of '+esc(x.text)+'. Click a column to count its runs of repeated letters</div><div class="tscroll"><table class="mini"><tr>'+
         [...Array(m).keys()].map(j=>'<th><button data-act="col" data-c="'+j+'" aria-label="Column '+(j+1)+'">'+(j===0?'first':j===m-1?'last':j+1)+'</button></th>').join('')+'</tr>'+
@@ -1113,7 +1113,7 @@ LV[3]={
 };
 BLOCKS.bwt={html:()=>'The sign that marks the end of the text is the '+term('end','end marker')+', written $. '+
   '<b>The last column of the sorted strips is the '+term('bwt','Burrows–Wheeler transform')+' of the text.</b> Burrows and Wheeler invented it to make files smaller: it gathers repeated letters into runs, as the meter showed. '+
-  'It costs one column: 0.75 GB for a human genome, against 12 GB for the start positions alone. Whether that column holds everything has not yet been shown.'};
+  'It costs one column: 0.75 GB for a human genome, against 12 GB for the start positions alone.'};
 
 /* ---------- level 4: cut the ring, sort the strips, read the last column ---------- */
 function ringSvg(t){
@@ -1191,7 +1191,7 @@ LV[5]={
 };
 BLOCKS.fl={html:()=>{const x=cur.inst,c=[...x.word].find(ch=>repeated(x.text,ch));
   return 'Look at the threads of one colour. The '+c+' threads run side by side and never cross: the first '+c+' on the right beam is the first '+c+' on the left, the second is the second, and so on. That holds for every letter. '+
-  '<b>It is called the '+term('fl','first-last property')+'.</b> It is why the right beam can stand in for the whole table, as the next level shows.';}};
+  '<b>It is called the '+term('fl','first-last property')+'.</b> It is why the right beam can stand in for the whole table.';}};
 
 /* ---------- level 6: unweave a last column ---------- */
 LV[6]={
@@ -1226,7 +1226,7 @@ LV[6]={
       if(st.left.includes(i))return;
       const k=st.left.length;
       if(L[i]===F[k]){snap();st.left.push(i);st.bad=null;log('put',{r:i,row:k});
-        if(st.left.length===n){st.phase='tie';say('The left beam is the right beam’s letters, sorted: every letter of the word sits once on each beam, and the strips were in order. Now the threads.','good');}else say('');}
+        if(st.left.length===n){st.phase='tie';say('The left beam is the right beam’s letters, sorted: every letter of the word sits once on each beam, and the strips were in order.','good');}else say('');}
       else{st.bad=i;log('put_reject',{r:i,row:k});say('Not '+(L[i]==='$'?'the $':L[i])+' in row '+k+': the strips were sorted, so their first letters ran in order down the left beam, and a letter that sorts earlier is still waiting on the right.','warn');}
       return render();
     }
@@ -1253,7 +1253,7 @@ LV[6]={
   }
 };
 BLOCKS.lf={html:()=>'You had only the last column of the table. Sorting that column gave the first; the rule that same-letter threads never cross told you which thread goes where; and each thread took you one letter to the left in the word. '+
-  '<b>Following a thread from the right beam to the left is the '+term('lf','last-to-first mapping')+'.</b> The claim from level 3 holds for the text. One column was enough to recover it.'};
+  '<b>Following a thread from the right beam to the left is the '+term('lf','last-to-first mapping')+'.</b>'};
 
 /* ---------- level 7: two fingers ---------- */
 LV[7]={
@@ -1496,7 +1496,7 @@ LV[11]={
     snap();st.tries.push(i);log('column',{i,variant:i===x.v});
     if(i===x.v){say('Every one of the '+over.length+' reads over column '+i+' reads '+x.alt+' where the reference has '+x.ref[i]+'.','good');
       complete(sweepTerms(),'patient');return render();}
-    if(diff.length)say('Only '+numWord(diff.length)+' of the '+numWord(over.length)+' reads over column '+i+' differs from the reference; the others agree with it. One read, one misread letter.','warn');
+    if(diff.length)say('Only '+numWord(diff.length)+' of the '+numWord(over.length)+' reads over column '+i+' differs from the reference; the others agree with it.','warn');
     else say('All '+numWord(over.length)+' reads over column '+i+' agree with the reference.');
     render();
   }
