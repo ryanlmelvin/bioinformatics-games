@@ -32,18 +32,26 @@ function note(f,t0,dur,vol,type,f2){
 }
 const SFX={
   tick(){note(520,0,.05,.035,'triangle',380);},
+  // the sounds of each game's own controls
+  clack(){note(210,0,.045,.07,'square',150);note(320,.012,.03,.035,'square',240);},
+  chunk(){note(120,0,.2,.09,'sawtooth',55);note(240,.16,.05,.07,'square',160);},
+  step(){note(250,0,.05,.05,'triangle',170);},
+  flick(){note(900,0,.035,.03,'triangle',500);},
+  bloop(){note(280,0,.13,.07,'sine',620);},
+  pluck(){note(392,0,.3,.07,'triangle');note(784,0,.12,.025,'sine');},
+  nA(){note(523.25,0,.16,.07,'sine');},nC(){note(659.25,0,.16,.07,'sine');},nG(){note(783.99,0,.16,.07,'sine');},nT(){note(880,0,.16,.07,'sine');},
   good(){note(523.25,0,.14,.07,'sine');note(783.99,.09,.22,.07,'sine');},
   warn(){note(196,0,.16,.06,'triangle',150);},
   term(){[523.25,659.25,783.99,1046.5].forEach((f,i)=>note(f,i*.075,.3,.06,'sine'));},
   level(){[392,523.25,659.25,783.99].forEach((f,i)=>note(f,i*.11,.26,.07,'triangle'));
     [523.25,659.25,783.99,1046.5].forEach(f=>note(f,.46,.9,.045,'sine'));}
 };
-const RANK={tick:0,warn:1,good:2,term:3,level:4};
+const RANK={warn:1,good:2,term:3,level:4};   // anything unlisted is a click sound, rank 0
 let pending=null,ptimer=0;
 function play(name){                           // one sound per moment: the most important wins
   if(!soundOn)return;
-  if(!pending||RANK[name]>RANK[pending])pending=name;
-  clearTimeout(ptimer);ptimer=setTimeout(()=>{const n=pending;pending=null;try{SFX[n]();}catch(e){}},name==='tick'?0:70);
+  if(!pending||(RANK[name]||0)>=(RANK[pending]||0))pending=name;
+  clearTimeout(ptimer);ptimer=setTimeout(()=>{const n=pending;pending=null;try{SFX[n]();}catch(e){}},RANK[name]?70:0);
 }
 
 /* ---------- the bar across the top of every page ---------- */
@@ -77,16 +85,33 @@ function confetti(){
   const d=Math.min(devicePixelRatio||1,2),W=c.width=innerWidth*d,H=c.height=innerHeight*d,x=c.getContext('2d');
   const cols=[G.hue||ch.hue,'#e9b949','#2e7d4f','#2b5fb3','#b83a4b','#fdf8ec'],L='ACGT';
   const P=Array.from({length:110},(_,i)=>({x:W*(.5+(Math.random()-.5)*.5),y:H*.28,vx:(Math.random()-.5)*16*d,vy:(-6-Math.random()*11)*d,
-    r:Math.random()*6.3,vr:(Math.random()-.5)*.4,s:(5+Math.random()*7)*d,c:cols[i%cols.length],ch:i%4===0?L[i%16>>2]:''}));
+    r:Math.random()*6.3,vr:(Math.random()-.5)*.4,s:(5+Math.random()*7)*d,c:cols[i%cols.length],i,piece:!!G.burst&&i%2===0,ch:i%4===1?L[i%16>>2]:''}));
   const t0=performance.now();
   (function frame(t){
     const age=t-t0;x.clearRect(0,0,W,H);
     P.forEach(p=>{p.vy+=.34*d;p.vx*=.99;p.x+=p.vx;p.y+=p.vy;p.r+=p.vr;
       x.save();x.translate(p.x,p.y);x.rotate(p.r);x.globalAlpha=Math.max(0,1-age/2400);x.fillStyle=p.c;
-      if(p.ch){x.font='700 '+(p.s*2)+'px ui-monospace,Menlo,monospace';x.fillText(p.ch,0,0);}else x.fillRect(-p.s/2,-p.s/3,p.s,p.s*.66);
+      if(p.piece)piece(x,G.burst,p.s*1.5,p.c,p.i);
+      else if(p.ch){x.font='700 '+(p.s*2)+'px ui-monospace,Menlo,monospace';x.fillText(p.ch,0,0);}else x.fillRect(-p.s/2,-p.s/3,p.s,p.s*.66);
       x.restore();});
     if(age<2400)requestAnimationFrame(frame);else c.remove();
   })(t0);
+}
+/* one celebration piece per game, drawn around (0,0) at size s */
+function piece(x,kind,s,col,i){
+  const P2=Math.PI*2;x.lineWidth=Math.max(1,s*.12);
+  if(kind==='coins'){x.scale(Math.abs(Math.cos(i+performance.now()/160))*.9+.1,1);x.fillStyle='#f2c037';x.strokeStyle='#a87412';x.beginPath();x.arc(0,0,s*.7,0,P2);x.fill();x.stroke();
+    x.fillStyle='#a87412';x.font='700 '+s+'px ui-monospace,Menlo,monospace';x.textAlign='center';x.textBaseline='middle';x.fillText('ACGT'[i%4],0,s*.05);}
+  else if(kind==='leaves'){x.fillStyle=i%3?'#6fae4e':'#3f8a3a';x.beginPath();x.moveTo(-s,0);x.quadraticCurveTo(0,-s*.8,s,0);x.quadraticCurveTo(0,s*.8,-s,0);x.fill();
+    x.strokeStyle='#2c6328';x.beginPath();x.moveTo(-s,0);x.lineTo(s,0);x.stroke();}
+  else if(kind==='tickets'){x.fillStyle=['#ffc21a','#fdf8ec','#e9b28a'][i%3];x.strokeStyle='#4a3a1c';x.beginPath();x.rect(-s,-s*.55,s*2,s*1.1);x.fill();x.stroke();
+    x.setLineDash([s*.15,s*.15]);x.beginPath();x.moveTo(s*.4,-s*.55);x.lineTo(s*.4,s*.55);x.stroke();x.setLineDash([]);}
+  else if(kind==='dice'){const h=s*.8;x.fillStyle='#fdf8ec';x.strokeStyle='#3a1f0c';x.beginPath();x.rect(-h,-h,h*2,h*2);x.fill();x.stroke();
+    const one=i%4===0;x.fillStyle=one?'#d62839':'#1a1208';(one?[[0,0]]:[[-.45,-.45],[.45,.45],[.45,-.45],[-.45,.45]]).forEach(d=>{x.beginPath();x.arc(d[0]*h,d[1]*h,h*(one?.3:.2),0,P2);x.fill();});}
+  else if(kind==='stars'){x.fillStyle=i%3?'#ffe9a0':'#ffd58a';x.beginPath();for(let k=0;k<10;k++){const r=k%2?s*.42:s,a=k*Math.PI/5;x.lineTo(Math.sin(a)*r,-Math.cos(a)*r);}x.closePath();x.fill();}
+  else if(kind==='drops'){x.fillStyle=['#e2557f','#b9a6e6','#f2a43a','#8fb8ea'][i%4];x.beginPath();x.moveTo(0,-s);x.bezierCurveTo(s*.9,-s*.1,s*.8,s,0,s);x.bezierCurveTo(-s*.8,s,-s*.9,-s*.1,0,-s);x.fill();}
+  else if(kind==='threads'){x.strokeStyle=['#2e7d4f','#b83a4b','#2b5fb3','#c9952a'][i%4];x.lineWidth=s*.28;x.lineCap='round';x.beginPath();x.moveTo(-s*1.4,0);x.bezierCurveTo(-s*.5,-s,s*.5,s,s*1.4,0);x.stroke();}
+  else if(kind==='keys'){x.strokeStyle=x.fillStyle='#e6bd4f';x.lineWidth=s*.3;x.beginPath();x.arc(-s*.6,0,s*.45,0,P2);x.stroke();x.beginPath();x.moveTo(-s*.15,0);x.lineTo(s*1.1,0);x.moveTo(s*.7,0);x.lineTo(s*.7,s*.5);x.moveTo(s*1.1,0);x.lineTo(s*1.1,s*.5);x.stroke();}
 }
 let toastEl=null,toastT=0;
 function toast(title,lines){
@@ -99,7 +124,7 @@ function toast(title,lines){
 
 /* ---------- a game page ---------- */
 function gamePage(){
-  document.body.classList.add('bk-game');
+  document.body.classList.add('bk-game','bk-g-'+G.dir);
   document.body.style.setProperty('--bk-hue',G.hue||ch.hue);
   document.title=G.game+' · '+(side?'Side quest':'Chapter '+ch.n)+' · '+BOOK.title;
   const wrap=$('.wrap')||$('main')||document.body;
@@ -182,8 +207,14 @@ function gamePage(){
 
   document.addEventListener('pointerdown',e=>{
     const t=e.target;if(!(t instanceof Element))return;
-    if(t.closest('button,[role=button],.stage svg,select,summary,[data-act]')&&!t.closest('.bk-sound'))play('tick');
+    if(t.closest('.bk-sound'))return;
+    const own=(G.sfx||[]).find(x=>t.closest(x[0]));
+    if(own)play(own[1]);else if(t.closest('button,[role=button],.stage svg,select,summary,[data-act]'))play('tick');
   },true);
+
+  // Lockpick's keypad sings: one note per letter, typed or clicked
+  if(G.keys)document.addEventListener('keydown',e=>{const n=!e.metaKey&&!e.ctrlKey&&!e.altKey&&!e.repeat&&G.keys[e.key.toLowerCase()];
+    if(n&&!(e.target instanceof Element&&e.target.closest('input,textarea')))play(n);},true);
 
   // after the game: where the chapter goes next
   const foot=$('footer',wrap);

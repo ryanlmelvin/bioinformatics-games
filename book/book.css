@@ -101,6 +101,15 @@ body.bk-game .status.warn:not(:empty){border-left-color:var(--warn,#b4541a);back
 .bk-nudge{animation:bk-nudge .34s}
 @keyframes bk-nudge{25%{transform:translateX(-5px)}60%{transform:translateX(4px)}85%{transform:translateX(-2px)}}
 
+/* each game's table: a faint texture behind the stage, in the game's own material */
+body.bk-game .stage{--tx:color-mix(in srgb,var(--ink,var(--bk-ink)) 4.5%,transparent)}
+.bk-g-bridge-walker .stage{background-image:linear-gradient(var(--tx) 1px,transparent 1px),linear-gradient(90deg,var(--tx) 1px,transparent 1px);background-size:22px 22px}
+.bk-g-toll-city .stage{background-image:linear-gradient(var(--tx) 2px,transparent 2px),linear-gradient(90deg,var(--tx) 2px,transparent 2px);background-size:64px 64px}
+.bk-g-cho-han-night .stage{background-image:repeating-linear-gradient(0deg,var(--tx) 0 1px,transparent 1px 5px),linear-gradient(90deg,var(--tx) 3px,transparent 3px);background-size:auto,180px 100%}
+.bk-g-hollow-mountain .stage{background-image:repeating-radial-gradient(ellipse 60% 90% at 18% 110%,transparent 0 22px,var(--tx) 22px 23.5px)}
+.bk-g-paint-by-k .stage{background-image:radial-gradient(var(--tx) 1.6px,transparent 2px);background-size:12px 12px}
+.bk-g-the-loom .stage{background-image:repeating-linear-gradient(0deg,var(--tx) 0 1px,transparent 1px 4px),repeating-linear-gradient(90deg,var(--tx) 0 1px,transparent 1px 4px)}
+
 /* the "level complete" panel */
 body.bk-game .reveal{position:relative;border-radius:14px;overflow:hidden;animation:bk-rise .5s cubic-bezier(.2,.9,.3,1) both;
   box-shadow:0 20px 40px -30px rgba(0,0,0,.6)}

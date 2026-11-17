@@ -215,7 +215,8 @@ footer input{font:inherit;width:9em;padding:5px 8px;border:1px solid var(--line)
   .gmeta{color:#333}
 }
 /* ambient life in the scenery; never needed to play */
-@media (prefers-reduced-motion:no-preference){.wv{animation:swell 5s ease-in-out infinite alternate}.wv2{animation:swell 3.6s ease-in-out -1.5s infinite alternate}@keyframes swell{from{transform:translate(-5px,1px)}to{transform:translate(6px,-2px)}}}
+#decor .boat{transform:translate(120px,0)}
+@media (prefers-reduced-motion:no-preference){#decor .boat{animation:sail 90s linear infinite}@keyframes sail{from{transform:translate(-40px,0)}to{transform:translate(800px,0)}}#decor .reeds use{transform-box:fill-box;transform-origin:50% 100%}#decor .reeds{animation:sway 4.5s ease-in-out infinite alternate;transform-origin:50% 100%;transform-box:fill-box}@keyframes sway{from{transform:skewX(-1.5deg)}to{transform:skewX(1.5deg)}}.wv{animation:swell 5s ease-in-out infinite alternate}.wv2{animation:swell 3.6s ease-in-out -1.5s infinite alternate}@keyframes swell{from{transform:translate(-5px,1px)}to{transform:translate(6px,-2px)}}}
 </style>
 <link rel="icon" href="../book/favicon.svg" type="image/svg+xml">
 <link rel="stylesheet" href="../book/book.css">
@@ -285,6 +286,22 @@ footer input{font:inherit;width:9em;padding:5px 8px;border:1px solid var(--line)
         <marker id="mN" viewBox="0 0 10 10" refX="7" refY="5" markerUnits="userSpaceOnUse" markerWidth="15" markerHeight="15" orient="auto"><path class="ah-n" d="M0,0L10,5L0,10z"/></marker>
       </defs>
       <rect width="760" height="500" fill="url(#pWater)" data-water="1"/>
+      <!-- ===== SCENERY: sits under the islands and never takes a click ===== -->
+      <g id="decor" pointer-events="none" aria-hidden="true">
+        <defs>
+          <radialGradient id="gDeep" cx=".5" cy=".5" r=".75"><stop offset=".55" stop-color="#1f6f86" stop-opacity="0"/><stop offset="1" stop-color="#1f6f86" stop-opacity=".34"/></radialGradient>
+          <g id="a-pad"><path d="M0,0L13,-4A14,14 0 1 0 13,4Z" fill="#6fae4e" stroke="#3f7a34" stroke-width="1.2"/><path d="M0,0L-11,-6M0,0L-12,4M0,0L-3,12M0,0L-2,-12" stroke="#3f7a34" stroke-width=".8" opacity=".7"/></g>
+          <g id="a-lotus"><path d="M0,-7Q4,-2 0,3Q-4,-2 0,-7ZM-7,-2Q-1,-3 0,3Q-6,3 -7,-2ZM7,-2Q1,-3 0,3Q6,3 7,-2Z" fill="#f6b6c8" stroke="#c9728c" stroke-width=".8"/><circle cy="1" r="1.6" fill="#f2c037"/></g>
+          <g id="a-reed"><path d="M0,0Q-3,-22 2,-46" fill="none" stroke="#4d7a3a" stroke-width="2.2" stroke-linecap="round"/><rect x="-1" y="-52" width="5" height="14" rx="2.5" fill="#7a4a22"/></g>
+        </defs>
+        <rect width="760" height="500" fill="url(#gDeep)"/>
+        <use href="#a-pad" transform="translate(40,452) rotate(-20)"/><use href="#a-pad" transform="translate(74,474) rotate(70) scale(.75)"/><use href="#a-lotus" transform="translate(42,448)"/>
+        <use href="#a-pad" transform="translate(716,52) rotate(140) scale(.9)"/><use href="#a-pad" transform="translate(690,30) rotate(30) scale(.6)"/><use href="#a-lotus" transform="translate(716,50) scale(.9)"/>
+        <use href="#a-pad" transform="translate(30,60) rotate(200) scale(.7)"/>
+        <g class="reeds"><use href="#a-reed" transform="translate(14,500)"/><use href="#a-reed" transform="translate(26,500) scale(.8)"/><use href="#a-reed" transform="translate(742,500) scale(-1,1)"/><use href="#a-reed" transform="translate(728,500) scale(-.75,.75)"/><use href="#a-reed" transform="translate(718,500) scale(.6)"/></g>
+        <g transform="translate(708,440)" opacity=".5"><circle r="26" fill="none" stroke="#1f5f72" stroke-width="1.2"/><circle r="20" fill="none" stroke="#1f5f72" stroke-width=".6" stroke-dasharray="2 3"/><path d="M0,-30L5,-5L0,0L-5,-5ZM0,30L5,5L0,0L-5,5ZM-30,0L-5,-5L0,0L-5,5ZM30,0L5,-5L0,0L5,5Z" fill="#1f5f72"/><path d="M0,-30L5,-5L0,0Z" fill="#e8590c"/><text y="-33" text-anchor="middle" font-size="9" font-weight="700" fill="#1f5f72" font-family="system-ui,sans-serif">N</text></g>
+        <g class="boat"><g transform="translate(0,26)"><path d="M-14,4H14L9,11H-9Z" fill="#8a5a2b" stroke="#4a2a10" stroke-width="1"/><path d="M0,3V-18" stroke="#4a2a10" stroke-width="1.4"/><path d="M1.500,-17L13,1H1.500Z" fill="#fffdf6" stroke="#b9b09a" stroke-width=".8"/><path d="M-1.500,-13L-9,1H-1.500Z" fill="#f4e7c8" stroke="#b9b09a" stroke-width=".8"/><path d="M-20,13q5,-4 10,0t10,0t10,0t10,0" fill="none" stroke="#eefafc" stroke-width="1.6" stroke-linecap="round" opacity=".8"/></g></g>
+      </g>
       <g id="scene"></g>
       <g id="ant" visibility="hidden"></g>
     </svg>
