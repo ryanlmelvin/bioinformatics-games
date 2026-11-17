@@ -637,11 +637,11 @@ const LEVELS=[
   {id:1,mode:'family',title:'One of the family?',
    brief:'Five proteins from one family are written in rows so that letters with the same role share a column. A dash means that member has nothing at that position. Two newcomers claim to belong, and only one does. Pick it.'},
   {id:2,mode:'open',title:'Seven or other',
-   brief:'Compare two pairs of dice. A fair pair has 36 equally likely rolls; six total 7. The loaded pair always totals 7. Record 7 or other for each roll in a balanced practice sample of 24 rolls per pair. Real classroom samples can vary.'},
+   brief:'Compare two pairs of dice. A fair pair has 36 equally likely rolls; six total 7. The loaded pair always totals 7. After each roll, the dealer calls “7” for a total of 7 or “other” for any other total. Record each call in a balanced practice sample of 24 rolls per pair. Real classroom samples can vary.'},
   {id:3,mode:'swap',title:'The swap',
-   brief:'Now the pair is behind a screen and you hear only the call. Between rounds he may swap pairs unseen, and the house card on the wall gives how often. Twelve rounds. After each call, slide the bead toward the pair you think is behind the screen.'},
+   brief:'The dealer now rolls one pair behind a screen, and you hear only the call. Between rounds, the dealer may switch between the fair and loaded pairs; the house card shows how often. After each of twelve calls, slide the bead toward the pair you think was rolled.'},
   {id:4,mode:'story',title:'One story',
-   brief:'The first four calls of that night. Make up one story of what the dealer did: which pair was behind the screen in each round. Then work out, using transition weights out of 4 and emission weights out of 6, how likely he was to play it that way, and how likely those four calls were if he did.'},
+   brief:'Use the first four calls from level 3. Make up a story by choosing which pair the dealer used in each round. Using transition weights out of 4 and emission weights out of 6, calculate the chance of that sequence of pairs, then the chance of those calls given those pairs.'},
   {id:5,mode:'wall',title:'Too many stories',
    brief:'Your story was one of 16 for four rounds. To know how likely the calls were, whatever the dealer did, you would add the chances of every story. The table’s counting machine does this one story at a time.'},
   {id:6,mode:'ledger',title:'The bookkeeper’s ledger',
@@ -649,7 +649,7 @@ const LEVELS=[
   {id:7,mode:'best',title:'The best story',
    brief:'A different night, six calls. This time the bookkeeper wants the single most likely story, not the total. Same page, one change: keep only the larger of the two ways in. Click the way you keep, then write the entry. After three columns you pick the ways and the bookkeeper writes. Then follow your kept ways back from the end.'},
   {id:8,mode:'rooms',title:'Rooms',
-   brief:'Back to the family from level 1. The bookkeeper builds them a house with a room for each column that most members fill, a trapdoor under each room for a member with a gap there, and a corridor between rooms for letters that belong to no room. Set how many gaps a column may have and still be a room. Then send the members through, one at a time, and keep the tally for the marked room.'},
+   brief:'Back to the protein family from level 1. The bookkeeper builds a house for the family, with a room for each column that most members fill, a trapdoor under each room for a member with a gap there, and a corridor between rooms for letters that belong to no room. Set how many gaps a column may have and still be a room. Then send the members through, one at a time, and keep the tally for the marked room.'},
   {id:9,mode:'bouncer',title:'The bouncer',
    brief:'The two newcomers from level 1 are at the door. Every door and every room of the house now carries its tally. Walk each newcomer through, choosing each step yourself. Each step multiplies the chance by that tally. Then the bookkeeper shows the best walk there is.'},
   {id:10,mode:'pebbles',title:'One unseen letter',
@@ -910,7 +910,7 @@ function table(o){
   return h+'</svg>';
 }
 const CARD_CALLS=['Fair pair: 7 = 1/6; other = 5/6','Loaded pair: 7 = 1; other = 0'];
-const CARD_SWAP=['Keeps his pair 3 rounds in 4, swaps 1 in 4','First round: either pair, 1 chance in 2'];
+const CARD_SWAP=['Keep pair: 3 in 4; swap pairs: 1 in 4','First round: either pair, 1 chance in 2'];
 
 /* ================= Level 2: both pairs in the open ================= */
 
@@ -978,7 +978,7 @@ ACT.ans=a=>{
   o.ans[c]=v;const want=c?6:1;
   if(v===want){o.ok[c]=true;log('estimate',{pair:c,v,ok:true});}
   else{log('estimate',{pair:c,v,ok:false});say('Count the total 7 marks and divide by four to express the tally per six rolls for the '+CUP[c]+'.','warn');jolt('ans'+c+v);return;}
-  if(o.ok[0]&&o.ok[1])complete([],null,'He pins both on the house card.');
+  if(o.ok[0]&&o.ok[1])complete([],null,'The dealer pins both probabilities on the house card.');
   else say('Right for the '+CUP[c]+'.');
 };
 
@@ -1031,7 +1031,7 @@ MODES.swap={
     cur.s.lifted=true;S.marks[gkey('night')]=cur.s.marks.slice();log('lift',{marks:cur.s.marks});
     complete(['hstate','hpath'],null,'Behind the screen, round by round.');
   },
-  reveal(){return [{html:'Which pair was behind the screen in a round is a '+term('hstate','hidden state')+': it shaped the call, but you never saw it. The whole night’s sequence of pairs is the '+term('hpath','hidden path')+'. Your bead was a guess at it. Keep it: the bookkeeper will draw over it soon.'}];}
+  reveal(){return [{html:'The pair used in each round is a '+term('hstate','hidden state')+': the pair determines the chances of “7” and “other”, but stays hidden behind the screen. The whole night’s sequence of pairs is the '+term('hpath','hidden path')+'. Your bead positions recorded your guesses; the bookkeeper will compare those guesses with calculated chances in level 6.'}];}
 };
 ACT.lock=()=>{
   const s=cur.s;if(cur.done||s.marks.length>=12)return;
@@ -1059,10 +1059,10 @@ MODES.story={
       '<button class="pairbtn '+(st.story[i]===null?'':CUPS[st.story[i]])+'" id="pair'+i+'" data-act="pair" data-arg="'+i+'">'+(st.story[i]===null?'which pair?':CUPS[st.story[i]])+'</button></div>').join('')+'</div>';
     if(!set)return h;
     const f=id=>nIn(id,st.v[id],st.ok[id],st.bad===id),nw=s=>'<span style="white-space:nowrap">'+s+'</span>';
-    h+='<div class="sub" style="margin-top:12px">How likely was he to play it this way?</div><div class="eq">'+nw('round 1 '+CUPS[st.story[0]]+': '+f('s0')+' in 2');
+    h+='<div class="sub" style="margin-top:12px">How likely was the dealer to use this sequence of pairs?</div><div class="eq">'+nw('round 1 '+CUPS[st.story[0]]+': '+f('s0')+' in 2');
     for(let t=1;t<4;t++)h+=' · '+nw('then '+(st.story[t]===st.story[t-1]?'keeps':'swaps to')+' '+CUPS[st.story[t]]+': '+f('t'+t)+' in 4');
     h+='</div><div class="eq">multiplied: '+nIn('pp',st.v.pp,st.ok.pp,st.bad==='pp',5)+' in '+fmt(storyChances(st.story,cur.calls).pathOf)+'</div>';
-    h+='<div class="sub" style="margin-top:12px">If he did, how likely were these four calls?</div><div class="eq">'+
+    h+='<div class="sub" style="margin-top:12px">Given those pairs, how likely were these four calls?</div><div class="eq">'+
       cur.calls.map((c,t)=>nw(CUPS[st.story[t]]+' calls '+CALL[c]+': '+f('e'+t)+' in 6')).join(' · ')+'</div>'+
       '<div class="eq">multiplied: '+nIn('pe',st.v.pe,st.ok.pe,st.bad==='pe',5)+' in 1,296</div>'+
       '<div class="sub" style="margin-top:12px">Both together</div><div class="eq">'+nIn('pb',st.v.pb,st.ok.pb,st.bad==='pb',6)+' in 165,888</div>';
@@ -1091,7 +1091,7 @@ function checkStory(id,val){
     cur.focus=next;say('Written in.');
   }else{
     st.bad=id;log('cell',{id,ok:false,val:n});jolt(id);cur.focus=id;
-    say(id[0]==='t'||id==='s0'?'The bookkeeper crosses it out: check the house card for how often he keeps and swaps.'
+    say(id[0]==='t'||id==='s0'?'The bookkeeper crosses it out: check the house card for the dealer’s starting, keeping and swapping chances.'
       :id[0]==='e'?'The bookkeeper crosses it out: check the house card for that pair’s chances of that call.'
       :'The bookkeeper crosses it out: multiply the numbers in the row above.','warn');
   }
@@ -1173,7 +1173,7 @@ const emitHtml=(k,c)=>'<div class="emit">× '+ODDS.emit[k][c]+' for '+CALL[c]+'<
 /* ================= Level 6: the summing ledger ================= */
 MODES.ledger={
   init(){cur.N=night();cur.cols=sumLedger(cur.N.calls);cur.lg={v:{},ok:{},bad:null,lit:null};say('Start with round 1: type each entry and press Enter.');},
-  rule(){return 'Each entry: add the ways in, then multiply by the call';},
+  rule(){return 'Each entry: add the ways in, then multiply by the weight for that call';},
   scene(){return table({keeper:true,card:CARD_CALLS.concat(CARD_SWAP),pairs:[{x:380,kind:'hidden'}],cloth:true});},
   work(){
     const lg=cur.lg,N=cur.N,cols=cur.cols,done=cur.done;
@@ -1206,13 +1206,13 @@ function checkLedger(id,val){
     if(!next){complete(['forward'],null,'The bookkeeper takes it from here and fills the rest of the night.');return;}
     cur.focus=next;say('Written in.');
   }else{lg.bad=id;lg.lit=t+','+k;log('cell',{id,ok:false,val:n});jolt(id);cur.focus=id;
-    say('The ink will not take '+n+'. Follow the ways in to this entry, then the call.','warn');}
+    say('The ink will not take '+n+'. Add the weighted ways into this entry, then multiply by this pair’s weight for the observed call.','warn');}
 }
 
 /* ================= Level 7: the best story ================= */
 MODES.best={
   init(){cur.calls=vnightFor(gkey('vnight'));cur.bl=bestLedger(cur.calls);cur.bs=bestStory(cur.calls);cur.b={v:{},ok:{},pick:{},bad:null,trail:[]};say('Round 1 first: type both entries.');},
-  rule(){return cur.b.stage==='back'?'Follow the kept ways back from the larger end':'Each entry: keep the larger way in, then multiply by the call';},
+  rule(){return cur.b.stage==='back'?'Follow the kept ways back from the larger end':'Each entry: keep the larger way in, then multiply by the weight for that call';},
   scene(){return table({keeper:true,card:CARD_CALLS.concat(CARD_SWAP),pairs:[{x:380,kind:'hidden'}],cloth:true});},
   colDone(t){return [0,1].every(k=>this.cellDone(t,k));},
   cellDone(t,k){const b=cur.b;return t===0?!!b.ok['c0'+k]:b.pick[t+','+k]!==undefined&&(t>2||!!b.ok['c'+t+k]);},
@@ -1239,7 +1239,7 @@ MODES.best={
     let h=ledgerGrid(calls,cell,extra);
     if(cur.done){
       const L=likelierPairs(calls),diff=L.map((k,i)=>k!==cur.bs.story[i]?i+1:0).filter(Boolean);
-      h+='<p class="prob">The best story is worth <b class="frac">'+fmt(cur.bs.value)+' / '+fmt(ledgerDenominator(n))+'</b>. The bottom row bets each round on the pair the adding page (level 6) favours for that round. They part in round'+(diff.length>1?'s ':' ')+diff.join(', ')+'.</p>';
+      h+='<p class="prob">The best story is worth <b class="frac">'+fmt(cur.bs.value)+' / '+fmt(ledgerDenominator(n))+'</b>. The bottom row bets each round on the pair the adding page (level 6) favours for that round. Those round-by-round choices differ from the best story in round'+(diff.length>1?'s ':' ')+diff.join(', ')+'.</p>';
     }
     return h;
   },
@@ -1263,7 +1263,7 @@ function checkBest(id,val){
   if(t>0&&b.pick[t+','+k]===undefined){say('Choose the way in to keep first.','warn');return;}
   if(n===cur.bl.cols[t][k]){b.ok[id]=true;b.bad=null;log('cell',{id,ok:true});say('Written in.');
     if(MODES.best.allDone()){b.stage='back';say('The page is full. Now follow the kept ways back: start at the larger entry in the last round.');}
-  }else{b.bad=id;log('cell',{id,ok:false,val:n});jolt(id);cur.focus=id;say('The ink will not take '+n+': the larger way in, times the call.','warn');}
+  }else{b.bad=id;log('cell',{id,ok:false,val:n});jolt(id);cur.focus=id;say('The ink will not take '+n+': multiply the larger way in by this pair’s weight for the observed call.','warn');}
 }
 ACT.back=a=>{
   const b=cur.b,[t,k]=a.split(',').map(Number),n=cur.calls.length;if(cur.done||!MODES.best.allDone())return;
