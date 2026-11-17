@@ -19,7 +19,7 @@ UNITS = [
  ('1_Motifs','motifs','Finding motifs','Motifs','Motif Slots','motif-slots'),
  ('2_GenomeAssembly','genome-assembly','Genome assembly','Genome assembly','Bridge Walker','bridge-walker'),
  ('3_Alignment','alignment','Sequence alignment','Sequence alignment','Toll City','toll-city'),
- ('7_HMM','hmm','Hidden Markov models','Hidden Markov models','Cho-Han Night','cho-han-night'),
+ ('7_HMM','hmm','Hidden Markov models','Hidden Markov models','Loaded Dice','cho-han-night'),
  ('4_EvolutionaryTrees','evolutionary-trees','Evolutionary trees','Evolutionary trees','Hollow Mountain','hollow-mountain'),
  ('5_Clustering','clustering','Clustering','Clustering','Paint by k','paint-by-k'),
  ('6_BurrowsWheeler','burrows-wheeler','Read mapping with the Burrows–Wheeler transform','Burrows Wheeler transform','The Loom','the-loom'),
@@ -41,7 +41,7 @@ ACTIVITY_SOURCES = {
     'alignment': [
         ('Ticket to Ride', 'https://www.daysofwonder.com/game/ticket-to-ride/'),
         ('rook', 'https://en.wikipedia.org/wiki/Rook_(chess)')],
-    'hmm': [('cho-han', 'https://en.wikipedia.org/wiki/Ch%C5%8D-han')],
+    'hmm': [],
     'evolutionary-trees': [('Pandemic', 'https://www.zmangames.com/game/pandemic/')],
     'clustering': [('cards', 'https://en.wikipedia.org/wiki/Standard_52-card_deck')],
 }
@@ -151,7 +151,7 @@ def adapt(source, output, unit, kind, title):
         elif slug=='alignment':
             change(ps[6],'Optional group activities: compare a Ticket to Ride route map with the directed streets in Toll City. On a chessboard, take turns moving a rook right or down by any positive distance; the player who reaches the lower-right square wins. Use the questions below to connect each activity to the algorithm.')
         elif slug=='hmm':
-            change(ps[6],re.sub(r'^Play a 40-minute cho-han investigation:.*?The dealer', 'Optional group activity: conduct a cho-han investigation. The dealer',ps[6].text))
+            change(ps[6],re.sub(r'^Play a 40-minute loaded-dice investigation:.*?The dealer', 'Optional group activity: conduct a loaded-dice investigation. The dealer',ps[6].text))
         elif slug=='evolutionary-trees':
             change(ps[6],'Optional group activity: photograph the starting board of a game such as Pandemic, play, then photograph the final board. Exchange only final photographs and reconstruct possible earlier states before revealing the starting photographs.')
         elif slug=='clustering':

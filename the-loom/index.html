@@ -547,9 +547,9 @@ const SRC={
 
 const VOCAB=[
   {id:'mapping',name:'Read mapping',code:'BA9N',def:'Finding where each sequencing read (a pattern) occurs in a reference genome (the text). With many reads this is the Multiple Pattern Matching Problem: find every position in Text where a string from Patterns occurs.'},
-  {id:'sa',name:'Suffix array',src:'manber',code:'BA9G',def:'The start positions of a text’s suffixes, listed in the alphabetical order of the suffixes. SuffixArray(“panamabananas$”) = 13, 5, 3, 1, 7, 9, 11, 6, 4, 2, 8, 10, 0, 12.'},
+  {id:'sa',name:'Suffix array',src:'manber',code:'BA9G',def:'The start positions of a text’s suffixes, listed in the alphabetical order of the suffixes. SuffixArray(“cocoacoconut$”) = 12, 4, 2, 0, 5, 7, 9, 3, 1, 6, 8, 11, 10.'},
   {id:'end',name:'End marker',def:'The symbol $, added once to the end of a text and sorted before every letter. It makes the endings of the text all different and marks where the text stops.'},
-  {id:'bwt',name:'Burrows–Wheeler transform',code:'BA9I',def:'Sort all cyclic rotations of Text into alphabetical order to form the Burrows–Wheeler matrix. BWT(Text) is the matrix’s last column. BWT(“panamabananas$”) = smnpbnnaaaaa$a.'},
+  {id:'bwt',name:'Burrows–Wheeler transform',code:'BA9I',def:'Sort all cyclic rotations of Text into alphabetical order to form the Burrows–Wheeler matrix. BWT(Text) is the matrix’s last column. BWT(“cocoacoconut$”) = too$aooccccun.'},
   {id:'rot',name:'Cyclic rotation',def:'A string formed by moving a suffix of Text to its front: the text read around a ring, starting from one of its letters. A text of length n has n cyclic rotations.'},
   {id:'fl',name:'First-last property',def:'The k-th occurrence of a symbol in the first column and the k-th occurrence of that symbol in the last column correspond to the same position of that symbol in Text.'},
   {id:'lf',name:'Last-to-first mapping',code:'BA9K',def:'LastToFirst(i) is the row, in the first column, of the symbol at row i of the last column. Following it from the row that begins with $ spells Text from right to left, which inverts the transform (BA9J).'},
@@ -942,8 +942,8 @@ function renderBench(){
   document.title='The Loom: workbench';
   $('.wrap').innerHTML='<header><h1><a href="./">The Loom</a>: workbench</h1></header><div class="bench">'+
     '<p>Paste a text (a $ is added at the end if it has none) and some patterns separated by spaces. The workbench shows the sorted rotations with the first, second and last columns picked out, the suffix array, and for each pattern the band after every step of backward search and where its matches start. A second text, if given, is shown beside the first with the number of leading columns the two tables share.</p>'+
-    '<label>Text<textarea id="bt" spellcheck="false">panamabananas</textarea></label>'+
-    '<label>Patterns <input type="text" id="bp" value="ana ban nab" style="width:100%"></label>'+
+    '<label>Text<textarea id="bt" spellcheck="false">cocoacoconut</textarea></label>'+
+    '<label>Patterns <input type="text" id="bp" value="coco nut xyz" style="width:100%"></label>'+
     '<label>Second text (optional) <input type="text" id="bt2" value="" style="width:100%" spellcheck="false"></label>'+
     '<p><button class="primary" id="brun">Run</button></p><div id="bout"></div></div>';
   const table=r=>'<div class="tscroll"><table><tr><th>row</th><th colspan="'+r.text.length+'">sorted rotations</th><th>suffix array</th></tr>'+

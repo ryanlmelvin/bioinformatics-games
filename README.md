@@ -7,7 +7,7 @@ The topic index follows a suggested learning path:
 - `motif-slots/`: finding motifs, from frequent words to Gibbs sampling.
 - `bridge-walker/`: genome assembly through overlap, de Bruijn, and paired de Bruijn graphs.
 - `toll-city/`: sequence alignment, from two decks of cards to global, local and overlap alignment.
-- `cho-han-night/`: hidden Markov models: the forward and Viterbi algorithms, and profile HMMs.
+- `cho-han-night/`: Loaded Dice (fair dice versus an always-seven loaded pair), hidden Markov models: the forward and Viterbi algorithms, and profile HMMs.
 - `hollow-mountain/`: evolutionary trees from distance matrices: additive phylogeny, UPGMA and neighbor joining.
 - `paint-by-k/`: clustering: farthest-first traversal, the Lloyd algorithm and hierarchical clustering.
 - `the-loom/`: read mapping with the suffix array and the Burrows–Wheeler transform.

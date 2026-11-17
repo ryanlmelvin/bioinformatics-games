@@ -10,18 +10,38 @@ const plain=x=>JSON.parse(JSON.stringify(x));
 const CODES=Array.from({length:500},(_,i)=>'CODE-'+i);
 const close=(a,b,rel=1e-6)=>assert(Math.abs(a-b)<=rel*Math.abs(b),a+' vs '+b);
 
-test('the worked ledger in the plan: cho, cho, han gives 2/3, 18/33, 174/117 and 291 / 2048',()=>{
-  assert.deepEqual(plain(X.sumLedger(['C','C','H'])),[[2,3],[18,33],[174,117]]);
-  assert.deepEqual(plain(X.nightProbability(['C','C','H'])),{num:291,den:2048});
-  close(291/2048,X.forwardProbability('CCH',X.PARLOUR));
+test('seven, seven, other ledger agrees with direct fair-dice probabilities',()=>{
+  assert.deepEqual(plain(X.sumLedger('SSO')),[[1,6],[9,114],[705,0]]);
+  assert.deepEqual(plain(X.nightProbability('SSO')),{num:705,den:6912});
+  close(705/6912,X.forwardProbability('SSO',X.PARLOUR));
 });
-
-test('property 1: the odds are exactly those of the plan, in every puzzle code',()=>{
+test('every twelve-call ledger agrees with exact integer arithmetic',()=>{
+  for(let mask=0;mask<4096;mask++){
+    const calls=Array.from({length:12},(_,i)=>mask&(1<<i)?'S':'O');
+    let f=0n,l=0n;
+    const exact=calls.map((c,t)=>{
+      const ef=c==='S'?1n:5n,el=c==='S'?6n:0n;
+      [f,l]=t?[(3n*f+l)*ef,(f+3n*l)*el]:[ef,el];
+      return [f,l];
+    });
+    X.sumLedger(calls).forEach((col,t)=>col.forEach((v,k)=>{
+      assert(Number.isSafeInteger(v));assert.equal(BigInt(v),exact[t][k]);
+    }));
+    const p=X.nightProbability(calls);
+    assert.equal(BigInt(p.num),f+l);
+    assert.equal(BigInt(p.den),2n*6n**12n*4n**11n);
+  }
+});
+test('fair dice have six seven outcomes; loaded pairs can never emit other',()=>{
+  assert.equal(X.DICE_OUTCOMES.S.length,6);assert.equal(X.DICE_OUTCOMES.O.length,30);
+  assert.equal(new Set([...X.DICE_OUTCOMES.S,...X.DICE_OUTCOMES.O].map(p=>p.join(','))).size,36);
   for(const code of CODES){
-    // the odds are constants; every code's night is scored with them
-    const n=X.nightFor(code);
-    assert.deepEqual(plain(X.ODDS),{start:[1,1],startOf:2,emit:[{C:2,H:2},{C:3,H:1}],emitOf:4,keep:3,swap:1,stepOf:4});
-    const p=X.nightProbability(n.calls);close(p.num/p.den,X.forwardProbability(n.calls.join(''),X.PARLOUR));
+    const n=X.nightFor(code);assert(n.truth.every((k,i)=>k===0||n.calls[i]==='S'));
+    assert.deepEqual(plain(X.ODDS),{start:[1,1],startOf:2,emit:[{S:1,O:5},{S:6,O:0}],emitOf:6,keep:3,swap:1,stepOf:4});
+    const r=X.rng(X.hashStr(code));for(const c of ['S','O'])for(let i=0;i<24;i++){
+      const p=X.diceFor(c,r);assert(p.every(x=>Number.isInteger(x)&&x>=1&&x<=6));assert.equal(p[0]+p[1]===7,c==='S');
+    }
+    const p=X.nightProbability(n.calls);close(p.num/p.den,X.forwardProbability(n.calls,X.PARLOUR));
   }
 });
 
@@ -37,21 +57,21 @@ test('property 2: level 3 night, the bookkeeper belief crosses one half at least
   for(const code of CODES){const n=X.nightFor(code);assert.equal(n.calls.length,12);assert.equal(n.truth.length,12);assert(X.crossings(n.calls)>=2,code);}
 });
 
-test('property 3: level 6 by-hand entries (first three columns) are whole numbers below 1000 (500 codes)',()=>{
+test('property 3: level 6 by-hand entries (first three columns) are whole numbers below 2000 (500 codes)',()=>{
   for(const code of CODES){
     const cols=X.sumLedger(X.nightFor(code).calls).slice(0,3);
-    for(const c of cols)for(const v of c){assert(Number.isInteger(v));assert(v>0&&v<1000);}
+    for(const c of cols)for(const v of c){assert(Number.isInteger(v));assert(v>=0&&v<2000);}
   }
 });
 
-test('property 4: level 7 most likely story is unique and differs from the round-by-round likelier cup (500 codes)',()=>{
+test('property 4: level 7 most likely story is unique and differs from the round-by-round likelier pair (500 codes)',()=>{
   for(const code of CODES){
-    const calls=X.vnightFor(code),b=X.bestStory(calls),L=X.likelierCups(calls),bl=X.bestLedger(calls);
+    const calls=X.vnightFor(code),b=X.bestStory(calls),L=X.likelierPairs(calls),bl=X.bestLedger(calls);
     assert(b.unique);assert(!L.includes(-1));
     assert(b.story.some((k,i)=>k!==L[i]),code);
     // every arrow the student clicks has one right answer, and the typed columns stay small
     for(const f of bl.from.slice(1))assert(!f.includes(-1));
-    for(const c of bl.cols.slice(0,3))for(const v of c)assert(Number.isInteger(v)&&v<1000);
+    for(const c of bl.cols.slice(0,3))for(const v of c)assert(Number.isInteger(v)&&v<2000);
     // unique by brute force too
     const all=[];for(let m=0;m<64;m++){const s=Array.from({length:6},(_,i)=>(m>>(5-i))&1);all.push(X.storyChances(s,calls).both);}
     assert.equal(all.filter(v=>v===b.value).length,1);

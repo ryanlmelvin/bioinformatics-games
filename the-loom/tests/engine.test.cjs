@@ -12,11 +12,11 @@ const CODES=Array.from({length:500},(_,i)=>'CODE'+i);
 /* ---------- Rosalind sample datasets ---------- */
 test('BA9G suffix array sample',()=>{
   assert.equal(E.suffixArray('AACGATAGCGGTAGA$').join(', '),'15, 14, 0, 1, 12, 6, 4, 2, 8, 13, 3, 7, 9, 10, 11, 5');
-  assert.equal(E.suffixArray('panamabananas$').join(','),'13,5,3,1,7,9,11,6,4,2,8,10,0,12');
+  assert.equal(E.suffixArray('cocoacoconut$').join(','),'12,4,2,0,5,7,9,3,1,6,8,11,10');
 });
 test('BA9I Burrows-Wheeler transform sample',()=>{
   assert.equal(E.bwt('GCGTGCCTGGTCA$'),'ACTGGCT$TGCGGC');
-  assert.equal(E.bwt('panamabananas$'),'smnpbnnaaaaa$a');
+  assert.equal(E.bwt('cocoacoconut$'),'too$aooccccun');
 });
 test('BA9J inverse transform sample',()=>{assert.equal(E.inverseBwt('TTCCTAACG$A'),'TACATCACGT$');});
 test('BA9K last-to-first sample',()=>{assert.equal(E.lastToFirst('T$GACCA')[3],1);});
@@ -38,8 +38,8 @@ test('BA9O approximate matching sample, and seeds agree with brute force',()=>{
     for(const d of [0,1,2])assert.deepEqual(plain(E.approxOccurrences(t,p,d)),plain(E.approxBrute(t,p,d)));
   }
 });
-test('BA9Q partial suffix array sample',()=>{
-  assert.deepEqual(plain(E.partialSuffixArray('PANAMABANANAS$',5)),[[1,5],[11,10],[12,0]]);
+test('BA9Q partial suffix array example',()=>{
+  assert.deepEqual(plain(E.partialSuffixArray('COCOACOCONUT$',5)),[[3,0],[4,5],[12,10]]);
 });
 
 /* ---------- the generator must guarantee (brief 9.5) ---------- */
@@ -143,9 +143,9 @@ test('puzzles are reproducible and a new variant changes them',()=>{
   assert.notDeepEqual(plain(E.makeLevel('SAME',8,0)),plain(E.makeLevel('SAME',8,1)));
 });
 test('workbench report: columns, suffix array, bands and positions',()=>{
-  const r=E.benchReport('panamabananas',['ana','ban','xyz']);
-  assert.equal(r.L,'smnpbnnaaaaa$a');assert.equal(r.F,'$aaaaaabmnnnps');assert.equal(r.rows.length,14);
-  assert.deepEqual(plain(r.patterns[0].positions),[1,7,9]);assert.equal(r.patterns[0].count,3);
+  const r=E.benchReport('cocoacoconut',['coco','nut','xyz']);
+  assert.equal(r.L,'too$aooccccun');assert.equal(r.F,'$accccnooootu');assert.equal(r.rows.length,13);
+  assert.deepEqual(plain(r.patterns[0].positions),[0,5]);assert.equal(r.patterns[0].count,2);
   assert.equal(r.patterns[2].count,0);
   // problem A of the kit: these pairs share their first two columns
   const cols=(t,k)=>E.sortedRotations(t).map(x=>x.rot.slice(0,k)).join('|');
