@@ -1437,7 +1437,7 @@ function renderPanel(){
   (M.src||[]).forEach(s=>h+=srcCard(s));
   const missing=VOCAB.filter(x=>!S.badges.includes(x.id)).length;
   if(cur.L.id<LEVELS.length)h+='<button class="primary advance" id="next">Next level →</button>';
-  else h+='<p>'+(missing?plural(missing,'vocabulary term')+' still hidden. Finish the levels without a ✓ to earn them.':'You have earned every term. The field guide below lists each one with its source.')+'</p>';
+  else h+='<p>'+(missing?plural(missing,'vocabulary term')+' still hidden. Finish the levels without a ✓ to earn them.':'You have earned every term.')+'</p>';
   $('#panel').innerHTML=h+'</div>';
 }
 function renderHeader(){

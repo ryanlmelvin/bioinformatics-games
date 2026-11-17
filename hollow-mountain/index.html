@@ -860,7 +860,7 @@ const BLOCKS={
   clock:{src:['zuck'],html:()=>'Steady digging is the '+term('clock','molecular clock')+': if a sequence changes at a constant rate, every present-day leaf is equally far from the common ancestor. That first chamber is the root, and a tree with one is a '+term('rooted','rooted tree')+'. Joining the closest pair under a node at half their distance, and averaging their rows, is '+term('upgma','UPGMA')+'. Its map reproduces this chart exactly.'},
   nj:{src:['saitou'],html:()=>'The real mountain has no first chamber to start from: it is an '+term('unrooted','unrooted tree')+'. Two leaves that share an internal node are '+term('neighbors','neighbors')+'. The closest pair here were not neighbors; the smallest entry of the discounted chart, the '+term('njm','neighbor-joining matrix')+', was. Joining that pair, replacing it by its internal node, and repeating is '+term('nj','neighbor joining')+'. The 1987 paper did not prove this guarantee, and neither does the game. The proof came later.'},
   join5:{html:()=>'On an exact chart, neighbor joining rebuilt the mountain. On level 6’s chart, where no tree fits, it still returned a tree, although the tree does not reproduce every rope reading. Real data resemble level 6, which is why neighbor joining is used in practice and additive phylogeny is not.'},
-  nni:{html:()=>'Re-hanging two of the four groups across one inner tunnel is a '+term('nni','nearest neighbor interchange')+'. Each inner tunnel gives a tree two nearest neighbors. This level compares those alternative shapes using the distance chart.'},
+  nni:{html:()=>'Re-hanging two of the four groups across one inner tunnel is a '+term('nni','nearest neighbor interchange')+'. Each inner tunnel gives a tree two nearest neighbors.'},
   finale:{src:['guan','li'],html:()=>'In this illustrative chart, the human viruses’ closest relative is the civet virus, and the bat viruses branch off further in. That is the shape of the real finding: in 2003 viruses almost identical to the human SARS virus were found in palm civets at a market in Guangdong, and in 2005 bats were shown to carry a wider family of related viruses, with the human and civet viruses nested inside it. The civet was the go-between; bats were the reservoir.'}
 };
 
@@ -1315,7 +1315,7 @@ function renderPanel(){
   cur.blocks.forEach(id=>{const B=BLOCKS[id];h+='<div class="called"><p>'+(typeof B.html==='function'?B.html():B.html)+'</p></div>';(B.src||[]).forEach(s=>h+=srcCard(s));});
   const missing=VOCAB.filter(x=>!knows(x.id)).length;
   if(cur.L.id<LEVELS.length)h+='<button class="primary advance" id="next">Next level →</button>';
-  else h+='<p>'+(missing?plural(missing,'vocabulary term')+' still hidden: replay the levels whose dots are open.':'You have earned every term. The field guide below lists each one with its source.')+'</p>';
+  else h+='<p>'+(missing?plural(missing,'vocabulary term')+' still hidden: replay the levels whose dots are open.':'You have earned every term.')+'</p>';
   $('#panel').innerHTML=h+'</div>';
 }
 function renderHeader(){

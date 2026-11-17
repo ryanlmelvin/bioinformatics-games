@@ -834,7 +834,7 @@ function renderPanel(){
   const missing=VOCAB.filter(x=>!S.badges.includes(x.id)).length;
   if(cur.L.id<LEVELS.length)h+='<button class="primary advance" id="next">Next level →</button>';
   else h+='<p>'+(missing?missing+' vocabulary term'+(missing===1?'':'s')+' still hidden. Finish the levels without a ✓ to earn them.'
-     :'You have earned every term. The field guide below lists each one with its source.')+'</p>';
+     :'You have earned every term.')+'</p>';
   $('#panel').innerHTML=h+'</div>';
 }
 function renderHeader(){
@@ -1122,7 +1122,7 @@ MODES.wall={
   },
   skip(){return cur.w.on100?'Switch the machine off: this is hopeless':'';},
   onSkip(){clearInterval(cur.timer);cur.headline='Giving up is the right answer';log('gave_up',{count:cur.w.count});complete([],null,'The machine stops. The bookkeeper looks up from her page.');},
-  reveal(){return [{html:'Every extra round doubles the number of stories, so adding them one by one is hopeless long before a real night ends. The bookkeeper gets the same total for the twelve-round night without listing any story.'}];}
+  reveal(){return [{html:'Every extra round doubles the number of stories, so adding them one by one is infeasible for a real night.'}];}
 };
 ACT.run=n=>{
   const w=cur.w;n=+n;if(cur.done)return;
@@ -1295,7 +1295,7 @@ MODES.family={
   },
   reveal(){
     const right=cur.order.indexOf('relative');
-    return [{html:'Newcomer '+AB[right]+' is family. '+(cur.pick===right?'You picked it.':'You picked the other one, and no wonder:')+' nearly every letter the stranger has, some member has in that column too. You cannot yet say why one is family and the other is not.'},
+    return [{html:'Newcomer '+AB[right]+' is family. '+(cur.pick===right?'You picked it.':'You picked the other one, and no wonder:')+' nearly every letter the stranger has, some member has in that column too.'},
       {html:'Proteins descended from one ancestor form a '+term('family','protein family')+'. Rows written one above another, with dashes so that related letters share a column, are a '+term('msa','multiple alignment')+'.'}];
   }
 };

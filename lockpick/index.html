@@ -416,7 +416,7 @@ const FINDS=[
   text:'Walk until you reach a dead end, go back to a node with a light still lit, and stitch in another cycle. Repeat until every light is out. The method visits each edge once, so it scales to a wall of a billion lockers.',
   ros:'BA3F, with this as the method',clue:'It is in how you get out of a dead end.',vis:t=>stitchHTML(t)},
  {id:'euler',name:'Euler’s theorem',lead:'That’s <b>Euler’s theorem</b>.',
-  text:'You began in the right place before trying anything. Every node here is <b>balanced</b>, with as many edges in as out, except two: the walk has to start at the one with an extra edge out and end at the one with an extra edge in. A walk like that is an <b>Eulerian path</b>.',
+  text:'Every node here is <b>balanced</b>, with as many edges in as out, except two: the walk has to start at the one with an extra edge out and end at the one with an extra edge in. A walk like that is an <b>Eulerian path</b>.',
   ros:'BA3G, Find an Eulerian Path in a Graph',clue:'It is on a fresh strip in part 7, and it depends on your very first presses.',vis:()=>balanceHTML()},
  {id:'recon',name:'Genome assembly',lead:'That’s <b>genome assembly</b>.',
   text:'You used every scrap once, each overlapping the next. The textbook calls this the String Reconstruction Problem, and real assemblers solve it the way you just did: build the de Bruijn graph of the scraps, then find a walk that uses every edge once.',

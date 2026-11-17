@@ -771,7 +771,7 @@ function renderPanel(){
   });
   const missing=VOCAB.filter(x=>!S.badges.includes(x.id)).length;
   if(cur.L.id<LEVELS.length)h+='<button class="primary advance" id="next">Next level →</button>';
-  else h+='<p>'+(missing?plural(missing,'vocabulary term')+' still hidden. Finish the levels without a ✓ to earn them.':'You have earned every term. The field guide below lists each one with its source.')+'</p>';
+  else h+='<p>'+(missing?plural(missing,'vocabulary term')+' still hidden. Finish the levels without a ✓ to earn them.':'You have earned every term.')+'</p>';
   $('#panel').innerHTML=h+'</div>';
 }
 
@@ -934,7 +934,7 @@ LV[1]={
 BLOCKS.mapping={html:()=>{const s=cur.st.scan,per=s/(10*195);
   return 'Ten reads against 200 letters: '+s.toLocaleString('en-US')+' letter comparisons for a scanner, about '+per.toFixed(2)+' per read per letter of reference. '+
   'A human genome has three billion letters and a single run of a sequencing machine gives hundreds of millions of reads. At this rate a hundred million reads would cost about '+sci(per*3e9*1e8)+' comparisons. '+
-  '<b>Finding where every read came from is called '+term('mapping','read mapping')+'.</b> The rest of this game prepares the reference once, so that each read can be found without scanning it.';}};
+  '<b>Finding where every read came from is called '+term('mapping','read mapping')+'.</b>';}};
 /*@end l1.js*/
 /*@bench.js*/
 /* ---------- the workbench (?bench=1): plain, saves nothing ---------- */
@@ -1105,7 +1105,7 @@ LV[3]={
 };
 BLOCKS.bwt={html:()=>'The sign that marks the end of the text is the '+term('end','end marker')+', written $. '+
   '<b>The last column of the sorted strips is the '+term('bwt','Burrows–Wheeler transform')+' of the text.</b> Burrows and Wheeler invented it to make files smaller: it gathers repeated letters into runs, as the meter showed. '+
-  'It costs one column: 0.75 GB for a human genome, against 12 GB for the start positions alone. Whether that column holds everything has not yet been shown.'};
+  'It costs one column: 0.75 GB for a human genome, against 12 GB for the start positions alone.'};
 
 /* ---------- level 4: cut the ring, sort the strips, read the last column ---------- */
 function ringSvg(t){
@@ -1218,7 +1218,7 @@ LV[6]={
       if(st.left.includes(i))return;
       const k=st.left.length;
       if(L[i]===F[k]){snap();st.left.push(i);st.bad=null;log('put',{r:i,row:k});
-        if(st.left.length===n){st.phase='tie';say('The left beam is the right beam’s letters, sorted: every letter of the word sits once on each beam, and the strips were in order. Now the threads.','good');}else say('');}
+        if(st.left.length===n){st.phase='tie';say('The left beam is the right beam’s letters, sorted: every letter of the word sits once on each beam, and the strips were in order.','good');}else say('');}
       else{st.bad=i;log('put_reject',{r:i,row:k});say('Not '+(L[i]==='$'?'the $':L[i])+' in row '+k+': the strips were sorted, so their first letters ran in order down the left beam, and a letter that sorts earlier is still waiting on the right.','warn');}
       return render();
     }
@@ -1245,7 +1245,7 @@ LV[6]={
   }
 };
 BLOCKS.lf={html:()=>'You had only the last column of the table. Sorting that column gave the first; the rule that same-letter threads never cross told you which thread goes where; and each thread took you one letter to the left in the word. '+
-  '<b>Following a thread from the right beam to the left is the '+term('lf','last-to-first mapping')+'.</b> The claim from level 3 holds for the text. One column was enough to recover it.'};
+  '<b>Following a thread from the right beam to the left is the '+term('lf','last-to-first mapping')+'.</b>'};
 
 /* ---------- level 7: two fingers ---------- */
 LV[7]={
@@ -1488,7 +1488,7 @@ LV[11]={
     snap();st.tries.push(i);log('column',{i,variant:i===x.v});
     if(i===x.v){say('Every one of the '+over.length+' reads over column '+i+' reads '+x.alt+' where the reference has '+x.ref[i]+'.','good');
       complete(sweepTerms(),'patient');return render();}
-    if(diff.length)say('Only '+numWord(diff.length)+' of the '+numWord(over.length)+' reads over column '+i+' differs from the reference; the others agree with it. One read, one misread letter.','warn');
+    if(diff.length)say('Only '+numWord(diff.length)+' of the '+numWord(over.length)+' reads over column '+i+' differs from the reference; the others agree with it.','warn');
     else say('All '+numWord(over.length)+' reads over column '+i+' agree with the reference.');
     render();
   }
