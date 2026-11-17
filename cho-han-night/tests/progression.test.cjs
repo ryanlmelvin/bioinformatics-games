@@ -91,7 +91,34 @@ test('level 5 is a wall: counting a 100-round night never finishes; only giving 
 test('level 6: a wrong entry is refused and a later column cannot be filled first',()=>{
   const ui=boot('?debug=1&level=6&seed=W6'),a=ui.api,c=a.state().cols;
   a.cell('c10',String(c[1][0]));assert(!a.state().lg.ok.c10);
+  assert.match(a.state().msg.text,/Fill both entries in round 1 first/);
   a.cell('c00',String(c[0][0]+1));assert.equal(a.state().lg.bad,'c00');
+  assert.match(a.state().msg.text,/Round 1, fair pair: calculate 1 × [15]/);
+});
+
+test('level 6: the worked example follows the current night and leads into a solvable three-column ledger',()=>{
+  const cases=[
+    {seed:'EXAMPLE0',calls:'OOO',entries:[[5,0],[75,0],[1125,0]],example:['1 × 5 = 5','1 × 0 = 0','(5 × 3 + 0 × 1) × 5 = 75']},
+    {seed:'EXAMPLE3',calls:'OOS',entries:[[5,0],[75,0],[225,450]],example:['1 × 5 = 5','1 × 0 = 0','(5 × 3 + 0 × 1) × 5 = 75']},
+    {seed:'EXAMPLE4',calls:'OSS',entries:[[5,0],[15,30],[75,630]],example:['1 × 5 = 5','1 × 0 = 0','(5 × 3 + 0 × 1) × 1 = 15']},
+    {seed:'EXAMPLE7',calls:'SSO',entries:[[1,6],[9,114],[705,0]],example:['1 × 1 = 1','1 × 6 = 6','(1 × 3 + 6 × 1) × 1 = 9']}
+  ];
+  for(const c of cases){
+    const ui=boot('?debug=1&level=6&seed='+c.seed),a=ui.api,work=ui.el('#work').innerHTML;
+    assert.equal(a.state().N.calls.slice(0,3).join(''),c.calls);
+    const example=work.match(/<section class="ledger-example"[\s\S]*?<\/section>/)[0];
+    assert.deepEqual([...example.matchAll(/class="frac">([^<]+)</g)].map(m=>m[1]),c.example);
+    assert.equal((work.match(/data-cell=/g)||[]).length,6);
+    assert(!work.includes('class="lhead">round 4'));
+    assert.match(work,/aria-label="Round 1, fair pair weight"/);
+    for(let t=0;t<3;t++)for(let k=0;k<2;k++)a.cell('c'+t+k,String(c.entries[t][k]));
+    assert(a.state().done,c.seed+' completes using the hand-calculated entries');
+    assert(a.earned().includes('forward'));
+    assert(ui.el('#work').innerHTML.includes('class="lhead">round 12'));
+    assert(!ui.el('#work').innerHTML.includes('ledger-example'));
+    a.loadLevel(6);
+    assert(ui.el('#work').innerHTML.includes('ledger-example'),'restarting restores the example');
+  }
 });
 
 test('level 7 trap: following the round-by-round likelier pairs back is refused; the kept ways lead elsewhere',()=>{

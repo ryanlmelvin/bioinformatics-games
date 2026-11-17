@@ -128,6 +128,10 @@ button.cell{font:inherit;cursor:pointer}
 .lfoot{font-size:.8rem;text-align:center;font-weight:700}
 .prob{margin-top:8px;font-size:.95rem}
 .frac{font-family:ui-monospace,Menlo,monospace;font-weight:700}
+.ledger-example{margin-bottom:14px}
+.ledger-example h3{font-size:1rem;margin:0 0 6px}
+.ledger-example ol{margin:8px 0;padding-left:22px}
+.ledger-example li+li{margin-top:8px}
 
 /* story builder */
 .story{display:flex;gap:8px;flex-wrap:wrap}
@@ -645,7 +649,7 @@ const LEVELS=[
   {id:5,mode:'wall',title:'Too many stories',
    brief:'Your story was one of 16 for four rounds. To know how likely the calls were, whatever the dealer did, you would add the chances of every story. The table’s counting machine does this one story at a time.'},
   {id:6,mode:'ledger',title:'The bookkeeper’s ledger',
-   brief:'The bookkeeper keeps a page with a row for each pair and a column for each call. Each entry adds the two ways in, from either pair one round earlier, times the chance of keeping or swapping, and then multiplies by this pair’s chance of the call. Fill in the first three columns.'},
+   brief:'Fill the fair and loaded rows for rounds 1–3, one column at a time. Each entry adds up the weights of all stories that match the calls so far and end with that pair. Enter whole numbers and press Enter; the bookkeeper finishes the remaining rounds and converts the totals to probabilities.'},
   {id:7,mode:'best',title:'The best story',
    brief:'A different night, six calls. This time the bookkeeper wants the single most likely story, not the total. Same page, one change: keep only the larger of the two ways in. Click the way you keep, then write the entry. After three columns you pick the ways and the bookkeeper writes. Then follow your kept ways back from the end.'},
   {id:8,mode:'rooms',title:'Rooms',
@@ -1042,7 +1046,7 @@ ACT.lock=()=>{
 ACT.bead=v=>{cur.s.bead=+v;};
 
 /* ================= Level 4: one story ================= */
-function nIn(id,val,ok,bad,w){return '<input class="smallin'+(ok?' ok':bad?' bad':'')+'" id="'+id+'" data-cell="'+id+'" inputmode="numeric" autocomplete="off" '+(w?'style="width:'+w+'em" ':'')+'value="'+(val===undefined?'':esc(val))+'"'+(ok?' disabled':'')+' aria-label="'+id+'">';}
+function nIn(id,val,ok,bad,w,label){return '<input class="smallin'+(ok?' ok':bad?' bad':'')+'" id="'+id+'" data-cell="'+id+'" inputmode="numeric" autocomplete="off" '+(w?'style="width:'+w+'em" ':'')+'value="'+(val===undefined?'':esc(val))+'"'+(ok?' disabled':'')+' aria-label="'+esc(label||id)+'">';}
 MODES.story={
   init(){cur.calls=night().calls.slice(0,4);cur.st={story:[null,null,null,null],v:{},ok:{},bad:null};say('Click each round’s pair to make up a story.');},
   rule(){return 'One story · steps out of 4 · calls out of 6';},
@@ -1171,20 +1175,34 @@ function waysHtml(t,k,mode,state){
 const emitHtml=(k,c)=>'<div class="emit">× '+ODDS.emit[k][c]+' for '+CALL[c]+'</div>';
 
 /* ================= Level 6: the summing ledger ================= */
+function ledgerCalculation(calls,cols,t,k){
+  const incoming=t===0?String(ODDS.start[k]):'('+cols[t-1][0]+' × '+trans(0,k)+' + '+cols[t-1][1]+' × '+trans(1,k)+')';
+  return incoming+' × '+ODDS.emit[k][calls[t]];
+}
+function ledgerExample(calls,cols){
+  const equation=(t,k)=>'<span class="frac">'+ledgerCalculation(calls,cols,t,k)+' = '+cols[t][k]+'</span>';
+  return '<section class="ledger-example" aria-label="Worked example"><h3>Worked example for this night</h3>'+
+    '<p>Use whole-number weights to avoid fractions: start at <b>1</b> for either pair (1/2 each), then <b>×3 to keep</b> the pair or <b>×1 to swap</b> (out of 4). The call multiplier printed in each box is out of 6: for example, a chance of 5/6 becomes ×5.</p>'+
+    '<ol><li><b>Round 1 — call “'+CALL[calls[0]]+'”.</b> Multiply the start weight by each pair’s call multiplier.'+
+    '<div class="eq"><span>fair: '+equation(0,0)+'</span><span>loaded: '+equation(0,1)+'</span></div></li>'+
+    '<li><b>Round 2, fair row — call “'+CALL[calls[1]]+'”.</b> Use both entries from round 1. Keeping the fair pair contributes '+cols[0][0]+' × '+ODDS.keep+'; switching from the loaded pair contributes '+cols[0][1]+' × '+ODDS.swap+'. Add those contributions, then multiply by the fair pair’s call multiplier.'+
+    '<div class="eq">'+equation(1,0)+'</div></li></ol>'+
+    '<p>For the loaded row, use <b>fair ×1 + loaded ×3</b>, then multiply by the loaded pair’s call multiplier. For round 3, use the entries from round 2.</p></section>';
+}
 MODES.ledger={
-  init(){cur.N=night();cur.cols=sumLedger(cur.N.calls);cur.lg={v:{},ok:{},bad:null,lit:null};say('Start with round 1: type each entry and press Enter.');},
+  init(){cur.N=night();cur.cols=sumLedger(cur.N.calls);cur.lg={v:{},ok:{},bad:null,lit:null};say('');},
   rule(){return 'Each entry: add the ways in, then multiply by the weight for that call';},
-  scene(){return table({keeper:true,card:CARD_CALLS.concat(CARD_SWAP),pairs:[{x:380,kind:'hidden'}],cloth:true});},
+  scene(){return '';},
   work(){
     const lg=cur.lg,N=cur.N,cols=cur.cols,done=cur.done;
     const cell=(t,k)=>{
       const id='c'+t+k;
-      if(t<3)return '<div class="cell '+CUPS[k]+'">'+waysHtml(t,k,'show',lg)+(lg.ok[id]?'<div class="v">'+cols[t][k]+'</div>':nIn(id,lg.v[id],false,lg.bad===id,5))+emitHtml(k,N.calls[t])+'</div>';
+      if(t<3)return '<div class="cell '+CUPS[k]+'">'+waysHtml(t,k,'show',lg)+(lg.ok[id]?'<div class="v">'+cols[t][k]+'</div>':nIn(id,lg.v[id],false,lg.bad===id,5,'Round '+(t+1)+', '+CUP[k]+' weight'))+emitHtml(k,N.calls[t])+'</div>';
       return '<div class="cell '+CUPS[k]+'">'+waysHtml(t,k,'show')+'<div class="v auto">'+(done?fmt(cols[t][k]):'…')+'</div>'+emitHtml(k,N.calls[t])+'</div>';
     };
     let extra='';
     if(done)extra='<span class="lrow">loaded share</span>'+cols.map(c=>'<span class="share">'+Math.round(100*c[1]/(c[0]+c[1]))+'%</span>').join('')+pairRow('truth',N.truth);
-    let h=ledgerGrid(N.calls,cell,extra);
+    let h=(done?'':ledgerExample(N.calls,cols))+ledgerGrid(done?N.calls:N.calls.slice(0,3),cell,extra);
     if(done){
       const p3=cols[2][0]+cols[2][1],tot=cols[11][0]+cols[11][1],d=ledgerDenominator(12);
       h+='<div class="prob">After three calls the column adds to <b class="frac">'+p3+'</b>. Divide by 2 for the start, by 6 for each of the 3 calls and by 4 for each of the 2 steps between rounds: <b class="frac">'+p3+' / '+fmt(ledgerDenominator(3))+' = '+(p3/ledgerDenominator(3)).toFixed(4)+'</b>, the chance of those three calls whatever the dealer did.</div>'+
@@ -1200,13 +1218,13 @@ function checkLedger(id,val){
   const lg=cur.lg,t=+id[1],k=+id[2];if(lg.ok[id])return;
   lg.v[id]=val;const n=Number(val);if(String(val).trim()===''||!Number.isInteger(n))return;
   const order=['c00','c01','c10','c11','c20','c21'];
-  if(t>0&&!lg.ok['c'+(t-1)+'0']||t>0&&!lg.ok['c'+(t-1)+'1']){say('This entry is built from the column before it. Fill that first.','warn');jolt(id);return;}
+  if(t>0&&!lg.ok['c'+(t-1)+'0']||t>0&&!lg.ok['c'+(t-1)+'1']){say('Fill both entries in round '+t+' first; round '+(t+1)+' uses those two numbers.','warn');jolt(id);return;}
   if(n===cur.cols[t][k]){lg.ok[id]=true;lg.bad=null;lg.lit=null;log('cell',{id,ok:true});
     const next=order.find(x=>!lg.ok[x]);
     if(!next){complete(['forward'],null,'The bookkeeper takes it from here and fills the rest of the night.');return;}
     cur.focus=next;say('Written in.');
   }else{lg.bad=id;lg.lit=t+','+k;log('cell',{id,ok:false,val:n});jolt(id);cur.focus=id;
-    say('The ink will not take '+n+'. Add the weighted ways into this entry, then multiply by this pair’s weight for the observed call.','warn');}
+    say('Round '+(t+1)+', '+CUP[k]+': calculate '+ledgerCalculation(cur.N.calls,cur.cols,t,k)+'. '+(t===0?'Start at 1, then apply the call multiplier.':'Use both entries from round '+t+'; add the two products before the final multiplication.'),'warn');}
 }
 
 /* ================= Level 7: the best story ================= */
