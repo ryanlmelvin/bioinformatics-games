@@ -139,7 +139,7 @@ test('level 10: the whole read finds nothing, and the decoy hit cannot be accept
   const ui=boot('?debug=1&level=10&seed=T10'),api=ui.api,x=api.state().inst;
   api.act('whole');assert.equal(api.state().st.phase,'cut');api.act('cut');
   const decoy=x.hits.find(h=>h.start!==x.at);api.act('fit',{s:decoy.start});
-  assert.equal(api.state().st.judged[decoy.start],undefined);assert.match(api.state().msg.text,/letters differ/);
+  assert.equal(api.state().st.judged[decoy.start],undefined);assert.match(api.state().msg.text,/nucleotides differ/);
 });
 test('plural of match and the level 11 brief agree with the screen',()=>{
   const ui=boot('?debug=1&level=7&seed=PL');solve(ui.api,7);assert.doesNotMatch(ui.el('#stage').innerHTML,/matchs/);

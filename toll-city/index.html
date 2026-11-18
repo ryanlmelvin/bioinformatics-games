@@ -583,7 +583,7 @@ const RM=()=>{try{return matchMedia('(prefers-reduced-motion: reduce)').matches;
 
 const LEVELS=[
   {id:1,mode:'strands',inst:'decks',title:'Two strands',
-   brief:'Two short DNA sequences, like the same gene in two species (these two are invented for the puzzle). Letters have been inserted and deleted over time, so matching letters no longer line up. Line up as many matching letters as you can, then lock it in.'},
+   brief:'Two short homologous DNA sequences, such as orthologous genes in two species (these sequences are synthetic). Nucleotide insertions and deletions have accumulated over time, so corresponding positions no longer line up. Line up as many matching nucleotides as you can, then lock it in.'},
   {id:2,mode:'decks',inst:'decks',title:'Two decks',
    brief:'The same two sequences as two decks of cards. The outlined card in each deck is the one in play. Each turn, take both outlined cards (a point if they show the same letter) or throw away the outlined card of one deck. A card that is taken or thrown away does not come back. Score as many points as you can.'},
   {id:3,mode:'table',inst:'decks',title:'Two games, one table',
@@ -599,9 +599,9 @@ const LEVELS=[
   {id:8,mode:'tolls',inst:'decks',title:'Tolls',
    brief:'The same city, but now the streets charge. A gold diagonal (two matching cards) still pays +1. A diagonal between two different cards costs 1, and every south or east street costs 2.'},
   {id:9,mode:'taxi',inst:'local',title:'Free taxi',
-   brief:'Two longer strands, mostly unrelated, priced with the same tolls. The best route from corner to corner scores below zero. Now a free taxi can drop the tourist at any corner and pick them up again at any corner further on. Where should they get on and off?'},
+   brief:'Two longer DNA sequences, mostly unrelated, priced with the same tolls. The best route from corner to corner scores below zero. Now a free taxi can drop the tourist at any corner and pick them up again at any corner further on. Where should they get on and off?'},
   {id:10,mode:'overlap',inst:'overlap',title:'Overlap',
-   brief:'Two sequencing reads, the kind you assembled in Bridge Walker. The end of read 1 should be the start of read 2, but one letter was misread. Here the taxi is free only down the left edge (skipping the start of read 1) and off the bottom edge (skipping the rest of read 2).'},
+   brief:'Two sequencing reads, the kind you assembled in Bridge Walker. The end of read 1 should be the start of read 2, but one nucleotide was miscalled during sequencing. Here the taxi is free only down the left edge (skipping the start of read 1) and off the bottom edge (skipping the rest of read 2).'},
   {id:11,mode:'code',inst:null,title:'The code breakers',
    brief:'Two real enzymes from two species of soil bacteria. Each one builds an antibiotic, and each picks out the same amino acid, phenylalanine, to build it from. Pencil their city with a real scoring table and follow the arrows.'}
 ];
@@ -615,16 +615,16 @@ const SRC={
   henikoff:{cite:'Henikoff & Henikoff, 1992',title:'Amino acid substitution matrices from protein blocks',where:'PNAS 89, 10915–10919',url:'https://doi.org/10.1073/pnas.89.22.10915',
     look:'The abstract says the scores were counted from about 2,000 blocks of aligned segments from more than 500 groups of related proteins, rather than from a model of evolutionary rates. These are the BLOSUM tables; BLOSUM62 is one of them.'},
   sw:{cite:'Smith & Waterman, 1981',title:'Identification of common molecular subsequences',where:'Journal of Molecular Biology 147, 195–197',url:'https://doi.org/10.1016/0022-2836(81)90087-5',
-    look:'Three pages. The title describes what the free taxi does: it finds the stretch two sequences share when the rest differs.'},
+    look:'Three pages. The title describes what the free taxi does: it finds a similar region within two sequences whose remaining regions differ.'},
   stach:{cite:'Stachelhaus, Mootz & Marahiel, 1999',title:'The specificity-conferring code of adenylation domains in nonribosomal peptide synthetases',where:'Chemistry & Biology 6, 493–505',url:'https://doi.org/10.1016/S1074-5521(99)80082-9',
     look:'The abstract describes comparing the residues that line the phenylalanine pocket of one domain with the matching positions in other domains, and turning that comparison into rules that predict, from sequence alone, which amino acid a domain picks.'}
 };
 
 /* Vocabulary, in the order it is earned. */
 const VOCAB=[
-  {id:'alignment',name:'Alignment',def:'An alignment of two strings is a two-row table: each string is written in order in one row, with space symbols (–) inserted so that no column holds two spaces. A column can be a match, a mismatch or an indel.'},
-  {id:'indel',name:'Indel',def:'An insertion or deletion: an alignment column with a letter in one row and a space in the other. Read one way a letter was inserted; read the other way it was deleted.'},
-  {id:'lcs',name:'Longest common subsequence',code:'BA5C',def:'A longest string whose letters appear in order, though not necessarily side by side, in both strings. Its length is the largest number of matching columns any alignment of the two strings can have.'},
+  {id:'alignment',name:'Alignment',def:'An alignment of two strings is a two-row table: each string is written in order in one row, with gap symbols (–) inserted so that no column holds two gaps. A column can be a match, a mismatch or an indel.'},
+  {id:'indel',name:'Indel',def:'An insertion or deletion: an alignment column with a sequence symbol in one row and a gap in the other. Read one way a nucleotide or amino acid residue was inserted; read the other way it was deleted.'},
+  {id:'lcs',name:'Longest common subsequence',code:'BA5C',def:'A longest string whose symbols appear in order, though not necessarily contiguously, in both strings. Its length is the largest number of matching columns any alignment of the two strings can have.'},
   {id:'graph',name:'Alignment graph',def:'For strings v and w: a node (i, j) for every 0 ≤ i ≤ |v| and 0 ≤ j ≤ |w|, with directed edges south (i, j)→(i+1, j), east (i, j)→(i, j+1) and diagonal (i, j)→(i+1, j+1). Every alignment of v and w is a path from (0, 0) to (|v|, |w|).'},
   {id:'path',name:'Path',def:'A sequence of nodes in which each node is joined to the next by an edge, followed in the edge’s direction.'},
   {id:'mtp',name:'Manhattan Tourist Problem',code:'BA5B',def:'Find a path of largest total weight from the source (0, 0) to the sink (n, m) of a rectangular grid whose edges run only south and east, each weighted by the number of attractions along it.'},
@@ -974,8 +974,8 @@ function strandTidy(c){
   while(c.b.length&&c.b[c.b.length-1]==='-')c.b.pop();
 }
 MODES.strands={
-  init(c){c.a=[...c.inst.v];c.b=[...c.inst.w];c.hist=[];say('Click a letter to put a gap before it. Click a gap to remove it.');},
-  rule:()=>'Letters keep their order · a gap pushes a letter to the right',
+  init(c){c.a=[...c.inst.v];c.b=[...c.inst.w];c.hist=[];say('Click a nucleotide to insert a gap before it. Click a gap to remove it.');},
+  rule:()=>'Nucleotides keep their order · a gap shifts the sequence to the right',
   view(c){
     const cols=strandCols(c),row=(arr,r)=>'<div class="strand">'+cols.map(([x,y],k)=>{
       const ch=r?y:x,hit=x&&y&&x!=='-'&&x===y;
@@ -984,7 +984,7 @@ MODES.strands={
       return '<button class="let'+(hit?' hit':'')+'" data-act="gap" data-a="'+r+'" data-b="'+k+'" aria-label="'+ch+', click to push a gap in front">'+letters(ch)+'</button>';
     }).join('')+'</div>';
     return '<div class="strands"><div class="strandlab">Strand 1</div>'+row(c.a,0)+row(c.b,1)+'<div class="strandlab">Strand 2</div></div>'+
-      '<div class="tally">Matching letters lined up: '+strandHits(c)+'</div>';
+      '<div class="tally">Matching nucleotides lined up: '+strandHits(c)+'</div>';
   },
   act(c,type,r,k){
     if(c.done)return;
@@ -993,19 +993,19 @@ MODES.strands={
       c.hist.push(JSON.stringify([c.a,c.b]));
       if(arr[k]==='-'){arr.splice(k,1);log('gap_remove',{row:r+1,at:k});}
       else{if(arr.length>=c.inst.v.length+c.inst.w.length)return;arr.splice(k,0,'-');log('gap_add',{row:r+1,at:k});}
-      strandTidy(c);say(strandHits(c)+' matching letters lined up.');render();
+      strandTidy(c);say(strandHits(c)+' matching nucleotides lined up.');render();
     }else if(type==='lock'){
       const k=strandHits(c),par=c.inst.par,top=strandCols(c).map(([x])=>x===null?'-':x).join(''),bot=strandCols(c).map(([,y])=>y===null?'-':y).join('');
       log('lock',{hits:k,top,bottom:bot});
-      say(k<par?'You lined up '+k+'. A better line-up exists: '+par+' matching letters are possible.':'You lined up '+k+'. Nobody can line up more.',k<par?'warn':'good');
+      say(k<par?'You lined up '+k+'. A better line-up exists: '+par+' matching nucleotides are possible.':'You lined up '+k+'. Nobody can line up more.',k<par?'warn':'good');
       c.final={top,bot,k};
       complete(['alignment','indel'],[
-        {html:()=>alignTiles(top,bot,{label:'Your line-up'})+'What you built is an '+term('alignment','alignment')+': the two strands one above the other, each kept in order, with gaps (–) put in so that letters stand in columns. A column with a gap marks a letter that one strand gained or the other lost: an '+term('indel','indel')+' (insertion or deletion).'},
+        {html:()=>alignTiles(top,bot,{label:'Your line-up'})+'What you built is an '+term('alignment','alignment')+': the two sequences in rows, preserving nucleotide order, with gaps (–) inserted to place nucleotides in columns. A column with a gap represents a nucleotide insertion or deletion: an '+term('indel','indel')+' (insertion or deletion).'},
         {html:()=>k<par?'You found '+k+' matching columns. <b>'+par+' is possible.</b>':'You found the most matching columns possible, '+par+'.'}
       ],{hits:k,par});
     }
   },
-  undo(c){if(!c.hist.length)return;[c.a,c.b]=JSON.parse(c.hist.pop());log('undo');say(strandHits(c)+' matching letters lined up.');},
+  undo(c){if(!c.hist.length)return;[c.a,c.b]=JSON.parse(c.hist.pop());log('undo');say(strandHits(c)+' matching nucleotides lined up.');},
   canUndo:c=>c.hist.length>0,
   skip:c=>({label:'Lock it in: '+strandHits(c)+' lined up',act:['lock']})
 };
@@ -1076,8 +1076,8 @@ MODES.decks={
       if(k>=c.inst.par){
         say('Par: '+k+' points. Your pairs spell '+spelled(c.g,v,w)+'.','good');
         const [top,bot]=alignRows(v,w,[0,0],c.g.moves);
-        complete(['lcs'],[{html:()=>'Your pairs spell <b class="mono">'+c.inst.lcs+'</b>. Its letters appear in order in deck 1 and in deck 2, though not side by side. A longest string like that is a '+term('lcs','longest common subsequence')+'; for these decks there is only one.'},
-          {html:()=>alignTiles(top,bot,{label:'Your game, written as a line-up'})+'Every game is also a line-up like the one in level 1: a pair taken is a column of two letters, and a card thrown away is a column with a gap.'}],{games:c.games});
+        complete(['lcs'],[{html:()=>'Your pairs spell <b class="mono">'+c.inst.lcs+'</b>. Its symbols appear in order in deck 1 and in deck 2, though not necessarily contiguously. A longest string like that is a '+term('lcs','longest common subsequence')+'; for these decks there is only one.'},
+          {html:()=>alignTiles(top,bot,{label:'Your game, written as a line-up'})+'Every game is also a line-up like the one in level 1: a pair taken is a column of two nucleotides, and a card thrown away is a column with a gap.'}],{games:c.games});
         return;
       }
       say('Game over: '+plural(k,'point')+'. Par for these decks is '+c.inst.par+'.','warn');
@@ -1165,7 +1165,7 @@ MODES.wall={
       '<div class="count">'+fmt(b.played)+' <span style="font-size:.9rem;font-weight:400">of '+fmt(c.total)+' games played</span></div>'+
       '<div class="meter"><i style="width:'+Math.max(.2,100*b.played/c.total)+'%"></i></div>'+
       '<div>Best so far: '+plural(b.best,'point')+(b.last?' · last game: <span class="mono">'+b.last+'</span>':'')+'</div>'+
-      (b.on?'<div>At '+BOT_RATE+' games a second it needs about <b>'+(days>=1?days.toFixed(1)+' days':Math.round(secs/60)+' minutes')+'</b> more. Two genes of a thousand letters would give a count of games '+c.bigDigits+' digits long.</div>'
+      (b.on?'<div>At '+BOT_RATE+' games a second it needs about <b>'+(days>=1?days.toFixed(1)+' days':Math.round(secs/60)+' minutes')+'</b> more. Two gene sequences of a thousand nucleotides would give a count of games '+c.bigDigits+' digits long.</div>'
         :'<button class="primary" data-act="bot" style="margin-top:8px">Start the bot</button>')+'</div>';
   },
   act(c,type,d){
@@ -1484,7 +1484,7 @@ function taxiMode(kind){
           const ok=c.done?false:(!c.on||c.off)?canOn(c,i,j):canOff(c,i,j);
           return {cls:(isOn||isOff?'pick':'')+(!ok&&!isOn&&!isOff&&!c.done?' dim':''),hit:ok?((!c.on||c.off)?'Get out of the taxi here':'Call the taxi here'):undefined};},
         taxi:[c.on,c.off].filter(Boolean),tourist:c.off||c.on||[0,0]})+'</div>';
-      h+='<div class="pad">'+(cur2?'This ride: '+(overlapMode?'skip '+c.on[0]+' letters of read 1, ':'get out at '+c.on[0]+','+c.on[1]+', ')+(overlapMode?'leave '+(m-c.off[1])+' letters of read 2':'call the taxi at '+c.off[0]+','+c.off[1])+' · the walk between scores <b>'+cur2.score+'</b>':'')+
+      h+='<div class="pad">'+(cur2?'This ride: '+(overlapMode?'skip '+c.on[0]+' nucleotides of read 1, ':'get out at '+c.on[0]+','+c.on[1]+', ')+(overlapMode?'leave '+(m-c.off[1])+' nucleotides of read 2':'call the taxi at '+c.off[0]+','+c.off[1])+' · the walk between scores <b>'+cur2.score+'</b>':'')+
         (c.bestTry!==null?'<div class="gmeta">Best walk so far: '+c.bestTry+' · rides tried: '+c.tries.length+'</div>':'')+'</div>';
       if(cur2)h+=alignTiles(...alignRows(v,w,c.on,cur2.moves),{label:'The walk between, as a line-up'});
       return h;
@@ -1505,9 +1505,9 @@ function taxiMode(kind){
           const v=c.inst.v,w=c.inst.w,sh=c.on[0],L=top.length;
           const pad=' '.repeat(sh);
           complete(['overlap'],[{html:()=>'<div class="alignout"><div class="sub">The two reads, overlapped</div><div class="strand">'+[...v].map((ch,k)=>'<span class="'+(k>=sh?(w[k-sh]===ch?'hit':'mis'):'off')+'">'+ch+'</span>').join('')+'</div><div class="strand">'+[...pad].map(()=>'<span style="visibility:hidden">·</span>').join('')+[...w].map((ch,k)=>'<span class="'+(k<L?(v[sh+k]===ch?'hit':'mis'):'off')+'">'+ch+'</span>').join('')+'</div></div>'+
-            'The end of read 1 against the start of read 2, '+L+' letters with one misread letter (the orange column). The best walk from the left edge to the bottom edge is an '+term('overlap','overlap alignment')+'. An assembler working from real reads, which contain errors, needs this in place of the exact matches Bridge Walker assumed.'}],{tries:c.tries.length});
+            'The end of read 1 against the start of read 2, '+L+' nucleotides with one sequencing error (the orange column). The best walk from the left edge to the bottom edge is an '+term('overlap','overlap alignment')+'. An assembler working from real reads, which contain errors, needs this in place of the exact matches Bridge Walker assumed.'}],{tries:c.tries.length});
         }else{
-          complete(['local'],[{html:()=>'The two strands share one stretch, <b class="mono">'+top+'</b> over <b class="mono">'+bot+'</b>, scoring '+r.score+', while the best route from corner to corner scored '+c.glob.best+'. A best walk between any two corners, with free rides at either end, is a '+term('local','local alignment')+'. For the pencil, the free taxi from the start means a corner never needs a number below 0; the free taxi to the end means the answer is the biggest number anywhere, not the one at the far corner.',src:['sw']}],{tries:c.tries.length});
+          complete(['local'],[{html:()=>'The two sequences share one similar region, <b class="mono">'+top+'</b> over <b class="mono">'+bot+'</b>, scoring '+r.score+', while the best route from corner to corner scored '+c.glob.best+'. A best walk between any two corners, with free rides at either end, is a '+term('local','local alignment')+'. For the pencil, the free taxi from the start means a corner never needs a number below 0; the free taxi to the end means the answer is the biggest number anywhere, not the one at the far corner.',src:['sw']}],{tries:c.tries.length});
         }
         return;
       }
@@ -1559,7 +1559,7 @@ MODES.code={
       const same=[...c.r.top].filter((x,k)=>x===c.r.bottom[k]).length;
       const missing=sweepTerms().filter(id=>!S.badges.includes(id));
       say(same+' of '+c.r.top.length+' columns hold the same amino acid.','good');
-      complete(missing,[{html:()=>'The two fragments line up with one indel at each end, and '+same+' of their '+c.r.top.length+' columns hold the same amino acid. These are stretches of two adenylation domains, the parts of two antibiotic-building enzymes that choose which amino acid to add; both choose phenylalanine. Lining up domains like these, position by position, is how the “code” that predicts a domain’s choice from its sequence was worked out.',src:['stach']},
+      complete(missing,[{html:()=>'The two fragments line up with one indel at each end, and '+same+' of their '+c.r.top.length+' columns hold the same amino acid. These are segments of two adenylation domains in nonribosomal peptide synthetases, the domains that select amino acid substrates for antibiotic biosynthesis; both choose phenylalanine. Lining up domains like these, position by position, is how the “code” that predicts a domain’s choice from its sequence was worked out.',src:['stach']},
         {html:'Sequences: UniProt '+PROTEINS.a.acc+' ('+PROTEINS.a.name+') and UniProt '+PROTEINS.b.acc+' ('+PROTEINS.b.name+'), residue numbers as in UniProt.'+(missing.length?' Terms not named in earlier levels: '+missing.map(x=>term(x)).join(', ')+'.':'')}],{same});
     }
   },
@@ -1586,9 +1586,9 @@ function renderBench(){
   const run=()=>{
     const v=$('#bv').value.trim().toUpperCase().replace(/[^A-Z]/g,''),w=$('#bw').value.trim().toUpperCase().replace(/[^A-Z]/g,'');
     const kind=$('#bscore').value,ind=Number($('#bi').value);
-    if(!v||!w||v.length>60||w.length>60){$('#bout').innerHTML='<p class="status warn">Enter two strings of 1 to 60 letters.</p>';return;}
+    if(!v||!w||v.length>60||w.length>60){$('#bout').innerHTML='<p class="status warn">Enter two sequences of 1 to 60 symbols.</p>';return;}
     const sc=kind==='prices'?{match:Number($('#bm').value),mismatch:Number($('#bx').value),indel:ind}:{matrix:kind,indel:ind};
-    let r;try{r=bench(v,w,sc,$('#bmode').value);}catch(e){$('#bout').innerHTML='<p class="status warn">'+esc(e.message)+' (a matrix needs amino-acid letters).</p>';return;}
+    let r;try{r=bench(v,w,sc,$('#bmode').value);}catch(e){$('#bout').innerHTML='<p class="status warn">'+esc(e.message)+' (a matrix requires amino acid one-letter codes).</p>';return;}
     const on=new Set(routeCorners(r.start,r.moves).map(x=>x.join(',')));
     let t='<table class="btable"><tr><th></th><th></th>'+[...w].map(c=>'<th>'+c+'</th>').join('')+'</tr>';
     for(let i=0;i<=v.length;i++)t+='<tr><th>'+(i?v[i-1]:'')+'</th>'+r.s[i].map((x,j)=>'<td class="'+(on.has(i+','+j)?'on':'')+'">'+x+'</td>').join('')+'</tr>';

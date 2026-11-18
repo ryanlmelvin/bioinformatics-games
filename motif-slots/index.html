@@ -398,7 +398,7 @@ function genL1(code){
   }
   return fallback('genL1',code,POOLS.genL1,genL1);
 }
-/* Level 2: five copies, each with one letter changed (a different letter each time); nothing repeats. */
+/* Level 2: five copies, each with one nucleotide substitution (a different letter each time); nothing repeats. */
 function genL2(code){
   const rand=rng(hashStr(code+'|L2')),word=DNAA5[Math.floor(rand()*5)];
   for(let attempt=0;attempt<maxTries(5000);attempt++){
@@ -538,7 +538,7 @@ function genL9(code){
   // gseed only works with the code it was found for, so a fallback puzzle carries that code
   return fallback('genL9',code,POOLS.genL9,k=>Object.assign(genL9(k),{code:k}));
 }
-/* Level 11: the level 4 strips, each site overwritten by the evening element with one letter changed (illustrative). */
+/* Level 11: the level 4 strips, each site overwritten by the evening element with one nucleotide substitution (illustrative). */
 function genL11(code){
   const L4=genL4(code),rand=rng(hashStr(code+'|L11')),k=9;
   for(let attempt=0;attempt<maxTries(200);attempt++){
@@ -582,41 +582,41 @@ function showP(x,den){const f=den?fracOf(x,den):null;if(f)return f;if(!x)return 
 function parseNum(s){s=String(s).trim().replace(/\s+/g,'');if(!s)return NaN;const m=s.match(/^(\d+)\/(\d+)$/);if(m)return +m[2]?+m[1]/+m[2]:NaN;return Number(s);}
 
 const LEVELS=[
-  {id:1,title:'A word that keeps turning up',
-   brief:'Eighty letters of bacterial DNA. One five-letter word occurs far more often than chance would predict. Find it.'},
+  {id:1,title:'A recurring sequence',
+   brief:'A bacterial DNA sequence of eighty nucleotides. One five-nucleotide sequence occurs far more often than chance would predict. Find it.'},
   {id:2,title:'Close enough',
-   brief:'A new stretch of the same kind of DNA. The word occurs five times here. Each copy has one letter changed, at a different position each time.'},
+   brief:'Another bacterial DNA sequence contains five variants of the same five-nucleotide sequence. Each variant has one nucleotide substitution, at a different position each time.'},
   {id:3,title:'Both strands',
-   brief:'DNA has two strands. Each letter pairs with a letter on the other strand, A with T and C with G. The other strand runs in the opposite direction, so a protein bound to it reads from right to left.'},
+   brief:'The DNA strands are antiparallel, with complementary base pairing: A–T and C–G. Read each strand 5′ to 3′; the lower strand runs right to left.'},
   {id:4,title:'Ten genes, one switch',
-   brief:'Ten genes switch on together. Each strip is the 24 letters upstream of one gene. A protein grips a six-letter word on each strip to switch that gene on, and the word differs slightly from strip to strip.'},
+   brief:'Ten genes are co-regulated. Each strip shows 24 nucleotides upstream of one gene. A transcription factor binds a six-nucleotide site in each upstream region to activate transcription, and the site varies slightly among genes.'},
   {id:5,title:'The reels',
    brief:'Four of those strips are now reels in a machine. A reel can only slide. The clamp reads the window at the payline on every reel at once.'},
   {id:6,title:'Too many stops',
    brief:'All ten reels. Each one has 19 stops, so the machine has 19¹⁰ settings, about 6 × 10¹².'},
   {id:7,title:'Let the reels vote',
-   brief:'Five reels with four letters at the payline. The reels already stopped vote on what each column should be, and a reel stops where the vote favours.'},
+   brief:'Five reels with four nucleotides at the payline. The reels already stopped vote on what each column should be, and a reel stops where the vote favours.'},
   {id:8,title:'One zero spoils everything',
    brief:'Back to your trip down the reels, at the moment reel 2 stopped.'},
   {id:9,title:'Spin',
-   brief:'Six reels, five letters at the payline. Pull the lever and every reel stops anywhere. Then let the reels vote.'},
+   brief:'Six reels, five nucleotides at the payline. Pull the lever and every reel stops anywhere. Then let the reels vote.'},
   {id:10,title:'Hold all but one',
    brief:'The same six reels, and the machine is stuck.'},
   {id:11,title:'Dusk',
-   brief:'The ten genes from level 4 return. The machine now runs on its own, nine letters wide.'}
+   brief:'The ten genes from level 4 return. The machine now runs on its own, nine nucleotides wide.'}
 ];
 
 /* Primary sources. Each was opened (publisher record, Crossref or PubMed abstract) before its line was written. */
 const SRC={
   fuller:{cite:'Fuller, Funnell & Kornberg, 1984',title:'The dnaA protein complex with the E. coli chromosomal replication origin (oriC) and other DNA sites',where:'Cell 38, 889–900',
     url:'https://doi.org/10.1016/0092-8674(84)90284-8',
-    look:'The abstract reports that every strong DnaA binding site shares one short sequence of about nine letters, repeated at four conserved positions within the E. coli origin. Counting found a word of this kind.'},
+    look:'The abstract reports that every strong DnaA binding site shares one short sequence of about nine nucleotides, repeated at four conserved positions within the E. coli origin. Counting found a sequence of this kind.'},
   pevzner:{cite:'Pevzner & Sze, 2000',title:'Combinatorial approaches to finding subtle signals in DNA sequences',where:'Proc. Int. Conf. Intelligent Systems for Molecular Biology 8, 269–278',
     url:'https://pubmed.ncbi.nlm.nih.gov/10977088/',
     look:'The abstract calls the task signal finding, pattern discovery in unaligned DNA, and says most signals are too subtle for reliable recognition. The paper offers a combinatorial approach for the very subtle ones.'},
   hertz:{cite:'Hertz & Stormo, 1999',title:'Identifying DNA and protein patterns with statistically significant alignments of multiple sequences',where:'Bioinformatics 15, 563–577',
     url:'https://doi.org/10.1093/bioinformatics/15.7.563',
-    look:'The abstract lists a scoring scheme built from the letter shares in each column of the aligned sites, and a greedy algorithm that chooses the sites. In the game these are the vote table and the trip down the reels.'},
+    look:'The abstract lists a scoring scheme built from the nucleotide frequencies in each column of the aligned sites, and a greedy algorithm that chooses the sites. In the game these are the vote table and the trip down the reels.'},
   lawrence:{cite:'Lawrence et al., 1993',title:'Detecting subtle sequence signals: a Gibbs sampling strategy for multiple alignment',where:'Science 262, 208–214',
     url:'https://doi.org/10.1126/science.8211139',
     look:'The abstract describes an algorithm based on iterative sampling that finds subtle patterns shared by many sequences in seconds, applied to protein families. The loaded wheel is this weighted random draw.'},
@@ -626,22 +626,22 @@ const SRC={
 };
 
 const VOCAB=[
-  {id:'kmer',name:'k-mer',code:'BA1A',def:'A string of k letters. TCCAC is a 5-mer.'},
-  {id:'freq',name:'Frequent words',code:'BA1B',def:'The Frequent Words Problem: find the k-mers that occur most often in a text. A k-mer that occurs far more often than chance allows is a candidate hidden message.'},
+  {id:'kmer',name:'k-mer',code:'BA1A',def:'A sequence of k nucleotides. TCCAC is a 5-mer.'},
+  {id:'freq',name:'Frequent words',code:'BA1B',def:'The Frequent Words Problem: find the k-mers that occur most often in a text. A k-mer that occurs far more often than chance allows is a candidate regulatory or functional sequence.'},
   {id:'ham',name:'Hamming distance',code:'BA1G',def:'The number of positions at which two strings of the same length differ. The Hamming distance between CGAAT and CGGAC is 2.'},
-  {id:'rc',name:'Reverse complement',code:'BA1C',def:'The string read off the other DNA strand: replace every letter by its partner (A↔T, C↔G) and read the result backwards. The reverse complement of TTATC is GATAA.'},
-  {id:'dnaa',name:'DnaA box',src:'fuller',def:'A nine-letter site where the protein DnaA binds to start copying a bacterial chromosome. In E. coli it is TTATCCACA, and it occurs several times, on both strands, near where copying starts.'},
-  {id:'ori',name:'Replication origin',code:'BA1J',def:'The region of a genome where copying of the DNA begins (ori). Finding it means looking for a short word that is unusually frequent there, allowing mismatches and either strand.'},
-  {id:'motif',name:'Motif',src:'pevzner',def:'A short pattern, such as the binding site of a regulatory protein, that occurs with small variations upstream of every gene in a set. A regulatory motif is the site a transcription factor grips to switch those genes on.'},
+  {id:'rc',name:'Reverse complement',code:'BA1C',def:'The string read off the other DNA strand: replace every nucleotide by its complement (A↔T, C↔G) and read the result backwards. The reverse complement of TTATC is GATAA.'},
+  {id:'dnaa',name:'DnaA box',src:'fuller',def:'A nine-nucleotide site where DnaA binds to initiate bacterial chromosome replication. In E. coli it is TTATCCACA, and it occurs several times, on both strands, near the replication origin.'},
+  {id:'ori',name:'Replication origin',code:'BA1J',def:'The region of a genome where DNA replication begins (ori). Finding it means looking for a short sequence that is unusually frequent there, allowing mismatches and either strand.'},
+  {id:'motif',name:'Motif',src:'pevzner',def:'A short pattern, such as the binding site of a regulatory protein, that occurs with small variations upstream of every gene in a set. A regulatory motif is a sequence pattern in binding sites where a transcription factor regulates gene expression.'},
   {id:'mf',name:'Motif finding',code:'BA2A',def:'The Motif Finding Problem: given t strings of DNA and a length k, choose one k-mer from each string so that the chosen k-mers agree as well as possible, that is, so that their score is as small as possible.'},
   {id:'mm',name:'Motif matrix',def:'The t × k matrix whose rows are the k-mers chosen from each of the t strings, one per string (written Motifs).'},
-  {id:'cons',name:'Consensus string',def:'The string made of the most popular letter in each column of a motif matrix. Where a column has a tie, there is more than one consensus string.'},
-  {id:'score',name:'Score',def:'Score(Motifs): the number of letters in a motif matrix that differ from the most popular letter of their column. Lower is better; 0 means every row is the same.'},
-  {id:'median',name:'Median string',code:'BA2B',def:'A k-mer Pattern that minimises d(Pattern, Dna): the sum, over every string, of the Hamming distance from Pattern to its closest k-mer in that string. Searching the 4^k words replaces searching every choice of windows.'},
-  {id:'profile',name:'Profile matrix',src:'hertz',def:'A 4 × k table giving, for each column of a motif matrix, the share of its rows that have A, C, G or T. Each column adds up to 1.'},
-  {id:'pmp',name:'Profile-most probable k-mer',code:'BA2C',def:'The k-mer of a string with the highest probability given a profile matrix: the product, column by column, of the profile entries for its letters. A tie goes to the first such k-mer.'},
+  {id:'cons',name:'Consensus string',def:'The string made of the most frequent nucleotide in each column of a motif matrix. Where a column has a tie, there is more than one consensus string.'},
+  {id:'score',name:'Score',def:'Score(Motifs): the number of nucleotides in a motif matrix that differ from the most frequent nucleotide of their column. Lower is better; 0 means every row is the same.'},
+  {id:'median',name:'Median string',code:'BA2B',def:'A k-mer Pattern that minimises d(Pattern, Dna): the sum, over every string, of the Hamming distance from Pattern to its closest k-mer in that string. Searching the 4^k sequences replaces searching every choice of windows.'},
+  {id:'profile',name:'Profile matrix',src:'hertz',def:'A 4 × k table giving, for each column of a motif matrix, the fraction of its rows containing A, C, G or T. Each column adds up to 1.'},
+  {id:'pmp',name:'Profile-most probable k-mer',code:'BA2C',def:'The k-mer of a string with the highest probability given a profile matrix: the product, column by column, of the profile entries for its nucleotides. A tie goes to the first such k-mer.'},
   {id:'greedy',name:'Greedy motif search',code:'BA2D',def:'GreedyMotifSearch: for each k-mer in the first string, choose a k-mer in each following string in turn, the profile-most probable one given the k-mers chosen so far; keep the collection with the lowest score.'},
-  {id:'pseudo',name:'Pseudocounts',code:'BA2E',def:'Small numbers added to every count before a profile is made, so that no letter gets probability 0. Adding 1 to every count is Laplace’s Rule of Succession.'},
+  {id:'pseudo',name:'Pseudocounts',code:'BA2E',def:'Small numbers added to every count before a profile is made, so that no nucleotide gets probability 0. Adding 1 to every count is Laplace’s Rule of Succession.'},
   {id:'rand',name:'Randomized motif search',code:'BA2F',def:'RandomizedMotifSearch: start from randomly chosen k-mers; repeatedly build the profile (with pseudocounts) and replace every k-mer by the profile-most probable one in its string, until the score stops improving. Run it many times and keep the best.'},
   {id:'gibbs',name:'Gibbs sampling',src:'lawrence',code:'BA2G',def:'GibbsSampler: repeatedly set aside one randomly chosen string, build a profile from the others, and replace that string’s k-mer by one drawn at random with probability proportional to the profile. Because it can move to a worse collection, it can leave a stall.'}
 ];
@@ -907,8 +907,8 @@ function stripLit(text,w,d,both){
 function tapeDraw(extra){return tapeSvg(Object.assign({text:cur.inst.text,k:cur.inst.k},extra));}
 
 LV[1]={
-  init(){cur.step='guess';cur.clamp=0;cur.found=[];cur.guess=null;cur.dial=null;cur.board=null;say('Click a letter. The clamp grips the five letters starting there.');},
-  rule(){return 'The clamp grips five letters at a time';},
+  init(){cur.step='guess';cur.clamp=0;cur.found=[];cur.guess=null;cur.dial=null;cur.board=null;say('Click a nucleotide. The clamp grips the five nucleotides starting there.');},
+  rule(){return 'The clamp grips five nucleotides at a time';},
   draw(){
     const I=cur.inst,lit=[];
     if(cur.step==='count'||cur.step==='sweep')cur.found.forEach(pos=>lit.push({pos,strand:0}));
@@ -916,10 +916,10 @@ LV[1]={
     if(cur.dial&&cur.step==='done')litPositions(I.text,cur.dial,0).forEach(pos=>lit.push({pos,strand:0}));
     const svg=tapeDraw({lit,clamp:cur.step==='done'?null:{pos:cur.clamp,strand:0,slip:cur.slip},clickable:!cur.done});
     let t='';
-    if(cur.step==='guess')t=dialHtml(I.text.substr(cur.clamp,5),'In the clamp')+'<div class="row"><button class="primary" data-act="grip">This is the word</button></div>';
-    if(cur.step==='count')t=dialHtml(cur.guess,'Dial')+'<p>Find every window that reads '+wordHtml(cur.guess)+'. Click its first letter. Found: <b>'+cur.found.length+'</b></p><div class="row"><button class="primary" data-act="counted">That is all of them</button></div>';
+    if(cur.step==='guess')t=dialHtml(I.text.substr(cur.clamp,5),'In the clamp')+'<div class="row"><button class="primary" data-act="grip">This is the sequence</button></div>';
+    if(cur.step==='count')t=dialHtml(cur.guess,'Dial')+'<p>Find every window that reads '+wordHtml(cur.guess)+'. Click its first nucleotide. Found: <b>'+cur.found.length+'</b></p><div class="row"><button class="primary" data-act="counted">That is all of them</button></div>';
     if(cur.step==='sweep'||cur.step==='done')t=dialHtml(cur.dial||cur.guess,'Dial')+
-      (cur.board?boardHtml(cur.board,x=>'×'+x.lit):'<div class="row"><button class="primary" data-act="sweep">Let the dial try every word on the strip</button></div>');
+      (cur.board?boardHtml(cur.board,x=>'×'+x.lit):'<div class="row"><button class="primary" data-act="sweep">Let the dial try every sequence on the strip</button></div>');
     return {svg,tools:t};
   },
   act(a,arg){
@@ -934,41 +934,41 @@ LV[1]={
       }
     }
     if(a==='grip'&&cur.step==='guess'){cur.guess=I.text.substr(cur.clamp,5);cur.found=[cur.clamp];cur.step='count';log('guess',{word:cur.guess,right:cur.guess===I.word});
-      say('The dial is set to your word. Find the rest of its copies.');}
+      say('The dial is set to your sequence. Find the rest of its copies.');}
     if(a==='counted'&&cur.step==='count'){
       const all=litPositions(I.text,cur.guess,0);cur.missed=all.filter(p=>!cur.found.includes(p));cur.step='sweep';
       log('counted',{word:cur.guess,found:cur.found.length,actual:all.length});
       say('The dial checks every window: '+cur.guess+' is here '+plural(all.length,'time')+(cur.missed.length?' (the blue one'+(cur.missed.length>1?'s':'')+' you missed).':'.'),'');
     }
-    if(a==='sweep'&&cur.step==='sweep'){cur.board=tally([I.text],5,0,false);log('sweep');say('The dial tried every five-letter word on the strip. Click a word on the board to set the dial to it.');}
+    if(a==='sweep'&&cur.step==='sweep'){cur.board=tally([I.text],5,0,false);log('sweep');say('The dial tried every five-nucleotide sequence on the strip. Click a sequence on the board to set the dial to it.');}
     if(a==='pick'&&cur.board){
       cur.dial=arg;cur.missed=null;cur.found=litPositions(I.text,arg,0);
-      if(arg===I.word){cur.step='done';say(arg+' turns up four times. No other word turns up more than twice.','good');finish(['kmer','freq'],{guess:cur.guess});}
+      if(arg===I.word){cur.step='done';say(arg+' turns up four times. No other sequence turns up more than twice.','good');finish(['kmer','freq'],{guess:cur.guess});}
       else say(arg+' turns up '+plural(cur.found.length,'time')+'.');
     }
   },
-  reveal(){return '<p>Each five-letter word is a '+term('kmer')+' (here k = 5). Finding the k-mers that occur most often in a text is the '+term('freq','Frequent Words Problem')+'. Counting worked here because the word was copied exactly.</p>';}
+  reveal(){return '<p>Each five-nucleotide sequence is a '+term('kmer')+' (here k = 5). Finding the k-mers that occur most often in a text is the '+term('freq','Frequent Words Problem')+'. Counting worked here because the sequence was copied exactly.</p>';}
 };
 
 LV[2]={
   init(){cur.step='sweep0';cur.d=0;cur.board=null;cur.marks=[[],[],[]];cur.dial=null;say('Try the method that worked last time.');},
-  rule(){return cur.d?'The clamp now tolerates '+plural(cur.d,'wrong letter'):'The clamp grips five letters at a time';},
+  rule(){return cur.d?'The clamp now tolerates '+plural(cur.d,'mismatch'):'The clamp grips five nucleotides at a time';},
   draw(){
     const I=cur.inst,lit=[];
     if(cur.step==='compare')I.compare.forEach(pos=>lit.push({pos,strand:0,cls:'lit2'}));
     if(cur.dial&&(cur.step==='tol'||cur.step==='done'))litPositions(I.text,cur.dial,cur.d).forEach(pos=>lit.push({pos,strand:0}));
     const svg=tapeDraw({lit});
     let t='';
-    if(cur.step==='sweep0')t=dialHtml(null,'Dial')+(cur.board?boardHtml(cur.board,x=>'×'+x.lit):'')+'<div class="row"><button class="primary" data-act="sweep">Let the dial try every word on the strip</button></div>';
+    if(cur.step==='sweep0')t=dialHtml(null,'Dial')+(cur.board?boardHtml(cur.board,x=>'×'+x.lit):'')+'<div class="row"><button class="primary" data-act="sweep">Let the dial try every sequence on the strip</button></div>';
     if(cur.step==='compare'){
-      t=boardHtml(cur.board,x=>'×'+x.lit,{max:6,title:'The board said'})+'<div class="hand"><h3>Letter by letter</h3><p>The word '+wordHtml(I.word)+' is not on the strip at all. Compare it with the three blue windows: click every letter of a window that differs from the word above it.</p>'+
-        '<div class="tscroll"><div class="comparison-row"><span class="sub">the word</span>'+tiles(I.word)+'</div>'+
+      t=boardHtml(cur.board,x=>'×'+x.lit,{max:6,title:'The board said'})+'<div class="hand"><h3>Nucleotide by nucleotide</h3><p>The sequence '+wordHtml(I.word)+' is not on the strip at all. Compare it with the three blue windows: click every nucleotide of a window that differs from the sequence above it.</p>'+
+        '<div class="tscroll"><div class="comparison-row"><span class="sub">the sequence</span>'+tiles(I.word)+'</div>'+
         I.compare.map((p,r)=>'<div class="comparison-row"><span class="sub">at '+(p+1)+'</span>'+[...I.text.substr(p,5)].map((c,j)=>'<button class="tile b'+c+(cur.marks[r].includes(j)?' bad':'')+'" data-act="mark" data-arg="'+r+':'+j+'">'+c+'</button>').join('')+
-        '<span class="gmeta">'+(cur.marks[r].length?plural(cur.marks[r].length,'letter')+' different':'')+'</span></div>').join('')+'</div></div>';
+        '<span class="gmeta">'+(cur.marks[r].length?plural(cur.marks[r].length,'nucleotide')+' different':'')+'</span></div>').join('')+'</div></div>';
     }
     if(cur.step==='tol'||cur.step==='done'){
-      t=dialHtml(cur.dial,'Dial','<span class="sub" style="margin:0 0 0 12px">wrong letters allowed</span>'+[0,1,2].map(d=>'<button class="'+(cur.d===d?'on':'')+'" data-act="tol" data-arg="'+d+'">'+d+'</button>').join(''))+
-        (cur.board&&cur.boardD===cur.d?boardHtml(cur.board,x=>x.lit+' lit'):'<div class="row"><button class="primary" data-act="sweep">Let the dial try every word on the strip</button></div>');
+      t=dialHtml(cur.dial,'Dial','<span class="sub" style="margin:0 0 0 12px">mismatches allowed</span>'+[0,1,2].map(d=>'<button class="'+(cur.d===d?'on':'')+'" data-act="tol" data-arg="'+d+'">'+d+'</button>').join(''))+
+        (cur.board&&cur.boardD===cur.d?boardHtml(cur.board,x=>x.lit+' lit'):'<div class="row"><button class="primary" data-act="sweep">Let the dial try every sequence on the strip</button></div>');
     }
     return {svg,tools:t};
   },
@@ -977,27 +977,27 @@ LV[2]={
     if(a==='sweep'){
       cur.board=tally([I.text],5,cur.d,false);cur.boardD=cur.d;log('sweep',{d:cur.d});
       if(cur.step==='sweep0'){cur.step='compare';say('Nothing turns up more than '+plural(cur.board[0].lit,'time')+'. The top of the board is a tie.','warn');}
-      else say(cur.d?'Every word, counting each window within '+plural(cur.d,'wrong letter')+'. Click a word to set the dial.':'Every word, exact copies only.');
+      else say(cur.d?'Every sequence, counting each window within '+plural(cur.d,'mismatch')+'. Click a sequence to set the dial.':'Every sequence, exact copies only.');
     }
     if(a==='mark'&&cur.step==='compare'){
       const [r,j]=arg.split(':').map(Number),w=I.text.substr(I.compare[r],5);
-      if(w[j]===I.word[j]){say('That letter matches the word above it.','warn');log('mark_wrong',{r,j});}
+      if(w[j]===I.word[j]){say('That nucleotide matches the sequence above it.','warn');log('mark_wrong',{r,j});}
       else if(!cur.marks[r].includes(j)){cur.marks[r].push(j);log('mark',{r,j});say('Marked.');}
-      if(cur.marks.every(m=>m.length===1)){cur.step='tol';cur.dial=I.word;cur.d=0;cur.board=null;say('Each window differs from the word by one letter. Set the number of wrong letters the clamp allows.','good');}
+      if(cur.marks.every(m=>m.length===1)){cur.step='tol';cur.dial=I.word;cur.d=0;cur.board=null;say('Each window differs from the sequence by one nucleotide. Set the number of mismatchs the clamp allows.','good');}
     }
-    if(a==='tol'&&cur.step==='tol'){cur.d=+arg;log('tol',{d:cur.d});say(cur.d?'The clamp now grips windows with up to '+plural(cur.d,'wrong letter')+'.':'Exact copies only.');}
+    if(a==='tol'&&cur.step==='tol'){cur.d=+arg;log('tol',{d:cur.d});say(cur.d?'The clamp now grips windows with up to '+plural(cur.d,'mismatch')+'.':'Exact copies only.');}
     if(a==='pick'&&cur.step==='tol'&&cur.board){
       cur.dial=arg;const n=litPositions(I.text,arg,cur.d).length;
-      if(arg===I.word&&cur.d>=1){cur.step='done';say(arg+' lights '+n+' windows, at least two more than any other word, and it is never on the strip exactly.','good');finish(['ham']);}
+      if(arg===I.word&&cur.d>=1){cur.step='done';say(arg+' lights '+n+' windows, at least two more than any other sequence, and it is never on the strip exactly.','good');finish(['ham']);}
       else say(arg+' lights '+plural(n,'window')+'.');
     }
   },
-  reveal(){return '<p>The number of letters that differ between two words of the same length is their '+term('ham')+'. A lit window is one within Hamming distance d of the word on the dial, here d = 1. The winning word never occurs exactly. It wins because more windows are within distance 1 of it than of any other word.</p>';}
+  reveal(){return '<p>The number of nucleotides that differ between two sequences of the same length is their '+term('ham')+'. A lit window is one within Hamming distance d of the sequence on the dial, here d = 1. The winning sequence never occurs exactly. It wins because more windows are within distance 1 of it than of any other sequence.</p>';}
 };
 
 LV[3]={
-  init(){cur.step='partner';cur.typed='';cur.board=null;cur.dial=null;say('Read the lower strand under the clamp, the way a protein on that strand would: right to left.');},
-  rule(){return cur.step==='partner'?'Partners: A with T, C with G · the lower strand runs right to left':'The clamp lights a window on either strand';},
+  init(){cur.step='partner';cur.typed='';cur.board=null;cur.dial=null;say('Read the lower strand under the clamp in the 5′-to-3′ direction: right to left.');},
+  rule(){return cur.step==='partner'?'Complementary bases: A–T, C–G · read the lower strand 5′ to 3′, right to left':'The clamp lights a window on either strand';},
   draw(){
     const I=cur.inst,lit=[];
     if(cur.dial)stripLit(I.text,cur.dial,1,true).forEach(l=>lit.push(l));
@@ -1005,11 +1005,11 @@ LV[3]={
     let t='';
     if(cur.step==='partner'){
       const need=revcomp(I.text.substr(I.handAt,5));
-      t='<div class="hand"><h3>Read it backwards</h3><p>Spell the five letters in the clamp on the lower strand, starting from its right-hand end.</p><div class="row">'+
+      t='<div class="hand"><h3>Read the complementary strand</h3><p>Spell the five nucleotides in the clamp on the lower strand, starting from its right-hand end.</p><div class="row">'+
         [...need].map((c,j)=>j<cur.typed.length?'<span class="tile b'+c+' ok">'+c+'</span>':'<span class="tile blank">·</span>').join('')+'</div><div class="row">'+
         BASES.split('').map(c=>'<button class="tile b'+c+'" data-act="type" data-arg="'+c+'" style="min-width:2.4em">'+c+'</button>').join('')+'</div></div>';
-    }else t=dialHtml(cur.dial,'Dial','<span class="gmeta" style="margin-left:10px">one wrong letter allowed · both strands</span>')+
-      (cur.board?boardHtml(cur.board,x=>x.lit+' lit'):'<div class="row"><button class="primary" data-act="sweep">Let the dial try every word, on both strands</button></div>');
+    }else t=dialHtml(cur.dial,'Dial','<span class="gmeta" style="margin-left:10px">one mismatch allowed · both strands</span>')+
+      (cur.board?boardHtml(cur.board,x=>x.lit+' lit'):'<div class="row"><button class="primary" data-act="sweep">Let the dial try every sequence, on both strands</button></div>');
     return {svg,tools:t};
   },
   act(a,arg){
@@ -1017,20 +1017,20 @@ LV[3]={
     if(a==='type'&&cur.step==='partner'){
       const need=revcomp(I.text.substr(I.handAt,5));
       if(need[cur.typed.length]===arg){cur.typed+=arg;log('type',{ch:arg});
-        if(cur.typed.length===5){cur.step='sweep';say('The lower strand, read its own way, says '+need+'. The dial will now read both strands.','good');}
+        if(cur.typed.length===5){cur.step='sweep';say('The lower strand, read 5′ to 3′, says '+need+'. The dial will now read both strands.','good');}
         else say('');}
-      else{log('type_wrong',{ch:arg,want:need[cur.typed.length]});say(arg+' does not pair with the letter above it there. Look at the upper strand, then take its partner.','warn');}
+      else{log('type_wrong',{ch:arg,want:need[cur.typed.length]});say(arg+' does not pair with the nucleotide above it there. Look at the upper strand, then take its complementary base.','warn');}
     }
-    if(a==='sweep'&&cur.step==='sweep'){cur.board=tally([I.text],5,1,true);log('sweep');say('Each word now counts its lit windows on the upper strand plus those of its backwards partner on the lower one. Click a word.');}
+    if(a==='sweep'&&cur.step==='sweep'){cur.board=tally([I.text],5,1,true);log('sweep');say('Each sequence now counts its lit windows on the upper strand plus those of its backwards partner on the lower one. Click a sequence.');}
     if(a==='pick'&&cur.board){
       cur.dial=arg;const n=stripLit(I.text,arg,1,true).length;
       if(arg===I.word||arg===I.rc){say(arg+' lights '+n+' windows across the two strands; read from the other strand it is '+revcomp(arg)+', which ties with it.','good');cur.step='done';finish(['rc','dnaa','ori']);}
       else say(arg+' lights '+plural(n,'window')+'.');
     }
   },
-  reveal(){const I=cur.inst;return '<p>The lower strand read in its own direction is the '+term('rc','reverse complement')+' of the upper one: '+I.word+' and '+I.rc+' are the same site seen from the two strands. '+
-    'Your word '+wordHtml(I.word)+' is part of '+wordHtml(DNAA)+', a '+term('dnaa')+'. The protein DnaA grips that box to start copying the chromosome, and a bacterium has several of them, on both strands, inside the stretch where copying begins: its '+term('ori','replication origin')+'.</p>'+
-    '<p class="gmeta">The strips in levels 1 to 3 are illustrative: made up for this game, with the real word planted in them.</p>';},
+  reveal(){const I=cur.inst;return '<p>The lower strand read 5′ to 3′ is the '+term('rc','reverse complement')+' of the upper one: '+I.word+' and '+I.rc+' are the same site seen from the two strands. '+
+    'Your sequence '+wordHtml(I.word)+' is part of '+wordHtml(DNAA)+', a '+term('dnaa')+'. DnaA binds that box to initiate chromosome replication. In E. coli, several such sites occur on both strands within the region where replication begins: its '+term('ori','replication origin')+'.</p>'+
+    '<p class="gmeta">The strips in levels 1 to 3 are illustrative: made up for this game, with the real sequence planted in them.</p>';},
   src:['fuller']
 };
 
@@ -1044,7 +1044,7 @@ function stripTally(strips,k,d){
 const clampOff=(s,k,p)=>Math.max(0,Math.min(s.length-k,p));
 
 LV[4]={
-  init(){cur.step='eye';cur.dial=null;cur.d=1;cur.count='windows';cur.board=null;say('Click a letter on any strip to set the dial to the six letters starting there. Each strip with a window the clamp can grip lights its gene.');},
+  init(){cur.step='eye';cur.dial=null;cur.d=1;cur.count='windows';cur.board=null;say('Click a nucleotide on any strip to set the dial to the six nucleotides starting there. Each strip with a window the clamp can grip lights its gene.');},
   rule(){return 'One clamp per window · a gene lights when the clamp grips its strip';},
   lits(){const I=cur.inst;return I.strips.map(s=>cur.dial?litPositions(s,cur.dial,cur.d):[]);},
   draw(){
@@ -1052,9 +1052,9 @@ LV[4]={
     const svg=rackSvg({reels:I.strips,k:6,mode:'strips',lit,lamps,clamps:true,click:!cur.done});
     const nl=lamps.filter(Boolean).length,nw=lit.reduce((a,l)=>a+l.length,0);
     let t=dialHtml(cur.dial,'Dial',cur.dial?'<span class="gmeta" style="margin-left:8px">'+plural(nw,'lit window')+' · '+nl+' of 10 genes</span>':'');
-    if(cur.step!=='eye')t+='<div class="row"><span class="sub" style="margin:0">wrong letters allowed</span>'+[1,2].map(d=>'<button class="'+(cur.d===d?'on':'')+'" data-act="tol" data-arg="'+d+'">'+d+'</button>').join('')+
+    if(cur.step!=='eye')t+='<div class="row"><span class="sub" style="margin:0">mismatches allowed</span>'+[1,2].map(d=>'<button class="'+(cur.d===d?'on':'')+'" data-act="tol" data-arg="'+d+'">'+d+'</button>').join('')+
       '<span class="sub" style="margin:0 0 0 10px">the board counts</span>'+[['windows','lit windows'],['strips','strips lit']].map(c=>'<button class="'+(cur.count===c[0]?'on':'')+'" data-act="count" data-arg="'+c[0]+'">'+c[1]+'</button>').join('')+'</div>';
-    t+=cur.board&&cur.boardKey===cur.d+cur.count?boardHtml(cur.board,x=>cur.boardKey.endsWith('strips')?x.lit+' strips':x.lit+' lit'):'<div class="row"><button class="primary" data-act="sweep">Let the dial try every six-letter word</button></div>';
+    t+=cur.board&&cur.boardKey===cur.d+cur.count?boardHtml(cur.board,x=>cur.boardKey.endsWith('strips')?x.lit+' strips':x.lit+' lit'):'<div class="row"><button class="primary" data-act="sweep">Let the dial try every six-nucleotide sequence</button></div>';
     return {svg,tools:t};
   },
   act(a,arg){
@@ -1065,8 +1065,8 @@ LV[4]={
     if(a==='sweep'){
       cur.board=cur.count==='windows'?tally(I.strips,6,cur.d,false):stripTally(I.strips,6,cur.d);cur.boardKey=cur.d+cur.count;log('sweep',{d:cur.d,count:cur.count,top:cur.board[0].word});
       if(cur.step==='eye'){cur.step='mode';cur.dial=cur.board[0].word;const nl=this.lits().filter(l=>l.length).length;
-        say('The winner, '+cur.dial+', lights '+cur.board[0].lit+' windows, more than any other word. It lights '+numWord(nl)+' of the ten genes.','warn');}
-      else say('Click a word on the board to set the dial to it.');
+        say('The winner, '+cur.dial+', lights '+cur.board[0].lit+' windows, more than any other sequence. It lights '+numWord(nl)+' of the ten genes.','warn');}
+      else say('Click a sequence on the board to set the dial to it.');
     }
     if(a==='pick'){cur.dial=arg;log('dial',{word:arg});this.report();}
   },
@@ -1076,9 +1076,9 @@ LV[4]={
     if(nl===10&&cur.step!=='eye'){say(cur.dial+' lights all ten genes.','good');finish(['motif','mf'],{word:cur.dial,d:cur.d});}
     else say(cur.dial+': '+plural(lit.reduce((a,l)=>a+l.length,0),'lit window')+', '+nl+' of 10 genes.');
   },
-  reveal(){const I=cur.inst;return '<p>A word that turns up, a little changed, once on every strip of a set of genes that switch on together is a '+term('motif','motif')+', and choosing one window on every strip to find it is '+term('mf','motif finding')+'. '+
-    'Counting lit windows rewarded '+wordHtml(I.decoy)+', which is common on three strips and absent from the rest. A switch has to be on every strip.</p>'+
-    '<p>With two wrong letters allowed, '+plural(I.allTen.length,'word')+' light all ten genes.</p>';},
+  reveal(){const I=cur.inst;return '<p>A short sequence pattern shared, with substitutions, by the upstream regions of co-regulated genes is a '+term('motif','motif')+', and choosing one window on every strip to find it is '+term('mf','motif finding')+'. '+
+    'Counting lit windows rewarded '+wordHtml(I.decoy)+', which is common on three strips and absent from the rest. The shared regulatory site must be present in every upstream region.</p>'+
+    '<p>With two mismatches allowed, '+plural(I.allTen.length,'sequence')+' light all ten genes.</p>';},
   src:['pevzner']
 };
 
@@ -1097,7 +1097,7 @@ LV[5]={
       if(m<=I.target){say('Jackpot: '+plural(m,'miss')+'.','good');finish(['mm','cons','score'],{misses:m});}
       else say(plural(m,'miss')+'.');}
   },
-  reveal(){return '<p>The stack of payline windows is a '+term('mm','motif matrix')+'. Its row of favourite letters is the '+term('cons','consensus string')+', and the misses meter is the matrix’s '+term('score','score')+'. Lower is better, and 0 means every window is the same.</p>';}
+  reveal(){return '<p>The stack of payline windows is a '+term('mm','motif matrix')+'. Its row of most frequent nucleotides is the '+term('cons','consensus string')+', and the misses meter is the matrix’s '+term('score','score')+'. Lower is better, and 0 means every window is the same.</p>';}
 };
 
 const SETTINGS=Math.pow(19,10);
@@ -1107,7 +1107,7 @@ LV[6]={
     cur.wi=0;cur.choice=[null,null,null];cur.totals=[];cur.board=null;
     say('A bot can try every setting of the ten reels in turn. Start it.');
   },
-  rule(){return cur.step==='bot'?'The bot tries every setting of the reels':cur.step==='hand'?'For each word: the closest window on every reel':'Search over words instead of stops';},
+  rule(){return cur.step==='bot'?'The bot tries every setting of the reels':cur.step==='hand'?'For each sequence: the closest window on every reel':'Search over sequences instead of stops';},
   botChunk(m){
     const b=cur.bot,dna=cur.big.strips,t0=performance.now();
     for(let r=0;r<m;r++){
@@ -1132,18 +1132,18 @@ LV[6]={
       t=b.running?'<p class="mono">Settings tried: <b>'+b.n.toLocaleString('en-US')+'</b> of '+SETTINGS.toLocaleString('en-US')+'<br>Fewest misses so far: <b>'+b.best+'</b><br>At this pace, every setting takes about <b>'+(years>=1?Math.round(years).toLocaleString('en-US')+' years':Math.round(years*365)+' days')+'</b>.</p>'
         :'<div class="row"><button class="primary" data-act="bot">Start the bot</button></div>';
     }else{
-      t=stackHtml(B.strips,cur.off,6)+(cur.board?boardHtml(cur.board,x=>x.lit+' in all',{title:'Each word, with its closest windows added up'}):'<div class="row"><button class="primary" data-act="dial">Let the dial try all 4,096 six-letter words</button></div>');
+      t=stackHtml(B.strips,cur.off,6)+(cur.board?boardHtml(cur.board,x=>x.lit+' in all',{title:'Each sequence, with its closest windows added up'}):'<div class="row"><button class="primary" data-act="dial">Let the dial try all 4,096 six-nucleotide sequences</button></div>');
     }
     return {svg,tools:t};
   },
   drawHand(){
     const H=cur.inst,w=H.words[cur.wi],lit=H.reels.map((r,i)=>cur.choice[i]===null?[]:[cur.choice[i]]);
     const svg=rackSvg({reels:H.reels,k:3,mode:'strips',lit,clamps:true,click:cur.wi<2});
-    let t='<div class="hand"><h3>Search over words instead of stops</h3>';
+    let t='<div class="hand"><h3>Search over sequences instead of stops</h3>';
     if(cur.wi<2){
-      t+='<p>Three short reels. For the word '+wordHtml(w)+', click the window on each reel that differs from it in the fewest letters. Then add up those differences.</p>'+
-        dialHtml(w,'Word '+(cur.wi+1))+'<div class="row"><label for="total">Letters different, all three reels:</label><input id="total" class="num" inputmode="numeric" autocomplete="off"><button class="primary" data-act="check">Check</button></div>';
-    }else t+='<p>'+H.words.map((x,i)=>wordHtml(x)+': '+cur.totals[i]+' letters different in all').join(' · ')+'</p><div class="row">'+H.words.map(x=>'<button data-act="better" data-arg="'+x+'">'+x+' fits better</button>').join('')+'</div>';
+      t+='<p>Three short reels. For the sequence '+wordHtml(w)+', click the window on each reel that differs from it in the fewest nucleotides. Then add up those differences.</p>'+
+        dialHtml(w,'Sequence '+(cur.wi+1))+'<div class="row"><label for="total">Total mismatches across all three reels:</label><input id="total" class="num" inputmode="numeric" autocomplete="off"><button class="primary" data-act="check">Check</button></div>';
+    }else t+='<p>'+H.words.map((x,i)=>wordHtml(x)+': '+cur.totals[i]+' mismatches in total').join(' · ')+'</p><div class="row">'+H.words.map(x=>'<button data-act="better" data-arg="'+x+'">'+x+' fits better</button>').join('')+'</div>';
     if(cur.totals.length&&cur.wi<2)t+='<p class="gmeta">'+wordHtml(H.words[0])+': '+cur.totals[0]+' in all.</p>';
     return {svg,tools:t+'</div>'};
   },
@@ -1158,28 +1158,28 @@ LV[6]={
       const got=parseNum(($('#total')||{}).value),want=cur.choice.reduce((s,c,i)=>s+hamming(w,H.reels[i].substr(c,3)),0);
       log('check',{word:w,total:got,far});
       if(far.length){say('Reel '+far.join(' and reel ')+' has a window closer to '+w+'.','warn');return;}
-      if(got!==want){say('Count again: compare '+w+' with each chosen window letter by letter.','warn');return;}
+      if(got!==want){say('Count again: compare '+w+' with each chosen window nucleotide by nucleotide.','warn');return;}
       cur.totals.push(want);cur.wi++;cur.choice=[null,null,null];
-      say(cur.wi<2?'Right. Now the second word.':'Which word fits the three reels better?','good');
+      say(cur.wi<2?'Right. Now the second sequence.':'Which sequence fits the three reels better?','good');
     }
     if(a==='better'&&cur.step==='hand'&&cur.wi===2){
       const best=H.totals[0]<H.totals[1]?H.words[0]:H.words[1];
       if(arg!==best){say(arg+'’s closest windows add up to more.','warn');return;}
-      cur.step='dial';log('better',{word:arg});say('Back to the ten big reels. The dial can do the same for every six-letter word.','good');
+      cur.step='dial';log('better',{word:arg});say('Back to the ten big reels. The dial can do the same for every six-nucleotide sequence.','good');
     }
     if(a==='dial'&&cur.step==='dial'){
       const B=cur.big,t=distTable(B.strips,6),list=[];
       for(let p=0;p<t.length;p++)list.push({word:dec(p,6),lit:t[p]});
       list.sort((x,y)=>x.lit-y.lit||(x.word<y.word?-1:1));cur.board=list;
       const w=list[0].word;cur.off=B.strips.map(s=>closestPos(w,s));log('dial_all',{word:w,total:list[0].lit});
-      say(w+' has the nearest closest windows: '+list[0].lit+' letters in all, against '+list[1].lit+' for the next word. The reels snap to its windows.','good');
+      say(w+' has the smallest total mismatch count: '+list[0].lit+' mismatches in all, against '+list[1].lit+' for the next sequence. The reels snap to its windows.','good');
       finish(['median'],{word:w});
     }
   },
-  skip(){return cur.step==='bot'&&cur.bot.running?'Stop the bot. Search the words instead →':'';},
+  skip(){return cur.step==='bot'&&cur.bot.running?'Stop the bot. Search the sequences instead →':'';},
   onSkip(){if(cur.step!=='bot')return;cur.step='hand';log('gave_up',{tried:cur.bot.n});timers.forEach(clearTimeout);say('Click a window on each reel.');},
-  reveal(){const B=cur.big;return '<p>Instead of 6 × 10¹² settings of the reels, the dial checked 4,096 words, each against every reel’s closest window. A word whose closest windows add up to the fewest letters is a '+term('median','median string')+'. '+
-    'Here it is '+wordHtml(B.word)+', one of the words that lit all ten genes in level 4. Its closest windows, stacked, score as well as the best setting of the reels.</p>';}
+  reveal(){const B=cur.big;return '<p>Instead of 6 × 10¹² settings of the reels, the dial checked 4,096 sequences, each against every reel’s closest window. A sequence that minimises the sum of mismatches to its closest window on each reel is a '+term('median','median string')+'. '+
+    'Here it is '+wordHtml(B.word)+', one of the sequences that lit all ten genes in level 4. Its closest windows, stacked, score as well as the best setting of the reels.</p>';}
 };
 
 
@@ -1232,8 +1232,8 @@ LV[7]={
   draw(){
     const I=cur.inst,m4=motifsAt(I.dna.slice(0,4),I.sites,4),P4=profileOf(m4,false),w5=I.dna[4].substr(I.sites[4],4);
     let t='';
-    if(cur.step==='vote')t='<div class="hand"><h3>Count the vote</h3><p>Reels 1 to 4 are on the payline. In column '+(I.handCol+1)+', what share of the four reels shows each letter?</p>'+voteHtml(m4,{editCol:I.handCol,sel:cur.sel})+'<div class="row"><button class="primary" data-act="check">Check</button></div></div>';
-    if(cur.step==='prob')t=voteHtml(m4)+'<div class="hand"><h3>Multiply it out</h3><p>Reel 5, at the window '+wordHtml(w5)+': take the share of its first letter in column 1, of its second in column 2, and so on, and multiply the four shares.</p><div class="row"><label for="pin">Odds of '+w5+':</label><input id="pin" class="num" autocomplete="off" placeholder="a/b"><button class="primary" data-act="checkprob">Check</button></div></div>';
+    if(cur.step==='vote')t='<div class="hand"><h3>Count the vote</h3><p>Reels 1 to 4 are on the payline. In column '+(I.handCol+1)+', what share of the four reels shows each nucleotide?</p>'+voteHtml(m4,{editCol:I.handCol,sel:cur.sel})+'<div class="row"><button class="primary" data-act="check">Check</button></div></div>';
+    if(cur.step==='prob')t=voteHtml(m4)+'<div class="hand"><h3>Multiply it out</h3><p>Reel 5, at the window '+wordHtml(w5)+': take the share of its first nucleotide in column 1, of its second in column 2, and so on, and multiply the four shares.</p><div class="row"><label for="pin">Odds of '+w5+':</label><input id="pin" class="num" autocomplete="off" placeholder="a/b"><button class="primary" data-act="checkprob">Check</button></div></div>';
     if(cur.step==='pick5')t=voteHtml(m4)+oddsHtml(I.dna[4],4,P4,256,{title:'Reel 5: the odds of every stop'})+'<p class="gmeta">Click the stop where reel 5 should stop.</p>';
     if(cur.step==='top')t=voteHtml(m4)+'<div class="row"><button class="primary" data-act="top">Now start again from reel 1 alone</button></div>';
     if(cur.step==='down')t=tripTools(false);
@@ -1246,12 +1246,12 @@ LV[7]={
     if(a==='check'&&cur.step==='vote'){
       const ok=[0,1,2,3].every(r=>cur.sel[r]===c[r][I.handCol]);log('vote_check',{ok,sel:cur.sel.slice()});
       if(ok){cur.step='prob';say('Right. Each reel is one quarter of the vote.','good');}
-      else say(cur.sel.some(v=>v===null)?'Give every letter a share, even if it is 0.':'Look at column '+(I.handCol+1)+' of the payline again: four reels, one quarter each.','warn');
+      else say(cur.sel.some(v=>v===null)?'Give every nucleotide a share, even if it is 0.':'Look at column '+(I.handCol+1)+' of the payline again: four reels, one quarter each.','warn');
     }
     if(a==='checkprob'&&cur.step==='prob'){
       const got=parseNum(($('#pin')||{}).value),want=prob(I.dna[4].substr(I.sites[4],4),profileOf(m4,false));log('prob_check',{got,want});
       if(Math.abs(got-want)<1e-9){cur.step='pick5';say('Right: '+fracOf(want,256)+'. The machine has worked out every other stop of reel 5 the same way.','good');}
-      else say('Multiply again: one share per column, for the letter reel 5 has there.','warn');
+      else say('Multiply again: one share per column, for the nucleotide reel 5 has there.','warn');
     }
     if(a==='stop'&&cur.step==='pick5'){
       const best=mostProbablePos(I.dna[4],4,profileOf(m4,false));
@@ -1278,7 +1278,7 @@ LV[8]={
     let t='';
     if(cur.step==='plus'){
       const same=[...s2].filter((x,j)=>x===m1[0][j]).length;
-      t='<p>On your trip, reel 2 stopped at stop '+(I.fromNo[1]+1)+', '+wordHtml(I.dna[1].substr(I.fromNo[1],4))+'. Its stop '+(I.sites[1]+1)+', '+wordHtml(s2,[...s2].map((x,j)=>x!==m1[0][j]))+', shares '+numWord(same)+' of its four letters with reel 1, and still gets odds 0.</p>'+
+      t='<p>On your trip, reel 2 stopped at stop '+(I.fromNo[1]+1)+', '+wordHtml(I.dna[1].substr(I.fromNo[1],4))+'. Its stop '+(I.sites[1]+1)+', '+wordHtml(s2,[...s2].map((x,j)=>x!==m1[0][j]))+', shares '+numWord(same)+' of its four nucleotides with reel 1, and still gets odds 0.</p>'+
         voteHtml(m1,{plus:cur.plus,title:'The vote of reel 1 alone, as counts'})+
         oddsHtml(I.dna[1],4,profileOf(m1,false),1,{act:'none',mark:I.sites[1],title:'Reel 2: odds of every stop'});
     }
@@ -1290,7 +1290,7 @@ LV[8]={
     const I=cur.inst;
     if(a==='plus'&&cur.step==='plus'){const [r,j]=arg.split(':').map(Number);cur.plus[r*4+j]=true;log('plus',{r,j});
       if(cur.plus.every(Boolean)){cur.step='down';cur.off=[I.sites[0],0,0,0,0];cur.dim=[false,true,true,true,true];cur.i=1;
-        say('No count is zero now, so no letter has odds 0. Go down the reels again with one added to every count.','good');}
+        say('No count is zero now, so no nucleotide has odds 0. Go down the reels again with one added to every count.','good');}
       else say(cur.plus.filter(x=>!x).length+' counts still to go.');}
     if(a==='stop'&&cur.step==='down'){
       if(descend(+arg,true)&&cur.i===5){cur.step='auto';say('All five reels stopped: '+plural(scoreAt(I.dna,cur.off,4),'miss')+'.','good');}
@@ -1298,7 +1298,7 @@ LV[8]={
     if(a==='all'&&cur.step==='auto'){cur.step='done';cur.off=greedy(I.dna,4,true);const m=scoreAt(I.dna,cur.off,4);log('greedy_all',{misses:m,pseudo:true});
       say('Over every first stop the best trip still ends with '+plural(m,'miss')+', against '+I.greedyNoScore+' without the extra counts.','good');finish(['pseudo'],{misses:m});}
   },
-  reveal(){return '<p>A count of zero made a whole window impossible, however well its other letters agreed. Adding one to every count before taking shares is called '+term('pseudo','pseudocounts')+' (Laplace’s Rule of Succession). With them, the trip down the reels kept every reel’s own site and ended with '+plural(cur.inst.planted,'miss')+'.</p>';}
+  reveal(){return '<p>A count of zero made a whole window impossible, however well its other nucleotides agreed. Adding one to every count before taking shares is called '+term('pseudo','pseudocounts')+' (Laplace’s Rule of Succession). With them, the trip down the reels kept every reel’s own site and ended with '+plural(cur.inst.planted,'miss')+'.</p>';}
 };
 
 LV[9]={
@@ -1415,8 +1415,8 @@ LV[11]={
       later(step,500);
     }
   },
-  reveal(){return '<p>The word the machine found, '+wordHtml(EVENING)+', is the <b>evening element</b>. It sits just upstream of plant genes that switch on near dusk, and a clock protein binds it. Harmer and colleagues found it by the same approach, searching the upstream DNA of genes that rise and fall together for a short word they share.</p>'+
-    '<p class="gmeta">Illustrative: these ten strips are made up for this game, with the real nine-letter element planted in each, one letter changed. The element itself is real.</p>';},
+  reveal(){return '<p>The sequence the machine found, '+wordHtml(EVENING)+', is the <b>evening element</b>. It occurs in the upstream regulatory regions of plant genes expressed near dusk and is bound by a circadian transcription factor. Harmer and colleagues found it by the same approach, searching the upstream DNA of genes with correlated expression profiles for a short sequence they share.</p>'+
+    '<p class="gmeta">Illustrative: these ten strips are made up for this game, with the real nine-nucleotide element planted in each with one nucleotide substitution. The element itself is real.</p>';},
   src:['harmer']
 };
 
@@ -1424,12 +1424,12 @@ LV[11]={
 function bench(){
   const sample=['GGCGTTCAGGCA','AAGAATCAGTCA','CAAGGAGTTCGC','CACGTCAATCAC','CAATAATATTCG'];
   document.querySelector('.wrap').innerHTML='<header><h1>Motif Slots workbench</h1><a href="./">Back to the game</a></header>'+
-    '<p>Paste strings of DNA, one per line, choose k, and run four methods side by side. Nothing here is saved.</p>'+
-    '<label for="bdna" class="sub">Strings</label><textarea id="bdna" spellcheck="false">'+sample.join('\n')+'</textarea>'+
+    '<p>Paste DNA sequences, one per line, choose k, and run four methods side by side. Nothing here is saved.</p>'+
+    '<label for="bdna" class="sub">DNA sequences</label><textarea id="bdna" spellcheck="false">'+sample.join('\n')+'</textarea>'+
     '<div class="row"><label for="bk">k</label><input id="bk" class="num" value="3" inputmode="numeric"><button class="primary" id="brun">Run</button></div><div id="bout"></div>';
   const run=()=>{
     const dna=$('#bdna').value.toUpperCase().split(/\s+/).filter(Boolean),k=parseInt($('#bk').value,10),out=$('#bout');
-    if(!dna.length||dna.some(s=>/[^ACGT]/.test(s))){out.innerHTML='<p class="status warn">Use only the letters A, C, G and T, one string per line.</p>';return;}
+    if(!dna.length||dna.some(s=>/[^ACGT]/.test(s))){out.innerHTML='<p class="status warn">Use only A, C, G and T nucleotide symbols, one sequence per line.</p>';return;}
     if(!(k>=1)||dna.some(s=>s.length<k)){out.innerHTML='<p class="status warn">k must be at least 1 and no longer than the shortest string.</p>';return;}
     out.innerHTML='<div class="tscroll"><table class="vt" style="text-align:left"><thead><tr><th>Method</th><th>Sites</th><th>Consensus</th><th>Misses</th></tr></thead><tbody>'+
       benchRun(dna,k,dna.join('|')).map(r=>'<tr><td style="text-align:left">'+r.name+'</td>'+(r.skip?'<td colspan="3">'+r.skip+'</td>':'<td>'+r.sites.join('<br>')+'</td><td>'+r.consensus+'</td><td><b>'+r.misses+'</b></td>')+'</tr>').join('')+'</tbody></table></div>';

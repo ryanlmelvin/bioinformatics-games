@@ -564,7 +564,7 @@ const reduced=()=>{try{return matchMedia('(prefers-reduced-motion: reduce)').mat
 /* ---------- levels ---------- */
 const LEVELS=[
  {id:1,mode:'sort',title:'Which genes move together?',
-  brief:'Each card is one yeast gene. Its seven dots are how active the gene was at seven times, two hours apart, while the yeast ate through its sugar. Genes that rise and fall together probably work together. Sort the twelve cards into three piles of look-alikes.'},
+  brief:'Each card is one yeast gene. Its seven dots show expression levels at seven time points, two hours apart, as the yeast depleted its glucose. Genes with correlated expression profiles may have related functions. Sort the twelve cards into three groups with similar profiles.'},
  {id:2,mode:'ruler',title:'Two inks',
   brief:'A print shop with two inks, red and blue. Every colour in this tulip is some amount of red and some amount of blue, each from 0 to 10, so each pixel has a spot on the ink map. The shop has three pots of mixed paint, and the press prints every pixel from the pot nearest to it on the map. Do the press’s job for the eight pixels in the dashed strip: click two pots to lay the ruler from the pixel to each, then click the pot to print it from.'},
  {id:3,mode:'worst',title:'The worst pixel',
@@ -578,17 +578,17 @@ const LEVELS=[
  {id:7,mode:'bad',title:'A bad start',
   brief:'A house. Two of the three pots start almost the same colour. Run the two buttons until nothing changes.'},
  {id:8,mode:'cards',title:'Seven numbers a gene',
-  brief:'Your twelve cards from level 1. A card has seven heights, so it would need a map with seven directions. It cannot be drawn, but the arithmetic is the same. Three cards serve as the starting pots.'},
+  brief:'Your twelve cards from level 1. Each expression vector has seven coordinates, so the data occupy a seven-dimensional space. The distance calculation is the same as in two dimensions. Three cards serve as the initial centers.'},
  {id:9,mode:'tree',title:'Family tree',
   brief:'Eight genes. The table gives the distance between every two of them. Join the two closest groups, again and again, until one group is left. When two groups join, the distance from the new group to any other is the average over all pairs of members.'},
  {id:10,mode:'shift',title:'The shift',
-  brief:'Twenty-four yeast genes measured at seven times, from six hours before the sugar ran out to six hours after. Sort them with the two buttons, starting from pots chosen by the level 3 move.'}
+  brief:'Expression of twenty-four yeast genes measured at seven time points, from six hours before glucose depletion to six hours after. Sort them with the two buttons, starting from pots chosen by the level 3 move.'}
 ];
 
 /* Primary sources. Each DOI was checked in Crossref; look lines come from the abstracts (Gonzalez: title only). */
 const SRC={
  derisi:{cite:'DeRisi, Iyer & Brown, 1997',title:'Exploring the metabolic and genetic control of gene expression on a genomic scale',where:'Science 278, 680–686',
-  url:'https://doi.org/10.1126/science.278.5338.680',look:'Its abstract describes microarrays carrying virtually every yeast gene, used to follow expression through the metabolic shift from fermentation to respiration: the diauxic shift. Look for which known metabolic genes changed, and for the many unknown genes whose patterns hinted at their jobs.'},
+  url:'https://doi.org/10.1126/science.278.5338.680',look:'Its abstract describes microarrays carrying virtually every yeast gene, used to follow expression through the metabolic shift from fermentation to respiration: the diauxic shift. Look for which known metabolic genes changed, and for the many unknown genes whose expression profiles suggested their functions.'},
  gonzalez:{cite:'Gonzalez, 1985',title:'Clustering to minimize the maximum intercluster distance',where:'Theoretical Computer Science 38, 293–306',
   url:'https://doi.org/10.1016/0304-3975(85)90224-5',look:'The 1985 paper behind farthest-first traversal, on choosing clusters so that the largest distance is as small as possible: your worst-pixel meter.'},
  lloyd:{cite:'Lloyd, 1982',title:'Least squares quantization in PCM',where:'IEEE Transactions on Information Theory 28, 129–137',
@@ -610,7 +610,7 @@ const VOCAB=[
  {id:'gravity',name:'Center of gravity',def:'The point whose i-th coordinate is the average of the i-th coordinates of a set of points. It is the one point that minimizes the sum of squared distances to them (the Center of Gravity Theorem).'},
  {id:'lloyd',name:'Lloyd algorithm',src:'lloyd',code:'BA8C',def:'Start from k centers and repeat two steps until the clusters stop changing: assign every data point to its nearest center (centers to clusters); move every center to its cluster’s center of gravity (clusters to centers). The distortion never rises, but where it stops depends on the start.'},
  {id:'hier',name:'Hierarchical clustering',src:'eisen',code:'BA8E',def:'Start with every data point as its own cluster; repeatedly merge the two closest clusters, here by D_avg, the average distance over all pairs of members, recording each merge as a node of a tree. Cutting the tree at some height gives clusters.'},
- {id:'diauxic',name:'Diauxic shift',src:'derisi',def:'The change a yeast culture makes when its glucose runs out: it switches from fermenting sugar into ethanol to living on the ethanol, and the expression of many genes changes with it.'}
+ {id:'diauxic',name:'Diauxic shift',src:'derisi',def:'The change a yeast culture makes when its glucose runs out: it switches from glucose fermentation to ethanol respiration, and the expression of many genes changes with it.'}
 ];
 const DEF={};VOCAB.forEach(v=>DEF[v.id]=v);
 /* inside a sentence a term is lower case, unless it carries a proper name */
@@ -1250,7 +1250,7 @@ MODES.shift={
   let h='<div class="work"><p class="cap">The three pots: each is the average of its genes</p><svg viewBox="0 0 440 230" style="width:100%;max-width:560px" role="img" aria-label="average of each group over time"><rect width="440" height="230" rx="6" fill="#fbf8f1"/>';
   [0,5,10].forEach(y=>{h+='<line x1="30" x2="420" y1="'+Y(y)+'" y2="'+Y(y)+'" stroke="#e0d8c6"/><text x="24" y="'+(Y(y)+4)+'" font-size="11" text-anchor="end" fill="#6b7078">'+y+'</text>';});
   for(let t=0;t<7;t++)h+='<text x="'+X(t)+'" y="212" font-size="11" text-anchor="middle" fill="#6b7078">'+(t*2-6)+' h</text>';
-  h+='<line x1="'+X(3)+'" x2="'+X(3)+'" y1="20" y2="196" stroke="#b4541a" stroke-dasharray="4 3"/><text x="'+(X(3)+4)+'" y="16" font-size="11" fill="#b4541a">sugar runs out</text>';
+  h+='<line x1="'+X(3)+'" x2="'+X(3)+'" y1="20" y2="196" stroke="#b4541a" stroke-dasharray="4 3"/><text x="'+(X(3)+4)+'" y="16" font-size="11" fill="#b4541a">glucose depleted</text>';
   D.forEach((v,i)=>{h+='<polyline fill="none" stroke="'+PILECOL[st.lab[i]]+'" stroke-opacity=".22" stroke-width="1.2" points="'+v.map((y,t)=>X(t)+','+Y(y)).join(' ')+'"/>';});
   st.pots.forEach((p,j)=>{h+='<polyline fill="none" stroke="'+PILECOL[j]+'" stroke-width="4" points="'+p.map((y,t)=>X(t)+','+f1(Y(y))).join(' ')+'"/>';});
   return h+'</svg></div>';
@@ -1264,20 +1264,20 @@ MODES.shift={
 
 /* ---------- what the game says when a level is done ---------- */
 const BLOCKS={
- L1:()=>'<div class="called"><p>A card’s seven heights are the gene’s '+term('expvec','expression vector')+'. Sorting genes into groups of look-alikes is '+term('clustering')+'. Both you and the other student sorted by eye. Deciding which sorting is better requires a measure.</p></div>'+srcCard('derisi'),
+ L1:()=>'<div class="called"><p>A card’s seven expression measurements are the gene’s '+term('expvec','expression vector')+'. Grouping genes by similarity of their expression profiles is '+term('clustering')+'. Both you and the other student sorted by eye. Deciding which sorting is better requires a measure.</p></div>'+srcCard('derisi'),
  L2:()=>{const c=cur,i=c.inst.strip[7],p=c.pic.px[i],q=c.st.pots[nearest(p,c.st.pots)];
   return '<div class="called"><p>Each pixel is a '+term('point','data point')+': a point whose coordinates are its two ink amounts. Each pot is a '+term('center')+', and the pixels printed from one pot are its '+term('cluster')+'. The ruler measures '+term('euclid','Euclidean distance')+': for your last pixel, √(('+p[0]+' − '+f1(q[0])+')² + ('+p[1]+' − '+f1(q[1])+')²) = '+f1(dist(p,q))+'. <b>We will use those words from now on.</b></p></div>';},
  L3:()=>{const c=cur,D=c.pic.px;
   return '<div class="called"><p>Choosing k centers so that the worst data point is as close as possible to its center is '+term('kcenter','k-center clustering')+'. No fast algorithm is known for finding the best answer. The move the meter points at, each new center on the data point farthest from every center so far, is '+term('fft','farthest-first traversal')+'.</p></div>'+
    '<div class="row two" style="margin:8px 0">'+c.inst.decoys.map(d=>'<div class="fig"><p class="cap">Pots on '+d.name+': worst '+f1(d.max)+'</p>'+sheetSvg(c.pic,i=>inkOf(d.centers[nearest(D[i],d.centers)]),{label:d.name})+'</div>').join('')+
    '<div class="fig"><p class="cap">Farthest-first: worst '+f1(c.inst.best)+'</p>'+sheetSvg(c.pic,i=>inkOf(c.inst.ff.centers[nearest(D[i],c.inst.ff.centers)]),{label:'farthest-first'})+'</div></div>'+srcCard('gonzalez');},
- L4:()=>'<div class="called"><p>The meter that only watches the worst point lets one stray steal a center. The new meter, the average of the squared distances from each data point to its center, is the '+term('distortion','squared error distortion')+'. Choosing k centers, anywhere, to make it as small as possible is '+term('kmeans','k-means clustering')+'.</p></div>',
+ L4:()=>'<div class="called"><p>The meter that only watches the worst point lets one outlier capture a center. The new meter, the average of the squared distances from each data point to its center, is the '+term('distortion','squared error distortion')+'. Choosing k centers, anywhere, to make it as small as possible is '+term('kmeans','k-means clustering')+'.</p></div>',
  L5:()=>'<div class="called"><p>The best pot sits at the average of its pixels’ inks, one coordinate at a time. That point is the cluster’s '+term('gravity','center of gravity')+'.</p></div>',
  L6:()=>'<div class="called"><p>Print from the nearest center, move each center to its cluster’s center of gravity, repeat until nothing changes: that is the '+term('lloyd','Lloyd algorithm')+'. Neither step can raise the error, and 144 pixels can be split in only finitely many ways, so the loop must stop.</p></div>'+srcCard('lloyd'),
  L7:()=>'<div class="called"><p>The Lloyd algorithm stopped twice, at two different errors. Where it stops depends on where the centers start. Farthest-first traversal is a cheap way to spread them out. Real software usually picks starts at random, weighted toward far-off points (k-means++), and keeps the best of many runs.</p></div>',
- L8:()=>'<div class="called"><p>With seven numbers a gene there was no picture to judge by. The arithmetic was the same as for two inks, and the error now answers level 1’s question.</p></div>',
+ L8:()=>'<div class="called"><p>Each gene is represented by a seven-dimensional expression vector. The distance calculation extends directly from the two-dimensional ink example, and the distortion now answers level 1’s question.</p></div>',
  L9:()=>'<div class="called"><p>Joining the closest groups and drawing the joins as a tree is '+term('hier','hierarchical clustering')+'. Averaging the distance over every pair of members is the same rule as UPGMA: this is level 7 of Hollow Mountain, with genes in place of species. Cutting the tree at one height gives the clusters.</p></div>'+srcCard('eisen'),
- L10:()=>'<div class="called"><p>When the sugar runs out, the yeast changes how it lives: the '+term('diauxic','diauxic shift')+'. One set of genes switches on, another switches off, and many hardly change. These cards are illustrative; DeRisi, Iyer and Brown measured nearly every yeast gene through the real shift.</p></div>'+srcCard('derisi')
+ L10:()=>'<div class="called"><p>Glucose depletion triggers a metabolic transition in yeast: the '+term('diauxic','diauxic shift')+'. One set of genes is upregulated, another is downregulated, and many show little change in expression. These cards are illustrative; DeRisi, Iyer and Brown measured nearly every yeast gene through the real shift.</p></div>'+srcCard('derisi')
 };
 function srcCard(id){const s=SRC[id];
  return '<div class="src"><span class="tag">Primary source</span><a href="'+s.url+'" target="_blank" rel="noopener">'+s.cite+': “'+s.title+'”</a> <span class="gmeta">'+s.where+'.</span><br>'+s.look+'</div>';}

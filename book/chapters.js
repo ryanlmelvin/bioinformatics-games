@@ -9,7 +9,7 @@ window.BOOK={
      hue:'#1f8a9c',hook:'Reconstruct a genome from short, overlapping reads.',
      side:{dir:'lockpick',key:'lockpick:v1',game:'Lockpick',burst:'keys',sfx:[['[data-k=A]','nA'],['[data-k=C]','nC'],['[data-k=G]','nG'],['[data-k=T]','nT']],keys:{a:'nA',c:'nC',g:'nG',t:'nT'},hook:'Open every locker on a wall from one keypad in the fewest key presses.'}},
     {n:3,slug:'alignment',dir:'toll-city',key:'tollcity:v1',topic:'Sequence alignment',game:'Toll City',levels:11,terms:13,burst:'tickets',sfx:[['.stage svg','step']],
-     hue:'#cf6a1c',hook:'Line up two related sequences so that the letters they share fall in the same columns.'},
+     hue:'#cf6a1c',hook:'Compare homologous sequences by placing corresponding nucleotides or amino acid residues in the same columns.'},
     {n:4,slug:'hmm',dir:'cho-han-night',key:'chohan:v1',topic:'Hidden Markov models',game:'Loaded Dice',levels:11,terms:14,burst:'dice',sfx:[['.stage svg','clack']],
      hue:'#3d4fa8',hook:'A dealer switches between two pairs of dice out of sight. From the calls alone, work out which pair was in play each round.'},
     {n:5,slug:'evolutionary-trees',dir:'hollow-mountain',key:'hollowmountain:v1',topic:'Evolutionary trees',game:'Hollow Mountain',levels:11,terms:17,burst:'stars',sfx:[['.stage svg','step']],
@@ -17,9 +17,9 @@ window.BOOK={
     {n:6,slug:'clustering',dir:'paint-by-k',key:'paintbyk:v1',topic:'Clustering',game:'Paint by k',levels:10,terms:14,burst:'drops',sfx:[['.stage svg','bloop']],
      hue:'#b8327a',hook:'Print a picture of a thousand colours from a few pots of ink by deciding which pixels share a pot.'},
     {n:7,slug:'burrows-wheeler',dir:'the-loom',key:'theloom:v1',topic:'Read mapping with the Burrows–Wheeler transform',short:'Read mapping',game:'The Loom',levels:11,terms:11,burst:'threads',sfx:[['.stage svg','pluck'],['.strip','pluck']],
-     hue:'#a4472f',hook:'Find where a read occurs in a genome of three billion letters without scanning the genome.'},
+     hue:'#a4472f',hook:'Find where a read occurs in a genome of three billion nucleotides without scanning the genome.'},
     {n:8,slug:'transformers',dir:'long-distance',key:'longdistance:v1',topic:'Transformers',game:'Long Distance',levels:10,terms:17,burst:'threads',sfx:[['.stage svg','pluck']],
-     hue:'#1f6f54',hook:'Predict whether a gene is switched on from its DNA, when the sequence that decides it can lie thousands of letters from the gene.'}
+     hue:'#1f6f54',hook:'Predict gene expression from DNA when regulatory sequences can lie thousands of base pairs from the gene.'}
   ],
   resources:[
     // [file suffix, link text, when to use it (shown beside the link on the chapter page)]

@@ -633,28 +633,28 @@ const REDUCED=typeof matchMedia==='function'&&matchMedia('(prefers-reduced-motio
 const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const fmt=n=>Number(n).toLocaleString('en-US');
 const CUP=['fair pair','loaded pair'],CUPS=['fair','loaded'],CALL={S:'7',O:'other'};
-const oneIn=p=>p<=0?'no chance at all':p>=1?'certain':'1 in '+fmt(Math.round(1/p));
+const oneIn=p=>p<=0?'probability 0':p>=1?'certain':'1 in '+fmt(Math.round(1/p));
 
 const LEVELS=[
   {id:1,mode:'family',title:'One of the family?',
-   brief:'Five proteins from one family are written in rows so that letters with the same role share a column. A dash means that member has nothing at that position. Two newcomers claim to belong, and only one does. Pick it.'},
+   brief:'Five related protein sequences are written in rows so that homologous amino acid residues share a column. A dash denotes a gap in that sequence. Two newcomers claim to belong, and only one does. Pick it.'},
   {id:2,mode:'open',title:'Seven or other',
    brief:'Compare two pairs of dice. A fair pair has 36 equally likely rolls; six total 7. The loaded pair always totals 7. After each roll, the dealer calls “7” for a total of 7 or “other” for any other total. Record each call in a balanced practice sample of 24 rolls per pair. Real classroom samples can vary.'},
   {id:3,mode:'swap',title:'The swap',
    brief:'The dealer now rolls one pair behind a screen, and you hear only the call. Between rounds, the dealer may switch between the fair and loaded pairs; the house card shows how often. After each of twelve calls, slide the bead toward the pair you think was rolled.'},
   {id:4,mode:'story',title:'One story',
-   brief:'Use the first four calls from level 3. Make up a story by choosing which pair the dealer used in each round. Using transition weights out of 4 and emission weights out of 6, calculate the chance of that sequence of pairs, then the chance of those calls given those pairs.'},
+   brief:'Use the first four calls from level 3. Make up a story by choosing which pair the dealer used in each round. Using transition weights out of 4 and emission weights out of 6, calculate the probability of that sequence of pairs, then the probability of those calls given those pairs.'},
   {id:5,mode:'wall',title:'Too many stories',
-   brief:'Your story was one of 16 for four rounds. To know how likely the calls were, whatever the dealer did, you would add the chances of every story. The table’s counting machine does this one story at a time.'},
+   brief:'Your story was one of 16 for four rounds. To know how likely the calls were, whatever the dealer did, you would add the probabilities of every story. The table’s counting machine does this one story at a time.'},
   {id:6,mode:'ledger',title:'The bookkeeper’s ledger',
    brief:'Fill the fair and loaded rows for rounds 1–3, one column at a time. Each entry adds up the weights of all stories that match the calls so far and end with that pair. Enter whole numbers and press Enter; the bookkeeper finishes the remaining rounds and converts the totals to probabilities.'},
   {id:7,mode:'best',title:'The best story',
    brief:'A different night, six calls. This time the bookkeeper wants the single most likely story, not the total. Same page, one change: keep only the larger of the two ways in. Click the way you keep, then write the entry. After three columns you pick the ways and the bookkeeper writes. Then follow your kept ways back from the end.'},
   {id:8,mode:'rooms',title:'Rooms',
-   brief:'Back to the protein family from level 1. The bookkeeper builds a house for the family, with a room for each column that most members fill, a trapdoor under each room for a member with a gap there, and a corridor between rooms for letters that belong to no room. Set how many gaps a column may have and still be a room. Then send the members through, one at a time, and keep the tally for the marked room.'},
+   brief:'Back to the protein family from level 1. The bookkeeper builds a house for the family, with a room for each column that most members fill, a trapdoor under each room for a member with a gap there, and a corridor between rooms for residues that belong to no room. Set how many gaps a column may have and still be a room. Then send the members through, one at a time, and keep the tally for the marked room.'},
   {id:9,mode:'bouncer',title:'The bouncer',
-   brief:'The two newcomers from level 1 are at the door. Every door and every room of the house now carries its tally. Walk each newcomer through, choosing each step yourself. Each step multiplies the chance by that tally. Then the bookkeeper shows the best walk there is.'},
-  {id:10,mode:'pebbles',title:'One unseen letter',
+   brief:'The two newcomers from level 1 are at the door. Every door and every room of the house now carries its tally. Walk each newcomer through, choosing each step yourself. Each step multiplies the probability by the corresponding transition and emission frequencies. Then the bookkeeper shows the best walk there is.'},
+  {id:10,mode:'pebbles',title:'One unseen residue',
    brief:'A third newcomer is a known member of the family, a cousin. Walk the cousin through the house.'},
   {id:11,mode:'reunion',title:'Reunion',
    brief:'Seven newcomers queue at the door. Send each one through; the bookkeeper finds each best walk, pebbles and all. Then draw the door line: family above it, strangers below.'}
@@ -673,7 +673,7 @@ const SRC={
   eddy:{cite:'Eddy, 1998',title:'Profile hidden Markov models',where:'Bioinformatics 14, 755–763',
     url:'https://doi.org/10.1093/bioinformatics/14.9.755',look:'A short review. Its abstract describes turning a multiple alignment into a position-specific scoring system for finding distant relatives, which is the house you built from the family.'},
   starcich:{cite:'Starcich and others, 1986',title:'Identification and characterization of conserved and variable regions in the envelope gene of HTLV-III/LAV, the retrovirus of AIDS',where:'Cell 45, 637–648',
-    url:'https://doi.org/10.1016/0092-8674(86)90778-6',look:'HIV was then called HTLV-III/LAV. The abstract reports that the envelope gene varies most of all, with substitutions, deletions and insertions clustered in some regions, while other stretches (all 18 cysteines) stay fixed. In the game’s terms, some rooms are conserved and others vary.'},
+    url:'https://doi.org/10.1016/0092-8674(86)90778-6',look:'HIV was then called HTLV-III/LAV. The abstract reports that the envelope gene varies most of all, with substitutions, deletions and insertions clustered in some regions, while other positions, including all 18 cysteine residues, are conserved. In the game’s terms, some rooms are conserved and others vary.'},
   sonnhammer:{cite:'Sonnhammer, Eddy & Durbin, 1997',title:'Pfam: a comprehensive database of protein domain families based on seed alignments',where:'Proteins 28, 405–420',
     url:'https://doi.org/10.1002/(SICI)1097-0134(199707)28:3%3C405::AID-PROT10%3E3.0.CO;2-L',look:'Pfam keeps a small hand-checked “seed” alignment for each family, builds a model from it, and lets the model find and align every other member. The abstract says it classified many unannotated worm proteins this way.'}
 };
@@ -681,7 +681,7 @@ const SRC={
 /* Vocabulary, in the order it is earned. */
 const VOCAB=[
   {id:'family',name:'Protein family',def:'A group of proteins descended from a common ancestor, with related sequences and usually related functions.'},
-  {id:'msa',name:'Multiple alignment',def:'Several sequences written in rows, with gap symbols (-) inserted so that letters descended from the same ancestral position fall in the same column.'},
+  {id:'msa',name:'Multiple alignment',def:'Several sequences written in rows, with gap symbols (-) inserted so that residues descended from the same ancestral position fall in the same column.'},
   {id:'hstate',name:'Hidden state',def:'The state a hidden Markov model is in at a given step. It cannot be observed; only the symbol it emits is seen.'},
   {id:'hpath',name:'Hidden path',def:'The sequence of hidden states π = π₁…πₙ that an HMM passes through while emitting a string x = x₁…xₙ.'},
   {id:'trans',name:'Transition probability',src:'rabiner',code:'BA10A',def:'transition(l, k): the probability that an HMM in state l is in state k at the next step. The transition probabilities out of each state sum to 1.'},
@@ -690,10 +690,10 @@ const VOCAB=[
   {id:'forward',name:'Forward algorithm',src:'baum',code:'BA10D',def:'Computes Pr(x), the probability that an HMM emits x summed over every hidden path, column by column: forward(k, i) = Σₗ forward(l, i−1) · transition(l, k) · emission(k, xᵢ). Time O(|States|² · n), not |States|ⁿ.'},
   {id:'viterbi',name:'Viterbi algorithm',src:'viterbi',code:'BA10C',def:'Finds a hidden path π maximising Pr(x, π): the forward recurrence with max in place of the sum, keeping a pointer to the better predecessor, then backtracking from the best final state.'},
   {id:'phmm',name:'Profile HMM',src:'eddy',code:'BA10E',def:'A hidden Markov model built from a multiple alignment: one match state per column kept (columns whose fraction of gaps is below a threshold θ), with insertion and deletion states, and transition and emission probabilities equal to the normalised counts in the alignment.'},
-  {id:'match',name:'Match state',src:'krogh',def:'MATCH(i): the state for the i-th column kept from the alignment. It emits letters with that column’s frequencies.'},
-  {id:'insert',name:'Insert state',def:'INSERTION(i): a state that emits letters lying between kept columns i and i+1. It can repeat, so a sequence can carry any number of extra letters there.'},
+  {id:'match',name:'Match state',src:'krogh',def:'MATCH(i): the state for the i-th column kept from the alignment. It emits residues with that column’s frequencies.'},
+  {id:'insert',name:'Insert state',def:'INSERTION(i): a state that emits residues lying between kept columns i and i+1. It can repeat, so a sequence can carry any number of extra residues there.'},
   {id:'delete',name:'Delete state',def:'DELETION(i): a silent state that emits nothing, letting a sequence skip kept column i.'},
-  {id:'pseudo',name:'Pseudocounts',code:'BA10F',def:'A small number added to every count (or probability) before normalising, so that no allowed letter or move has probability zero. You first met them in Motif Slots.'}
+  {id:'pseudo',name:'Pseudocounts',code:'BA10F',def:'A small number added to every count (or probability) before normalising, so that no allowed emission or transition has probability zero. You first met them in Motif Slots.'}
 ];
 const DEF={};VOCAB.forEach(v=>DEF[v.id]=v);
 function term(id,label){return '<span class="term" tabindex="0">'+(label||DEF[id].name)+'<span class="tip" role="tooltip"><b>'+DEF[id].name+'</b>'+DEF[id].def+'</span></span>';}
@@ -914,7 +914,7 @@ function table(o){
   return h+'</svg>';
 }
 const CARD_CALLS=['Fair pair: 7 = 1/6; other = 5/6','Loaded pair: 7 = 1; other = 0'];
-const CARD_SWAP=['Keep pair: 3 in 4; swap pairs: 1 in 4','First round: either pair, 1 chance in 2'];
+const CARD_SWAP=['Keep pair: 3 in 4; swap pairs: 1 in 4','First round: either pair, probability 1/2'];
 
 /* ================= Level 2: both pairs in the open ================= */
 
@@ -1035,7 +1035,7 @@ MODES.swap={
     cur.s.lifted=true;S.marks[gkey('night')]=cur.s.marks.slice();log('lift',{marks:cur.s.marks});
     complete(['hstate','hpath'],null,'Behind the screen, round by round.');
   },
-  reveal(){return [{html:'The pair used in each round is a '+term('hstate','hidden state')+': the pair determines the chances of “7” and “other”, but stays hidden behind the screen. The whole night’s sequence of pairs is the '+term('hpath','hidden path')+'. Your bead positions recorded your guesses; the bookkeeper will compare those guesses with calculated chances in level 6.'}];}
+  reveal(){return [{html:'The pair used in each round is a '+term('hstate','hidden state')+': the pair determines the probabilities of “7” and “other”, but stays hidden behind the screen. The whole night’s sequence of pairs is the '+term('hpath','hidden path')+'. Your bead positions recorded your guesses; the bookkeeper will compare those guesses with calculated probabilities in level 6.'}];}
 };
 ACT.lock=()=>{
   const s=cur.s;if(cur.done||s.marks.length>=12)return;
@@ -1074,7 +1074,7 @@ MODES.story={
   },
   reveal(){
     const c=storyChances(cur.st.story,cur.calls);
-    return [{html:'The chances of keeping or swapping, 3 in 4 and 1 in 4, are '+term('trans','transition probabilities')+'. A pair’s chances of each call are its '+term('emit','emission probabilities')+': 1/6 and 5/6 for the fair pair, 1 and 0 for the loaded pair. The whole table, a hidden pair that changes by transition probabilities and a call emitted by whichever pair is in play, is a '+term('hmm','hidden Markov model')+'.'},
+    return [{html:'The probabilities of keeping or swapping, 3 in 4 and 1 in 4, are '+term('trans','transition probabilities')+'. A pair’s probabilities of each call are its '+term('emit','emission probabilities')+': 1/6 and 5/6 for the fair pair, 1 and 0 for the loaded pair. The whole table, a hidden pair that changes by transition probabilities and a call emitted by whichever pair is in play, is a '+term('hmm','hidden Markov model')+'.'},
       {html:'Your story with its calls: '+c.both+' / 165,888 = '+(c.both/165888).toPrecision(3)+'. That is one story. There are others.',src:['rabiner']}];
   }
 };
@@ -1082,7 +1082,7 @@ ACT.pair=i=>{
   const st=cur.st;if(cur.done)return;i=+i;
   st.story[i]=st.story[i]===null?0:1-st.story[i];
   if(Object.keys(st.v).length){st.v={};st.ok={};say('New story: the sums start again.');}
-  else say(st.story.every(k=>k!==null)?'Now the chances. Type each one and press Enter.':'Click each round’s pair.');
+  else say(st.story.every(k=>k!==null)?'Now the probabilities. Type each one and press Enter.':'Click each round’s pair.');
   log('story',{story:st.story.slice()});
 };
 function checkStory(id,val){
@@ -1095,8 +1095,8 @@ function checkStory(id,val){
     cur.focus=next;say('Written in.');
   }else{
     st.bad=id;log('cell',{id,ok:false,val:n});jolt(id);cur.focus=id;
-    say(id[0]==='t'||id==='s0'?'The bookkeeper crosses it out: check the house card for the dealer’s starting, keeping and swapping chances.'
-      :id[0]==='e'?'The bookkeeper crosses it out: check the house card for that pair’s chances of that call.'
+    say(id[0]==='t'||id==='s0'?'The bookkeeper crosses it out: check the house card for the dealer’s starting, keeping and swapping probabilities.'
+      :id[0]==='e'?'The bookkeeper crosses it out: check the house card for that pair’s probabilities of that call.'
       :'The bookkeeper crosses it out: multiply the numbers in the row above.','warn');
   }
 }
@@ -1127,7 +1127,7 @@ MODES.wall={
         w.done4.list.map(r=>r.s.map(k=>k?'L':'F').join('')+'  '+String(r.v).padStart(4)+' in 165,888').join('\n')+'</div>'+
         '<p>16 stories. Added up: <b class="frac">'+fmt(w.done4.total)+' in 165,888</b>.</p>';
     }
-    if(w.done12)h+='<p>Twelve rounds: <b>'+fmt(4096)+'</b> stories, each a product of 24 chances. Added up: <b class="frac">'+fmt(w.done12.total)+'</b> in '+fmt(ledgerDenominator(12))+'.</p>';
+    if(w.done12)h+='<p>Twelve rounds: <b>'+fmt(4096)+'</b> stories, each a product of 24 probabilities. Added up: <b class="frac">'+fmt(w.done12.total)+'</b> in '+fmt(ledgerDenominator(12))+'.</p>';
     if(w.on100)h+='<p>One hundred rounds: <b>'+BIG100+'</b> stories (2 multiplied by itself 100 times). At a million stories a second the machine needs about 40,000,000,000,000,000 years.</p>'+
       '<p class="counter">counted: '+fmt(w.count)+'</p>';
     return h;
@@ -1182,7 +1182,7 @@ function ledgerCalculation(calls,cols,t,k){
 function ledgerExample(calls,cols){
   const equation=(t,k)=>'<span class="frac">'+ledgerCalculation(calls,cols,t,k)+' = '+cols[t][k]+'</span>';
   return '<section class="ledger-example" aria-label="Worked example"><h3>Worked example for this night</h3>'+
-    '<p>Use whole-number weights to avoid fractions: start at <b>1</b> for either pair (1/2 each), then <b>×3 to keep</b> the pair or <b>×1 to swap</b> (out of 4). The call multiplier printed in each box is out of 6: for example, a chance of 5/6 becomes ×5.</p>'+
+    '<p>Use whole-number weights to avoid fractions: start at <b>1</b> for either pair (1/2 each), then <b>×3 to keep</b> the pair or <b>×1 to swap</b> (out of 4). The call multiplier printed in each box is out of 6: for example, a probability of 5/6 becomes ×5.</p>'+
     '<ol><li><b>Round 1 — call “'+CALL[calls[0]]+'”.</b> Multiply the start weight by each pair’s call multiplier.'+
     '<div class="eq"><span>fair: '+equation(0,0)+'</span><span>loaded: '+equation(0,1)+'</span></div></li>'+
     '<li><b>Round 2, fair row — call “'+CALL[calls[1]]+'”.</b> Use both entries from round 1. Keeping the fair pair contributes '+cols[0][0]+' × '+ODDS.keep+'; switching from the loaded pair contributes '+cols[0][1]+' × '+ODDS.swap+'. Add those contributions, then multiply by the fair pair’s call multiplier.'+
@@ -1205,8 +1205,8 @@ MODES.ledger={
     let h=(done?'':ledgerExample(N.calls,cols))+ledgerGrid(done?N.calls:N.calls.slice(0,3),cell,extra);
     if(done){
       const p3=cols[2][0]+cols[2][1],tot=cols[11][0]+cols[11][1],d=ledgerDenominator(12);
-      h+='<div class="prob">After three calls the column adds to <b class="frac">'+p3+'</b>. Divide by 2 for the start, by 6 for each of the 3 calls and by 4 for each of the 2 steps between rounds: <b class="frac">'+p3+' / '+fmt(ledgerDenominator(3))+' = '+(p3/ledgerDenominator(3)).toFixed(4)+'</b>, the chance of those three calls whatever the dealer did.</div>'+
-        '<div class="prob">After all twelve: <b class="frac">'+fmt(tot)+' / '+fmt(d)+' = '+(tot/d).toPrecision(3)+'</b>, the chance of the whole night. It is the counting machine’s total, with no story listed.</div>'+
+      h+='<div class="prob">After three calls the column adds to <b class="frac">'+p3+'</b>. Divide by 2 for the start, by 6 for each of the 3 calls and by 4 for each of the 2 steps between rounds: <b class="frac">'+p3+' / '+fmt(ledgerDenominator(3))+' = '+(p3/ledgerDenominator(3)).toFixed(4)+'</b>, the probability of those three calls whatever the dealer did.</div>'+
+        '<div class="prob">After all twelve: <b class="frac">'+fmt(tot)+' / '+fmt(d)+' = '+(tot/d).toPrecision(3)+'</b>, the probability of the whole night. It is the counting machine’s total, with no story listed.</div>'+
         '<div class="sub" style="margin-top:10px">The bookkeeper’s share for the loaded pair, over your bead from level 3</div>'+
         beliefChart(12,S.marks[gkey('night')]||null,beliefs(N.calls),N.truth)+(S.marks[gkey('night')]?'':'<p class="gmeta">(Your level 3 beads for this night were not saved: play level 3 to see them here.)</p>');
     }
@@ -1264,7 +1264,7 @@ MODES.best={
   reveal(){
     const L=likelierPairs(cur.calls),diff=L.map((k,i)=>k!==cur.bs.story[i]?i+1:0).filter(Boolean);
     return [{html:'Keeping the better way in, then following the kept ways back, is the '+term('viterbi','Viterbi algorithm')+'. It finds the single most likely story. Betting each round on the pair the adding page favours answers a different question, which pair is likelier given the calls up to that round, and here the two disagree in round'+(diff.length>1?'s ':' ')+diff.join(', ')+'. A story made of round-by-round favourites can even be one the dealer was unlikely to play.'},
-      {html:'This page is the Toll City table with two rows. There you added tolls along a route and kept the better way into each corner. Here you multiply chances along a story and keep the better way into each entry.',src:['viterbi']}];
+      {html:'This page is the Toll City table with two rows. There you added tolls along a route and kept the better way into each corner. Here you multiply probabilities along a story and keep the better way into each entry.',src:['viterbi']}];
   }
 };
 ACT.way=a=>{
@@ -1321,8 +1321,8 @@ MODES.family={
   },
   reveal(){
     const right=cur.order.indexOf('relative');
-    return [{html:'Newcomer '+AB[right]+' is family. '+(cur.pick===right?'You picked it.':'You picked the other one, and no wonder:')+' nearly every letter the stranger has, some member has in that column too.'},
-      {html:'Proteins descended from one ancestor form a '+term('family','protein family')+'. Rows written one above another, with dashes so that related letters share a column, are a '+term('msa','multiple alignment')+'.'}];
+    return [{html:'Newcomer '+AB[right]+' is family. '+(cur.pick===right?'You picked it.':'You picked the other one, and no wonder:')+' nearly every residue the stranger has, some member has in that column too.'},
+      {html:'Proteins descended from one ancestor form a '+term('family','protein family')+'. Rows written one above another, with gap symbols so that homologous residues share a column, are a '+term('msa','multiple alignment')+'.'}];
   }
 };
 ACT.pick=i=>{if(cur.done)return;cur.pick=+i;S.picked.l1=cur.order[+i];log('pick',{newcomer:AB[+i],who:cur.order[+i]});complete(['family','msa'],null,'The door opens for newcomer '+AB[cur.order.indexOf('relative')]+'.');};
@@ -1402,7 +1402,7 @@ MODES.rooms={
     h+='<div class="row"><span class="sub">Send through:</span>'+f.aln.map((_,i)=>'<button id="mem'+i+'" data-act="member" data-arg="'+i+'" class="'+(r.member===i?'primary':'')+'">member '+(i+1)+'</button>').join('')+'</div>';
     h+='<div class="sub" style="margin-top:10px">Your tally for room '+R+' (outlined): where each member goes next</div><div class="moveset">'+
       this.moves().map(s=>'<div class="mv'+(r.bad&&r.bad.includes(s)?' bad':'')+'"><span>'+stName(s)+'</span><button data-act="mv" data-arg="'+s+',-1" aria-label="one fewer">−</button><b id="mv'+s+'">'+(r.mv[s]||0)+'</b><button data-act="mv" data-arg="'+s+',1" id="mvp'+s+'" aria-label="one more">+</button></div>').join('')+'</div>';
-    h+='<div class="sub" style="margin-top:10px">Letters said in room '+R+' (click to add one; '+'<button data-act="clearlt" style="padding:0 8px">clear</button>)</div><div class="board">'+
+    h+='<div class="sub" style="margin-top:10px">Residues emitted in room '+R+' (click to add one; '+'<button data-act="clearlt" style="padding:0 8px">clear</button>)</div><div class="board">'+
       AMINO.map(x=>'<button class="lkey'+(r.bad&&r.bad.includes(x)?' bad':'')+'" id="lt'+x+'" data-act="lt" data-arg="'+x+'">'+x+'<small>'+(r.lt[x]||0)+'</small></button>').join('')+'</div>'+
       '<button class="primary" id="pin" data-act="pin">Pin the tally on room '+R+'’s door</button>';
     if(cur.done)h+=this.table();
@@ -1412,7 +1412,7 @@ MODES.rooms={
     const f=cur.f,isR=this.isRoom(),C=profileCounts(f.aln,isR,AMINO),k=C.k;
     let h='<div class="sub" style="margin-top:12px">The bookkeeper tallies every room the same way, in fifths</div><div class="hscroll"><table class="gmeta" style="border-collapse:collapse"><tr><th></th>';
     for(let j=1;j<=k;j++)h+='<th style="padding:2px 8px">room '+j+'</th>';
-    h+='</tr><tr><td>letters</td>';
+    h+='</tr><tr><td>residues</td>';
     for(let j=1;j<=k;j++){const e=C.E['M'+j],tot=AMINO.reduce((a,x)=>a+e[x],0);h+='<td style="padding:2px 8px;vertical-align:top">'+AMINO.filter(x=>e[x]).map(x=>x+' '+e[x]+'/'+tot).join('<br>')+'</td>';}
     h+='</tr><tr><td>moves out</td>';
     for(let j=1;j<=k;j++){const t=C.T['M'+j],nx=allowedNext('M'+j,k),tot=nx.reduce((a,s)=>a+t[s],0);
@@ -1420,7 +1420,7 @@ MODES.rooms={
     return h+'</tr></table></div>';
   },
   reveal(){
-    return [{html:'The house is a '+term('phmm','profile HMM')+' of the family. Each room is a '+term('match','match state')+': it emits letters with its column’s tally. The corridor is an '+term('insert','insert state')+', for extra letters between rooms. The trapdoor is a '+term('delete','delete state')+': silent, it lets a member skip a room. The moves out of each room are its transition probabilities, the letters its emission probabilities. Counting the traffic of the aligned members is how the model is built.',src:['krogh','eddy']}];
+    return [{html:'The house is a '+term('phmm','profile HMM')+' of the family. Each room is a '+term('match','match state')+': it emits residues with its column’s tally. The corridor is an '+term('insert','insert state')+', for extra residues between rooms. The trapdoor is a '+term('delete','delete state')+': silent, it lets a member skip a room. Normalised counts of moves out of each room give its transition probabilities; normalised residue counts give its emission probabilities. Counting the traffic of the aligned members is how the model is built.',src:['krogh','eddy']}];
   }
 };
 ACT.gaps=v=>{const r=cur.r;if(cur.done)return;v=+v;if(v===r.gaps)return;r.gaps=v;r.mv={};r.lt={};r.bad=null;r.member=null;log('gaps',{v});
@@ -1471,7 +1471,7 @@ function walkPanel(w,P,id){
     }).join('')+(w.steps.length?'<button data-act="unstep" id="unstep">Back one step</button>':'')+'</div>';
   }
   const fs=walkFactors(w,P),p=fprod(fs);
-  h+='<div class="prob">Chance so far: '+(fs.length?fs.map(([n,d])=>'<span class="frac">'+n+'/'+d+'</span>').join(' × '):'nothing yet')+(fs.length?' = <b>'+oneIn(p)+'</b>':'')+'</div>';
+  h+='<div class="prob">Probability so far: '+(fs.length?fs.map(([n,d])=>'<span class="frac">'+n+'/'+d+'</span>').join(' × '):'nothing yet')+(fs.length?' = <b>'+oneIn(p)+'</b>':'')+'</div>';
   return h;
 }
 ACT.step=s=>{
@@ -1492,7 +1492,7 @@ ACT.unstep=()=>{const w=cur.walk;if(!w||cur.done)return;if(w.out)w.out=false;els
 MODES.bouncer={
   init(){cur.f=family();cur.P=profileHMM(cur.f.aln,{maxGaps:DEFAULT_GAPS});cur.order=newcomerOrder(cur.f);
     cur.walks=cur.order.map(who=>newWalk(cur.f[who]));cur.best=[null,null];cur.which=0;cur.walk=cur.walks[0];say('Walk newcomer A through, one step at a time.');},
-  rule(){return 'Each step multiplies the chance by the tally on that door';},
+  rule(){return 'Each step multiplies the probability by the relevant transition and emission frequencies';},
   scene(){const w=cur.walk;return houseSvg(cur.P.k,{trail:trailOf(w),out:w.out,col:cur.which?'#b4541a':'#2b5fb3'});},
   walked(){const i=cur.which,b=profileBest(cur.walk.text,cur.P);cur.best[i]=b;log('walked',{who:cur.order[i],mine:fprod(walkFactors(cur.walk,cur.P)),best:b.prob});
     say('Out the back. The bookkeeper checks every possible walk: the best is '+oneIn(b.prob)+'.');},
@@ -1506,7 +1506,7 @@ MODES.bouncer={
   },
   reveal(){
     const b=cur.best,r=cur.order.indexOf('relative'),ratio=b[r].prob/b[1-r].prob;
-    return [{html:'The best walk is found the way the bookkeeper found the best story in level 7: keep the better way into each room, then follow it back. Newcomer '+AB[r]+'’s best walk is about '+fmt(Math.round(ratio))+' times likelier than the other’s. Every letter the stranger said had been said in its room by somebody, but mostly by one member out of five, in rooms where the others agree.'}];
+    return [{html:'The best walk is found the way the bookkeeper found the best story in level 7: keep the better way into each room, then follow it back. Newcomer '+AB[r]+'’s best walk is about '+fmt(Math.round(ratio))+' times likelier than the other’s. Every residue the stranger said had been said in its room by somebody, but mostly by one member out of five, in rooms where the others agree.'}];
   }
 };
 ACT.which=i=>{if(cur.done)return;cur.which=+i;cur.walk=cur.walks[+i];say('Newcomer '+AB[+i]+'.');};
@@ -1520,21 +1520,21 @@ ACT.admit=i=>{
 MODES.pebbles={
   init(){cur.f=family();cur.P=profileHMM(cur.f.aln,{maxGaps:DEFAULT_GAPS});cur.walk=newWalk(cur.f.second);cur.which=0;cur.best0=null;
     cur.pb={on:false,letters:{},moves:{},spread:false};say('');},
-  rule(){return cur.pb.on?'One pebble on every letter and every move':'Each step multiplies the chance by the tally on that door';},
+  rule(){return cur.pb.on?'One pebble on every residue and every move':'Each step multiplies the probability by the relevant transition and emission frequencies';},
   scene(){return houseSvg(cur.P.k,{trail:trailOf(cur.walk),out:cur.walk.out,col:'#2e7d4f',mark:cur.pb.on?cur.f.slipRoom:undefined});},
   walked(){if(cur.pb.spread)return MODES.pebbles.rescored();cur.best0=profileBest(cur.walk.text,cur.P);log('walked',{best:cur.best0.prob});
-    say(cur.best0.prob?'Best walk: '+oneIn(cur.best0.prob)+'.':'The bookkeeper checks every possible walk, and each has chance zero. The house turns the cousin away.','warn');},
+    say(cur.best0.prob?'Best walk: '+oneIn(cur.best0.prob)+'.':'The bookkeeper checks every possible walk, and each has probability zero. The house turns the cousin away.','warn');},
   moves(){return allowedNext('M'+cur.f.slipRoom,cur.P.k);},
   work(){
     const pb=cur.pb,R=cur.f.slipRoom;
     let h=walkPanel(cur.walk,cur.P,'The cousin');
     if(pb.on&&!pb.spread){
-      h+='<div class="sub" style="margin-top:10px">Room '+R+': drop one pebble on each letter (it counts as one more time that letter was said)</div><div class="board">'+
+      h+='<div class="sub" style="margin-top:10px">Room '+R+': drop one pebble on each residue (it counts as one more time that residue was observed)</div><div class="board">'+
         AMINO.map(x=>'<button class="lkey" id="pl'+x+'" data-act="peb" data-arg="L'+x+'"'+(pb.letters[x]?' disabled':'')+'>'+x+'<small>'+(cur.P.counts.E['M'+R][x]+(pb.letters[x]?1:0))+'</small></button>').join('')+'</div>'+
         '<div class="sub">and one on each way out of room '+R+'</div><div class="moveset">'+
         this.moves().map(s=>'<button class="mv" id="pm'+s+'" data-act="peb" data-arg="M'+s+'"'+(pb.moves[s]?' disabled':'')+'>'+stName(s)+' <b>'+(cur.P.counts.T['M'+R][s]+(pb.moves[s]?1:0))+'</b></button>').join('')+'</div>';
       const e=AMINO.reduce((a,x)=>a+cur.P.counts.E['M'+R][x]+(pb.letters[x]?1:0),0);
-      h+='<p class="prob">Room '+R+' now counts '+e+' letters. '+cur.f.unseen+' has <b class="frac">'+(pb.letters[cur.f.unseen]?1:0)+' / '+e+'</b>.</p>';
+      h+='<p class="prob">Room '+R+' now counts '+e+' residues. '+cur.f.unseen+' has <b class="frac">'+(pb.letters[cur.f.unseen]?1:0)+' / '+e+'</b>.</p>';
     }
     if(pb.spread){
       const s=familyScores(cur.f);
@@ -1547,13 +1547,13 @@ MODES.pebbles={
     if(pb.on&&!pb.spread&&AMINO.every(x=>pb.letters[x])&&this.moves().every(s=>pb.moves[s]))return 'Let the bookkeeper drop one on everything else';
     return '';},
   onSkip(){const pb=cur.pb;
-    if(!pb.on){pb.on=true;log('pebbles_open');say('One pebble on each letter of room '+cur.f.slipRoom+', and one on each way out.');return;}
+    if(!pb.on){pb.on=true;log('pebbles_open');say('One pebble on each residue of room '+cur.f.slipRoom+', and one on each way out.');return;}
     pb.spread=true;cur.P=profileHMM(cur.f.aln,{maxGaps:DEFAULT_GAPS,add:1});cur.walk=newWalk(cur.f.second);log('pebbles_spread');
-    say('Every room, corridor and trapdoor has a pebble on every letter and move. Walk the cousin through again.');
+    say('Every room, corridor and trapdoor has a pebble on every residue and move. Walk the cousin through again.');
   },
   rescored(){const b=profileBest(cur.walk.text,cur.P),s=familyScores(cur.f);log('walked',{best:b.prob});
     complete(['pseudo'],null,'The cousin’s best walk is now '+oneIn(b.prob)+': above the stranger’s '+oneIn(s.str1)+'.');},
-  reveal(){return [{html:'A pebble on every letter and every move is a '+term('pseudo','pseudocount')+'. Motif Slots used the same correction, where a profile that had never seen a letter gave a good motif probability zero. Here one letter that no member had said in that room excluded the cousin. With the pebbles it only lowers the cousin’s chance.'}];}
+  reveal(){return [{html:'A pebble on every residue and every move is a '+term('pseudo','pseudocount')+'. Motif Slots used the same correction, where a profile with an unobserved nucleotide gave a good motif probability zero. Here one residue unobserved in that column excluded the cousin. With the pebbles it only lowers the cousin’s probability.'}];}
 };
 ACT.peb=a=>{const pb=cur.pb;if(!pb||!pb.on||pb.spread)return;
   if(a[0]==='L')pb.letters[a.slice(1)]=true;else pb.moves[a.slice(1)]=true;log('pebble',{a});
@@ -1581,9 +1581,9 @@ MODES.reunion={
   },
   reveal(){
     const f=cur.f;
-    return [{html:'Back to level 1. Every letter the stranger said had been said in that column by some member, but where the family agrees it kept picking the odd one out, and where the family is split it picked the popular letter, which matters little. Counting letters by eye treats every column alike. The house weights each room by how strongly the family agrees there, and the corridor and trapdoors account for insertions and gaps.'},
-      {wild:'<p>HIV’s envelope protein mutates so fast that two samples, even from one patient, differ in many places, while some stretches never change. In pairwise comparison, distant relatives look unrelated. Models built from whole families, like your house, are how such relatives are found: the Pfam database keeps one for each of thousands of protein families.</p>'+srcCard('starcich')+srcCard('sonnhammer')},
-      {html:'What you played, in algorithm terms: the pair in play is a '+term('hstate','hidden state')+'; the night of pairs a '+term('hpath','hidden path')+'; the chances of each call '+term('emit','emission probabilities')+'; keeping and swapping '+term('trans','transition probabilities')+'; the adding page the '+term('forward','forward algorithm')+'; the keep-the-better page the '+term('viterbi','Viterbi algorithm')+'; rooms, corridors and trapdoors the '+term('match','match')+', '+term('insert','insert')+' and '+term('delete','delete states')+' of a '+term('phmm','profile HMM')+'. The family in this game is illustrative.'}];
+    return [{html:'Back to level 1. Every residue the stranger said had been said in that column by some member, but where the family agrees it kept picking the odd one out, and where the family is split it picked the popular residue, which matters little. Counting residues by eye treats every column alike. The house weights each room by how strongly the family agrees there, and the corridor and trapdoors account for insertions and gaps.'},
+      {wild:'<p>HIV’s envelope protein mutates so fast that two samples, even from one patient, differ in many places, while some regions remain conserved. In pairwise comparison, distant relatives look unrelated. Models built from whole families, like your house, are how such relatives are found: the Pfam database keeps one for each of thousands of protein families.</p>'+srcCard('starcich')+srcCard('sonnhammer')},
+      {html:'What you played, in algorithm terms: the pair in play is a '+term('hstate','hidden state')+'; the night of pairs a '+term('hpath','hidden path')+'; the probabilities of each call '+term('emit','emission probabilities')+'; keeping and swapping '+term('trans','transition probabilities')+'; the adding page the '+term('forward','forward algorithm')+'; the keep-the-better page the '+term('viterbi','Viterbi algorithm')+'; rooms, corridors and trapdoors the '+term('match','match')+', '+term('insert','insert')+' and '+term('delete','delete states')+' of a '+term('phmm','profile HMM')+'. The family in this game is illustrative.'}];
   }
 };
 ACT.send=i=>{i=+i;if(cur.done||cur.sc[i])return;const b=profileBest(cur.q[i].s,cur.P);cur.sc[i]=b;cur.show=i;log('send',{i,prob:b.prob});
@@ -1672,23 +1672,23 @@ function benchCalls(txt){
     row('adding: fair',t=>fmt(L[t][0]))+row('adding: loaded',t=>fmt(L[t][1]))+row('likelier this round',t=>cn(lk[t]))+
     row('best: fair',t=>fmt(B.cols[t][0])+(t?' ←'+cn(B.from[t][0]):''))+row('best: loaded',t=>fmt(B.cols[t][1])+(t?' ←'+cn(B.from[t][1]):''))+
     row('most likely story',t=>cn(bs.story[t]))+'</table></div>'+
-    '<p>Chance of the calls: '+fmt(P.num)+' / '+fmt(P.den)+' = '+(P.num/P.den).toPrecision(4)+'. Most likely story: '+fmt(bs.value)+' / '+fmt(P.den)+(bs.unique?'':' (not unique: a tie lies on it)')+'.</p>'+
+    '<p>Probability of the calls: '+fmt(P.num)+' / '+fmt(P.den)+' = '+(P.num/P.den).toPrecision(4)+'. Most likely story: '+fmt(bs.value)+' / '+fmt(P.den)+(bs.unique?'':' (not unique: a tie lies on it)')+'.</p>'+
     '<p><b>'+(differ?'They disagree':'They agree')+'</b>: the most likely story and betting round by round on the likelier pair '+(differ?(d=>'part in round'+(d.length>1?'s ':' ')+d.join(', ')+'.')(bs.story.map((k,i)=>k!==lk[i]?i+1:0).filter(Boolean)):'pick the same pairs.')+'</p>';
 }
 function benchFamily(txt,maxGaps,seq,add){
   const rows=txt.toUpperCase().split(/\s+/).filter(Boolean);
-  if(rows.length<2||rows.some(r=>r.length!==rows[0].length||/[^A-Z-]/.test(r)))return '<p class="status warn">Paste at least two rows of equal length, letters and dashes only.</p>';
+  if(rows.length<2||rows.some(r=>r.length!==rows[0].length||/[^A-Z-]/.test(r)))return '<p class="status warn">Paste at least two rows of equal length, using amino acid one-letter codes and gap symbols (-).</p>';
   const isRoom=roomsOf(rows,maxGaps),k=isRoom.filter(Boolean).length;
   const al=[...new Set(rows.join('').replace(/-/g,'').split('').concat(AMINO))].sort();
   const C=profileCounts(rows,isRoom,al);
   let h='<p>Rooms (columns with at most '+maxGaps+' gaps): '+isRoom.map((r,j)=>r?'col '+(j+1)+'→room '+roomNo(isRoom,j):'col '+(j+1)+'→corridor').join(', ')+'.</p>';
   const tb=a=>{
     const P=profileHMM(rows,{isRoom,alphabet:al,add:a});
-    let t='<div class="hscroll"><table><tr><th>state</th><th>letters said</th><th>moves out</th></tr>';
+    let t='<div class="hscroll"><table><tr><th>state</th><th>residues emitted</th><th>moves out</th></tr>';
     P.states.filter(s=>s!=='E').forEach(s=>{
       const e=al.filter(x=>C.E[s][x]||(a&&(s[0]==='M'||s[0]==='I'))).slice(0,a?6:al.length).map(x=>x+' '+(C.E[s][x]+(s[0]==='D'||s==='S'?0:a))+(a?'':'')).join(' ');
       const nx=allowedNext(s,k).map(x=>x+' '+(C.T[s][x]+a)).join(' ');
-      t+='<tr><td>'+s+'</td><td style="text-align:left">'+(s[0]==='M'||s[0]==='I'?e+(a?' … (every letter +'+a+')':''):'')+'</td><td style="text-align:left">'+nx+'</td></tr>';
+      t+='<tr><td>'+s+'</td><td style="text-align:left">'+(s[0]==='M'||s[0]==='I'?e+(a?' … (every residue +'+a+')':''):'')+'</td><td style="text-align:left">'+nx+'</td></tr>';
     });
     t+='</table></div>';
     const sq=seq.toUpperCase().replace(/[^A-Z]/g,'');

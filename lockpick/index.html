@@ -390,10 +390,10 @@ const VOCAB=[
  ['balanced','euler','A node is balanced when as many edges enter it as leave it.'],
  ['Eulerian path','euler','A walk that uses every edge exactly once but may end on a different node from the one where it began.'],
  ['Euler’s theorem','euler','A connected graph has an Eulerian cycle exactly when every node is balanced. It has an Eulerian path when only the start (one extra edge out) and the end (one extra edge in) are unbalanced.'],
- ['read','recon','A short stretch of DNA reported by a sequencing machine. Reads cut to length k are k-mers.'],
+ ['read','recon','A short nucleotide sequence reported by a sequencing instrument. Reads cut to length k are k-mers.'],
  ['genome assembly','recon','Rebuilding a genome from reads. With k-mer reads it means finding an Eulerian path in their de Bruijn graph: the String Reconstruction Problem.'],
- ['repeat','repeat','A stretch that occurs more than once in a genome. Repeats let the same reads be assembled in more than one way.'],
- ['read length','klen','The number of letters in each read. Longer reads reach across repeats.']
+ ['repeat','repeat','A DNA sequence that occurs more than once in a genome. Repeats let the same reads be assembled in more than one way.'],
+ ['read length','klen','The number of nucleotides in each read. Longer reads reach across repeats.']
 ];
 const TERMS={};VOCAB.forEach(v=>{TERMS[v[0]]=v[2];});
 
@@ -422,10 +422,10 @@ const FINDS=[
   vocab:'A scrap is called a <b>read</b>. From here on the game says read.',
   ros:'BA3H, Reconstruct a String from its k-mer Composition',clue:'It is in part 7.',vis:t=>tilingHTML(t.join(''),I.k)},
  {id:'repeat',name:'The repeat problem',lead:'That’s the <b>repeat problem</b>.',
-  text:'The same reads give two different strips. The strip comes back to a node it has already been through, and the stretches in between can be taken in either order. Nothing in 3-letter reads says which strip is the real one.',
+  text:'The same reads give two different strips. The strip comes back to a node it has already been through, and the sequence segments in between can be taken in either order. Nothing in three-nucleotide reads says which strip is the real one.',
   ros:'BA3K, Generate Contigs from a Collection of Reads',clue:'It is in part 7, after you finish it once.',vis:()=>twinHTML()},
  {id:'klen',name:'Read length',lead:'That’s why <b>read length</b> matters.',
-  text:'With one more letter per read, the crowded node splits into separate nodes and only one strip remains.',
+  text:'With one more nucleotide per read, the crowded node splits into separate nodes and only one strip remains.',
   ros:'BA3J, Reconstruct a String from its Paired Composition',clue:'It is in part 8.',vis:()=>splitHTML()}
 ];
 const FIND={};FINDS.forEach(F=>{FIND[F.id]=F;});
@@ -513,19 +513,19 @@ const wScrap=pl=>has('recon')?term('read'+(pl?'s':''),'read'):'scrap'+(pl?'s':''
 function briefFor(){
   const N=I.codes.length;
   switch(I.L.id){
-    case 1:return `A strip of DNA ${I.strip.text.length} letters long went through a shredder that cuts out a 3-letter scrap at every position. Here are all ${N} scraps, shuffled. Type the strip back. Each time the last 3 letters you typed match an unused scrap, that scrap is used up.`;
+    case 1:return `A DNA sequence ${I.strip.text.length} nucleotides long went through a shredder that cuts out a three-nucleotide fragment at every position. Here are all ${N} scraps, shuffled. Type the strip back. Each time the last three nucleotides you typed match an unused scrap, that scrap is used up.`;
     case 2:return `Every locker has its own ${wCode(2)}, and all four listen to this one keypad. A locker pops open the moment the last 2 keys pressed match it. There is no Enter key. Open them all in as few presses as you can.`;
     case 3:return `Same lock, ${wCode(3,1)} now: eight lockers. Trying them one at a time takes 24 presses.`;
     case 4:return `Sixteen lockers, one for every ${wCode(4)}.`+(S.map?` The ${wMap()} keeps drawing as you type. Click a ${wDot()} on it to put your cursor at that point in the tape.`:'');
     case 5:return `Four keys now: A, C, G and T. Sixteen lockers, one for every ${wCode(2)}.`;
-    case 6:return `Sixty-four lockers, one for every ${wCode(3)}. A cell reads these 3-letter words as codons, and each locker holds what its codon stands for.`;
+    case 6:return `Sixty-four lockers, one for every ${wCode(3)}. These nucleotide triplets represent codons; each locker holds the corresponding amino acid or stop signal.`;
     case 7:return `The ${N} ${wScrap(1)} of the shredded strip are now on locker doors, and the rest of the wall is gone. A press with no locker to open is wasted.`;
-    default:return `The same strip, shredded into 4-letter ${wScrap(1)} this time.`;
+    default:return `The same strip, fragmented into four-nucleotide ${wScrap(1)} this time.`;
   }
 }
 function hintFor(){
   switch(I.L.id){
-    case 1:return 'Pick a scrap to start with, then look for one that overlaps it by two letters.';
+    case 1:return 'Pick a scrap to start with, then look for one that overlaps it by two nucleotides.';
     case 2:return 'One press can finish one code and start the next.';
     case 3:return 'A struck-through press re-opened a locker. Watch the display: what was the lock still holding?';
     case 4:case 5:return `Click a ${wDot()} that still has a light lit and type from there until you are back on it.`;
@@ -688,7 +688,7 @@ function renderTape(A,t,p){
   if(!t.length)h+='<span class="ghost">press a key, or type on your keyboard</span>';
   $('#tape').innerHTML=h;
   put('#stats',`Presses <b>${t.length}</b> &middot; Wasted <b class="${A.waste?'bad':''}">${A.waste}</b> &middot; ${I.scraps?'Used':'Open'} <b>${A.open}</b>/${I.codes.length}`);
-  put('#legend',I.scraps?'dashed: not three letters yet &middot; solid: used up a scrap &middot; struck through: wasted &middot; underlined: the last three letters'
+  put('#legend',I.scraps?'dashed: fewer than three nucleotides &middot; solid: used up a scrap &middot; struck through: wasted &middot; underlined: the last three nucleotides'
     :'dashed: the lock is still filling up &middot; solid: opened a locker &middot; struck through: wasted &middot; underlined: what the lock hears now');
 }
 function renderLCD(t,p){
@@ -798,7 +798,7 @@ function twinHTML(){
     return j<z?'d2':j>=m-x?'d1':'';
   };
   const row=(s,first)=>`<div class="trow2">${s.split('').map((c,i)=>`<span class="${cls(i,first)}">${c}</span>`).join('')}</div>`;
-  return `<div class="twin">${row(a,true)}${row(b,false)}</div><span class="cap2">the same two stretches, in either order</span>`;
+  return `<div class="twin">${row(a,true)}${row(b,false)}</div><span class="cap2">the same two sequence segments, in either order</span>`;
 }
 function splitHTML(){
   const s=I.strip.text,cnt={};
@@ -806,8 +806,8 @@ function splitHTML(){
   const u=Object.keys(cnt).sort((x,y)=>cnt[y]-cnt[x])[0],rows=[];
   for(let i=0;i+2<s.length;i++)if(s.slice(i,i+2)===u)rows.push([i>0?s[i-1]+u:u,s[i+2]]);
   const pill=x=>`<span class="pill key-${x}">${x}</span>`;
-  return `<div class="split"><div><span class="cap2">3-letter reads: one crowded node</span><div class="bal"><span class="mini">${u}</span><b>&rarr;</b>${rows.map(r=>pill(r[1])).join('<i>or</i>')}</div></div>`+
-    `<div><span class="cap2">4-letter reads: it splits</span>${rows.map(r=>`<div class="bal"><span class="mini">${r[0]}</span><b>&rarr;</b>${pill(r[1])}</div>`).join('')}</div></div>`;
+  return `<div class="split"><div><span class="cap2">three-nucleotide reads: one crowded node</span><div class="bal"><span class="mini">${u}</span><b>&rarr;</b>${rows.map(r=>pill(r[1])).join('<i>or</i>')}</div></div>`+
+    `<div><span class="cap2">4-nucleotide reads: it splits</span>${rows.map(r=>`<div class="bal"><span class="mini">${r[0]}</span><b>&rarr;</b>${pill(r[1])}</div>`).join('')}</div></div>`;
 }
 function revealHTML(id,t){
   const F=FIND[id];let vis='';

@@ -583,7 +583,7 @@ $('#ant').innerHTML=$('#a-ant').innerHTML;
 
 const LEVELS=[
   {id:1,mode:'cards',k:3,n:8,minB:1,maxB:2,title:'Shredded',
-   brief:'A DNA sequence was shredded into overlapping 3-letter reads, and the shreds got shuffled. Rebuild it. Click reads to chain them so that each starts with the last two letters of the one before. Use every read exactly once.'},
+   brief:'A DNA sequence was fragmented into overlapping three-nucleotide reads, then the reads were shuffled. Rebuild it. Click reads to chain them so that each starts with the last two nucleotides of the one before. Use every read exactly once.'},
   {id:2,mode:'ham',share:1,intro:'cards',title:'Put it on a map',
    brief:'The same eight reads. Each read becomes an island, with a one-way bridge from one island to another wherever the end of the first read overlaps the start of the second. Islands sink when '+ANT+' the ant leaves them.'},
   {id:3,mode:'ham',k:3,n:12,minB:2,title:'Twelve nodes',
@@ -599,20 +599,20 @@ const LEVELS=[
   {id:8,mode:'balance',title:'Round trip',
    brief:'No DNA this time: a small graph with numbered nodes. '+ANT+' wants a round trip that crosses every edge once and ends where it began. For that, every node needs as many edges arriving as leaving. Add the fewest new edges that achieve this.'},
   {id:9,mode:'eul',k:4,n:10,minB:2,build:true,title:'Draw the map yourself',
-   brief:'Ten reads, four letters each. Until now the game drew the edge map for you. This time you draw it. Each read is one edge, from the node named by its first three letters to the node named by its last three. Pick a read, then click where its edge starts and where it ends: an existing node, or open water to raise a new one.'},
+   brief:'Ten reads, four nucleotides each. Until now the game drew the edge map for you. This time you draw it. Each read is one edge, from the node named by its first three nucleotides to the node named by its last three. Pick a read, then click where its edge starts and where it ends: an existing node, or open water to raise a new one.'},
   {id:10,mode:'eul',k:4,n:12,minB:2,nomap:true,title:'No map',
    brief:'Twelve reads and no map. Before anything is drawn, decide where '+ANT+' has to start. Click a candidate node to see which reads start with it and which end with it.'},
   {id:11,mode:'eul',share:4,intro:'morph',noUndo:true,title:'Two dozen, again',
    brief:'The same twenty-four reads that stranded '+ANT+' in level 4. There is no Undo this time, because an assembler working through millions of reads cannot afford to backtrack.'},
   {id:12,mode:'eul',pairs:true,title:'Which one is real?',
-   brief:'Twenty reads, four letters each. Cross every edge once. Does finding a walk tell you which DNA sequence was really there?'}
+   brief:'Twenty reads, four nucleotides each. Cross every edge once. Does finding a walk tell you which DNA sequence was really there?'}
 ];
 
 /* Primary sources. Every link and citation here was checked against the publisher's record. */
 const SRC={
   staden:{cite:'Staden, 1979',title:'A strategy of DNA sequencing employing computer programs',where:'Nucleic Acids Research 6, 2601–2610',
     url:'https://pmc.ncbi.nlm.nih.gov/articles/PMC327874/',
-    look:'An early program for ordering stretches of sequence by their overlaps, the task you just did by hand.'},
+    look:'An early program for ordering sequence fragments by their overlaps, the task you just did by hand.'},
   myers:{cite:'Myers et al., 2000',title:'A whole-genome assembly of Drosophila',where:'Science 287, 2196–2204',
     url:'https://doi.org/10.1126/science.287.5461.2196',
     look:'The assembler used for the fruit fly genome. Its Overlapper stage compares every read with every other read, which produces the map used in this level.'},
@@ -650,13 +650,13 @@ const SRC={
 /* Vocabulary, in the order it is earned. def = the technical definition shown on hover.
    src = primary source unlocked with the term; code = the Rosalind problem that codes it. */
 const VOCAB=[
-  {id:'kmer',name:'k-mer',def:'A string of k letters. ATG is a 3-mer and ATGC is a 4-mer. A sequencing read of length k is a k-mer.'},
+  {id:'kmer',name:'k-mer',def:'A sequence of k nucleotides. ATG is a 3-mer and ATGC is a 4-mer. A sequencing read of length k is a k-mer.'},
   {id:'comp',name:'k-mer composition',code:'BA3A',def:'The collection of all k-mer substrings of a string, repeats included, with their order forgotten. The 3-mer composition of TATGGG is ATG, GGG, TAT, TGG.'},
   {id:'strrec',name:'String reconstruction',code:'BA3H',def:'The String Reconstruction Problem: given a collection of k-mers, find a string whose k-mer composition is exactly that collection.'},
   {id:'assembly',name:'Genome assembly',src:'staden',def:'Reconstructing a genome from sequencing reads: short fragments read from unknown, overlapping positions. In its idealised form it is the String Reconstruction Problem.'},
   {id:'node',name:'Node',def:'One of the objects in a graph. A graph G = (V, E) is a set V of nodes together with a set E of edges joining pairs of nodes. Also called a vertex.'},
   {id:'edge',name:'Edge',def:'A connection between two nodes. In a directed graph an edge (u, v) is an ordered pair: it leaves u, enters v, and can only be followed in that direction.'},
-  {id:'overlap',name:'Overlap graph',src:'myers',code:'BA3C',def:'For a collection of k-mers: one node per k-mer, and a directed edge from a to b whenever the last k−1 letters of a are the first k−1 letters of b.'},
+  {id:'overlap',name:'Overlap graph',src:'myers',code:'BA3C',def:'For a collection of k-mers: one node per k-mer, and a directed edge from a to b whenever the last k−1 nucleotides of a are the first k−1 nucleotides of b.'},
   {id:'ham',name:'Hamiltonian path',src:'hamilton',def:'A path in a graph that visits every node exactly once.'},
   {id:'np',name:'NP-complete',src:'karp',def:'A class of decision problems with no known polynomial-time algorithm, where a fast algorithm for any one would give a fast algorithm for all. Deciding whether a graph has a Hamiltonian path is NP-complete.'},
   {id:'degree',name:'Degree',src:'euler',def:'The number of edges touching a node.'},
@@ -668,9 +668,9 @@ const VOCAB=[
   {id:'balance',name:'Euler’s theorem',def:'A connected directed graph has an Eulerian cycle if and only if every node is balanced. It has an Eulerian path if and only if at most one node has outdegree − indegree = 1 (the start), at most one has indegree − outdegree = 1 (the end), and every other node is balanced.'},
   {id:'hier',name:'Hierholzer’s algorithm',src:'hierholzer',def:'Finds an Eulerian path in O(|E|) time: walk until stuck; then, while unused edges remain, start a new walk from a node on the current path that still has unused edges, follow it until it returns, and splice that cycle into the path.'},
   {id:'debruijn',name:'de Bruijn graph',src:'debruijn',code:'BA3E',def:'For a collection of k-mers: the nodes are all (k−1)-mers that occur as a prefix or suffix, and each k-mer is a directed edge from its prefix to its suffix. An Eulerian path spells a string containing every k-mer exactly once.'},
-  {id:'repeat',name:'Repeat',def:'A stretch of DNA occurring more than once. Repeated node labels can allow different walks through the same reads, making an assembly ambiguous.'},
-  {id:'readpair',name:'Read-pair',src:'paired',code:'BA3J',def:'Two reads from the same DNA fragment, with information about their relative orientation and separation. In this puzzle both are written in the same direction: two k-mers with exactly d unknown letters between them. Their starts are k + d letters apart.'},
-  {id:'pairedgraph',name:'Paired de Bruijn graph',src:'paired',code:'BA3J',def:'Each read-pair (a|b) is an edge from the pair of (k−1)-letter prefixes to the pair of suffixes. Nodes merge only when both labels match. A valid reconstruction must also make the two spelled strings agree at the specified gap; paired data do not always resolve every repeat.'}
+  {id:'repeat',name:'Repeat',def:'A DNA sequence occurring more than once in a genome. Repeated node labels can allow different walks through the same reads, making an assembly ambiguous.'},
+  {id:'readpair',name:'Read-pair',src:'paired',code:'BA3J',def:'Two reads from the same DNA fragment, with information about their relative orientation and separation. In this puzzle both are written in the same direction: two k-mers with exactly d unknown nucleotides between them. Their starts are k + d nucleotides apart.'},
+  {id:'pairedgraph',name:'Paired de Bruijn graph',src:'paired',code:'BA3J',def:'Each read-pair (a|b) is an edge from the pair of (k−1)-nucleotide prefixes to the pair of suffixes. Nodes merge only when both labels match. A valid reconstruction must also make the two spelled strings agree at the specified gap; paired data do not always resolve every repeat.'}
 ];
 const DEF={};VOCAB.forEach(v=>DEF[v.id]=v);
 function term(id,label){
@@ -678,7 +678,7 @@ function term(id,label){
 }
 /* What the game says when vocabulary is earned. html may be a function of the current level. */
 const BLOCKS={
-  problem:{src:['staden'],html:'Each shred is a '+term('kmer','k-mer')+': a string of k letters, here k = 3. The whole pile of shreds is the string’s '+term('comp','k-mer composition')+'. Rebuilding a string from its composition is the '+term('strrec','String Reconstruction Problem')+', and doing it with real DNA is called <b>'+term('assembly','genome assembly')+'</b>.'},
+  problem:{src:['staden'],html:'Each read is a '+term('kmer','k-mer')+': a sequence of k nucleotides, here k = 3. The collection of reads is the string’s '+term('comp','k-mer composition')+'. Rebuilding a string from its composition is the '+term('strrec','String Reconstruction Problem')+', and doing it with real DNA is called <b>'+term('assembly','genome assembly')+'</b>.'},
   graph:{pic:'equiv',src:['myers'],html:'In graph theory, islands are called '+term('node','nodes')+' and bridges are called '+term('edge','edges')+'. <b>We’ll use those words from now on.</b> This particular map, with one node per read, is an '+term('overlap','overlap graph')+'.'},
   ham:{pic:'ham',src:['hamilton'],html:ANT+' visited every node exactly once. <b>That’s called a '+term('ham','Hamiltonian path')+'.</b>'},
   np:{pic:'ham',src:['karp'],html:'<b>Nobody knows a fast way to find a Hamiltonian path.</b> The problem is '+term('np','NP-complete')+': every added node multiplies the number of routes to try, and the search becomes infeasible long before a million reads.'},
@@ -686,13 +686,13 @@ const BLOCKS={
   euler:{pic:'eul',src:['pevzner89'],html:ANT+' crossed every edge exactly once. <b>That’s called an '+term('euler','Eulerian path')+'.</b> The reads moved from the nodes to the edges.'},
   inout:{html:'The number of edges entering a node is its '+term('inout','indegree')+'; the number leaving it is its '+term('inout','outdegree')+'.'},
   roundtrip:{html:()=>'Every node now has indegree equal to outdegree: each one is a '+term('balanced','balanced node')+'. That is exactly when a round trip over every edge exists, an '+term('cycle','Eulerian cycle')+'. <b>That’s '+term('balance','Euler’s theorem')+'.</b> You needed '+cur.inst.need+' new edges because each one repairs one node that was short an edge out and one that was short an edge in. The table under the map is the graph’s '+term('adj','adjacency list')+'.'},
-  debruijn:{src:['debruijn'],html:'You drew a node for every 3-letter prefix or suffix and an edge for every read. <b>That map is called a '+term('debruijn','de Bruijn graph')+'.</b> Reads of length k always give nodes of length k − 1.'},
+  debruijn:{src:['debruijn'],html:'You drew a node for every 3-nucleotide prefix or suffix and an edge for every read. <b>That map is called a '+term('debruijn','de Bruijn graph')+'.</b> Reads of length k always give nodes of length k − 1.'},
   nomap:{html:'A node’s outdegree is the number of reads that start with it, and its indegree is the number that end with it. '+ANT+' must start where outdegree − indegree = 1: '+term('balance','Euler’s theorem')+' again, this time for a path.'},
   balance:{html:'You set '+ANT+' down on the right node first time, twice. <b>That’s '+term('balance','Euler’s theorem')+'.</b> Start where one more edge leaves than arrives; you will finish where one more arrives than leaves. Every other node has as many in as out.'},
   hier:{src:['hierholzer'],html:'No backing up: when stranded, '+ANT+' went to a node with unused edges and spliced in a loop. <b>That’s '+term('hier','Hierholzer’s algorithm')+'.</b> It touches each edge once, so it works for millions of reads.'},
   nohier:{html:ANT+' was never stranded, so one term is still hidden. Try a new puzzle and let '+ANT+' get stranded once to earn it.'},
   finale:{src:['ptw','primer'],html:'The twenty-four reads that stranded '+ANT+' as nodes took twenty-four steps as edges, with no backing up. <b>That is why assemblers for short reads are built on de Bruijn graphs.</b>'},
-  paired:{src:['paired'],html:()=>'<b>One pair told the two walks apart.</b> The repeated '+cur.inst.repeat+' is a '+term('repeat','repeat')+'. A '+term('readpair','read-pair')+' can decide between the walks only when its two ends come from different stretches, so that swapping the loops pulls them apart. The four pairs that fitted both strings each came from a single loop, or from the stretch after both. Adding both prefix and suffix labels to every node gives a '+term('pairedgraph','paired de Bruijn graph')+': here the repeated nodes separate and the forks disappear. This small puzzle has one answer; real pairs have uncertain gaps and do not resolve every repeat.'}
+  paired:{src:['paired'],html:()=>'<b>One pair told the two walks apart.</b> The repeated '+cur.inst.repeat+' is a '+term('repeat','repeat')+'. A '+term('readpair','read-pair')+' can decide between the walks only when its two ends come from different sequence regions, so that swapping the loops pulls them apart. The four pairs that fitted both strings each came from a single loop, or from the region after both. Adding both prefix and suffix labels to every node gives a '+term('pairedgraph','paired de Bruijn graph')+': here the repeated nodes separate and the forks disappear. This small puzzle has one answer; real pairs have uncertain gaps and do not resolve every repeat.'}
 };
 
 /* ---------- saved state ---------- */
@@ -1133,9 +1133,9 @@ function pairTape(c,i){
     const cls=!won?'':i===won.cand?'ok':right&&c.text[off+rightAt+j]!==ch?'bad':'';
     return '<span'+(cls?' class="'+cls+'"':'')+'>'+ch+'</span>';
   };
-  const stencil=[...p.left].map((ch,j)=>cell(ch,j,false)).join('')+'<span class="gap" aria-label="one unknown letter">·</span>'+[...p.right].map((ch,j)=>cell(ch,j,true)).join('');
+  const stencil=[...p.left].map((ch,j)=>cell(ch,j,false)).join('')+'<span class="gap" aria-label="one unknown nucleotide">·</span>'+[...p.right].map((ch,j)=>cell(ch,j,true)).join('');
   return '<div class="tape" style="--letters:'+c.text.length+'"><b>String '+AB(i)+'</b><div class="tapeletters" aria-label="'+c.text+'">'+letters+'</div>'+
-    '<div class="pairstencil" id="stencil'+i+'" style="--offset:'+off+'" aria-label="'+p.left+', one unknown letter, '+p.right+'">'+stencil+'</div>'+
+    '<div class="pairstencil" id="stencil'+i+'" style="--offset:'+off+'" aria-label="'+p.left+', one unknown nucleotide, '+p.right+'">'+stencil+'</div>'+
     (won?'<p class="verdict '+(i===won.cand?'ok':'bad')+'">'+(i===won.cand?'Both ends match here.':'The left-hand end sits here, but the right-hand end does not match.')+'</p>'
         :'<input type="range" min="0" max="'+(c.text.length-2*inst.k-inst.d)+'" step="1" value="'+cur.pairOffsets[i]+'" data-slide="'+i+'" aria-label="Slide pair under string '+AB(i)+'">'+
          '<button class="primary" data-answer="'+i+'">Choose string '+AB(i)+'</button>')+'</div>';
@@ -1144,7 +1144,7 @@ function renderPairWork(){
   const el=$('#pairwork'),active=cur.L.pairs&&cur.phase==='pairs';el.hidden=!active;
   if(!active){el.innerHTML='';return;}
   const inst=cur.inst,won=cur.pairWon;
-  el.innerHTML='<p>The blue and purple stretches come from the two loops, taken in opposite orders. Each measured pair has four letters at each end and one unknown letter between them (k = 4, d = 1).</p>'+
+  el.innerHTML='<p>The blue and purple sequence regions come from the two loops, taken in opposite orders. Each measured pair has four nucleotides at each end and one unknown nucleotide between them (k = 4, d = 1).</p>'+
     (won?'<p><b>This pair settles it.</b> It lines up under string '+AB(won.cand)+' and nowhere under string '+AB(1-won.cand)+'.</p>'
         :'<p>'+cap(numWord(inst.bench.length))+' of the '+numWord(inst.pairs.length)+' measured pairs are on the bench. Most of them fit both strings and so cannot distinguish them. Find the pair that lines up under only one string, slide it into place there, and choose that string.</p>')+
     '<label for="pairSelect">Read-pair </label><select id="pairSelect"'+(won?' disabled':'')+'>'+inst.bench.map(i=>{const p=inst.pairs[i];
@@ -1159,7 +1159,7 @@ function choosePairAnswer(i){
   log('pair_answer',{candidate:i,pair:cur.pairSel,offsets:cur.pairOffsets.slice(),lined,decides:lined&&decides});
   // No verdict is given away until the pair has actually been lined up under the chosen string.
   if(!lined){
-    say('That pair is not lined up under string '+AB(i)+'. Slide it until both four-letter ends match the letters above, with one letter between them. If it cannot be lined up anywhere, it does not belong to that string.','warn');
+    say('That pair is not lined up under string '+AB(i)+'. Slide it until both four-nucleotide ends match the nucleotides above, with one nucleotide between them. If it cannot be lined up anywhere, it does not belong to that string.','warn');
     $('#status').textContent=cur.msg.text;$('#status').className='status '+cur.msg.kind;
     return;
   }
@@ -1168,11 +1168,11 @@ function choosePairAnswer(i){
     cur.pairKnown[cur.pairSel]=true;
     say('It lines up here, and under string '+AB(1-i)+' as well: this pair fits both strings, so it cannot decide. Both of its ends come from '+
       (s===1?'the blue loop, and swapping the loops carries the whole pair along.':s===2?'the purple loop, and swapping the loops carries the whole pair along.'
-       :'the stretch '+(s===0?'before':'after')+' both loops, which is the same in the two strings.')+' Try another pair.','warn');
+       :'the region '+(s===0?'before':'after')+' both loops, which is the same in the two strings.')+' Try another pair.','warn');
   }else{
     cur.pairWon={cand:i,offset:cur.pairOffsets[i],pair:cur.pairSel};
     log('pair_resolved',{pair:cur.pairSel,tries:cur.pairTries});
-    say(p.left+' · '+p.right+' lines up under string '+AB(i)+' only. Its two ends come from different stretches, so swapping the loops pulls them apart.','good');
+    say(p.left+' · '+p.right+' lines up under string '+AB(i)+' only. Its two ends come from different sequence regions, so swapping the loops pulls them apart.','good');
   }
   render();
 }
@@ -1201,7 +1201,7 @@ function runPairSplit(){
   const done=()=>{
     if(cur!==mine||cur.phase!=='split')return;
     cur.phase='paired';cur.done=true;markDone();grant(['repeat','readpair','pairedgraph']);cur.blocks.push('paired');save();
-    say(cap(numWord(cur.inst.pairs.length))+' paired edges, one unbranched path. The right-hand reads supply the final '+numWord(cur.inst.k+cur.inst.d)+' letters.','good');
+    say(cap(numWord(cur.inst.pairs.length))+' paired edges, one unbranched path. The right-hand reads supply the final '+numWord(cur.inst.k+cur.inst.d)+' nucleotides.','good');
     log('complete',{ms:Date.now()-cur.t0,pairs:true,earned:['repeat','readpair','pairedgraph']});render();
   };
   if(matchMedia('(prefers-reduced-motion: reduce)').matches)return done();
@@ -1267,7 +1267,7 @@ function buildClick(v,pt){
   if(v!==undefined){
     if(v!==want){
       cur.buildErrs++;log('build_reject',{read:e.read,at:N[v],end:verb,why:'wrong_node'});
-      say('The edge for '+e.read+' can’t '+verb+' at '+N[v]+': those are not its '+part+' three letters.','warn');return render();
+      say('The edge for '+e.read+' can’t '+verb+' at '+N[v]+': those are not its '+part+' three nucleotides.','warn');return render();
     }
     snapB();
   }else{
@@ -1678,7 +1678,7 @@ function ruleText(){
   if(ph==='pairs')return 'Same single reads · two possible strings';
   if(ph==='split'||ph==='paired')return 'Pair of prefixes → pair of suffixes';
   if(m==='cards')return 'Chain the reads · use every read once';
-  if(ph==='build')return 'One read, one edge · first three letters → last three';
+  if(ph==='build')return 'One read, one edge · first three nucleotides → last three';
   if(ph==='ask')return 'No map yet · where must '+ANT+' start?';
   if(ph!=='play')return cur.L.intro==='cards'?'Eight shredded reads':'Reads on the nodes … for now';
   if(m==='ham')return cap(w.n)+'s sink behind '+ANT+' · visit every '+w.n+' once';
@@ -1705,7 +1705,7 @@ function renderControls(){
   const sk=$('#skip');let label='';
   if(ph==='pre')label=cur.L.intro==='cards'?'Put the reads on a map':'Turn every node into an edge';
   else if(ph==='ask'&&cur.nm.cand!==null)label='Set '+ANT+' down on '+cur.inst.nodes[cur.nm.cand];
-  else if(ph==='pairs'&&cur.pairWon)label='Add each partner’s letters to the node names';
+  else if(ph==='pairs'&&cur.pairWon)label='Add each partner’s nucleotides to the node names';
   else if(cur.L.id===4&&!cur.done&&(cur.skipOK||cur.strands>=3))label='This is hopeless. Change the map →';
   else if(m==='konig'&&!cur.done&&(cur.skipOK||cur.strands>=2))label='It can’t be done';
   sk.hidden=!label;sk.textContent=label;

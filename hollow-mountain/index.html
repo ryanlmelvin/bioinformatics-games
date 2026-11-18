@@ -558,7 +558,7 @@ const reduced=()=>{try{return matchMedia('(prefers-reduced-motion: reduce)').mat
 
 const LEVELS=[
   {id:1,mode:'count',title:'Who caught it from whom?',
-   brief:'Four patients fell ill with the same new virus, and a short stretch of each patient’s virus has been read, letter by letter. A virus makes occasional copying errors, so viruses passed directly from one person to another differ in few letters.'},
+   brief:'Four patients are infected with the same virus, and a short genomic region from each viral sample has been sequenced. Mutations accumulate during replication, so recently diverged viral sequences generally differ at fewer nucleotide positions.'},
   {id:2,mode:'lit',title:'The mountain, lights on',
    brief:'Inside Hollow Mountain, tunnels meet at junctions, and there is exactly one way through between any two entrances. In this level the lamps are lit. The surveyor measures with a rope. Click two entrances to stretch the rope along the way between them.'},
   {id:3,mode:'y',title:'Lights out',
@@ -568,7 +568,7 @@ const LEVELS=[
   {id:5,mode:'grow',n:5,title:'Rebuild the mountain',
    brief:'Five leaves and only the chart. Start from the single tunnel between A and B, and dig in C, D and E one at a time with the same move. A limb calculator now does the arithmetic you did by hand.'},
   {id:6,mode:'lie',title:'A rope that lies',
-   brief:'Level 1’s four patients, read further along: twenty letters each. The surveyor counted the differences and made a chart. Map it the way you did in level 4.'},
+   brief:'Longer viral sequences from level 1’s four patients: twenty nucleotides each. The surveyor counted the differences and made a chart. Map it the way you did in level 4.'},
   {id:7,mode:'clock',title:'Dug at a steady rate',
    brief:'The miners’ story: the first miners dug outward from one chamber, all at the same steady rate, splitting into two crews at each junction, until every crew broke through to the surface. So every leaf is the same distance from that first chamber. Rebuild this mountain from the story.'},
   {id:8,mode:'fast',title:'The fast tunnel',
@@ -864,12 +864,12 @@ const BLOCKS={
   limb:{html:()=>{const d=cur.D,f=(i,j)=>d[i][j];return 'The tunnel from a leaf to its internal node is the leaf’s limb, and you found all three '+term('limb','limb lengths')+'. For A: the ropes from A to B and from A to C both run along A’s limb, and the rope from B to C runs along neither, so A’s limb is ('+f(0,1)+' + '+f(0,2)+' − '+f(1,2)+') / 2 = '+fmt((f(0,1)+f(0,2)-f(1,2))/2)+'.';}},
   additive:{html:()=>'Your four-leaf map reproduces every rope reading. A chart that some tree fits exactly is an '+term('additive','additive matrix')+'. Of the three values you worked out, the smallest was D’s limb. For a pair whose path D does not branch off, both ropes from D take a detour along that path before coming back, so the value can only come out larger.'},
   addphylo:{html:()=>'Splitting a tunnel and hanging one leaf at a time, until the map reproduces the chart, is '+term('addphylo','additive phylogeny')+' (AdditivePhylogeny). A recursive implementation trims the last leaf’s limb off the chart, solves the smaller chart, then hangs the leaf back where it belongs.'},
-  fourpoint:{src:['buneman'],html:()=>'In a real tree, of the three ways to pair four leaves, two pairings send both of their ropes along the middle tunnel, so those two sums are equal and the largest. That is the '+term('fourpoint','four-point condition')+', and a chart is additive exactly when every foursome meets it. In this chart the two largest sums differ by '+cur.gap+'. Look back at the new letters: the same change turns up in two viruses that are not each other’s closest relatives. It happened twice, independently, and a count of differences cannot tell that from shared descent.'},
+  fourpoint:{src:['buneman'],html:()=>'In a real tree, of the three ways to pair four leaves, two pairings send both of their ropes along the middle tunnel, so those two sums are equal and the largest. That is the '+term('fourpoint','four-point condition')+', and a chart is additive exactly when every foursome meets it. In this chart the two largest sums differ by '+cur.gap+'. Look back at the new nucleotides: the same substitution occurs independently in two viral lineages that are not each other’s closest relatives. This homoplasy cannot be distinguished from shared ancestry by counting pairwise differences alone.'},
   clock:{src:['zuck'],html:()=>'Steady digging is the '+term('clock','molecular clock')+': if a sequence changes at a constant rate, every present-day leaf is equally far from the common ancestor. That first chamber is the root, and a tree with one is a '+term('rooted','rooted tree')+'. Joining the closest pair under a node at half their distance, and averaging their rows, is '+term('upgma','UPGMA')+'. Its map reproduces this chart exactly.'},
   nj:{src:['saitou'],html:()=>'The real mountain has no first chamber to start from: it is an '+term('unrooted','unrooted tree')+'. Two leaves that share an internal node are '+term('neighbors','neighbors')+'. The closest pair here were not neighbors; the smallest entry of the discounted chart, the '+term('njm','neighbor-joining matrix')+', was. Joining that pair, replacing it by its internal node, and repeating is '+term('nj','neighbor joining')+'. The 1987 paper did not prove this guarantee, and neither does the game. The proof came later.'},
   join5:{html:()=>'On an exact chart, neighbor joining rebuilt the mountain. On level 6’s chart, where no tree fits, it still returned a tree, although the tree does not reproduce every rope reading. Real data resemble level 6, which is why neighbor joining is used in practice and additive phylogeny is not.'},
   nni:{html:()=>'Re-hanging two of the four groups across one inner tunnel is a '+term('nni','nearest neighbor interchange')+'. Each inner tunnel gives a tree two nearest neighbors.'},
-  finale:{src:['guan','li'],html:()=>'In this illustrative chart, the human viruses’ closest relative is the civet virus, and the bat viruses branch off further in. That is the shape of the real finding: in 2003 viruses almost identical to the human SARS virus were found in palm civets at a market in Guangdong, and in 2005 bats were shown to carry a wider family of related viruses, with the human and civet viruses nested inside it. The civet was the go-between; bats were the reservoir.'}
+  finale:{src:['guan','li'],html:()=>'In this illustrative chart, the human viruses’ closest relative is the civet virus, and the bat viruses branch off further in. That is the shape of the real finding: in 2003 viruses almost identical to the human SARS virus were found in palm civets at a market in Guangdong, and in 2005 bats were shown to carry a wider family of related viruses, with the human and civet viruses nested inside it. Civets were intermediate hosts; bats were the reservoir.'}
 };
 
 /* ---------- shared pieces ---------- */
@@ -895,8 +895,8 @@ function names4(n){return LET.slice(0,n).split('');}
 const HANDLERS={};
 HANDLERS.count={
   init(c){c.v=makeViruses(keyFor(1));c.stage=0;c.marks=[new Set(),new Set()];c.D=range(4).map(i=>range(4).map(j=>i===j?0:null));c.nod=null;
-    say('Patients '+LET[c.v.hand[0][0]]+' and '+LET[c.v.hand[0][1]]+' first. Click each column where their letters differ.');},
-  rule:()=>'Count the letters that differ',
+    say('Patients '+LET[c.v.hand[0][0]]+' and '+LET[c.v.hand[0][1]]+' first. Click each column where their nucleotides differ.');},
+  rule:()=>'Count the nucleotides that differ',
   scene:()=>({hide:true}),
   diffs(c,k){const [a,b]=c.v.hand[k];return range(12).filter(x=>c.v.short[a][x]!==c.v.short[b][x]);},
   work(c){const v=c.v,names=['Patient A','Patient B','Patient C','Patient D'];let h='';
@@ -915,11 +915,11 @@ HANDLERS.count={
       c.nod=null;if(c.marks[c.stage].has(col))return;c.marks[c.stage].add(col);log('diff_col',{col});
       const all=this.diffs(c,c.stage);
       if(c.marks[c.stage].size===all.length){c.D[a][b]=c.D[b][a]=all.length;
-        if(c.stage===0){c.stage=1;const [x,y]=c.v.hand[1];say(LET[a]+' and '+LET[b]+' differ in '+plural(all.length,'letter')+'. Now '+LET[x]+' and '+LET[y]+'.');}
-        else{c.stage=2;c.D=c.v.D1.map(r=>r.slice());say(LET[a]+' and '+LET[b]+' differ in '+plural(all.length,'letter')+'. The surveyor counted the other four pairs the same way.');}}
+        if(c.stage===0){c.stage=1;const [x,y]=c.v.hand[1];say(LET[a]+' and '+LET[b]+' differ in '+plural(all.length,'nucleotide')+'. Now '+LET[x]+' and '+LET[y]+'.');}
+        else{c.stage=2;c.D=c.v.D1.map(r=>r.slice());say(LET[a]+' and '+LET[b]+' differ in '+plural(all.length,'nucleotide')+'. The surveyor counted the other four pairs the same way.');}}
       else say(plural(c.marks[c.stage].size,'difference')+' so far.');return;}
     if(type==='pick'&&c.stage===2){const p=+d.v,want=c.v.pairs.find(x=>x[0]===0)[1],o=[1,2,3].filter(x=>x!==p);log('pair_guess',{with:LET[p],ok:p===want});
-      if(p!==want){c.wrong++;const D=c.D;say('A and '+LET[p]+' differ in '+D[0][p]+' letters, '+LET[o[0]]+' and '+LET[o[1]]+' in '+D[o[0]][o[1]]+'. Another pairing needs fewer changes in all.','warn');return;}
+      if(p!==want){c.wrong++;const D=c.D;say('A and '+LET[p]+' differ in '+D[0][p]+' nucleotides, '+LET[o[0]]+' and '+LET[o[1]]+' in '+D[o[0]][o[1]]+'. Another pairing needs fewer changes in all.','warn');return;}
       const q=[1,2,3].filter(x=>x!==p);complete(['dmat'],'dmat','A and '+LET[p]+' are close, and so are '+LET[q[0]]+' and '+LET[q[1]]+'.');return;}
     return false;}
 };
@@ -1048,7 +1048,7 @@ HANDLERS.lie=Object.assign({},HANDLERS.grow,{
   scene(c){if(c.stage!=='sums')return HANDLERS.grow.scene(c);const pos=caveLayout(c.lit.tree);
     return {lit:true,svg:caveSVG(c.lit.tree,pos,{style:'lit'}),label:'Level 2’s mountain, lamps lit'};},
   work(c){const names=['Patient A','Patient B','Patient C','Patient D'];
-    let h='<div class="sub">The four viruses, 20 letters (the last 8 are new)</div>'+seqRows(c.v.seqs,names,{newFrom:12});
+    let h='<div class="sub">The four viruses, 20 nucleotides (the last 8 are new)</div>'+seqRows(c.v.seqs,names,{newFrom:12});
     if(c.stage!=='sums')return h+HANDLERS.grow.work.call(HANDLERS.grow,c);
     const P4=[[[0,1],[2,3]],[[0,2],[1,3]],[[0,3],[1,2]]],t=c.lit.tree,pos=caveLayout(t),pn=p=>LET[p[0]]+LET[p[1]];
     h+='<div class="sub">Level 2’s mountain: '+chartHTML(c.lit.D,names4(4),{label:'Level 2 chart'}).replace('<div class="chartwrap">','<div class="chartwrap" style="display:inline-block;vertical-align:top">')+'</div>';
