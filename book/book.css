@@ -30,6 +30,7 @@ a.bk-step:hover,.bk-toc:hover,.bk-bar .bk-sound:hover{background:rgba(255,255,25
 .bk-sound svg{width:20px;height:20px}
 .bk-bar :focus-visible{outline:2px solid var(--bk-gold);outline-offset:1px}
 @media (max-width:640px){.bk-brand span,.bk-toc{display:none}.bk-toc.bk-hlink{display:inline-grid}.bk-where{padding-left:10px}}
+@media (max-width:480px){.bk-topic{display:none}}
 
 /* ---------- a game page ---------- */
 body.bk-game .wrap{padding-top:22px}

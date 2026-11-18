@@ -133,8 +133,8 @@ def suggested_readings(doc, slug=None):
             p=paragraph('')
             source=f"Appendix {reading['appendix']}" if 'appendix' in reading else f"Chapter {reading['chapter']}"
             label=f"{source}: {reading['title']}"
-            if 'section' in reading: label+=f" - {reading['section']}"
-            if 'pages' in reading: label+=f" (pp. {reading['pages']})"
+            extra=', '.join(x for x in (reading.get('section'),f"pp. {reading['pages']}" if 'pages' in reading else None) if x)
+            if extra: label+=f" ({extra})"
             p.add_run(label+'. ').bold=True
             p.add_run(reading['focus'])
         p=paragraph('');p.add_run('Book exercises: ').bold=True;p.add_run(entry['exercises'])

@@ -170,7 +170,7 @@ svg.city{display:block;width:100%;height:auto;touch-action:manipulation;backgrou
 .alignout .strand span.gp{color:var(--muted);border-style:dashed}
 .alignout .strand span.off{opacity:.35}
 .entry{display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding:10px 14px;border-top:1px solid var(--line)}
-.entry input{font:inherit;width:5em;padding:6px 8px;border:1px solid var(--line);border-radius:8px;background:var(--panel);color:var(--ink)}
+.entry input{font:inherit;width:5em;padding:6px 8px;border:1px solid var(--muted);border-radius:8px;background:var(--panel);color:var(--ink)}
 .mat{border-collapse:collapse;font:.85rem ui-monospace,Menlo,monospace;margin:6px 0}
 .mat td,.mat th{border:1px solid var(--line);padding:2px 7px;text-align:right}
 
@@ -609,13 +609,13 @@ const LEVELS=[
 /* Primary sources. Each link was opened (or its PubMed record, where the publisher refuses automated readers). */
 const SRC={
   bellman:{cite:'Bellman, 1952',title:'On the theory of dynamic programming',where:'PNAS 38, 716–719',url:'https://doi.org/10.1073/pnas.38.8.716',
-    look:'A four-page note by the mathematician who named the method, free to read at PubMed Central.'},
+    look:'This four-page note is by the mathematician who named the method. It is free to read at PubMed Central.'},
   nw:{cite:'Needleman & Wunsch, 1970',title:'A general method applicable to the search for similarities in the amino acid sequence of two proteins',where:'Journal of Molecular Biology 48, 443–453',url:'https://doi.org/10.1016/0022-2836(70)90057-4',
     look:'The title states the problem of this level: finding the similarities between the amino-acid sequences of two whole proteins. The end-to-end method still carries the authors’ names.'},
   henikoff:{cite:'Henikoff & Henikoff, 1992',title:'Amino acid substitution matrices from protein blocks',where:'PNAS 89, 10915–10919',url:'https://doi.org/10.1073/pnas.89.22.10915',
     look:'The abstract says the scores were counted from about 2,000 blocks of aligned segments from more than 500 groups of related proteins, rather than from a model of evolutionary rates. These are the BLOSUM tables; BLOSUM62 is one of them.'},
   sw:{cite:'Smith & Waterman, 1981',title:'Identification of common molecular subsequences',where:'Journal of Molecular Biology 147, 195–197',url:'https://doi.org/10.1016/0022-2836(81)90087-5',
-    look:'Three pages. The title describes what the free taxi does: it finds a similar region within two sequences whose remaining regions differ.'},
+    look:'The paper is three pages long. Its title describes what the free taxi finds, a similar region within two sequences whose remaining regions differ.'},
   stach:{cite:'Stachelhaus, Mootz & Marahiel, 1999',title:'The specificity-conferring code of adenylation domains in nonribosomal peptide synthetases',where:'Chemistry & Biology 6, 493–505',url:'https://doi.org/10.1016/S1074-5521(99)80082-9',
     look:'The abstract describes comparing the residues that line the phenylalanine pocket of one domain with the matching positions in other domains, and turning that comparison into rules that predict, from sequence alone, which amino acid a domain picks.'}
 };
@@ -805,7 +805,7 @@ function renderPanel(){
   });
   const missing=VOCAB.filter(x=>!S.badges.includes(x.id)).length;
   if(cur.L.id<LEVELS.length)h+='<button class="primary advance" id="next" data-act="next">Next level →</button>';
-  else h+='<p>'+(missing?plural(missing,'vocabulary term')+' still hidden: '+VOCAB.filter(x=>!S.badges.includes(x.id)).map(x=>'level '+(LEVELS.find(l=>(TERMS_AT[l.id]||[]).includes(x.id))||{id:'?'}).id).join(', ')+'.'
+  else h+='<p>'+(missing?plural(missing,'vocabulary term')+' still hidden. Finish '+(lv=>(lv.length>1?'levels '+lv.slice(0,-1).join(', ')+' and '+lv[lv.length-1]:'level '+lv[0]))([...new Set(VOCAB.filter(x=>!S.badges.includes(x.id)).map(x=>(LEVELS.find(l=>(TERMS_AT[l.id]||[]).includes(x.id))||{id:'?'}).id))])+' to earn them.'
      :'You have earned every term.')+'</p>';
   $('#panel').innerHTML=h+'</div>';
 }
@@ -863,7 +863,7 @@ const STEP={S:[-1,0],E:[0,-1],D:[-1,-1]};          /* where a street arriving by
 function fromOf(i,j,d){const s=STEP[d];return [i+s[0],j+s[1]];}
 function gridSvg(o){
   const n=o.n,m=o.m,P=o.P||56,x0=o.rows!==undefined?38:22,y0=o.cols!==undefined?38:22;
-  const X=j=>x0+j*P,Y=i=>y0+i*P,W=X(m)+(o.tourist?40:22),H=Y(n)+(o.tourist?46:22);
+  const X=j=>x0+j*P,Y=i=>y0+i*P,W=X(m)+(o.tourist?Math.max(40,P*.66):22),H=Y(n)+(o.tourist?Math.max(46,P*.8):22);
   let h='<svg class="city" viewBox="0 0 '+W+' '+H+'" role="group" aria-label="'+esc(o.label||'City map')+'"'+(o.maxw?' style="max-width:'+o.maxw+'px;margin:0 auto'+(o.minw?';min-width:'+o.minw+'px':'')+'"':'')+'>';
   /* blocks */
   for(let i=0;i<n;i++)for(let j=0;j<m;j++){
@@ -916,7 +916,7 @@ function gridSvg(o){
       (hit?'<title>'+esc(hit)+'</title>':'')+'</g>';
   }
   if(o.taxi)o.taxi.forEach(([i,j])=>{h+='<use pointer-events="none" href="#a-taxi" transform="translate('+(X(j)-P*.05)+','+(Y(i)-P*.38)+') scale('+(P/62)+')"/>';});
-  if(o.tourist){const [i,j]=o.tourist;h+='<g id="tourist" transform="translate('+(X(j)+P*.3)+','+(Y(i)+P*.3)+') scale('+(P/44)+')"><use href="#a-tourist"/></g>';}
+  if(o.tourist){const [i,j]=o.tourist;h+='<g id="tourist" transform="translate('+(X(j)+P*.42)+','+(Y(i)+P*.45)+') scale('+(P/52)+')"><use href="#a-tourist"/></g>';}
   return h+'</svg>';
 }
 /* An alignment drawn as two rows of tiles, deck 1 on top. */
@@ -993,19 +993,19 @@ MODES.strands={
       c.hist.push(JSON.stringify([c.a,c.b]));
       if(arr[k]==='-'){arr.splice(k,1);log('gap_remove',{row:r+1,at:k});}
       else{if(arr.length>=c.inst.v.length+c.inst.w.length)return;arr.splice(k,0,'-');log('gap_add',{row:r+1,at:k});}
-      strandTidy(c);say(strandHits(c)+' matching nucleotides lined up.');render();
+      strandTidy(c);render();
     }else if(type==='lock'){
       const k=strandHits(c),par=c.inst.par,top=strandCols(c).map(([x])=>x===null?'-':x).join(''),bot=strandCols(c).map(([,y])=>y===null?'-':y).join('');
       log('lock',{hits:k,top,bottom:bot});
-      say(k<par?'You lined up '+k+'. A better line-up exists: '+par+' matching nucleotides are possible.':'You lined up '+k+'. Nobody can line up more.',k<par?'warn':'good');
+      say(k<par?'Locked in with '+k+' lined up.':'Locked in. Nobody can line up more.',k<par?'warn':'good');
       c.final={top,bot,k};
       complete(['alignment','indel'],[
-        {html:()=>alignTiles(top,bot,{label:'Your line-up'})+'What you built is an '+term('alignment','alignment')+': the two sequences in rows, preserving nucleotide order, with gaps (–) inserted to place nucleotides in columns. A column with a gap represents a nucleotide insertion or deletion: an '+term('indel','indel')+' (insertion or deletion).'},
+        {html:()=>alignTiles(top,bot,{label:'Your line-up'})+'What you built is an '+term('alignment','alignment')+': the two sequences in rows, preserving nucleotide order, with gaps (–) inserted to place nucleotides in columns. A column with a gap represents a nucleotide insertion or deletion, an '+term('indel','indel')+'.'},
         {html:()=>k<par?'You found '+k+' matching columns. <b>'+par+' is possible.</b>':'You found the most matching columns possible, '+par+'.'}
       ],{hits:k,par});
     }
   },
-  undo(c){if(!c.hist.length)return;[c.a,c.b]=JSON.parse(c.hist.pop());log('undo');say(strandHits(c)+' matching nucleotides lined up.');},
+  undo(c){if(!c.hist.length)return;[c.a,c.b]=JSON.parse(c.hist.pop());log('undo');},
   canUndo:c=>c.hist.length>0,
   skip:c=>({label:'Lock it in: '+strandHits(c)+' lined up',act:['lock']})
 };
@@ -1056,7 +1056,7 @@ function deckTable(v,w,g,live,title){
 MODES.decks={
   init(c){c.g=newGame();c.games=0;c.best=0;S.games[instKey('decks')]=S.games[instKey('decks')]||[];
     say('');},
-  rule:c=>'Take both top cards, or throw one away · nothing comes back'+(c.games||(S.games[instKey('decks')]||[]).length?' · par '+c.inst.par:''),
+  rule:c=>'Take both outlined cards, or throw one away · nothing comes back'+(c.games||(S.games[instKey('decks')]||[]).length?' · par '+c.inst.par:''),
   view(c){
     const list=S.games[instKey('decks')]||[];
     return deckTable(c.inst.v,c.inst.w,c.g,!c.done&&!gameOver(c.g,c.inst.v,c.inst.w))+
@@ -1074,9 +1074,9 @@ MODES.decks={
       const k=c.g.score,list=S.games[instKey('decks')];list.push(c.g.moves.join(''));if(list.length>12)list.shift();
       c.games++;log('game',{moves:c.g.moves.join(''),score:k,par:c.inst.par});
       if(k>=c.inst.par){
-        say('Par: '+k+' points. Your pairs spell '+spelled(c.g,v,w)+'.','good');
+        say('Par: '+plural(k,'point')+'.','good');
         const [top,bot]=alignRows(v,w,[0,0],c.g.moves);
-        complete(['lcs'],[{html:()=>'Your pairs spell <b class="mono">'+c.inst.lcs+'</b>. Its symbols appear in order in deck 1 and in deck 2, though not necessarily contiguously. A longest string like that is a '+term('lcs','longest common subsequence')+'; for these decks there is only one.'},
+        complete(['lcs'],[{html:()=>'Your pairs spell <b class="mono">'+c.inst.lcs+'</b>. Its symbols appear in order in deck 1 and in deck 2, though not necessarily contiguously. A longest string with this property is a '+term('lcs','longest common subsequence')+'. These decks have only one.'},
           {html:()=>alignTiles(top,bot,{label:'Your game, written as a line-up'})+'Every game is also a line-up like the one in level 1: a pair taken is a column of two nucleotides, and a card thrown away is a column with a gap.'}],{games:c.games});
         return;
       }
@@ -1101,7 +1101,7 @@ function trailList(c){
 }
 MODES.table={
   init(c){c.tp=tablePuzzle(c.inst);c.phase='ask';c.struck=[];c.shown=false;c.drawn=0;
-    say('To finish as well as possible from here, what do you need to know?');},
+    say('');},
   rule:c=>c.phase==='ask'?'Same cards left on both tables':'One dot for every way the table can look',
   view(c){
     const {v,w}=c.inst,tp=c.tp;
@@ -1135,7 +1135,7 @@ MODES.table={
         say('Choose again.');render();return;
       }
       c.phase='dots';c.stage=null;c.drawn=0;
-      say('Each dot stands for the number of cards taken or thrown away from each deck. Your games are drawn as walks across the dots.');
+      say('Each dot stands for how many cards have been taken or thrown away from each deck. '+(trailList(c).mine?'Your level 2 games':'Two sample games')+' are drawn as walks across the dots.');
       const len=Math.max(...trailList(c).list.map(x=>x.length));
       show(len+1,260,k2=>{c.drawn=k2;},()=>{c.drawn=99;say('Click the dot where tables A and B both stand.');render();});
       render();return;
@@ -1156,7 +1156,7 @@ MODES.table.act=function(c,type,a,b){if(type==='fastdots'){clearInterval(showTim
 /* ---------- level 4: too many games ---------- */
 const BOT_RATE=400;      /* games a second, so each one can be dealt on screen */
 MODES.wall={
-  init(c){c.g=newGame();c.total=countGames(12,12);c.bot={on:false,played:0,best:0,last:''};c.it=null;say('Start the bot.');},
+  init(c){c.g=newGame();c.total=countGames(12,12);c.bot={on:false,played:0,best:0,last:''};c.it=null;say('');},
   rule:c=>'12 cards a deck · '+fmt(c.total)+' possible games',
   view(c){
     const {v,w}=c.inst,b=c.bot,secs=(c.total-b.played)/BOT_RATE,days=secs/86400;
@@ -1164,7 +1164,7 @@ MODES.wall={
       '<div class="bot"><div class="sub">The bot’s table</div>'+
       '<div class="count">'+fmt(b.played)+' <span style="font-size:.9rem;font-weight:400">of '+fmt(c.total)+' games played</span></div>'+
       '<div class="meter"><i style="width:'+Math.max(.2,100*b.played/c.total)+'%"></i></div>'+
-      '<div>Best so far: '+plural(b.best,'point')+(b.last?' · last game: <span class="mono">'+b.last+'</span>':'')+'</div>'+
+      '<div>Best so far: '+plural(b.best,'point')+(b.last?' · last game: <span class="mono">'+b.last+'</span> (D: take both, S: throw away from deck 1, E: throw away from deck 2)':'')+'</div>'+
       (b.on?'<div>At '+BOT_RATE+' games a second it needs about <b>'+(days>=1?days.toFixed(1)+' days':Math.round(secs/60)+' minutes')+'</b> more. Two gene sequences of a thousand nucleotides would give a count of games '+c.bigDigits+' digits long.</div>'
         :'<button class="primary" data-act="bot" style="margin-top:8px">Start the bot</button>')+'</div>';
   },
@@ -1181,14 +1181,14 @@ MODES.wall={
       },100);
       say('The bot is playing every game in turn.');render();return;
     }
-    if(type==='giveup'){log('gave_up',{played:c.bot.played});clearInterval(c.timer);c.title='Stuck is the right answer';
-      say('The bot would still be dealing next week.');
+    if(type==='giveup'){log('gave_up',{played:c.bot.played});clearInterval(c.timer);
+      say('The bot stopped after '+fmt(c.bot.played)+' games.');
       complete([],[{html:()=>'Twelve cards a deck already make '+fmt(c.total)+' different games, and the count roughly multiplies by six for every card added to both decks. Playing them all is infeasible.'}],{played:c.bot.played});return;}
     if(type==='deal'){c.g=newGame();render();return;}
     if(type==='move'&&!gameOver(c.g,v,w)){applyMove(c.g,v,w,d);log('card',{move:d});
       if(gameOver(c.g,v,w))say('Your game: '+plural(c.g.score,'point')+'. One game of '+fmt(c.total)+'.');render();}
   },
-  skip:c=>c.bot.on&&(RM()||c.bot.played>=1200)?{label:'Stop the bot: trying every game is hopeless',act:['giveup']}:gameOver(c.g,c.inst.v,c.inst.w)?{label:'Deal again',act:['deal']}:null
+  skip:c=>c.bot.on&&(RM()||c.bot.played>=1200)?{label:'Stop the bot',act:['giveup']}:gameOver(c.g,c.inst.v,c.inst.w)?{label:'Deal again',act:['deal']}:null
 };
 
 /* ---------- level 5: the tourist ---------- */
@@ -1253,7 +1253,7 @@ MODES.tourist={
       const ar=penArrivals(g,i,j),x=ar.find(y=>y.d===d),best=penBest(g,i,j);
       if(x.val<best){const y=ar.find(z=>z.val===best);c.flash=[i,j,y.d];c.wrong=(c.wrong||0)+1;
         log('pencil_reject',{at:[i,j],via:d,val:x.val,best});
-        stage('Along that street the tourist arrives with '+x.val+'; along the other with '+best+'. The pencil keeps the most.','warn');render();c.flash=null;return;}
+        stage('Along that street the tourist arrives with '+plural(x.val,'sight')+', but another street brings '+best+'. Pencil the largest arrival.','warn');render();c.flash=null;return;}
       penSet(g,i,j,d);g.byHand++;c.stage=null;log('pencil',{at:[i,j],via:d,val:x.val});
       if(penFull(g))return this.toBot(c);
       say(g.byHand>=HAND_CAP?'You have pencilled '+g.byHand+' corners by hand. The pencil can finish the rest the same way.':plural(g.byHand,'corner')+' pencilled.');render();return;
@@ -1268,7 +1268,7 @@ MODES.tourist={
     if(c.phase==='bot'&&type==='run'){
       const city=c.inst.big;
       if(!c.memo){const r=allRoutes(4,4),t=r.map(x=>routeSights(city.down,city.right,x));c.botRuns.off={routes:r.length,streets:r.length*8,best:Math.max(...t)};
-        log('bot_run',{memo:false});say('Switch off: the bot walked all '+r.length+' routes. Now flip the switch.');render();return;}
+        log('bot_run',{memo:false});say('Switch off: the bot walked all '+r.length+' routes. Tick Remember answers and run it again.');render();return;}
       const m=manhattan(city.down,city.right);c.botRuns.on={corners:24,streets:40,best:m.best};log('bot_run',{memo:true});
       say('Switch on: '+r24()+'.','good');
       complete(['mtp','dp'],[
@@ -1313,7 +1313,7 @@ MODES.follow={
     if(i===0&&j===0){
       const mv=cornersToMoves(c.back.slice().reverse()),tot=routeSights(c.inst.big.down,c.inst.big.right,mv);
       say('Back at the start. This route sees '+tot+' sights, the number at the far corner.','good');
-      complete(['backtrack'],[{html:'The numbers give the score of the best route, and the arrows give the route. Starting at the far corner and following the stored arrows back to the start is '+term('backtrack','backtracking')+'.'}]);
+      complete(['backtrack'],[{html:'The number at the far corner is the score of the best route. Following the stored arrows from the far corner back to the start recovers the route itself, which is '+term('backtrack','backtracking')+'.'}]);
       return;
     }
     say(plural(c.back.length-1,'step')+' back.');render();
@@ -1384,8 +1384,8 @@ MODES.deckcity={
     if(type==='corner'&&c.phase==='back')backAct(c,+a,+b,mv=>{
       [c.top,c.bot]=alignRows(v,w,[0,0],mv);S.routes[instKey('decks')]=mv.join('');save();
       const sp=[...c.top].filter((ch,k)=>ch===c.bot[k]).join('');
-      say('Back at the start. The gold diagonals on your route spell '+sp+'.','good');
-      complete([],[{html:()=>'The gold diagonals on your route spell <b class="mono">'+sp+'</b>: the '+term('lcs','longest common subsequence')+' that was par in level 2, and the far corner’s number, '+c.inst.par+', is its length. The route itself is an '+term('alignment','alignment')+' of the two decks: a diagonal is a column of two cards, a step south or east is an '+term('indel','indel')+'.'}]);
+      say('Back at the start.','good');
+      complete([],[{html:()=>'The gold diagonals on your route spell <b class="mono">'+sp+'</b>, the '+term('lcs','longest common subsequence')+' that was par in level 2. Its length, '+c.inst.par+', is the number at the far corner. The route is also an '+term('alignment','alignment')+' of the two decks, in which a diagonal is a column of two cards and a step south or east is an '+term('indel','indel')+'.'}]);
     });
   },
   skip:c=>c.phase==='pre'?{label:'Lay the decks out as a city',act:['lay']}:c.phase==='row'&&c.hand>=c.inst.w.length+1?{label:'Let the pencil fill the rest',act:['auto']}:null
@@ -1430,11 +1430,11 @@ MODES.tolls={
       if(raw===undefined||String(raw).trim()===''||!Number.isFinite(val)){say('Type a whole number, such as −3.','warn');render();return;}
       const best=penBest(c.g,ti,tj);c.tries++;log('toll_corner',{typed:val,best});
       if(val!==best){
-        const ar=penArrivals(c.g,ti,tj).map(x=>(x.d==='S'?'from the north ':x.d==='E'?'from the west ':'along the diagonal ')+c.g.s[x.from[0]][x.from[1]]+' '+signed(x.w).replace(/^([+−])/,'$1 ')+' = '+x.val);
-        stage(val+' is not the best arrival. The three ways in: '+ar.join('; ')+'.','warn');render();return;
+        const mn=n=>n<0?'−'+(-n):String(n),ar=penArrivals(c.g,ti,tj).map(x=>(x.d==='S'?'from the north ':x.d==='E'?'from the west ':'along the diagonal ')+mn(c.g.s[x.from[0]][x.from[1]])+' '+signed(x.w).replace(/^([+−])/,'$1 ')+' = '+mn(x.val));
+        stage(signed(val).replace(/^\+/,'')+' is not the best arrival. The three ways in: '+ar.join('; ')+'.','warn');render();return;
       }
       const ar=penArrivals(c.g,ti,tj),d=['D','S','E'].find(d=>ar.some(x=>x.d===d&&x.val===best));penSet(c.g,ti,tj,d);c.hand=1;c.stage=null;
-      say('Right: '+best+'. The pencil can do the rest the same way.','good');c.phase='ready';render();return;
+      say('Right: '+signed(best).replace(/^\+/,'')+'. The pencil can do the rest the same way.','good');c.phase='ready';render();return;
     }
     if(type==='auto'&&c.phase==='ready'){
       c.phase='fill';const g=c.g,cl={n:g.n,m:g.m,weight:g.weight,s:g.s.map(r=>r.slice()),arrow:g.arrow.map(r=>r.slice())},todo=penAuto(cl);
@@ -1448,7 +1448,7 @@ MODES.tolls={
       say('Back at the start. Under tolls the best route scores '+c.g.s[v.length][w.length]+', and it is not your level 7 route.','good');
       const M=MATRICES.BLOSUM62,L='ACDEF';
       complete(['global','matrix','indelpen'],[
-        {html:()=>'With prices on every street the best route changed: it takes '+plural(pairs,'pair')+', not '+c.inst.par+', because the extra pair cost more in −2 streets than it paid. A best route from the top-left corner to the bottom-right under a scoring like this is a '+term('global','global alignment')+': all of one string against all of the other.',src:['nw']},
+        {html:()=>'With prices on every street the best route changed. It takes '+plural(pairs,'pair')+', not '+c.inst.par+', because the −2 streets needed to reach the other pairs cost more than those pairs pay. A best route from the top-left corner to the bottom-right under a scoring like this is a '+term('global','global alignment')+': all of one string against all of the other.',src:['nw']},
         {html:()=>'The −2 on every south or east street is the '+term('indelpen','indel penalty')+'. For proteins a single mismatch price is too crude, because substitutions between similar amino acids are common and substitutions between dissimilar ones are rare. A '+term('matrix','scoring matrix')+' gives every pair its own price. Here is one corner of BLOSUM62:<table class="mat"><tr><th></th>'+[...L].map(x=>'<th>'+x+'</th>').join('')+'</tr>'+[...L].map(r=>'<tr><th>'+r+'</th>'+[...L].map(x=>'<td>'+M[r+x]+'</td>').join('')+'</tr>').join('')+'</table>',src:['henikoff']}
       ],{tries:c.tries,old,now:mv.join('')});
     });

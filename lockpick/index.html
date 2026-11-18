@@ -245,7 +245,7 @@ dd{margin:0;font-size:.93rem}
   <header class="top">
     <div class="brand">
       <h1>Lockpick</h1>
-      <p class="tag">One keypad. A wall of lockers. No Enter key.</p>
+      <p class="tag">Open every locker on the wall from one keypad that has no Enter key.</p>
     </div>
     <nav class="lv" id="lv" aria-label="Parts"></nav>
     <button class="aux" id="codexBtn" type="button">Discoveries <b id="codexN"></b></button>
@@ -391,7 +391,7 @@ const VOCAB=[
  ['Eulerian path','euler','A walk that uses every edge exactly once but may end on a different node from the one where it began.'],
  ['Euler’s theorem','euler','A connected graph has an Eulerian cycle exactly when every node is balanced. It has an Eulerian path when only the start (one extra edge out) and the end (one extra edge in) are unbalanced.'],
  ['read','recon','A short nucleotide sequence reported by a sequencing instrument. Reads cut to length k are k-mers.'],
- ['genome assembly','recon','Rebuilding a genome from reads. With k-mer reads it means finding an Eulerian path in their de Bruijn graph: the String Reconstruction Problem.'],
+ ['genome assembly','recon','Rebuilding a genome from reads. With k-mer reads it means finding an Eulerian path in their de Bruijn graph, which solves the String Reconstruction Problem.'],
  ['repeat','repeat','A DNA sequence that occurs more than once in a genome. Repeats let the same reads be assembled in more than one way.'],
  ['read length','klen','The number of nucleotides in each read. Longer reads reach across repeats.']
 ];
@@ -400,11 +400,11 @@ const TERMS={};VOCAB.forEach(v=>{TERMS[v[0]]=v[2];});
 /* What the game says when something is discovered. vis() draws it from the player's own tape. */
 const FINDS=[
  {id:'seq',name:'de Bruijn sequence',lead:'That’s called a <b>de Bruijn sequence</b>.',
-  text:'Your tape contains every code exactly once. Joined into a ring, it has no code missing or repeated.',
+  text:'Your tape contains every code exactly once. Drop its last k−1 symbols and join the ends into a ring, and the ring also reads every code exactly once.',
   vocab:'A code that is k symbols long is called a <b>k-mer</b>. From here on the game says k-mer.',
   ros:'BA3I, Find a k-Universal Circular String',clue:'It is on any complete wall.',vis:t=>ringSVG(t.join(''),I.k)},
  {id:'graph',name:'de Bruijn graph',lead:'This map is called a <b>de Bruijn graph</b>.',
-  text:'You drew it. The game only followed your presses.',
+  text:'Each box on it is something the lock can remember, and each arrow is one press from your tape.',
   vocab:'Each display is called a <b>node</b> and each arrow is called an <b>edge</b>. Nodes joined by edges make a <b>graph</b>. From here on the game uses those words.',
   ros:'BA3D, Construct the De Bruijn Graph of a String',clue:'It comes after the wall with eight lockers.'},
  {id:'cycle',name:'Eulerian cycle',lead:'That walk is called an <b>Eulerian cycle</b>.',
@@ -515,22 +515,22 @@ function briefFor(){
   switch(I.L.id){
     case 1:return `A DNA sequence ${I.strip.text.length} nucleotides long went through a shredder that cuts out a three-nucleotide fragment at every position. Here are all ${N} scraps, shuffled. Type the strip back. Each time the last three nucleotides you typed match an unused scrap, that scrap is used up.`;
     case 2:return `Every locker has its own ${wCode(2)}, and all four listen to this one keypad. A locker pops open the moment the last 2 keys pressed match it. There is no Enter key. Open them all in as few presses as you can.`;
-    case 3:return `Same lock, ${wCode(3,1)} now: eight lockers. Trying them one at a time takes 24 presses.`;
-    case 4:return `Sixteen lockers, one for every ${wCode(4)}.`+(S.map?` The ${wMap()} keeps drawing as you type. Click a ${wDot()} on it to put your cursor at that point in the tape.`:'');
-    case 5:return `Four keys now: A, C, G and T. Sixteen lockers, one for every ${wCode(2)}.`;
-    case 6:return `Sixty-four lockers, one for every ${wCode(3)}. These nucleotide triplets represent codons; each locker holds the corresponding amino acid or stop signal.`;
+    case 3:return `The lock now takes ${wCode(3,1)}, so there are eight lockers. Typing each code separately takes 24 presses.`;
+    case 4:return `There are sixteen lockers, one for every ${wCode(4)}.`+(S.map?` The ${wMap()} keeps drawing as you type. Click a ${wDot()} on it to put your cursor at that point in the tape.`:'');
+    case 5:return `The keypad now has four keys: A, C, G and T. There are sixteen lockers, one for every ${wCode(2)}.`;
+    case 6:return `There are sixty-four lockers, one for every ${wCode(3)}. Each code is a codon, and each locker shows the amino acid or stop signal it encodes.`;
     case 7:return `The ${N} ${wScrap(1)} of the shredded strip are now on locker doors, and the rest of the wall is gone. A press with no locker to open is wasted.`;
-    default:return `The same strip, fragmented into four-nucleotide ${wScrap(1)} this time.`;
+    default:return `The same strip is now cut into four-nucleotide ${wScrap(1)}.`;
   }
 }
 function hintFor(){
   switch(I.L.id){
     case 1:return 'Pick a scrap to start with, then look for one that overlaps it by two nucleotides.';
     case 2:return 'One press can finish one code and start the next.';
-    case 3:return 'A struck-through press re-opened a locker. Watch the display: what was the lock still holding?';
+    case 3:return 'A struck-through press re-opened a locker. Watch the display to see what the lock was still holding.';
     case 4:case 5:return `Click a ${wDot()} that still has a light lit and type from there until you are back on it.`;
     case 6:return `Walk until you dead-end. Then stitch a ${wLoop()} in wherever a light is still lit, and keep doing that until none are.`;
-    case 7:return 'Where the tape begins matters now. Is there a locker that no other locker leads to?';
+    case 7:return 'Where the tape begins matters now. Look for a locker that no other locker leads to.';
     default:return 'Find the locker that nothing leads to, and start there.';
   }
 }
@@ -592,6 +592,7 @@ function showCard(){const c=$('#msg .card');if(c&&c.scrollIntoView)c.scrollIntoV
 function award(id){if(S.found[id])return;S.found[id]=Date.now();news.push(id);log('award',{id});}
 function onPerfect(){
   const L=I.L,s=tape.join('');
+  news=[];                        /* the card shows only what this tape discovered */
   if(!S.best[I.key])S.best[I.key]={n:tape.length,t:Date.now()};
   if(L.wall==='full'){award('seq');if(S.map)award('cycle');}
   else if(L.id===FINALE){
@@ -807,7 +808,7 @@ function splitHTML(){
   for(let i=0;i+2<s.length;i++)if(s.slice(i,i+2)===u)rows.push([i>0?s[i-1]+u:u,s[i+2]]);
   const pill=x=>`<span class="pill key-${x}">${x}</span>`;
   return `<div class="split"><div><span class="cap2">three-nucleotide reads: one crowded node</span><div class="bal"><span class="mini">${u}</span><b>&rarr;</b>${rows.map(r=>pill(r[1])).join('<i>or</i>')}</div></div>`+
-    `<div><span class="cap2">4-nucleotide reads: it splits</span>${rows.map(r=>`<div class="bal"><span class="mini">${r[0]}</span><b>&rarr;</b>${pill(r[1])}</div>`).join('')}</div></div>`;
+    `<div><span class="cap2">four-nucleotide reads: the node splits</span>${rows.map(r=>`<div class="bal"><span class="mini">${r[0]}</span><b>&rarr;</b>${pill(r[1])}</div>`).join('')}</div></div>`;
 }
 function revealHTML(id,t){
   const F=FIND[id];let vis='';
@@ -820,7 +821,7 @@ function deadHTML(s,A,t){
   if(I.scraps)return `<div class="note dead"><b>Dead end.</b> No unused scrap continues from <code>${s}</code>. Back up with &#9003;, or click inside your tape and type there.</div>`;
   if(!S.map)return `<div class="note dead"><b>Dead end.</b> Every key from here re-opens a locker that is already open. Back up with &#9003;, or click inside your tape and type there.</div>`;
   if(!litNodes(A,t).size)return `<div class="note dead"><b>Dead end.</b> The lockers still shut cannot be reached from anywhere this tape has been. Perhaps it should begin somewhere else.</div>`;
-  if(A.waste===0&&I.L.wall==='full'&&s===stateAt(t,I.k-1))return `<div class="note dead"><b>Dead end.</b> <code>${s}</code> is the ${wDot()} your tape started from. So far it is one closed ${wLoop()}, and a ${wLoop()} can be opened up anywhere. Click a ${wDot()} that still has a light lit, then type from there.</div>`;
+  if(A.waste===0&&I.L.wall==='full'&&s===stateAt(t,I.k-1))return `<div class="note dead"><b>Dead end.</b> <code>${s}</code> is the ${wDot()} your tape started from. So far the tape is one closed ${wLoop()}, and a ${wLoop()} can be opened at any of its ${wDot(1)}. Click a ${wDot()} that still has a light lit, then type from there.</div>`;
   return `<div class="note dead"><b>Dead end.</b> Every key from <code>${s}</code> is wasted now. Click a ${wDot()} that still has a light lit to put your cursor there.</div>`;
 }
 function cardHTML(A,t){
@@ -835,7 +836,7 @@ function cardHTML(A,t){
     if(found<2)h+=s===G?'<p>They match. One other tape also opens this wall with no wasted presses. Clear yours and find it.</p>':'<p>Your tape is not the original strip, although nothing was wasted. Clear it and find the original too.</p>';
   }else if(L.id===FINALE+1)h+=`<p class="seqs">Your tape <code>${s}</code> is the strip, and this time no other tape will do.</p>`;
   for(const id of news)h+=revealHTML(id,t);
-  if(L.id===QUIZ_LEVEL&&!S.map)return h+'<p>Before the next wall, answer one question about how the lock works.</p><button class="primary" type="button" data-a="quiz">Ask me &rarr;</button></div>';
+  if(L.id===QUIZ_LEVEL&&!S.map)return h+'<p>Before the next wall, answer three questions about how the lock works.</p><button class="primary" type="button" data-a="quiz">Ask me &rarr;</button></div>';
   if(L.id<LEVELS.length)h+='<button class="primary" type="button" data-a="next">Next wall &rarr;</button>';
   else h+=`<p><b>That was the last wall.</b> You have made ${nFound} of ${FINDS.length} discoveries.${nFound<FINDS.length?' The rest are listed under Discoveries, each with a clue.':''}</p>`;
   if(S.map)h+=' <button class="aux" type="button" data-a="replay">Walk it again</button>';
@@ -851,7 +852,7 @@ function renderMsg(A,t,p){
     if(A.done)note+=`<div class="note"><b>Everything is ${I.scraps?'used':'open'}</b>, but ${A.waste} press${A.waste===1?' was':'es were'} wasted: the struck-through one${A.waste===1?'':'s'}. It can be done with none.</div>`;
     else{const d=deadEnd(A,t);if(d!==null&&p===t.length)note+=deadHTML(d,A,t);}
     if(showHint)note+=`<div class="note hint">${hintFor()}</div>`;
-    if(lv.gave)card=`<div class="card"><h3>Good call</h3><p>${I.codes.length} scraps, and the only way to find which one comes next is trial and error.</p><button class="primary" type="button" data-a="next">Next &rarr;</button></div>`;
+    if(lv.gave)card=`<div class="card gave"><h3>Good call</h3><p>${I.codes.length} scraps, and the only way to find which one comes next is trial and error.</p><button class="primary" type="button" data-a="next">Next &rarr;</button></div>`;
     else if(I.L.id===1&&(lv.presses>=12||lv.deads>=1||S.gaveUp))note+='<p class="aside"><button class="aux" type="button" data-a="giveup">This is hard. Set it aside &rarr;</button></p>';
   }
   put('#note',note);put('#msg',card);

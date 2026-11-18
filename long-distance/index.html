@@ -403,9 +403,9 @@ const LEVELS=[
   {id:1,title:'Which genes are expressed?',rule:'Click the first nucleotide of the shared sequence',
    brief:'Each strand is the DNA upstream of one gene, with the gene at its right end. A lit lamp indicates measured gene expression. The three lit strands share one four-nucleotide sequence that the unlit strands lack. Click its first nucleotide in each lit strand.'},
   {id:2,title:'Pass it along',rule:'A jack hears only the jacks beside it',
-   brief:'Put a jack under every nucleotide and wire each jack to its two neighbours. In one round every jack tells its neighbours what it has heard. The line carries three rounds. Get the news of the GATA to the gene.'},
+   brief:'Put a jack under every nucleotide and wire each jack to its two neighbors. In one round every jack tells its neighbors what it has heard. The line carries three rounds. Get the news of the GATA to the gene.'},
   {id:3,title:'A direct line',rule:'One slip for every board',
-   brief:'Each jack now stands for four nucleotides and shows them on its plate. A cord can run from the gene’s jack to any other jack in one step. On each lit board, click the plate the gene should be wired to.'},
+   brief:'Each jack now stands for four nucleotides and shows them on its plate. A cord can run from the gene’s jack to any other jack in one step. On each board measured on, click the plate the gene should be wired to.'},
   {id:4,title:'What comes down the cord',rule:'Cords share the gene’s current equally',
    brief:'Two of these genes hold a GATA and were measured off. Find what else those boards share. Then change the query, and what each plate sends, until every lamp agrees with its measurement. Click a plate to select it.'},
   {id:5,title:'One unit of current',rule:'Each agreeing nucleotide doubles a jack’s pull',
@@ -426,7 +426,7 @@ const SRC={
   banerji:{cite:'Banerji, Rusconi & Schaffner, 1981',title:'Expression of a β-globin gene is enhanced by remote SV40 DNA sequences',where:'Cell 27, 299–308',
     url:'https://doi.org/10.1016/0092-8674(81)90413-X',look:'The abstract reports 200 times more β-globin transcripts when the plasmid also carried an SV40 DNA fragment, and that the fragment acted in either orientation at many positions, including 1,400 base pairs upstream or 3,300 downstream of the transcription start site. Its last two sentences announce a new class of DNA element.'},
   ji:{cite:'Ji et al., 2021',title:'DNABERT: pre-trained Bidirectional Encoder Representations from Transformers model for DNA-language in genome',where:'Bioinformatics 37, 2112–2120',
-    url:'https://doi.org/10.1093/bioinformatics/btab083',look:'DNABERT cuts DNA into overlapping k-mers. The abstract claims that one pre-trained model predicts promoters, splice sites and transcription factor binding sites after fine-tuning on small labelled sets, and that it shows which nucleotides were important to a prediction.'},
+    url:'https://doi.org/10.1093/bioinformatics/btab083',look:'DNABERT cuts DNA into overlapping k-mers. The abstract claims that one pre-trained model predicts promoters, splice sites and transcription factor binding sites after fine-tuning on small labeled sets, and that it shows which nucleotides were important to a prediction.'},
   bahdanau:{cite:'Bahdanau, Cho & Bengio, 2014',title:'Neural machine translation by jointly learning to align and translate',where:'arXiv:1409.0473',
     url:'https://doi.org/10.48550/arXiv.1409.0473',look:'The abstract proposes that a translation model search the source sentence for the parts relevant to the next word instead of squeezing the sentence into one fixed-length vector. It calls the result a soft alignment. Compare that use of the word with the alignment chapter.'},
   vaswani:{cite:'Vaswani et al., 2017',title:'Attention is all you need',where:'arXiv:1706.03762',
@@ -434,21 +434,21 @@ const SRC={
   vaswani6:{cite:'Vaswani et al., 2017',title:'Attention is all you need',where:'arXiv:1706.03762',
     url:'https://doi.org/10.48550/arXiv.1706.03762',look:'Section 3.5 says why order has to be added to the tokens and how the paper adds it.'},
   vaswani8:{cite:'Vaswani et al., 2017',title:'Attention is all you need',where:'arXiv:1706.03762',
-    url:'https://doi.org/10.48550/arXiv.1706.03762',look:'The paper that named the Transformer. Its abstract proposes a network based only on attention, without recurrence or convolution. Figure 1 shows one layer.'},
+    url:'https://doi.org/10.48550/arXiv.1706.03762',look:'This paper named the Transformer. Its abstract proposes a network based only on attention, without recurrence or convolution. Figure 1 shows one layer.'},
   vig:{cite:'Vig et al., 2020',title:'BERTology meets biology: interpreting attention in protein language models',where:'arXiv:2006.15222',
     url:'https://doi.org/10.48550/arXiv.2006.15222',look:'The abstract reports that attention in protein language models connects amino acids that are far apart in the sequence and close in the folded structure, that it targets binding sites, and that later stages of the model attend to more complex properties.'},
   avsec:{cite:'Avsec et al., 2021',title:'Effective gene expression prediction from sequence by integrating long-range interactions',where:'Nature Methods 18, 1196–1203',
-    url:'https://doi.org/10.1038/s41592-021-01252-x',look:'Enformer. The abstract reports better prediction of gene expression from DNA sequence by integrating information from up to 100 kb away, more accurate predictions of variant effects, and enhancer–promoter interactions predicted from the sequence alone.'},
+    url:'https://doi.org/10.1038/s41592-021-01252-x',look:'This paper describes Enformer. The abstract reports better prediction of gene expression from DNA sequence by integrating information from up to 100 kb away, more accurate predictions of variant effects, and enhancer–promoter interactions predicted from the sequence alone.'},
   devlin:{cite:'Devlin et al., 2019',title:'BERT: pre-training of deep bidirectional transformers for language understanding',where:'Proceedings of NAACL-HLT 2019, 4171–4186',
     url:'https://doi.org/10.18653/v1/N19-1423',look:'Section 3.1 describes the masked language model task: some of the input tokens are masked at random and the model predicts them from the context on both sides.'},
   dalla:{cite:'Dalla-Torre et al., 2025',title:'Nucleotide Transformer: building and evaluating robust foundation models for human genomics',where:'Nature Methods 22, 287–297',
     url:'https://doi.org/10.1038/s41592-024-02523-z',look:'The abstract describes models of 50 million to 2.5 billion parameters pre-trained on 3,202 human genomes and 850 genomes of other species, and says that without supervision they learned to focus attention on key genomic elements.'},
   canver:{cite:'Canver et al., 2015',title:'BCL11A enhancer dissection by Cas9-mediated in situ saturating mutagenesis',where:'Nature 527, 192–197',
-    url:'https://doi.org/10.1038/nature15521',look:'The laboratory version of this level. The abstract describes saturating mutagenesis of the BCL11A erythroid enhancer in its place in the genome, using libraries of Cas9 guide RNAs, which revealed the enhancer’s critical minimal features.'},
+    url:'https://doi.org/10.1038/nature15521',look:'The abstract describes saturating mutagenesis of the BCL11A erythroid enhancer in its place in the genome, using libraries of Cas9 guide RNAs, which revealed the enhancer’s critical minimal features.'},
   karollus:{cite:'Karollus, Mauermeier & Gagneur, 2023',title:'Current sequence-based models capture gene expression determinants in promoters but mostly ignore distal enhancers',where:'Genome Biology 24, 56',
-    url:'https://doi.org/10.1186/s13059-023-02899-9',look:'A test of Enformer and similar models against perturbation experiments. The abstract reports that the models capture what drives promoters and fail to capture the causal effects of enhancers at medium to long distances.'},
+    url:'https://doi.org/10.1186/s13059-023-02899-9',look:'This paper tests Enformer and similar models against perturbation experiments. The abstract reports that the models capture what drives promoters and fail to capture the causal effects of enhancers at medium to long distances.'},
   frangoul:{cite:'Frangoul et al., 2021',title:'CRISPR-Cas9 gene editing for sickle cell disease and β-thalassemia',where:'New England Journal of Medicine 384, 252–260',
-    url:'https://doi.org/10.1056/NEJMoa2031054',look:'The first two patients treated with cells in which the BCL11A erythroid enhancer had been edited.'}
+    url:'https://doi.org/10.1056/NEJMoa2031054',look:'This paper reports the first two patients treated with cells in which the BCL11A erythroid enhancer had been edited.'}
 };
 
 const VOCAB=[
@@ -808,7 +808,7 @@ LV[2]={
     if(a==='round'&&(st.phase==='mini'||st.phase==='big')&&st.r<x.rounds){
       snap();st.r++;log('round',{r:st.r});
       const s=st.phase==='mini'?x.mini:x.big,short=s.seq.length-(s.at+3+st.r);
-      say(short<=0?'The news has reached the gene, and its lamp lights.':st.r<x.rounds?'The news has moved one jack each way.':'Three rounds are used. The news is '+plural(short,'jack')+' short of the gene.',short<=0?'good':st.r<x.rounds?'':'warn');
+      say(short<=0?'The news has reached the gene, and its lamp lights.':st.r<x.rounds?'The news has moved one jack each way.':'All three rounds are used. The news is '+plural(short,'jack')+' short of the gene.',short<=0?'good':st.r<x.rounds?'':'warn');
     }else if(a==='bigger'&&st.phase==='mini'){snap();st.phase='big';st.r=0;say('The same line, on strand A.');}
     else if(a==='peek'&&st.phase==='window'){st.peek=+d.i;st.peeks++;say('');}
     else if(a==='cut'&&st.phase==='window'){snap();st.phase='done';log('cut');say('Forty jacks have become ten.','good');complete(['field','token'],'l2');}
@@ -819,7 +819,7 @@ LV[2]={
 BLOCKS.l2={src:['ji'],html:()=>{const b=cur.inst.big,need=b.seq.length-(b.at+3);
   return 'After three rounds a jack has heard from three jacks on each side and no farther. <b>The input region that can influence a position is its '+term('field','receptive field')+'.</b> '+
     'Reaching this gene would take '+need+' rounds. The enhancer in level 1’s source worked from 3,300 base pairs away. '+
-    'Three rounds are still enough for a jack to recognise a four-nucleotide sequence where it stands, so each segment of four nucleotides now has one jack and one plate. '+
+    'Three rounds are still enough for a jack to recognize a four-nucleotide sequence where it stands, so each segment of four nucleotides now has one jack and one plate. '+
     '<b>The unit a model reads is called a '+term('token','token')+'.</b> DNA models cut their tokens in different ways: single nucleotides, overlapping k-mers, or fixed segments of a hundred nucleotides or more.';}};
 
 /* ---------- level 3: a direct line, then one slip for every board ---------- */
@@ -847,9 +847,9 @@ LV[3]={
     if(a==='plug'&&st.phase==='hand'){
       const b=x.boards[+d.b],i=+d.i;snap();
       if(i===b.at){st.plug[d.b]=i;log('plug',{b:+d.b,ok:true});
-        if(Object.keys(st.plug).length===3){st.phase='slip';say('Each cord is one step long, whatever the distance. A human genome has about 20,000 genes, so nobody plugs cords by hand. The gene’s jack carries a written slip, and the same slip is used on every board. Choose a slip and fill it in.','good');}
+        if(Object.keys(st.plug).length===3){st.phase='slip';say('A human genome has about 20,000 genes, so nobody plugs cords by hand. The gene’s jack carries a written slip, and the same slip is used on every board. Choose a slip and fill it in.','good');}
         else say('One step, whatever the distance.','good');
-      }else{log('plug',{b:+d.b,ok:false});say('That plate reads '+b.labels[i]+'. The lit boards share one plate.','warn');}
+      }else{log('plug',{b:+d.b,ok:false});say('That plate reads '+b.labels[i]+'. The boards measured on share one plate.','warn');}
       return render();
     }
     if(st.phase!=='slip')return;
@@ -905,7 +905,7 @@ LV[4]={
   }
 };
 BLOCKS.l4={html:()=>{const b=cur.inst.boards[4];
-  return 'The key decides whether a jack answers. What the jack then sends is a separate matter. <b>What a jack sends down the cord is its '+term('value','value')+'.</b> '+
+  return 'The key decides whether a jack answers, and a separate quantity decides what it sends. <b>What a jack sends down the cord is its '+term('value','value')+'.</b> '+
     'The gene’s reading is each value times the share of current on its cord, added up. On board E that is (+1 +1 −1) ÷ 3, which is above 0, and on board F it is (+1 −1 −1) ÷ 3. '+
     'CTCC stands here for a silencer, a regulatory sequence whose bound protein represses transcription.';}};
 
@@ -918,7 +918,7 @@ LV[5]={
       return boardSvg({labels:b.labels,tag:k,agree:x.want,lamp:done?b.out:null,meas:done?b.out:undefined,
         top:b.labels.map((l,j)=>k!=='A'||st.pulls[j]!==undefined?s.pull[j]+(x.values[l]?' · +1':''):''),
         sets:[{cords:known?b.labels.map((l,j)=>({from:n,to:j,w:s.w[j]})):[]}]});};
-    let h='<div class="slip on">Query: '+colour(x.want)+'. Nucleotides of a key that agree with it are shown in colour. '+colour(ACT)+' and '+colour(WEAK)+' send +1. Every other plate sends 0.</div>';
+    let h='<div class="slip on">Query: '+colour(x.want)+'. Nucleotides of a key that agree with it are shown in color. '+colour(ACT)+' and '+colour(WEAK)+' send +1. Every other plate sends 0.</div>';
     h+=boardsHtml(['A','B','C'].filter(k=>k==='A'||st.outs.A!==undefined&&(k==='B'||st.outs.B!==undefined)).map(show),'Above each plate: its pull, and +1 if the plate sends +1');
     const A=x.A,sA=soft(A.labels,x.want);
     if(st.phase==='pull'){
@@ -1053,7 +1053,7 @@ LV[8]={
       snap();st.ran=true;const pred=x.boards.map(b=>l8pred(b,st).on),w=firstWrong(x.boards,pred);
       log('run',{r1:Object.assign({},st.r1),r2:Object.assign({},st.r2),ok:w<0});
       if(w<0){say('Every lamp agrees.','good');complete(['layer','embedding','transformer'],'l8');}
-      else say('Board '+TAGS[w]+' is predicted '+onOff(pred[w])+' and was measured '+onOff(x.boards[w].on)+'.'+(w===2||w===0?' The gene cannot see from its own jack whether two other jacks are neighbours.':''),'warn');
+      else say('Board '+TAGS[w]+' is predicted '+onOff(pred[w])+' and was measured '+onOff(x.boards[w].on)+'.'+(w===2||w===0?' The gene cannot see from its own jack whether two other jacks are neighbors.':''),'warn');
     }else return;
     render();
   }
@@ -1116,7 +1116,7 @@ LV[10]={
       if(st.on!==null){st.tried[i]=true;const on=runFull(applyVar(x.labels,x.vars[i])).on;log('apply',{v:i,on});say('With nucleotide '+(x.vars[i].pos+1)+' changed, the exchange predicts the gene is '+onOff(on)+'.',on?'':'good');}
       else say('Back to the reference.');}
     else if(a==='blame'&&st.phase==='test'){snap();const i=+d.v,ok=x.vars[i].kind==='partner';log('blame',{v:i,ok});
-      if(ok){st.phase='scan';st.on=null;say('Correct. The other two changes leave the prediction as it was, and one of them is inside a GATA. Three nucleotides have been tested. The board has forty.','good');}
+      if(ok){st.phase='scan';st.on=null;say('Correct. The other two changes leave the prediction as it was, and one of them is inside a GATA. Three of the board’s forty nucleotides have been tested.','good');}
       else say('With that change alone the exchange still predicts on.','warn');}
     else if(a==='scan'&&st.phase==='scan'){snap();st.scan=true;log('scan');say('That was 120 changes and 120 runs of the exchange.','good');complete(['ism'].concat(sweepTerms()),'l10');}
     else return;
@@ -1127,9 +1127,9 @@ BLOCKS.l10={src:['canver','karollus','frangoul'],html:()=>{const x=cur.inst;
   return 'The twelve nucleotides that matter are the TATA beside the gene and the CAGC and GATA that sit together. The GATA at plate '+(x.lone+1)+' has no partner, so its nucleotides can change freely. '+
     '<b>Changing an input one nucleotide at a time and recording the prediction is '+term('ism','in silico mutagenesis')+'.</b> It is how a sequence model is used to score a variant that nobody has studied. '+
     'The score is a statement about the model. It says something about the patient only as far as the model has learned how real enhancers work, and the second paper below tests that.';},
-  wild:()=>'<span class="sub">In the wild</span><p>An enhancer of the gene BCL11A is active only in the erythroid cells, and common variants inside it change how much fetal haemoglobin a person makes. '+
+  wild:()=>'<span class="sub">In the wild</span><p>An enhancer of the gene BCL11A is active only in erythroid cells, and common variants inside it change how much fetal hemoglobin a person makes. '+
     'Canver and colleagues cut that enhancer with Cas9 at every place they could and measured the effect of each cut, which is this level done in living cells. '+
-    'A treatment for sickle cell disease that edits the same enhancer was approved in 2023. Frangoul and colleagues describe its first two patients.</p>'};
+    'A treatment for sickle cell disease that edits the same enhancer was approved in 2023.</p>'};
 /*LEVELS-END*/
 
 /* ---------- the workbench ---------- */

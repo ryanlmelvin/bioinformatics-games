@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Bioinformatics Algorithms: a playable textbook</title>
-<meta name="description" content="Games and handouts for a course in bioinformatics algorithms: motif finding, genome assembly, sequence alignment, hidden Markov models, evolutionary trees, clustering and read mapping.">
+<meta name="description" content="Games and handouts for a course in bioinformatics algorithms: motif finding, genome assembly, sequence alignment, hidden Markov models, evolutionary trees, clustering, read mapping and transformers.">
 <link rel="icon" href="book/favicon.svg" type="image/svg+xml">
 <link rel="stylesheet" href="book/book.css">
 <link rel="manifest" href="manifest.webmanifest">
@@ -136,7 +136,7 @@ const state=B.chapters.map(c=>{
   return {c,started:!!s,got,fin,done:got>=c.terms,terms,link:s&&typeof s.link==='string'&&(got||fin)?s.link:''};
 });
 
-$('#shelf').innerHTML='Handouts for the whole book (Word): '+[doc('materials/learning-guide.docx','Learning guide'),doc('materials/suggested-investigations.docx','Suggested investigations'),doc('materials/presentation-checklist.docx','Presenting an algorithm')].join(', ');
+$('#shelf').innerHTML='Handouts for the whole book (Word): '+[doc('materials/learning-guide.docx','Learning guide'),doc('materials/suggested-investigations.docx','Suggested investigations'),doc('materials/presentation-checklist.docx','Presentation checklist')].join(', ');
 
 $('#toc').innerHTML=state.map(st=>{const c=st.c;
   const where=st.done?'All '+c.terms+' terms earned':st.started?st.fin+' of '+c.levels+' levels finished, '+st.got+' of '+c.terms+' terms earned':c.levels+' levels, '+c.terms+' terms';
@@ -161,7 +161,8 @@ if(nextUp&&got){const r=$('#resume');r.href=nextUp.c.dir+'/';r.textContent=nextU
 const mark=(key,body)=>{const s=key+'|'+body;let h=2166136261>>>0;for(let i=0;i<s.length;i++){h^=s.charCodeAt(i);h=Math.imul(h,16777619);}return (h>>>0).toString(36);};
 function sound(c,enc){const m=/^1\.([0-9a-z]+)\.([01]+)\.([0-9a-z]+)\.(.+)$/.exec(enc||'');if(!m)return false;
   let seed;try{seed=decodeURIComponent(m[4]);}catch(e){return false;}return mark(c.key,'1.'+m[1]+'.'+m[2]+'.'+seed)===m[3];}
-const held=()=>B.chapters.reduce((n,c)=>{const s=read(c.key,null);return n+(s&&Array.isArray(s.badges)?s.badges.length:0)+(s&&Array.isArray(s.done)?s.done.length:0);},0);
+const held=()=>B.chapters.reduce((n,c)=>{const s=read(c.key,null);n.t+=s&&Array.isArray(s.badges)?s.badges.length:0;n.l+=s&&Array.isArray(s.done)?s.done.length:0;return n;},{t:0,l:0});
+const count=(n,one)=>n+' '+one+(n===1?'':'s');
 const parts=state.filter(s=>s.link).map(s=>s.c.dir+':'+s.link);
 if(parts.length){$('#bookLink').value=location.origin+location.pathname+'#book=1/'+parts.join('/');
   $('#bookText').textContent='Progress is saved in this browser. This link restores it in any other. It changes as you earn terms, so copy it again before you leave.';}
@@ -178,8 +179,8 @@ function restoreBook(text,say){
   (function next(){
     if(i>=want.length){
       try{if(lastRead==null)localStorage.removeItem('book:last');else localStorage.setItem('book:last',lastRead);}catch(e){}
-      const n=held()-before;
-      try{sessionStorage.setItem('book:restored',(n?'Restored from your link: '+n+' new term'+(n===1?'':'s')+' and finished level'+(n===1?'':'s')+' added to this browser.':'That link held nothing this browser did not already have.')+
+      const now=held(),t=now.t-before.t,l=now.l-before.l;
+      try{sessionStorage.setItem('book:restored',(t||l?'Restored from your link: '+[t&&count(t,'new term'),l&&count(l,'finished level')].filter(Boolean).join(' and ')+' added to this browser.':'That link held nothing this browser did not already have.')+
         (bad?' '+(bad===1?'One part of the link was damaged and was skipped.':bad+' parts of the link were damaged and were skipped.'):''));}catch(e){}
       history.replaceState(null,'',location.pathname+location.search+'#keep');location.reload();return;
     }

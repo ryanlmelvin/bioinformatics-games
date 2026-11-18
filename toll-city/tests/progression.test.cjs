@@ -132,7 +132,7 @@ test('level 6 replays the arrows pencilled in level 5, and level 8 differs from 
 test('the wall level cannot be finished by the bot: it has hundreds of millions of games to play',()=>{
   const ui=boot(null,'?debug=1&level=4&seed=WALL');ui.api.act('bot');
   const c=st(ui);assert.equal(c.bot.played,0);assert(c.total>2.5e8);assert.equal(c.done,false);
-  assert.match(ui.el('#skip').textContent,/hopeless/);
+  assert.match(ui.el('#skip').textContent,/Stop the bot/);
 });
 test('workbench opens without touching saved progress',()=>{
   const ui=boot(null,'?bench=1');assert.equal(ui.writes.length,0);assert.equal(ui.el('#title').textContent,'Workbench');

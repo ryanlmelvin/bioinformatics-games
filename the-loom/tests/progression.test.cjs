@@ -114,7 +114,7 @@ test('level 5: a thread between two different letters of the word will not hold'
 });
 test('level 6: the left beam fills only in alphabetical order, and a crossing thread is refused until one is cut',()=>{
   const ui=boot('?debug=1&level=6&seed=T6'),api=ui.api,x=api.state().inst,L=x.L,F=x.F;
-  const notFirst=[...L].findIndex(c=>c!==F[0]);api.act('put',{i:notFirst});assert.equal(api.state().st.left.length,0);assert.match(api.state().msg.text,/strips were sorted/);
+  const notFirst=[...L].findIndex(c=>c!==F[0]);api.act('put',{i:notFirst});assert.equal(api.state().st.left.length,0);assert.match(api.state().msg.text,/sorted order/);
   const used=[];for(let k=0;k<F.length;k++){const r=[...L].findIndex((ch,i)=>ch===F[k]&&!used.includes(i));used.push(r);api.act('put',{i:r});}
   assert.equal(api.state().st.phase,'tie');
   // a letter that appears at least twice: tie its first right-beam copy to its second left-beam slot

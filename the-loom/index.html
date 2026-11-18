@@ -401,9 +401,9 @@ function makeWordLevel(code,id,variant){
     let absent=null;for(const a of letters)for(const b of letters)for(const c of letters){const p=a+b+c;if(!absent&&!x.word.includes(p))absent=p;}
     return {word:x.word,text:t,L,F:firstColumn(L),pattern:x.pattern,more:[present,absent]};
   }
-  // levels 4, 5, 6: 6-letter words. Level 6 never repeats level 5's word, so the word must be unwoven.
-  let avoid=null;if(id===6)avoid=makeWordLevel(code,5,variant).word;
-  let w=pick(WORDS6,rand);while(w===avoid)w=pick(WORDS6,rand);
+  // levels 4, 5, 6: 6-letter words. Level 6 never repeats the word of level 4 or 5, so the word must be unwoven.
+  const avoid=id===6?[makeWordLevel(code,4,variant).word,makeWordLevel(code,5,variant).word]:[];
+  let w=pick(WORDS6,rand);while(avoid.includes(w))w=pick(WORDS6,rand);
   const t=w+'$',L=bwt(t);
   return {word:w,text:t,L,F:firstColumn(L),rows:sortedRotations(t),ring:rotations(t)};
 }
@@ -521,34 +521,34 @@ const LEVELS=[
    brief:'Your sorted list found a pattern without scanning the text. Now work out what it costs for a genome of three billion nucleotides.'},
   {id:4,title:'Make the last column',rule:'Sort the strips · read down the right edge',
    brief:'Write the word on a ring, with the $ after its last letter. Cut the ring before each letter in turn and you get one strip per letter. Sort the strips, then read their last letters from top to bottom.'},
-  {id:5,title:'Is it enough?',rule:'Tie each right-edge letter to the same letter on the left',
+  {id:5,title:'Is it enough?',rule:'Tie each right-beam letter to the same letter on the left',
    brief:null},   /* written by LV[5].brief, which names the word’s own repeated letter */
   {id:6,title:'Unweave',rule:'Threads of the same letter never cross',
    brief:'Only the right beam survives. Rebuild everything else from it, and read off the word.'},
   {id:7,title:'Two fingers',rule:'Read the pattern from its last letter',
-   brief:'The two beams and their threads, nothing else. How many times does the pattern occur in the word? Two fingers mark a band of rows. They start on the whole loom.'},
+   brief:'Count how many times the pattern occurs in the word, using only the two beams and their threads. Two fingers mark a band of rows, starting with the whole loom. For each letter of the pattern, from the last, click the band rows whose right-beam letter it is, then move the fingers to where their threads land.'},
   {id:8,title:'Where, exactly?',rule:'Follow threads to a tag · add the steps',
-   brief:'The fingers give a count, not a place. A tag on every row saying where its strip starts would be the bill from level 3 all over again, so only the rows that start at 0, 4, 8 and 12 carry one.'},
+   brief:'Backward search counts the matches but does not say where they are. A tag on every row giving the start of its strip would cost as much as the full list in level 3, so only the rows whose strips start at 0, 4, 8 and 12 carry a tag.'},
   {id:9,title:'Tally boards',rule:'Count from the nearest board',
    brief:'Each finger move needs the count of a nucleotide symbol above a row on the right beam. For a genome, that can require scanning millions of symbols. Here are 32 rows of a DNA loom, right beam only.'},
   {id:10,title:'One sequencing error',rule:'The loom only finds exact matches',
    brief:'Reads can contain sequencing errors. This read came from the reference sequence below, but one nucleotide was miscalled.'},
   {id:11,title:'The patient',rule:'Look down each column',
-   brief:'Eight reads from a patient, placed against a short region of the reference genome by everything you have built: backward search for the seeds, threads to the tags for the places, one mismatch allowed. Most columns agree with the reference. Find the column that shows a real difference from the reference, and click it.'}
+   brief:'Eight reads from a patient, placed against a short region of the reference genome with backward search for the seeds, threads to the tags for the positions, and one mismatch allowed. Most columns agree with the reference. Click the column that shows a real difference from the reference.'}
 ];
 
 /* Primary sources. Each link was opened and checked. */
 const SRC={
   manber:{cite:'Manber & Myers, 1993',title:'Suffix arrays: a new method for on-line string searches',where:'SIAM Journal on Computing 22, 935–948',
-    url:'https://doi.org/10.1137/0222058',look:'The paper that introduced the suffix array as a leaner alternative to the suffix tree. The abstract says it uses several times less space, and that a pattern is found by sorting and searching: what you did with the strips.'},
+    url:'https://doi.org/10.1137/0222058',look:'The paper that introduced the suffix array as a leaner alternative to the suffix tree. The abstract says it uses several times less space, and that a pattern is found by sorting and searching, as you did with the strips.'},
   ferragina:{cite:'Ferragina & Manzini, 2000',title:'Opportunistic data structures with applications',where:'Proceedings of the 41st Symposium on Foundations of Computer Science, 390–398',
     url:'https://doi.org/10.1109/SFCS.2000.892127',look:'The abstract describes an index that takes less space when the text compresses well, yet still finds every occurrence of a pattern in time that depends on the pattern’s length and the number of matches, not on the length of the text. That is the idea behind searching a compressed transform, as your two fingers did.'},
   langmead:{cite:'Langmead et al., 2009',title:'Ultrafast and memory-efficient alignment of short DNA sequences to the human genome',where:'Genome Biology 10, R25',
-    url:'https://doi.org/10.1186/gb-2009-10-3-r25',look:'Bowtie. The abstract reports aligning more than 25 million reads an hour to the human genome in about 1.3 GB of memory, using a Burrows–Wheeler index, with backtracking to tolerate nucleotide mismatches.'},
+    url:'https://doi.org/10.1186/gb-2009-10-3-r25',look:'This paper describes Bowtie. The abstract reports aligning more than 25 million reads an hour to the human genome in about 1.3 GB of memory, using a Burrows–Wheeler index, with backtracking to tolerate nucleotide mismatches.'},
   li:{cite:'Li & Durbin, 2009',title:'Fast and accurate short read alignment with Burrows–Wheeler transform',where:'Bioinformatics 25, 1754–1760',
-    url:'https://doi.org/10.1093/bioinformatics/btp324',look:'BWA. The abstract says it aligns short reads to large genomes with backward search on the Burrows–Wheeler transform, allowing mismatches and gaps, and is 10 to 20 times faster than an earlier hash-table aligner.'},
+    url:'https://doi.org/10.1093/bioinformatics/btp324',look:'This paper describes BWA. The abstract says it aligns short reads to large genomes with backward search on the Burrows–Wheeler transform, allowing mismatches and gaps, and is 10 to 20 times faster than an earlier hash-table aligner.'},
   worthey:{cite:'Worthey et al., 2011',title:'Making a definitive diagnosis: successful clinical application of whole exome sequencing in a child with intractable inflammatory bowel disease',where:'Genetics in Medicine 13, 255–262',
-    url:'https://doi.org/10.1097/GIM.0b013e3182088158',look:'The abstract: a boy whose bowel disease began at 15 months had no diagnosis after standard tests; sequencing his exome found a new mutation in the XIAP gene, and a transplant followed.'}
+    url:'https://doi.org/10.1097/GIM.0b013e3182088158',look:'The clinical report of the case described under In the wild below.'}
 };
 
 const VOCAB=[
@@ -940,8 +940,8 @@ LV[1]={
   }
 };
 BLOCKS.mapping={html:()=>{const s=cur.st.scan,per=s/(10*195);
-  return 'Ten reads against 200 nucleotides: '+s.toLocaleString('en-US')+' nucleotide comparisons for a scanner, about '+per.toFixed(2)+' per read per nucleotide of reference. '+
-  'A human genome has approximately three billion nucleotides and a single run of a sequencing machine gives hundreds of millions of reads. At this rate a hundred million reads would cost about '+sci(per*3e9*1e8)+' comparisons. '+
+  return 'A scanner needed '+s.toLocaleString('en-US')+' nucleotide comparisons to place ten reads against 200 nucleotides, about '+per.toFixed(2)+' per read per nucleotide of reference. '+
+  'A human genome has approximately three billion nucleotides and a single run of a sequencing machine produces hundreds of millions of reads. At this rate a hundred million reads would cost about '+sci(per*3e9*1e8)+' comparisons. '+
   '<b>Finding where every read came from is called '+term('mapping','read mapping')+'.</b>';}};
 /*@end l1.js*/
 /*@bench.js*/
@@ -1004,8 +1004,8 @@ LV[2]={
     if(st.phase==='find'||st.phase==='done')hi=st.found.length?i=>foundStarts.some(p=>i>=p&&i<p+2):hi;
     let h='<div class="sub">The word, with each letter’s position</div>'+wordCells(x.word,hi);
     h+='<div class="sub">'+(st.phase==='sort'?'Its seven suffixes. Drag them into lexicographic order (as comes before ass)':
-      st.phase==='num'?'In order. Beside each ending, write the position where it starts':
-      'Find every ending that begins with '+x.pattern)+'</div>';
+      st.phase==='num'?'Sorted. Beside each suffix, type the position where it starts':
+      'Click every suffix that begins with '+x.pattern)+'</div>';
     h+=stripsHtml(texts,{cls,act:st.phase==='find'?'find':null,drag:st.phase==='sort'?undefined:false,
       after:st.phase==='sort'?null:slot=>{const v=st.nums[slot];
         return '<input type="text" inputmode="numeric" maxlength="2" id="n'+slot+'" data-inp="num" data-i="'+slot+'" aria-label="Starts at" placeholder="at…" value="'+(v!==undefined?v:'')+'"'+(v!==undefined?' class="ok" readonly':'')+'>';}});
@@ -1014,7 +1014,7 @@ LV[2]={
   drop(k,i,tk,j){
     const st=cur.st,x=cur.inst;if(st.phase!=='sort'||k!=='strip'||tk!=='strip')return;
     snap();moveSlot(st.order,i,j);log('move',{from:i,to:j});
-    if(isSorted(st.order.map(r=>x.rows[r].text))){st.phase='num';say('Dictionary order. Now: where does each ending start in the word?','good');log('sorted');}
+    if(isSorted(st.order.map(r=>x.rows[r].text))){st.phase='num';say('Sorted. Now type where each suffix starts in the word.','good');log('sorted');}
     else say('Keep going.');
   },
   input(n,v,d){
@@ -1022,7 +1022,7 @@ LV[2]={
     const k=parseInt(v,10);st.peek=isNaN(k)?null:k;
     const want=x.rows[st.order[slot]];
     if(k===want.start){snap();st.nums[slot]=k;log('num',{slot,k});
-      if(Object.keys(st.nums).length===x.rows.length){st.phase='find';st.peek=null;say('Every ending has its start. Now look something up.','good');}
+      if(Object.keys(st.nums).length===x.rows.length){st.phase='find';st.peek=null;say('Every suffix has its start. Now search the sorted list.','good');}
       else say('Yes: '+want.text+' starts at '+k+'.','good');
       render();const nx=[...Array(x.rows.length).keys()].find(s=>st.nums[s]===undefined);if(nx!==undefined){const e=document.getElementById('n'+nx);if(e)e.focus();}
       return;}
@@ -1037,16 +1037,16 @@ LV[2]={
     snap();
     if(t.startsWith(x.pattern)){st.found.push(slot);st.wrong=null;log('find',{slot,ok:true});
       const need=st.order.filter(r=>x.rows[r].text.startsWith(x.pattern)).length;
-      if(st.found.length===need){st.phase='done';say('All '+numWord(need)+' are found, and they sit next to each other.','good');complete(['sa'],'sa');}
+      if(st.found.length===need){st.phase='done';say((need===2?'Both':'All '+numWord(need))+' suffixes that begin with '+x.pattern+' sit next to each other.','good');complete(['sa'],'sa');}
       else say(t+' begins with '+x.pattern+'.','good');
-    }else{st.wrong=slot;log('find',{slot,ok:false});say(t+' begins with '+t.slice(0,2)+'.','warn');}
+    }else{st.wrong=slot;log('find',{slot,ok:false});say(t+' does not begin with '+x.pattern+'.','warn');}
     render();
   }
 };
 BLOCKS.sa={src:['manber'],html:()=>{const x=cur.inst,st=cur.st,list=st.order.map(r=>x.rows[r].start);
   const m=st.found.map(s=>x.rows[st.order[s]].start).sort((a,b)=>a-b);
-  return 'The suffixes that begin with '+x.pattern+' sit in one band of neighbouring rows, because sorting puts things that begin alike together. Their numbers, '+m.join(' and ')+', are where '+x.pattern+' occurs in '+x.word+'. '+
-  'You found them without scanning the string, by binary search in a sorted list: each comparison halves the remaining search interval. '+
+  return 'The suffixes that begin with '+x.pattern+' sit in one band of neighboring rows, because strings with the same prefix sort together. Their numbers, '+m.join(' and ')+', are where '+x.pattern+' occurs in '+x.word+'. '+
+  'In a sorted list they can be found by binary search, without scanning the string, because each comparison halves the remaining search interval. '+
   '<b>The column of start positions, '+list.join(', ')+', is the '+term('sa','suffix array')+' of '+x.word+'.</b>';}};
 
 /* ---------- level 3: the bill, and the handover ---------- */
@@ -1054,7 +1054,7 @@ const LENS=[7,70,700,7000,70000,700000,7e6,7e7,7e8,3e9];
 function bytes(b){const u=['bytes','KB','MB','GB','TB','PB','EB','ZB'];let i=0;while(b>=1000&&i<u.length-1){b/=1000;i++;}return (b<10&&i?b.toFixed(2):b<100&&i?b.toFixed(1):Math.round(b).toLocaleString('en-US'))+' '+u[i];}
 const OPTS=[
   {k:'A',name:'Every suffix, written out in full',cost:n=>n*(n+1)/2/4,note:n=>fmt(n*(n+1)/2)+' nucleotide symbols at 2 bits each'},
-  {k:'B',name:'Only where each ending starts',cost:n=>4*n,note:n=>fmt(n)+' numbers at 4 bytes each'},
+  {k:'B',name:'Only where each suffix starts',cost:n=>4*n,note:n=>fmt(n)+' numbers at 4 bytes each'},
   {k:'C',name:'One column of symbols',cost:n=>n/4,note:n=>fmt(n)+' nucleotide symbols at 2 bits each'}
 ];
 LV[3]={
@@ -1077,7 +1077,7 @@ LV[3]={
     h+='</div>';
     if(st.handed){
       h+='<div class="handover"><p><b>What Burrows and Wheeler did</b> (Burrows &amp; Wheeler, 1994, “A block-sorting lossless data compression algorithm”, Digital SRC Research Report 124).</p>'+
-        '<p>1. Put one new sign at the end of the text, <b class="mono">$</b>, and let it sort before every letter.</p>'+
+        '<p>1. Put one new symbol at the end of the text, <b class="mono">$</b>, and let it sort before every letter.</p>'+
         '<p>2. Write the text on a ring. Cut the ring before each letter in turn, so there is one strip per letter. Sort the strips.</p>'+
         '<p>3. Keep only the last column. Throw the rest away.</p>'+
         '<p><b>They claimed that this one column is enough to recover the text and the position of every pattern in it.</b></p></div>';
@@ -1099,7 +1099,7 @@ LV[3]={
       const o=OPTS.find(q=>q.k===d.k),n=LENS[st.li],c=o.cost(n),ratio=c/(n/4);snap();
       st.tried[o.k]={n,over:ratio>1.0001,ratio};log('shelf',{opt:o.k,n,ratio});
       if(o.k==='C'){if(st.li!==LENS.length-1){say('It fits. Try it with the whole genome too.','good');return render();}
-        say('Three billion nucleotides, 0.75 GB: exactly one shelf.','good');complete(['end','bwt'],'bwt');return render();}
+        say('Three billion nucleotides at 2 bits each take 750 MB, exactly one shelf.','good');complete(['end','bwt'],'bwt');return render();}
       say(ratio>1.0001?'The shelf gives way.':'It fits.',ratio>1.0001?'warn':'good');
       if(st.tried.A&&st.tried.B&&st.tried.A.n===3e9&&st.tried.B.n===3e9&&!st.handed)say('Neither way of keeping the sorted list fits the shelf for a genome.','warn');
       return render();
@@ -1111,9 +1111,9 @@ LV[3]={
   skipLabel(){const st=cur.st;return st.tried.A&&st.tried.B&&st.tried.A.n===3e9&&st.tried.B.n===3e9&&!st.handed?'What did Burrows and Wheeler keep?':'';},
   skip(){snap();cur.st.handed=true;log('handover');say('Read their three steps, then click the last column of the table.');render();}
 };
-BLOCKS.bwt={html:()=>'The sign that marks the end of the text is the '+term('end','end marker')+', written $. '+
-  '<b>The last column of the sorted strips is the '+term('bwt','Burrows–Wheeler transform')+' of the text.</b> Burrows and Wheeler invented it to make files smaller: it gathers repeated letters into runs, as the meter showed. '+
-  'It costs one column: 0.75 GB for a human genome, against 12 GB for the start positions alone.'};
+BLOCKS.bwt={html:()=>'The symbol that marks the end of the text is the '+term('end','end marker')+', written $. '+
+  '<b>The last column of the sorted strips is the '+term('bwt','Burrows–Wheeler transform')+' of the text.</b> Burrows and Wheeler invented it for data compression, because it gathers repeated letters into runs, as the run counts showed. '+
+  'It costs one column, 750 MB for a human genome, against 12 GB for the start positions alone.'};
 
 /* ---------- level 4: cut the ring, sort the strips, read the last column ---------- */
 function ringSvg(t){
@@ -1150,7 +1150,7 @@ LV[4]={
   }
 };
 BLOCKS.rot={html:()=>{const x=cur.inst;return 'Each strip is the word read around the ring from a different letter. <b>A strip like that is a '+term('rot','cyclic rotation')+'</b>, and '+esc(x.text)+' has '+numWord(x.text.length)+' of them. '+
-  'Sorted, they form a table whose last column, '+esc(x.L)+', is the '+term('bwt','Burrows–Wheeler transform')+' of '+esc(x.text)+'. Because the $ appears once and sorts first, the sorted rotations come in the same order as the sorted suffixes of level 2.';}};
+  'Sorted, they form a table whose last column, '+esc(x.L)+', is the '+term('bwt','Burrows–Wheeler transform')+' of '+esc(x.text)+'. Because the $ appears once and sorts first, the sorted rotations come in the same order as the sorted suffixes, the order of the suffix array from level 2.';}};
 /*@end l2.js*/
 /*@l5.js*/
 /* ---------- loom levels: shared helpers ---------- */
@@ -1185,13 +1185,13 @@ LV[5]={
     if(p===q){snap();st.tied[i]=j;st.last=i;st.bad=null;log('tie',{r:i,l:j});
       if(Object.keys(st.tied).length===n){say('Every letter on the right is tied to itself on the left.','good');complete(['fl'],'fl');}
       else say(id(p)+' tied.');
-    }else{st.bad={r:i,l:j};log('snap',{r:i,l:j});say('The thread will not hold: '+id(p)+' and '+id(q)+' are different letters of the word.','warn');}
+    }else{st.bad={r:i,l:j};log('snap',{r:i,l:j});say('The thread will not hold. '+id(p)+' and '+id(q)+(t[p]===t[q]?' are different occurrences of '+t[p]+' in the word.':' are different letters.'),'warn');}
   },
   act(){}
 };
 BLOCKS.fl={html:()=>{const x=cur.inst,c=[...x.word].find(ch=>repeated(x.text,ch));
-  return 'Look at the threads of one colour. The '+c+' threads run side by side and never cross: the first '+c+' on the right beam is the first '+c+' on the left, the second is the second, and so on. That holds for every letter. '+
-  '<b>It is called the '+term('fl','first-last property')+'.</b> It is why the right beam can stand in for the whole table.';}};
+  return 'Look at the threads of one color. The '+c+' threads run side by side and never cross. The k-th '+c+' from the top of the right beam is the k-th '+c+' from the top of the left beam, and the same holds for every letter. '+
+  '<b>This is the '+term('fl','first-last property')+'.</b> It lets the right beam stand in for the whole table.';}};
 
 /* ---------- level 6: unweave a last column ---------- */
 LV[6]={
@@ -1226,16 +1226,16 @@ LV[6]={
       if(st.left.includes(i))return;
       const k=st.left.length;
       if(L[i]===F[k]){snap();st.left.push(i);st.bad=null;log('put',{r:i,row:k});
-        if(st.left.length===n){st.phase='tie';say('The left beam is the right beam’s letters, sorted: every letter of the word sits once on each beam, and the strips were in order.','good');}else say('');}
-      else{st.bad=i;log('put_reject',{r:i,row:k});say('Not '+(L[i]==='$'?'the $':L[i])+' in row '+k+': the strips were sorted, so their first letters ran in order down the left beam, and a letter that sorts earlier is still waiting on the right.','warn');}
+        if(st.left.length===n){st.phase='tie';say('The left beam holds the right beam’s letters in sorted order, because each beam holds every letter of the word once and the strips were sorted.','good');}else say('');}
+      else{st.bad=i;log('put_reject',{r:i,row:k});say('Not '+(L[i]==='$'?'the $':L[i])+' in row '+k+'. The left beam is in sorted order, and a letter that sorts earlier is still on the right beam.','warn');}
       return render();
     }
     if(a==='cut'&&st.phase==='tie'){if(st.tied[i]===undefined)return;snap();delete st.tied[i];st.cross=null;st.refused=null;log('cut',{r:i});say('Thread cut.');return render();}
     if(a==='land'&&st.phase==='follow'){
       const r=st.path[st.path.length-1];if(L[r]==='$')return;
       if(lf[r]===i){snap();st.path.push(i);log('follow',{to:i});
-        if(L[i]==='$'){st.phase='done';const w=unweave(L).text;say('The thread from row '+i+' ends at the $: the word is '+w+'.','good');complete(['lf'],'lf');}
-        else say('Row '+i+' ends with '+L[i]+'. Follow its thread.');
+        if(L[i]==='$'){st.phase='done';const w=unweave(L).text;say('Row '+i+' ends with $, so the word starts here. The word is '+w+'.','good');complete(['lf'],'lf');}
+        else say('Row '+i+' ends with '+L[i]+'. Click where its thread lands.');
       }else{log('follow_miss',{to:i});say('The glowing thread does not land on row '+i+'.','warn');}
       return render();
     }
@@ -1244,15 +1244,15 @@ LV[6]={
     const x=cur.inst,L=x.L,F=x.F,st=cur.st,rk=ranks(L);
     if(st.phase!=='tie'||k!=='peg'||tk!=='lpeg'||st.tied[i]!==undefined)return;
     if(Object.values(st.tied).includes(j)){st.refused=null;say('That peg already holds a thread. Click a thread to cut it.','warn');return;}
-    if(L[i]!==F[j]){st.refused={r:i,l:j};log('snap',{r:i,l:j});say('A thread joins a letter to the same letter: '+labelOf(L[i])+' is not '+labelOf(F[j])+'.','warn');return;}
+    if(L[i]!==F[j]){st.refused={r:i,l:j};log('snap',{r:i,l:j});say('A thread joins a letter to the same letter, and '+labelOf(L[i])+' is not '+labelOf(F[j])+'.','warn');return;}
     const hit=Object.keys(st.tied).map(Number).find(r=>L[r]===L[i]&&crosses(r,st.tied[r],i,j));
     if(hit!==undefined){st.cross=hit;st.refused={r:i,l:j};log('cross',{r:i,l:j,with:hit});say('That thread would cross '+labelOf(L[hit],repeated(L,L[hit])?rk[hit]:0)+'’s thread, and threads of the same letter never cross. Cut one.','warn');return;}
     snap();st.tied[i]=j;st.last=i;st.cross=null;st.refused=null;log('tie',{r:i,l:j});
-    if(Object.keys(st.tied).length===L.length){st.phase='follow';say('All tied. Row 0 begins with $, the end of the word. Its right-beam letter came just before it: follow that letter’s thread.','good');}
+    if(Object.keys(st.tied).length===L.length){st.phase='follow';say('All tied. Row 0 begins with $, the end of the word, so its right-beam letter is the last letter of the word. Click the left-beam row where its thread lands.','good');}
     else say('');
   }
 };
-BLOCKS.lf={html:()=>'You had only the last column of the table. Sorting that column gave the first; the rule that same-letter threads never cross told you which thread goes where; and each thread took you one letter to the left in the word. '+
+BLOCKS.lf={html:()=>'You started with only the last column of the table. Sorting it gives the first column. The first-last property fixes where each thread lands, and each thread steps one letter to the left in the word. '+
   '<b>Following a thread from the right beam to the left is the '+term('lf','last-to-first mapping')+'.</b>'};
 
 /* ---------- level 7: two fingers ---------- */
@@ -1275,7 +1275,7 @@ LV[7]={
     }
     if(st.auto){
       h+='<div class="sub">Two more patterns, fingers running on their own</div>'+st.auto.map(a=>'<p class="mono">'+esc(a.p)+': '+
-        a.steps.map(s=>s.sym+' → '+(s.band?'rows '+s.band[0]+'–'+s.band[1]:'no rows')).join(' · ')+' → <b>'+plural(a.count,'match')+'</b></p>').join('');
+        a.steps.map(s=>s.sym+' → '+(s.band?(s.band[0]===s.band[1]?'row '+s.band[0]:'rows '+s.band[0]+'–'+s.band[1]):'no rows')).join(' · ')+' → <b>'+plural(a.count,'match')+'</b></p>').join('');
     }
     return h;
   },
@@ -1298,14 +1298,14 @@ LV[7]={
       if(i!==bot){say('A glowing thread reaches lower than row '+i+'.','warn');return render();}
       snap();st.band=[top,bot];st.fingers=[top,bot];st.kept=[];st.j--;st.newTop=null;log('finger',{bottom:i});
       if(st.j<0){st.phase='done';say('The fingers hold rows '+top+' to '+bot+'.','good');}
-      else{st.phase='keep';say('Between the fingers: rows that begin with '+x.pattern.slice(st.j+1)+'. Next letter: '+x.pattern[st.j]+'. Keep the band rows whose right-beam letter is '+x.pattern[st.j]+'.');}
+      else{st.phase='keep';say('The band now holds the rows that begin with '+x.pattern.slice(st.j+1)+'. Keep the band rows whose right-beam letter is '+x.pattern[st.j]+'.');}
       return render();
     }
   },
   skipLabel(){return cur.st.phase==='done'&&!cur.st.auto?'Let the fingers run on two more patterns':'';},
   skip(){const x=cur.inst,st=cur.st;snap();
     st.auto=x.more.map(p=>{const b=bandSteps(x.L,p);return {p,steps:b.steps,count:b.count};});log('auto',{});
-    say('Each pattern took one finger move per letter, however long the word.','good');complete(['bs'],'bs');render();}
+    say('Each pattern takes one finger move per letter, whatever the length of the word.','good');complete(['bs'],'bs');render();}
 };
 BLOCKS.bs={src:['ferragina'],html:()=>'You counted the pattern from the two beams alone, one letter at a time from its end. After each move the band held exactly the rows that begin with the part of the pattern read so far. '+
   '<b>Two fingers closing on a band of rows is '+term('bs','backward search')+'.</b> It costs one move per letter of the pattern, not one pass over the text.'};
@@ -1327,9 +1327,9 @@ LV[8]={
       hl:st.phase==='done'?null:st.row,bird:st.phase==='done'?null:st.row});
     h+='<div class="sub">Patterns</div><div class="cards">'+pats.map((p,t)=>'<span class="card'+(t===st.task&&st.phase!=='done'?' on':t<st.task||st.phase==='done'?' placed':'')+'">'+
       [...p].map(c=>lt(c)).join('')+(st.placed[t].length?' <small style="letter-spacing:0">at '+st.placed[t].slice().sort((a,b)=>a-b).join(', ')+'</small>':'')+'</span>').join('')+'</div>';
-    if(st.phase==='walk')h+='<p class="meter">Steps along threads: '+st.steps+'</p><p>Row '+st.row+' has no tag. Its right-beam letter came one place earlier in the text: click where its thread lands.</p>';
+    if(st.phase==='walk')h+='<p class="meter">Steps along threads: '+st.steps+'</p><p>Row '+st.row+' has no tag. Its right-beam letter comes one place earlier in the text. Click where its thread lands.</p>';
     if(st.phase==='type')h+='<p class="meter">Steps along threads: '+st.steps+' · tag on row '+st.row+': '+x.labels[st.row]+'</p>'+
-      '<label class="sub" for="pos">Where does the match from row '+l8rows(x,st.task)[st.m]+' start?</label><input type="text" inputmode="numeric" id="pos" data-inp="pos" data-chg="posc" maxlength="2" style="width:4em" autocomplete="off">';
+      '<label class="sub" for="pos">Type where the match from row '+l8rows(x,st.task)[st.m]+' starts</label><input type="text" inputmode="numeric" id="pos" data-inp="pos" data-chg="posc" maxlength="2" style="width:4em" autocomplete="off">';
     if(st.phase==='done'){
       const cls={};x.reads.forEach(r=>{for(let j=0;j<4;j++)cls[r.pos+j]='done';});
       h+='<div class="sub">The text the loom was hiding</div>'+textCells(x.text,{cls,per:16});
@@ -1341,7 +1341,7 @@ LV[8]={
     if(a!=='land'||st.phase!=='walk')return;
     if(lf[st.row]!==i){log('walk_miss',{to:i});say('The glowing thread does not land on row '+i+'.','warn');return render();}
     snap();st.row=i;st.steps++;log('walk',{to:i});
-    if(x.labels[i]!==undefined){st.phase='type';say('Row '+i+' carries a tag: its strip starts at '+x.labels[i]+'.','good');}else say('One step. No tag yet.');
+    if(x.labels[i]!==undefined){st.phase='type';say('Row '+i+' carries a tag. Its strip starts at '+x.labels[i]+'.','good');}else say('Row '+i+' has no tag. Follow its thread.');
     render();
   },
   input(nm,v){
@@ -1353,9 +1353,9 @@ LV[8]={
       if(st.m>=rows.length){st.task++;st.m=0;}
       if(st.task>=5){st.phase='done';say('All five patterns placed.','good');complete(['psa'],'psa');return render();}
       const r=l8rows(x,st.task)[st.m];st.row=r;st.steps=0;st.phase=x.labels[r]!==undefined?'type':'walk';
-      say(k+' it is. '+(st.m?'Now the second match.':'Next pattern: its band is already marked by the fingers.'),'good');return render();
+      say('That match starts at '+k+'. '+(st.m?'Now place the second match.':'The fingers already mark the band of the next pattern.'),'good');return render();
     }
-    if(nm==='posc'&&!isNaN(k)&&k!==want){log('place_miss',{pos:k});say('Not '+k+'. Every step along a thread moved one letter to the left in the text.','warn');
+    if(nm==='posc'&&!isNaN(k)&&k!==want){log('place_miss',{pos:k});say('Not '+k+'. Add the steps to the tag, because each step along a thread moved one letter to the left in the text.','warn');
       $('#status').textContent=cur.msg.text;$('#status').className='status warn';}
   }
 };
@@ -1387,7 +1387,7 @@ LV[9]={
     if(st.phase!=='scan')h+='<p class="meter">Above row '+x.top+': '+x.above+' '+s+'s'+(st.phase==='jump'?' · above row '+B+': '+x.upto+' '+s+'s':'')+'</p>';
     if(st.phase==='jump'||st.phase==='done'){
       h+='<div class="handover"><p>Note kept beside the loom: the first row of each letter on the left beam. '+Object.keys(x.fo).filter(c=>c!=='$').map(c=>'<b style="color:'+colorOf(c)+'">'+c+'</b> row '+x.fo[c]).join(' · ')+'</p>'+
-        '<p>The rows between the fingers end with '+(x.upto-x.above)+' '+s+'s. Their threads land on the left beam among the '+s+' rows, in the same order. Where?</p>'+
+        '<p>The rows between the fingers end with '+(x.upto-x.above)+' '+s+'s. Their threads land on the left beam among the '+s+' rows, in the same order. Type the rows where the fingers land.</p>'+
         '<label>Top finger: row <input type="text" inputmode="numeric" maxlength="2" style="width:3.5em" id="vt" data-inp="vt" value="'+esc(st.vt)+'"></label> '+
         '<label>Bottom finger: row <input type="text" inputmode="numeric" maxlength="2" style="width:3.5em" id="vb" data-inp="vb" value="'+esc(st.vb)+'"></label></div>';
     }
@@ -1422,7 +1422,7 @@ LV[9]={
     }
   },
   finish2(){const x=cur.inst,st=cur.st;st.phase='jump';
-    say('Board '+x.boards[st.board][x.sym]+' plus '+st.marks2.length+' = '+x.upto+', after looking at '+(x.bottom+1-st.board)+' symbols instead of '+(x.bottom+1)+'.','good');render();},
+    say('The board’s '+x.boards[st.board][x.sym]+' plus '+st.marks2.length+' counted below it makes '+x.upto+', after looking at '+(x.bottom+1-st.board)+' symbols instead of '+(x.bottom+1)+'.','good');render();},
   input(n,v){
     const x=cur.inst,st=cur.st;if(st.phase!=='jump')return;
     if(n==='vt')st.vt=v.trim();if(n==='vb')st.vb=v.trim();
@@ -1440,15 +1440,15 @@ LV[10]={
   view(){
     const x=cur.inst,st=cur.st,cls={};
     if(st.phase!=='whole'&&st.phase!=='cut')x.hits.forEach(hh=>{for(let j=0;j<4;j++)cls[hh.pos+j]='hit';});
-    let h='<div class="sub">Text, '+x.text.length+' nucleotides</div>'+textCells(x.text,{cls,per:24});
+    let h='<div class="sub">Reference, '+x.text.length+' nucleotides</div>'+textCells(x.text,{cls,per:24});
     h+='<div class="sub">The read</div><div class="cards" style="align-items:center">';
     [...x.read].forEach((c,k)=>{h+='<span class="card" style="padding:8px 10px">'+lt(c)+'</span>';
       if(k===3)h+=st.phase==='cut'?'<button data-act="cut" aria-label="Cut the read in half" title="Cut here">✂</button>':st.phase!=='whole'?'<span style="width:14px"></span>':'';});
     h+='</div>';
     if(st.phase==='whole')h+='<button data-act="whole">Look the whole read up on the loom</button>';
-    if(st.phase==='cut'){const k=bandSteps(bwt(x.text+'$'),x.read).steps.length;h+='<p>The fingers closed on nothing: after '+numWord(k)+' of the read’s nucleotides, taken from its last, no row was left between them. One position contains a sequencing error. Cut the read in half.</p>';}
+    if(st.phase==='cut'){const k=bandSteps(bwt(x.text+'$'),x.read).steps.length;h+='<p>Backward search found no match. After '+numWord(k)+' of the read’s nucleotides, taken from its last, no rows were left between the fingers. The read contains one sequencing error. Cut it in half.</p>';}
     if(st.phase==='check'||st.phase==='done'){
-      h+='<p>The loom found each half exactly here (marked). Lay the whole read at each place and compare all eight nucleotides.</p>';
+      h+='<p>The marked positions are the exact matches of each half. Lay the whole read at each place and compare all eight nucleotides.</p>';
       x.hits.forEach(hh=>{const s=hh.start,seg=x.text.slice(s,s+8),j=st.judged[s];
         h+='<div class="opt" style="margin:6px 0"><span>Half '+(hh.half+1)+' at '+hh.pos+', so the read would start at '+s+'<br>'+
           '<span class="mono" style="font-size:1.1rem;letter-spacing:.2em">'+[...seg].map(c=>lt(c)).join('')+'</span><br>'+
@@ -1461,7 +1461,7 @@ LV[10]={
   act(a,d){
     const x=cur.inst,st=cur.st;
     if(a==='whole'&&st.phase==='whole'){snap();st.phase='cut';log('whole');say('No match.','warn');return render();}
-    if(a==='cut'&&st.phase==='cut'){snap();st.phase='check';log('cut');say('Each half went through the loom on its own: '+plural(x.hits.length,'exact hit')+' in all.','good');return render();}
+    if(a==='cut'&&st.phase==='cut'){snap();st.phase='check';log('cut');say('Each half was searched on its own, with '+plural(x.hits.length,'exact hit')+' in all.','good');return render();}
     if((a==='fit'||a==='no')&&st.phase==='check'){
       const s=+d.s,mm=mismatches(x.text.slice(s,s+8),x.read),truth=mm<=1?'fit':'no';
       snap();log('judge',{start:s,said:a,truth});
@@ -1473,7 +1473,7 @@ LV[10]={
     }
   }
 };
-BLOCKS.seed={src:['langmead'],html:()=>'With one nucleotide mismatch, at least one half of the read is untouched, so the loom, which only finds exact matches, can still find it. A half can also match by chance, as one did here, so every hit has to be checked across the whole read. '+
+BLOCKS.seed={src:['langmead'],html:()=>'With one nucleotide mismatch, at least one half of the read is untouched, so the loom, which only finds exact matches, can still find it. A half can also match by chance, as at least one did here, so every hit has to be checked across the whole read. '+
   '<b>Each half is a '+term('seed','seed')+'.</b> To allow d mismatches, cut the read into d + 1 pieces.'};
 
 /* ---------- level 11: the patient ---------- */
@@ -1494,17 +1494,18 @@ LV[11]={
     const x=cur.inst,st=cur.st,i=+d.i;if(a!=='col')return;
     const over=x.reads.filter(r=>r.start<=i&&i<r.start+10),diff=over.filter(r=>r.read[i-r.start]!==x.ref[i]);
     snap();st.tries.push(i);log('column',{i,variant:i===x.v});
-    if(i===x.v){say('Every one of the '+over.length+' reads over column '+i+' reads '+x.alt+' where the reference has '+x.ref[i]+'.','good');
+    if(i===x.v){say('All '+numWord(over.length)+' reads over column '+i+' have '+x.alt+' where the reference has '+x.ref[i]+'.','good');
       complete(sweepTerms(),'patient');return render();}
-    if(diff.length)say('Only '+numWord(diff.length)+' of the '+numWord(over.length)+' reads over column '+i+' differs from the reference; the others agree with it.','warn');
-    else say('All '+numWord(over.length)+' reads over column '+i+' agree with the reference.');
+    if(diff.length)say('Only '+numWord(diff.length)+' of the '+numWord(over.length)+' reads over column '+i+(diff.length===1?' differs':' differ')+' from the reference. The others agree with it.','warn');
+    else if(!over.length)say('No read covers column '+i+'.');
+    else say((over.length===1?'The one read':'All '+numWord(over.length)+' reads')+' over column '+i+(over.length===1?' agrees':' agree')+' with the reference.');
     render();
   }
 };
 BLOCKS.patient={src:['worthey'],html:()=>{const x=cur.inst;return 'Every read over column '+x.v+' says '+x.alt+' where the reference says '+x.ref[x.v]+'. A nucleotide substitution supported by all reads at this position is a single-nucleotide variant in this patient’s DNA. '+
   'The lone difference in column '+x.err+' was a misread in a single read, the kind of error that seeds let you place anyway. '+
-  'This is what the whole game was for: a genome’s worth of reads, each placed by '+term('bs','backward search')+' on a '+term('bwt','Burrows–Wheeler transform')+', and then read down the columns.';},
-  wild:()=>'<span class="sub">In the wild</span><p>A boy’s inflammatory bowel disease began when he was 15 months old and resisted diagnosis by every standard test. His doctors sequenced his exome, mapped the reads to the reference and looked for variants. A new mutation in the XIAP gene explained the illness, and he was treated with a transplant of haematopoietic cells. The paper reports no return of the bowel disease at follow-up.</p>'};
+  'Variant calling on a whole genome works the same way. Each read is placed by '+term('bs','backward search')+' on a '+term('bwt','Burrows–Wheeler transform')+', and then the columns are read.';},
+  wild:()=>'<span class="sub">In the wild</span><p>A boy’s inflammatory bowel disease began when he was 15 months old and resisted diagnosis by every standard test. His doctors sequenced his exome, mapped the reads to the reference and looked for variants. A new mutation in the XIAP gene explained the illness, and he was treated with a transplant of hematopoietic cells. The paper reports no return of the bowel disease at follow-up.</p>'};
 /*@end l8.js*/
 /*LEVELS-END*/
 

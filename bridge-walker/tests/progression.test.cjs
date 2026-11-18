@@ -84,7 +84,7 @@ test('either Eulerian walk leads to pair checking, not premature completion',()=
   ui.el('#skip').click();assert.equal(c.phase,'paired');assert(c.done);
   for(const id of ['repeat','readpair','pairedgraph'])assert(ui.persisted().badges.includes(id));
   assert.match(ui.el('#guideBody').innerHTML,/ba3j/);assert.match(ui.el('#panel').innerHTML,/In the wild/);
-  assert.match(c.msg.text,/^Fifteen paired edges/);
+  assert.match(c.msg.text,/^The paired graph has fifteen edges/);
   ui.el('#fresh').click();assert.equal(ui.api.state().phase,'play');assert.equal(ui.api.state().pairWon,null);
  }
 });

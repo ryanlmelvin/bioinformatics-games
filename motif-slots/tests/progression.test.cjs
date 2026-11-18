@@ -123,7 +123,7 @@ test('level 2: changing the mismatch limit clears the answer and requires fresh 
 test('level 3: a wrong partner letter is refused',()=>{
   const u=boot('?debug=1&level=3&seed=W3'),c=u.api.state(),I=c.inst,need=u.ctx.revcomp(I.text.substr(I.handAt,5));
   u.api.act('type',I.text[I.handAt+4]===need[0]?'A':I.text[I.handAt+4]);
-  assert.equal(c.typed,'');assert.match(c.msg.text,/was not added/);assert.match(c.msg.text,/nucleotide 1 of 5/);
+  assert.equal(c.typed,'');assert.match(c.msg.text,/is not the outlined nucleotide/);assert.match(c.msg.text,/nucleotide 1 of 5/);
 });
 test('level 3: exactly five highlighted nucleotides match five inputs, including across a narrow row break',()=>{
   for(const width of [900,320])for(const seed of ['W2','LKSNDR']){

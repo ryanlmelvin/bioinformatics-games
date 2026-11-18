@@ -79,7 +79,7 @@ test('property 3: level 6, unweaving returns the original word, for every word i
     const F=E.firstColumn(L),lf=E.lastToFirst(L),rf=E.ranks(F),rl=E.ranks(L);
     [...L].forEach((c,i)=>{assert.equal(F[lf[i]],c);assert.equal(rf[lf[i]],rl[i]);});
   }
-  for(const code of CODES){const x=E.makeLevel(code,6,0);assert.notEqual(x.word,E.makeLevel(code,5,0).word);assert.equal(E.unweave(x.L).text,x.text);}
+  for(const code of CODES){const x=E.makeLevel(code,6,0);assert.notEqual(x.word,E.makeLevel(code,5,0).word);assert.notEqual(x.word,E.makeLevel(code,4,0).word);assert.equal(E.unweave(x.L).text,x.text);}
 });
 /* The properties each generated level must have. The property tests and the fallback tests share them. */
 const check={

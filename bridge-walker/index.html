@@ -591,7 +591,7 @@ const LEVELS=[
   {id:4,mode:'ham',k:3,n:24,minB:6,title:'Two dozen',
    brief:'Twenty-four reads. A real sequencing run produces millions.'},
   {id:5,mode:'konig',title:'Königsberg, 1736',
-   brief:'A different city with a different rule. The four pieces of land are the nodes and the seven bridges are the edges. Here the land stays put and each bridge falls once '+ANT+' has crossed it. The townspeople want a walk that crosses every bridge exactly once.'},
+   brief:'This is a different city with a different rule. The four pieces of land are the nodes and the seven bridges are the edges. Here the land stays put and each bridge falls once '+ANT+' has crossed it. The townspeople want a walk that crosses every bridge exactly once.'},
   {id:6,mode:'eul',share:1,intro:'morph',title:'Redraw the map',
    brief:'Your first eight reads again. Apply Königsberg’s rule and put each read on an edge instead of a node.'},
   {id:7,mode:'eul',k:3,n:16,minB:3,title:'Archipelago',
@@ -599,7 +599,7 @@ const LEVELS=[
   {id:8,mode:'balance',title:'Round trip',
    brief:'No DNA this time: a small graph with numbered nodes. '+ANT+' wants a round trip that crosses every edge once and ends where it began. For that, every node needs as many edges arriving as leaving. Add the fewest new edges that achieve this.'},
   {id:9,mode:'eul',k:4,n:10,minB:2,build:true,title:'Draw the map yourself',
-   brief:'Ten reads, four nucleotides each. Until now the game drew the edge map for you. This time you draw it. Each read is one edge, from the node named by its first three nucleotides to the node named by its last three. Pick a read, then click where its edge starts and where it ends: an existing node, or open water to raise a new one.'},
+   brief:'Ten reads, four nucleotides each. Draw the edge map yourself. Each read is one edge, from the node named by its first three nucleotides to the node named by its last three. Pick a read, then click where its edge starts and where it ends: an existing node, or open water to raise a new one.'},
   {id:10,mode:'eul',k:4,n:12,minB:2,nomap:true,title:'No map',
    brief:'Twelve reads and no map. Before anything is drawn, decide where '+ANT+' has to start. Click a candidate node to see which reads start with it and which end with it.'},
   {id:11,mode:'eul',share:4,intro:'morph',noUndo:true,title:'Two dozen, again',
@@ -618,7 +618,7 @@ const SRC={
     look:'The assembler used for the fruit fly genome. Its Overlapper stage compares every read with every other read, which produces the map used in this level.'},
   hamilton:{cite:'Hamilton, 1856–1858',title:'Account of the Icosian Calculus',where:'Proceedings of the Royal Irish Academy 6, 415–416',
     url:'https://www.maths.tcd.ie/pub/HistMath/People/Hamilton/Icosian/',
-    look:'Hamilton turned this puzzle into a peg game played on the corners of a dodecahedron: find a route that visits every corner exactly once.'},
+    look:'Hamilton made this problem into a peg game played on the corners of a dodecahedron, in which the route must visit every corner exactly once.'},
   karp:{cite:'Karp, 1972',title:'Reducibility among combinatorial problems',where:'Complexity of Computer Computations, 85–103',
     url:'https://doi.org/10.1007/978-1-4684-2001-2_9',
     look:'A list of 21 problems that are all as hard as one another. The Hamilton circuit problem is one of them.'},
@@ -627,7 +627,7 @@ const SRC={
     look:'Euler never draws nodes and edges. He writes a walk as a string of capital letters, one per piece of land, and counts how often each letter must appear (his paragraphs 4 to 9). In paragraph 3 he rejects listing every route as too laborious. The archive page has the Latin original and an English translation.'},
   pevzner89:{cite:'Pevzner, 1989',title:'l-Tuple DNA sequencing: computer analysis',where:'Journal of Biomolecular Structure and Dynamics 7, 63–73',
     url:'https://doi.org/10.1080/07391102.1989.10507752',
-    look:'An early paper that puts the DNA fragments on the edges and asks for an Eulerian path. It was written for an older technology and speaks of an “l-tuple composition”: your k-mer composition.'},
+    look:'An early paper that puts the DNA fragments on the edges and asks for an Eulerian path. It was written for an older technology and speaks of an “l-tuple composition”, which is the k-mer composition.'},
   hierholzer:{cite:'Hierholzer, 1873',title:'Ueber die Möglichkeit, einen Linienzug ohne Wiederholung und ohne Unterbrechung zu umfahren',where:'Mathematische Annalen 6, 30–32',
     url:'https://eudml.org/doc/156599',
     look:'Three pages, in German, printed two years after Hierholzer died; a colleague he had explained it to saw it into print. It proves the half Euler left unproved, that whenever the counts allow a walk, one can be built by joining closed loops.'},
@@ -679,20 +679,20 @@ function term(id,label){
 /* What the game says when vocabulary is earned. html may be a function of the current level. */
 const BLOCKS={
   problem:{src:['staden'],html:'Each read is a '+term('kmer','k-mer')+': a sequence of k nucleotides, here k = 3. The collection of reads is the string’s '+term('comp','k-mer composition')+'. Rebuilding a string from its composition is the '+term('strrec','String Reconstruction Problem')+', and doing it with real DNA is called <b>'+term('assembly','genome assembly')+'</b>.'},
-  graph:{pic:'equiv',src:['myers'],html:'In graph theory, islands are called '+term('node','nodes')+' and bridges are called '+term('edge','edges')+'. <b>We’ll use those words from now on.</b> This particular map, with one node per read, is an '+term('overlap','overlap graph')+'.'},
+  graph:{pic:'equiv',src:['myers'],html:'In graph theory, islands are called '+term('node','nodes')+' and bridges are called '+term('edge','edges')+'. <b>The rest of the game uses those words.</b> This particular map, with one node per read, is an '+term('overlap','overlap graph')+'.'},
   ham:{pic:'ham',src:['hamilton'],html:ANT+' visited every node exactly once. <b>That’s called a '+term('ham','Hamiltonian path')+'.</b>'},
-  np:{pic:'ham',src:['karp'],html:'<b>Nobody knows a fast way to find a Hamiltonian path.</b> The problem is '+term('np','NP-complete')+': every added node multiplies the number of routes to try, and the search becomes infeasible long before a million reads.'},
-  degree:{src:['euler'],html:'Correct, and Euler proved it. Each time '+ANT+' walks onto a node, a second edge is needed to walk off, so edges get used up in pairs. The number of edges at a node is its '+term('degree','degree')+', and <b>all four nodes here have odd degree.</b> Only the first and last node of a walk can be odd.'},
+  np:{pic:'ham',src:['karp'],html:'<b>Nobody knows a fast way to find a Hamiltonian path.</b> The problem is '+term('np','NP-complete')+'. The number of routes to try grows exponentially with the number of nodes, and the search becomes infeasible long before a million reads.'},
+  degree:{src:['euler'],html:'Correct, and Euler proved it. Each time '+ANT+' walks onto a node, a second edge is needed to walk off, so edges get used up in pairs. The number of edges at a node is its '+term('degree','degree')+', and <b>all four nodes here have odd degree.</b> A walk that crosses every edge once can have at most two odd nodes, the first and the last.'},
   euler:{pic:'eul',src:['pevzner89'],html:ANT+' crossed every edge exactly once. <b>That’s called an '+term('euler','Eulerian path')+'.</b> The reads moved from the nodes to the edges.'},
   inout:{html:'The number of edges entering a node is its '+term('inout','indegree')+'; the number leaving it is its '+term('inout','outdegree')+'.'},
   roundtrip:{html:()=>'Every node now has indegree equal to outdegree: each one is a '+term('balanced','balanced node')+'. That is exactly when a round trip over every edge exists, an '+term('cycle','Eulerian cycle')+'. <b>That’s '+term('balance','Euler’s theorem')+'.</b> You needed '+cur.inst.need+' new edges because each one repairs one node that was short an edge out and one that was short an edge in. The table under the map is the graph’s '+term('adj','adjacency list')+'.'},
-  debruijn:{src:['debruijn'],html:'You drew a node for every 3-nucleotide prefix or suffix and an edge for every read. <b>That map is called a '+term('debruijn','de Bruijn graph')+'.</b> Reads of length k always give nodes of length k − 1.'},
-  nomap:{html:'A node’s outdegree is the number of reads that start with it, and its indegree is the number that end with it. '+ANT+' must start where outdegree − indegree = 1: '+term('balance','Euler’s theorem')+' again, this time for a path.'},
-  balance:{html:'You set '+ANT+' down on the right node first time, twice. <b>That’s '+term('balance','Euler’s theorem')+'.</b> Start where one more edge leaves than arrives; you will finish where one more arrives than leaves. Every other node has as many in as out.'},
-  hier:{src:['hierholzer'],html:'No backing up: when stranded, '+ANT+' went to a node with unused edges and spliced in a loop. <b>That’s '+term('hier','Hierholzer’s algorithm')+'.</b> It touches each edge once, so it works for millions of reads.'},
+  debruijn:{src:['debruijn'],html:'You drew a node for every three-nucleotide prefix or suffix and an edge for every read. <b>That map is called a '+term('debruijn','de Bruijn graph')+'.</b> Reads of length k always give nodes of length k − 1.'},
+  nomap:{html:'A node’s outdegree is the number of reads that start with it, and its indegree is the number that end with it. '+ANT+' must start where outdegree − indegree = 1. This is '+term('balance','Euler’s theorem')+' for a path.'},
+  balance:{html:'You set '+ANT+' down on the right node at the first try in two levels. <b>That’s '+term('balance','Euler’s theorem')+'.</b> Start where one more edge leaves than arrives; you will finish where one more arrives than leaves. Every other node has as many in as out.'},
+  hier:{src:['hierholzer'],html:'When stranded, '+ANT+' went back to a node with unused edges and spliced in a loop instead of backing up. <b>That’s '+term('hier','Hierholzer’s algorithm')+'.</b> It touches each edge once, so it works for millions of reads.'},
   nohier:{html:ANT+' was never stranded, so one term is still hidden. Try a new puzzle and let '+ANT+' get stranded once to earn it.'},
   finale:{src:['ptw','primer'],html:'The twenty-four reads that stranded '+ANT+' as nodes took twenty-four steps as edges, with no backing up. <b>That is why assemblers for short reads are built on de Bruijn graphs.</b>'},
-  paired:{src:['paired'],html:()=>'<b>One pair told the two walks apart.</b> The repeated '+cur.inst.repeat+' is a '+term('repeat','repeat')+'. A '+term('readpair','read-pair')+' can decide between the walks only when its two ends come from different sequence regions, so that swapping the loops pulls them apart. The four pairs that fitted both strings each came from a single loop, or from the region after both. Adding both prefix and suffix labels to every node gives a '+term('pairedgraph','paired de Bruijn graph')+': here the repeated nodes separate and the forks disappear. This small puzzle has one answer; real pairs have uncertain gaps and do not resolve every repeat.'}
+  paired:{src:['paired'],html:()=>'<b>One pair told the two walks apart.</b> '+cur.inst.repeat+' occurs more than once in the string, so it is a '+term('repeat','repeat')+'. A '+term('readpair','read-pair')+' can decide between the walks only when its two ends come from different sequence regions, so that swapping the loops pulls them apart. The other pairs on the bench fit both strings because each came from a single loop or from a region outside both loops. Adding both prefix and suffix labels to every node gives a '+term('pairedgraph','paired de Bruijn graph')+', in which the repeated nodes separate and the forks disappear. This small puzzle has one answer; real pairs have uncertain gaps and do not resolve every repeat.'}
 };
 
 /* ---------- saved state ---------- */
@@ -1121,7 +1121,7 @@ function pairMapLayout(inst){
 }
 function beginPairCheck(){
   cur.phase='pairs';setAnt(null);log('pairs_revealed',{walk:cur.b.walk.map(s=>s[0]),spelled:spellEul(),bench:cur.inst.bench.slice()});
-  say('Both walks use all '+numWord(cur.inst.reads.length)+' reads. Which string do the paired measurements support?');
+  say('Both walks use all '+numWord(cur.inst.reads.length)+' reads. Use the read-pairs to decide which string is real.');
 }
 const AB=i=>i?'B':'A';
 function pairTape(c,i){
@@ -1201,7 +1201,7 @@ function runPairSplit(){
   const done=()=>{
     if(cur!==mine||cur.phase!=='split')return;
     cur.phase='paired';cur.done=true;markDone();grant(['repeat','readpair','pairedgraph']);cur.blocks.push('paired');save();
-    say(cap(numWord(cur.inst.pairs.length))+' paired edges, one unbranched path. The right-hand reads supply the final '+numWord(cur.inst.k+cur.inst.d)+' nucleotides.','good');
+    say('The paired graph has '+numWord(cur.inst.pairs.length)+' edges in one unbranched path. The right-hand reads supply the final '+numWord(cur.inst.k+cur.inst.d)+' nucleotides.','good');
     log('complete',{ms:Date.now()-cur.t0,pairs:true,earned:['repeat','readpair','pairedgraph']});render();
   };
   if(matchMedia('(prefers-reduced-motion: reduce)').matches)return done();
@@ -1214,9 +1214,19 @@ function runPairSplit(){
 function balEdges(){
   const base=cur.inst.edges,cnt={},all=[];
   base.forEach(e=>{const k=e.from+'>'+e.to;cnt[k]=(cnt[k]||0)+1;all.push({id:e.id,from:e.from,to:e.to,par:0,added:false});});
-  cur.bal.added.forEach((e,i)=>{const k=e.from+'>'+e.to,par=cnt[k]||0;cnt[k]=par+1;
+  cur.bal.added.forEach((e,i)=>{const k=e.from+'>'+e.to,par=clearPar(e.from,e.to,cnt[k]||0);cnt[k]=par+1;
     all.push({id:base.length+i,from:e.from,to:e.to,par,added:true,idx:i});});
   return all;
+}
+/* a new edge bends further out until it no longer runs through another node */
+function clearPar(a,b,par){
+  for(let p=par;p<par+5;p++){
+    const g=geom(cur.pos[a],cur.pos[b],p);let hit=false;
+    for(let u=.1;u<.95&&!hit;u+=.05){const v=1-u,x=v*v*g.s.x+2*u*v*g.m.x+u*u*g.t.x,y=v*v*g.s.y+2*u*v*g.m.y+u*u*g.t.y;
+      hit=cur.pos.some((q,w)=>w!==a&&w!==b&&Math.hypot(q.x-x,q.y-y)<R+12);}
+    if(!hit)return p;
+  }
+  return par;
 }
 function degOf(all){
   const n=cur.inst.nodes.length,out=Array(n).fill(0),inn=Array(n).fill(0);
@@ -1255,7 +1265,7 @@ function buildPick(i){
     bd.start=null;
   }
   bd.sel=bd.sel===i?null:i;
-  if(bd.sel!==null){log('build_pick',{read:r[i]});say('Drawing '+r[i]+': click where its edge starts. A node if it is already on the map, open water if it is not.');}
+  if(bd.sel!==null){log('build_pick',{read:r[i]});say('Drawing '+r[i]+'. Click the node where its edge starts, or open water if that node is not on the map yet.');}
   else say(buildCount());
   render();
 }
@@ -1273,7 +1283,7 @@ function buildClick(v,pt){
   }else{
     if(bd.pos[want]){
       cur.buildErrs++;log('build_reject',{read:e.read,end:verb,why:'duplicate'});
-      say('The node this edge '+verb+'s at is already on the map. A name can’t be used twice: find that node and click it.','warn');return render();
+      say(N[want]+' is already on the map, and a node name can’t be used twice. Click that node.','warn');return render();
     }
     const p={x:clamp(pt.x,R+34,W-R-34),y:clamp(pt.y,R+56,H-R-38)};
     const near=N.findIndex((_,u)=>bd.pos[u]&&Math.hypot(bd.pos[u].x-p.x,bd.pos[u].y-p.y)<R*3);
@@ -1298,7 +1308,7 @@ function buildClick(v,pt){
 function candClick(v){
   if(cur.phase!=='ask')return;
   cur.nm.cand=cur.nm.cand===v?null:v;
-  say('Which node must '+ANT+' start on?');render();
+  say('Choose the node where '+ANT+' must start.');render();
 }
 function askSubmit(){
   const nm=cur.nm,inst=cur.inst,N=inst.nodes,c=nm.cand;
@@ -1313,7 +1323,7 @@ function askSubmit(){
   }
   cur.firstPick=nm.misses===0;cur.phase='play';
   cur.b=freshWalk();cur.b.start=cur.b.head=c;cur.hist=[];
-  say('Right: one more read starts with '+N[c]+' than ends with it. Here is the map. Walk it.','good');
+  say('Right. One more read starts with '+N[c]+' than ends with it. Walk the map.','good');
   render();setAnt(restSpot(),0);
   const sc=$('#scene');sc.classList.add('fadein');setTimeout(()=>sc.classList.remove('fadein'),1000);
 }
@@ -1494,8 +1504,8 @@ function runIntro(){
   if(cur.phase!=='pre')return;
   const cards=cur.L.intro==='cards',frameFn=cards?cardsFrame:morphFrame,dur=cards?3200:4200,mine=cur;
   cur.phase='intro';log('intro',{kind:cur.L.intro});renderControls();
-  say(cards?'Each read becomes an island… and a bridge appears wherever two reads overlap.'
-           :'Every node stretches into an edge… and ends with the same name are glued together.');
+  say(cards?'Each read becomes an island, with a bridge wherever two reads overlap.'
+           :'Each node stretches into an edge, and edge ends with the same name are joined into one node.');
   $('#status').textContent=cur.msg.text;$('#status').className='status';
   const t0=performance.now();
   const done=()=>{if(cur!==mine||cur.phase!=='intro')return;cur.phase='play';
@@ -1593,12 +1603,12 @@ function srcCard(id){
 function renderPanel(){
   if(!cur.done){$('#panel').innerHTML='';return;}
   const m=cur.mode;
-  let h='<div class="reveal"><h3>'+(cur.gave?'Stuck is the right answer':'Level '+cur.L.id+' complete')+'</h3>';
-  if(m==='cards')h+='<p>Eight reads took trial and error. A real genome yields millions of reads.</p>';
+  let h='<div class="reveal"><h3>Level '+cur.L.id+' complete</h3>';
+  if(m==='cards')h+='<p>A real genome yields millions of reads, far too many to chain by trial and error.</p>';
   cur.blocks.forEach(id=>{
     const B=BLOCKS[id];
     h+='<div class="called">'+(B.pic?picto(B.pic):'')+'<p>'+(typeof B.html==='function'?B.html():B.html)+'</p></div>';
-    if(id==='euler')h+='<div class="called">'+picto('ham')+'<p>Compare: before, the reads were the nodes and '+ANT+' had to visit each node once.</p></div>';
+    if(id==='euler')h+='<div class="called">'+picto('ham')+'<p>In levels 2 to 4 the reads were the nodes, and '+ANT+' had to visit each node once.</p></div>';
     (B.src||[]).forEach(s=>{h+=srcCard(s);});
   });
   if(m!=='konig'&&m!=='balance'&&!cur.gave&&!cur.L.pairs){
@@ -1612,7 +1622,7 @@ function renderPanel(){
   }
   const missing=VOCAB.filter(x=>!S.badges.includes(x.id)).length;
   if(cur.L.id<LEVELS.length)h+='<button class="primary advance" id="next">Next level →</button>';
-  else h+='<p>'+(missing?plural(missing,'vocabulary term')+' still hidden. Try a new puzzle on levels 6 to 11.'
+  else h+='<p>'+(missing?plural(missing,'vocabulary term')+' still hidden. '+(VOCAB.every(x=>S.badges.includes(x.id)||x.id==='hier'||x.id==='balance')?'Try a new puzzle on levels 6 to 11.':'Finish the levels without a ✓ to earn them.')
      :'You have earned every term.')+'</p>';
   $('#panel').innerHTML=h+'</div>';
 }

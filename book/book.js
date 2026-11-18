@@ -63,12 +63,12 @@ const ICON={
 };
 window.BOOK.icon=ICON;
 function bar(){
-  const i=ch?BOOK.chapters.indexOf(ch):-1,prev=i>0?BOOK.chapters[i-1]:null,next=i>=0&&i<BOOK.chapters.length-1?BOOK.chapters[i+1]:null;
+  const i=ch?BOOK.chapters.indexOf(ch):-1,prev=side?ch:i>0?BOOK.chapters[i-1]:null,next=i>=0&&i<BOOK.chapters.length-1?BOOK.chapters[i+1]:null;
   const b=el('nav','bk-bar');b.setAttribute('aria-label','Book');
   b.innerHTML='<a class="bk-brand" href="'+base+'" title="Contents">'+ICON.book+'<span>'+BOOK.title+'</span></a>'+
     (ch?'<div class="bk-where"><span class="bk-chip">'+(side?'Side quest':'Chapter '+ch.n)+'</span><span class="bk-topic">'+(ch.short||ch.topic)+'</span></div>':'<div class="bk-where"></div>')+
     '<div class="bk-nav">'+
-    (ch?(prev?'<a class="bk-step" href="'+base+prev.dir+'/" title="Chapter '+prev.n+': '+esc(prev.topic)+'" aria-label="Previous chapter">‹</a>':'<span class="bk-step off" aria-hidden="true">‹</span>')+
+    (ch?(prev?'<a class="bk-step" href="'+base+prev.dir+'/" title="Chapter '+prev.n+': '+esc(prev.topic)+'" aria-label="'+(side?'Back to chapter '+prev.n:'Previous chapter')+'">‹</a>':'<span class="bk-step off" aria-hidden="true">‹</span>')+
         (!side&&ch.docs!==false?'<a class="bk-toc bk-hlink" href="#handouts">Handouts</a>':'')+
         '<a class="bk-toc" href="'+base+'#contents">Contents</a>'+
         (next?'<a class="bk-step" href="'+base+next.dir+'/" title="Chapter '+next.n+': '+esc(next.topic)+'" aria-label="Next chapter">›</a>':'<span class="bk-step off" aria-hidden="true">›</span>'):'')+
@@ -143,7 +143,7 @@ function gamePage(){
       '<p class="bk-eyebrow"><span>'+(side?'Side quest, chapter '+ch.n:'Chapter '+ch.n)+'</span>'+esc(ch.topic)+'</p>'+
       '<h2 id="bkCoverT">'+esc(G.game)+'</h2><p class="bk-hook">'+esc(G.hook)+'</p>'+
       (G.levels?'<p class="bk-meta">'+G.levels+' levels, '+G.terms+' terms</p>':'')+
-      (!side&&ch.docs!==false?'<p class="bk-meta">To fill in as you play: <a href="'+base+'materials/'+ch.slug+'-play-guide.docx">exploration guide</a> (Word). Other handouts are <a href="#handouts" class="bk-tohandouts">under the game</a>.</p>':'')+
+      (!side&&ch.docs!==false?'<p class="bk-meta">Fill in the <a href="'+base+'materials/'+ch.slug+'-play-guide.docx">exploration guide</a> (Word) as you play. The other handouts are <a href="#handouts" class="bk-tohandouts">under the game</a>.</p>':'')+
       '<div class="bk-cover-go"><button type="button" class="bk-begin">Begin</button><a href="'+base+'">Back to the contents</a></div></div></div>';
     document.body.append(o);document.body.classList.add('bk-locked');
     const go=$('.bk-begin',o);go.focus();
@@ -180,15 +180,15 @@ function gamePage(){
   }
   if(badges){onBadges();new MutationObserver(onBadges).observe(badges,{childList:true});}
 
-  // level complete: the game draws its "Level n complete" panel
-  const panel=$('#panel');let hadReveal=!!(panel&&panel.querySelector('.reveal'));
+  // level complete: the game draws its "Level n complete" panel (Lockpick names its own panel and finished card)
+  const done=G.done||'.reveal',panel=$(G.panel||'#panel');let hadReveal=!!(panel&&panel.querySelector(done));
   const events={terms:[],level:''};let ft=0;
   function flush(){clearTimeout(ft);ft=setTimeout(()=>{
     if(events.level){play('level');confetti();toast(events.level,events.terms);}
     else if(events.terms.length){play('term');toast(events.terms.length>1?'New terms':'New term',events.terms);}
     events.terms=[];events.level='';},60);}
   if(panel)new MutationObserver(()=>{
-    const r=panel.querySelector('.reveal'),has=!!r;
+    const r=panel.querySelector(done),has=!!r;
     if(has&&!hadReveal){const h=r.querySelector('h3');events.level=h?h.textContent.trim():'Level complete';flush();}
     hadReveal=has;
   }).observe(panel,{childList:true});
@@ -228,7 +228,7 @@ function gamePage(){
     if(reading){
       const b=readingMap.book,details=el('details','bk-reading');details.id='suggested-reading';
       const readingLabel=r=>(r.appendix?'Appendix '+r.appendix:'Chapter '+r.chapter)+': '+r.title+
-        (r.section?' - '+r.section:'')+(r.pages?' (pp. '+r.pages+')':'');
+        (r.section||r.pages?' ('+[r.section,r.pages&&'pp. '+r.pages].filter(Boolean).join(', ')+')':'');
       details.innerHTML='<summary>Suggested reading and problems in <cite>'+esc(b.title)+'</cite></summary><p><a href="'+esc(b.url)+'"><cite>'+esc(b.title)+'</cite>, '+esc(b.edition)+'</a> by '+esc(b.author)+' ('+b.year+'). '+esc(readingMap.note)+'</p><ul>'+
         reading.readings.map(r=>'<li><strong>'+esc(readingLabel(r))+'.</strong> '+esc(r.focus)+'</li>').join('')+
         '</ul><p><strong>Book exercises:</strong> '+esc(reading.exercises)+'</p>'+

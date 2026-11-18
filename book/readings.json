@@ -80,7 +80,7 @@
       "readings": [
         {"chapter": 1, "title": "Introduction to algorithms", "focus": "Review binary search and Big O notation as preparation for searching a sorted suffix array."},
         {"chapter": 4, "title": "Quicksort", "focus": "Review sorting and divide and conquer, then consider the cost of comparing suffixes instead of single numbers."},
-        {"chapter": 7, "title": "Trees", "focus": "For an extension, read the Huffman coding section as another use of structure in compression. It is separate from the Burrows-Wheeler transform and backward search."},
+        {"chapter": 7, "title": "Trees", "focus": "For an extension, read the Huffman coding section as another use of structure in compression. It is separate from the Burrows–Wheeler transform and backward search."},
         {"chapter": 2, "title": "Selection sort", "section": "Memory, arrays and linked lists", "pages": "22-34", "focus": "Focus on the memory and data-structure sections and exercises 2.2-2.5. Random access and insertion costs help explain the choice of representation for a suffix index."},
         {"chapter": 13, "title": "Where to go next", "section": "Inverted indexes", "pages": "249-250", "focus": "A word-to-location index becomes a k-mer-to-genome-position index. Compare explicit occurrence lists with the suffix-array intervals used in read mapping."}
       ],
@@ -94,7 +94,7 @@
     "transformers": {
       "readings": [
         {"chapter": 12, "title": "K-nearest neighbors", "focus": "Focus on features, weighted recommendations, regression and the overview of training a model. These are useful analogies for representations and weighted values; the chapter does not teach attention or transformers."},
-        {"chapter": 4, "title": "Quicksort", "focus": "Review Big O notation revisited to reason about the cost of comparing every query with every key."}
+        {"chapter": 4, "title": "Quicksort", "section": "Big O notation revisited", "focus": "Use this section to reason about the cost of comparing every query with every key."}
       ],
       "exercises": "12.2 and 4.8.",
       "connection": "Compare weighting a recommender's ratings with weighting values in attention. Which weights depend on the current query? If every one of n positions attends to every position, how many query-key scores are computed, and what happens when n doubles?"
