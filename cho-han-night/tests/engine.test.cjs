@@ -11,16 +11,16 @@ const CODES=Array.from({length:500},(_,i)=>'CODE-'+i);
 const close=(a,b,rel=1e-6)=>assert(Math.abs(a-b)<=rel*Math.abs(b),a+' vs '+b);
 
 test('seven, seven, other ledger agrees with direct fair-dice probabilities',()=>{
-  assert.deepEqual(plain(X.sumLedger('SSO')),[[1,6],[9,114],[705,0]]);
-  assert.deepEqual(plain(X.nightProbability('SSO')),{num:705,den:6912});
-  close(705/6912,X.forwardProbability('SSO',X.PARLOUR));
+  assert.deepEqual(plain(X.sumLedger('SSO')),[[1,4],[7,52],[365,326]]);
+  assert.deepEqual(plain(X.nightProbability('SSO')),{num:691,den:6912});
+  close(691/6912,X.forwardProbability('SSO',X.PARLOUR));
 });
 test('every twelve-call ledger agrees with exact integer arithmetic',()=>{
   for(let mask=0;mask<4096;mask++){
     const calls=Array.from({length:12},(_,i)=>mask&(1<<i)?'S':'O');
     let f=0n,l=0n;
     const exact=calls.map((c,t)=>{
-      const ef=c==='S'?1n:5n,el=c==='S'?6n:0n;
+      const ef=c==='S'?1n:5n,el=c==='S'?4n:2n;
       [f,l]=t?[(3n*f+l)*ef,(f+3n*l)*el]:[ef,el];
       return [f,l];
     });
@@ -32,12 +32,13 @@ test('every twelve-call ledger agrees with exact integer arithmetic',()=>{
     assert.equal(BigInt(p.den),2n*6n**12n*4n**11n);
   }
 });
-test('fair dice have six seven outcomes; loaded pairs can never emit other',()=>{
+test('fair dice have six seven outcomes; each designed night has a loaded other and a fair seven',()=>{
   assert.equal(X.DICE_OUTCOMES.S.length,6);assert.equal(X.DICE_OUTCOMES.O.length,30);
   assert.equal(new Set([...X.DICE_OUTCOMES.S,...X.DICE_OUTCOMES.O].map(p=>p.join(','))).size,36);
   for(const code of CODES){
-    const n=X.nightFor(code);assert(n.truth.every((k,i)=>k===0||n.calls[i]==='S'));
-    assert.deepEqual(plain(X.ODDS),{start:[1,1],startOf:2,emit:[{S:1,O:5},{S:6,O:0}],emitOf:6,keep:3,swap:1,stepOf:4});
+    const n=X.nightFor(code);
+    assert(n.truth.some((k,i)=>k===1&&n.calls[i]==='O'));assert(n.truth.some((k,i)=>k===0&&n.calls[i]==='S'));
+    assert.deepEqual(plain(X.ODDS),{start:[1,1],startOf:2,emit:[{S:1,O:5},{S:4,O:2}],emitOf:6,keep:3,swap:1,stepOf:4});
     const r=X.rng(X.hashStr(code));for(const c of ['S','O'])for(let i=0;i<24;i++){
       const p=X.diceFor(c,r);assert(p.every(x=>Number.isInteger(x)&&x>=1&&x<=6));assert.equal(p[0]+p[1]===7,c==='S');
     }

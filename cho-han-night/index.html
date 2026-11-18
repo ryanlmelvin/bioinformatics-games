@@ -346,7 +346,7 @@ const POOLS={makeFamily:['fallback-0','fallback-1','fallback-3','fallback-4']};
 
 /* ===== Pairs: 0 = fair, 1 = loaded. S = sum 7, O = any other sum. ===== */
 const ODDS={start:[1,1],startOf:2,                 // the night starts with either pair, 1 chance in 2 each
-  emit:[{S:1,O:5},{S:6,O:0}],emitOf:6,              // emission weights out of 6
+  emit:[{S:1,O:5},{S:4,O:2}],emitOf:6,              // emission weights out of 6
   keep:3,swap:1,stepOf:4};                          // after each round: keep 3 in 4, swap 1 in 4
 // All equally likely ordered rolls of two fair dice, grouped by their sum.
 const DICE_OUTCOMES={S:[],O:[]};
@@ -410,15 +410,16 @@ function bruteForce(calls){
 }
 
 /* Designed nights (found by search, checked in tests). truth: the pairs really used; calls: what the dealer called.
-   Level 3 shows twelve rounds; the bookkeeper's belief crosses one half at least twice on each. */
+   Level 3 shows twelve rounds; the bookkeeper's belief crosses one half at least twice on each,
+   and on each night the loaded pair calls "other" at least once and the fair pair calls "7" at least once. */
 const NIGHTS=[
-  {truth:'000010111000',calls:'OOOOSOSSSOOO'},{truth:'000001111100',calls:'OOOOOSSSSSOO'},
-  {truth:'110100000111',calls:'SSOSSOOOSSSS'},{truth:'000111000011',calls:'OOOSSSOOOSSS'},
-  {truth:'000101110000',calls:'OOOSOSSSSOOO'},{truth:'011110000011',calls:'OSSSSSOOOOSS'},
-  {truth:'000011110001',calls:'OOSSSSSSSOSS'},{truth:'010000011110',calls:'OSSOOSOSSSSO'}
+  {truth:'110000011000',calls:'OSOOOOOSOOSO'},{truth:'011110001111',calls:'OOSSSOOSSSSS'},
+  {truth:'111010000000',calls:'OSOSSOOOOOOO'},{truth:'001111110000',calls:'OSSSOOSSOOOO'},
+  {truth:'110000100001',calls:'OOOOSOSOOOOS'},{truth:'011110001110',calls:'OSSOSOSOSSOO'},
+  {truth:'110000110000',calls:'SSOOOOSOSOOO'},{truth:'001100001111',calls:'OOSSSOOOOSSS'}
 ].map(o=>({truth:o.truth.split('').map(Number),calls:o.calls.split('')}));
 /* Six-call nights for level 7: the most likely story is unique and differs from the round-by-round likelier pair. */
-const VNIGHTS=["SSSOSO","SSOSOS","SSOSOO","SSOOSO","SOSOSS","SOSOSO","SOSOOS","SOSOOO"].map(c=>c.split(''));
+const VNIGHTS=["OOOSOS","OOSSOS","SOSOOO","OSSSOO","SSOSOO","OOOSSO","OSOOSS","SOSSOO"].map(c=>c.split(''));
 function nightFor(seed){return NIGHTS[hashStr(seed+'|night')%NIGHTS.length];}
 function vnightFor(seed){return VNIGHTS[hashStr(seed+'|vnight')%VNIGHTS.length];}
 function crossings(calls){
@@ -449,7 +450,7 @@ function forwardProbability(x,hmm){
 }
 /* The table as a general model, for the workbench and the tests. */
 const PARLOUR={states:['F','L'],alphabet:['S','O'],start:{F:.5,L:.5},
-  T:{F:{F:.75,L:.25},L:{F:.25,L:.75}},E:{F:{S:1/6,O:5/6},L:{S:1,O:0}}};
+  T:{F:{F:.75,L:.25},L:{F:.25,L:.75}},E:{F:{S:1/6,O:5/6},L:{S:2/3,O:1/3}}};
 
 /* ===== Profile models of a family (Rosalind BA10E, BA10F) ===== */
 const AMINO='ACDEFGHIKLMNPQRSTVWY'.split('');
@@ -639,7 +640,7 @@ const LEVELS=[
   {id:1,mode:'family',title:'One of the family?',
    brief:'Five related protein sequences are written in rows so that homologous amino acid residues share a column. A dash denotes a gap in that sequence. Two newcomers claim to belong, and only one does. Pick it.'},
   {id:2,mode:'open',title:'Seven or other',
-   brief:'Compare two pairs of dice. A fair pair has 36 equally likely rolls, and six of them total 7. The loaded pair always totals 7. After each roll, the dealer calls “7” for a total of 7 or “other” for any other total. Roll each pair 24 times and tally every call.'},
+   brief:'Compare two pairs of dice. A fair pair has 36 equally likely rolls, and six of them total 7. The loaded pair is weighted toward 7. After each roll, the dealer calls “7” for a total of 7 or “other” for any other total. Roll each pair 24 times and tally every call.'},
   {id:3,mode:'swap',title:'The swap',
    brief:'The dealer now rolls one pair behind a screen, and you hear only the call. Between rounds, the dealer may switch between the fair and loaded pairs; the house card shows how often. After each of twelve calls, slide the bead toward the pair you think was rolled.'},
   {id:4,mode:'story',title:'One story',
@@ -913,7 +914,7 @@ function table(o){
   if(o.call)h+='<text x="580" y="75" text-anchor="middle" font-size="28" fill="#fffdf6" font-family="system-ui,sans-serif">'+(o.call==='S'?'Total 7':'Other total')+'</text>';
   return h+'</svg>';
 }
-const CARD_CALLS=['Fair pair: 7 = 1/6; other = 5/6','Loaded pair: 7 = 1; other = 0'];
+const CARD_CALLS=['Fair pair: 7 = 1/6; other = 5/6','Loaded pair: 7 = 2/3; other = 1/3'];
 const CARD_SWAP=['Keep pair: 3 in 4; swap pairs: 1 in 4','First round: either pair, probability 1/2'];
 
 /* ================= Level 2: both pairs in the open ================= */
@@ -922,7 +923,7 @@ MODES.open={
   init(){
     const rand=rng(hashStr(gkey('open')));
     const make=n=>shuffled(24,rand).map(i=>i<n?'S':'O');
-    const seq=[make(4),make(24)];
+    const seq=[make(4),make(16)];
     cur.o={seq,dice:seq.map(s=>s.map(c=>diceFor(c,rand))),idx:[0,0],shown:[null,null],tally:[[],[]],ans:[null,null],ok:[false,false],last:null};
     say('Roll either pair to start.');
   },
@@ -957,7 +958,7 @@ MODES.open={
     }
     return h+'</div>';
   },
-  reveal(){return [{html:'The fair pair totals 7 with probability 1/6, and the loaded pair totals 7 with probability 1. These 24 rolls were arranged to match those probabilities exactly; real fair dice fluctuate. A total other than 7 proves the fair pair was used, but a 7 could come from either pair.'}];}
+  reveal(){return [{html:'The fair pair totals 7 with probability 1/6, and the loaded pair totals 7 with probability 4/6, or 2/3. These 24 rolls were arranged to match those probabilities exactly; real dice fluctuate. Neither call settles which pair was rolled. A 7 is four times likelier from the loaded pair, and an “other” is two and a half times likelier from the fair pair (5/6 against 2/6).'}];}
 };
 const v4=v=>v+' in 6';
 const ACT={};
@@ -979,7 +980,7 @@ ACT.tally=a=>{
 };
 ACT.ans=a=>{
   const o=cur.o,c=+a[0],v=+a[1];if(cur.done||o.ok[c])return;
-  o.ans[c]=v;const want=c?6:1;
+  o.ans[c]=v;const want=c?4:1;
   if(v===want){o.ok[c]=true;log('estimate',{pair:c,v,ok:true});}
   else{log('estimate',{pair:c,v,ok:false});say('Count the 7 marks for the '+CUP[c]+' and divide by four, because 24 rolls are four sets of six.','warn');jolt('ans'+c+v);return;}
   if(o.ok[0]&&o.ok[1])complete([],null,'The dealer pins both probabilities on the house card.');
@@ -1074,7 +1075,7 @@ MODES.story={
   },
   reveal(){
     const c=storyChances(cur.st.story,cur.calls);
-    return [{html:'The probabilities of keeping or swapping, 3 in 4 and 1 in 4, are '+term('trans','transition probabilities')+'. A pair’s probabilities of each call are its '+term('emit','emission probabilities')+': 1/6 and 5/6 for the fair pair, 1 and 0 for the loaded pair. The whole table, a hidden pair that changes by transition probabilities and a call emitted by whichever pair is in play, is a '+term('hmm','hidden Markov model')+'.'},
+    return [{html:'The probabilities of keeping or swapping, 3 in 4 and 1 in 4, are '+term('trans','transition probabilities')+'. A pair’s probabilities of each call are its '+term('emit','emission probabilities')+': 1/6 and 5/6 for the fair pair, 4/6 and 2/6 for the loaded pair. The whole table, a hidden pair that changes by transition probabilities and a call emitted by whichever pair is in play, is a '+term('hmm','hidden Markov model')+'.'},
       {html:'Your story with its calls: '+c.both+' / 165,888 = '+(c.both/165888).toPrecision(3)+'. This is one story of 16.',src:['rabiner']}];
   }
 };
@@ -1655,7 +1656,7 @@ else{
   window.addEventListener&&window.addEventListener('hashchange',()=>{if(/^#save=/.test(location.hash))location.reload();});
 }
 $('#dl').onclick=()=>{
-  const blob=new Blob([JSON.stringify({game:'cho-han-night',version:2,model:'fair-or-always-seven',seed:S.seed,exported:new Date().toISOString(),
+  const blob=new Blob([JSON.stringify({game:'cho-han-night',version:2,model:'fair-or-loaded-two-in-three',seed:S.seed,exported:new Date().toISOString(),
     unlocked:S.unlocked,finished:S.done,vocabulary:S.badges,earnedAt:S.earnedAt,events:S.log},null,1)],{type:'application/json'});
   const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='cho-han-night-'+S.seed.replace(/[^\w-]/g,'_')+'.json';
   document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),1000);

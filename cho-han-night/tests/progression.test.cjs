@@ -16,7 +16,7 @@ const plain=x=>JSON.parse(JSON.stringify(x));
 /* Each player plays one level by the rules, through the same actions the page's buttons send. */
 const PLAY={
   1(ui){ui.api.act('pick','1');},
-  2(ui){const a=ui.api;for(const c of [0,1])for(let i=0;i<24;i++){a.act('shake',String(c));const o=a.state().o;a.act('tally',c+o.seq[c][o.shown[c]]);}a.act('ans','01');a.act('ans','16');},
+  2(ui){const a=ui.api;for(const c of [0,1])for(let i=0;i<24;i++){a.act('shake',String(c));const o=a.state().o;a.act('tally',c+o.seq[c][o.shown[c]]);}a.act('ans','01');a.act('ans','14');},
   3(ui){const a=ui.api;for(let i=0;i<12;i++){a.act('bead',String(i*8));a.act('lock');}a.act('skip');},
   4(ui){const a=ui.api;for(let i=0;i<4;i++)a.act('pair',String(i));a.act('pair','2');
     for(const id of ['s0','t1','t2','t3','pp','e0','e1','e2','e3','pe','pb'])a.cell(id,String(a.answers().want[id]));},
@@ -98,10 +98,10 @@ test('level 6: a wrong entry is refused and a later column cannot be filled firs
 
 test('level 6: the worked example follows the current night and leads into a solvable three-column ledger',()=>{
   const cases=[
-    {seed:'EXAMPLE0',calls:'OOO',entries:[[5,0],[75,0],[1125,0]],example:['1 × 5 = 5','1 × 0 = 0','(5 × 3 + 0 × 1) × 5 = 75']},
-    {seed:'EXAMPLE3',calls:'OOS',entries:[[5,0],[75,0],[225,450]],example:['1 × 5 = 5','1 × 0 = 0','(5 × 3 + 0 × 1) × 5 = 75']},
-    {seed:'EXAMPLE4',calls:'OSS',entries:[[5,0],[15,30],[75,630]],example:['1 × 5 = 5','1 × 0 = 0','(5 × 3 + 0 × 1) × 1 = 15']},
-    {seed:'EXAMPLE7',calls:'SSO',entries:[[1,6],[9,114],[705,0]],example:['1 × 1 = 1','1 × 6 = 6','(1 × 3 + 6 × 1) × 1 = 9']}
+    {seed:'EXAMPLE5',calls:'OOO',entries:[[5,2],[85,22],[1385,302]],example:['1 × 5 = 5','1 × 2 = 2','(5 × 3 + 2 × 1) × 5 = 85']},
+    {seed:'EXAMPLE2',calls:'OOS',entries:[[5,2],[85,22],[277,604]],example:['1 × 5 = 5','1 × 2 = 2','(5 × 3 + 2 × 1) × 5 = 85']},
+    {seed:'EXAMPLE0',calls:'OSS',entries:[[5,2],[17,44],[95,596]],example:['1 × 5 = 5','1 × 2 = 2','(5 × 3 + 2 × 1) × 1 = 17']},
+    {seed:'EXAMPLE3',calls:'SSO',entries:[[1,4],[7,52],[365,326]],example:['1 × 1 = 1','1 × 4 = 4','(1 × 3 + 4 × 1) × 1 = 7']}
   ];
   for(const c of cases){
     const ui=boot('?debug=1&level=6&seed='+c.seed),a=ui.api,work=ui.el('#work').innerHTML;
