@@ -87,6 +87,9 @@ input.num{font:inherit;width:5.5em;padding:5px 8px;border:1px solid var(--line);
 #skip:not([hidden]) + .controls{margin-top:20px;padding-top:14px;border-top:1px solid var(--line)}
 .hand{margin:8px 0;padding:10px 12px;border-radius:10px;border:1px dashed var(--m-clamp);background:color-mix(in srgb,var(--m-clamp) 7%,var(--panel))}
 .hand h3{margin:0 0 4px;font-size:1rem}
+.comparison-row{display:grid;grid-template-columns:4.25rem repeat(5,2.5rem) auto;gap:8px;align-items:center;width:max-content;margin:6px 0}
+.comparison-row .sub{margin:0}
+.comparison-row .tile{display:flex;align-items:center;justify-content:center;width:2.5rem;min-width:0;height:2.5rem;margin:0;padding:0;font:700 1.1rem/1 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
 /* machine art */
 .cab{fill:url(#gCab);stroke:#3b0d16;stroke-width:2}
 .trim{fill:none;stroke:var(--m-trim);stroke-width:3}
@@ -959,9 +962,9 @@ LV[2]={
     if(cur.step==='sweep0')t=dialHtml(null,'Dial')+(cur.board?boardHtml(cur.board,x=>'×'+x.lit):'')+'<div class="row"><button class="primary" data-act="sweep">Let the dial try every word on the strip</button></div>';
     if(cur.step==='compare'){
       t=boardHtml(cur.board,x=>'×'+x.lit,{max:6,title:'The board said'})+'<div class="hand"><h3>Letter by letter</h3><p>The word '+wordHtml(I.word)+' is not on the strip at all. Compare it with the three blue windows: click every letter of a window that differs from the word above it.</p>'+
-        '<div class="row"><span class="sub" style="margin:0;width:5.5em">the word</span>'+tiles(I.word)+'</div>'+
-        I.compare.map((p,r)=>'<div class="row"><span class="sub" style="margin:0;width:5.5em">at '+(p+1)+'</span>'+[...I.text.substr(p,5)].map((c,j)=>'<button class="tile b'+c+(cur.marks[r].includes(j)?' bad':'')+'" data-act="mark" data-arg="'+r+':'+j+'">'+c+'</button>').join('')+
-        '<span class="gmeta">'+(cur.marks[r].length?plural(cur.marks[r].length,'letter')+' different':'')+'</span></div>').join('')+'</div>';
+        '<div class="tscroll"><div class="comparison-row"><span class="sub">the word</span>'+tiles(I.word)+'</div>'+
+        I.compare.map((p,r)=>'<div class="comparison-row"><span class="sub">at '+(p+1)+'</span>'+[...I.text.substr(p,5)].map((c,j)=>'<button class="tile b'+c+(cur.marks[r].includes(j)?' bad':'')+'" data-act="mark" data-arg="'+r+':'+j+'">'+c+'</button>').join('')+
+        '<span class="gmeta">'+(cur.marks[r].length?plural(cur.marks[r].length,'letter')+' different':'')+'</span></div>').join('')+'</div></div>';
     }
     if(cur.step==='tol'||cur.step==='done'){
       t=dialHtml(cur.dial,'Dial','<span class="sub" style="margin:0 0 0 12px">wrong letters allowed</span>'+[0,1,2].map(d=>'<button class="'+(cur.d===d?'on':'')+'" data-act="tol" data-arg="'+d+'">'+d+'</button>').join(''))+
