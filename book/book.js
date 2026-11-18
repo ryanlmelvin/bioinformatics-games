@@ -135,7 +135,7 @@ function gamePage(){
   // the chapter cover, once, for a reader who has not started this game
   // (the game has already saved a blank state by now, so "not started" means nothing unlocked and nothing earned)
   const saved=store.get(G.key,null),begun=!!saved&&((saved.unlocked||1)>1||(Array.isArray(saved.badges)&&saved.badges.length>0)||(Array.isArray(saved.log)&&saved.log.length>2));
-  const fresh=!begun&&!store.get('book:seen:'+G.dir,false)&&!['level','seed','debug','code'].some(k=>params.has(k))&&!/level-\d+/.test(path);
+  const fresh=!begun&&!store.get('book:seen:'+G.dir,false)&&!['level','seed','debug','code'].some(k=>params.has(k))&&!/level-\d+/.test(path)&&location.hash!=='#suggested-reading';
   if(fresh){
     const o=el('div','bk-cover');o.setAttribute('role','dialog');o.setAttribute('aria-modal','true');o.setAttribute('aria-labelledby','bkCoverT');
     o.innerHTML='<div class="bk-cover-card"><img src="'+base+'book/art/'+G.dir+'.svg" alt=""><div class="bk-cover-body">'+
@@ -221,6 +221,18 @@ function gamePage(){
            :'<a class="bk-nextch" href="'+base+'#glossary"><img src="'+base+'book/art/'+ch.dir+'.svg" alt=""><span><small>This was the last chapter</small><b>Your glossary</b></span></a>';
   }
   after.innerHTML=h+'</div>';
+  const readingMap=BOOK.readings,reading=readingMap&&readingMap.chapters[ch.slug];
+  if(!side&&reading){
+    const b=readingMap.book,details=el('details','bk-reading');details.id='suggested-reading';
+    details.innerHTML='<summary>Suggested reading and problems</summary><p><a href="'+esc(b.url)+'"><cite>'+esc(b.title)+'</cite>, '+esc(b.edition)+'</a> by '+esc(b.author)+' ('+b.year+'). '+esc(readingMap.note)+'</p><ul>'+
+      reading.readings.map(r=>'<li><strong>Chapter '+r.chapter+': '+esc(r.title)+'.</strong> '+esc(r.focus)+'</li>').join('')+
+      '</ul><p><strong>Book exercises:</strong> '+esc(reading.exercises)+'</p><p><strong>Connect to the game:</strong> '+esc(reading.connection)+'</p>';
+    details.open=location.hash==='#suggested-reading';
+    after.append(details);
+    const openReading=()=>{if(location.hash==='#suggested-reading'){details.open=true;details.scrollIntoView();}};
+    window.addEventListener('hashchange',openReading);
+    requestAnimationFrame(openReading);
+  }
   if(foot)foot.before(after);else wrap.append(after);
 }
 

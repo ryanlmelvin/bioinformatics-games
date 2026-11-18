@@ -6,6 +6,7 @@ Requires python-docx. Instructor documents are never copied into the output.
 from pathlib import Path
 import argparse
 import copy
+import json
 import re
 from html import escape
 from docx import Document
@@ -14,6 +15,9 @@ from docx.oxml.ns import qn
 from docx.opc.constants import RELATIONSHIP_TYPE as RT
 from docx.oxml import OxmlElement
 from docx.text.run import Run
+from docx.enum.style import WD_STYLE_TYPE
+
+READINGS = json.loads((Path(__file__).resolve().parent.parent/'book/readings.json').read_text())
 
 UNITS = [
  ('1_Motifs','motifs','Finding motifs','Motifs','Motif Slots','motif-slots'),
@@ -89,6 +93,50 @@ def paragraphs(doc):
         for row in table.rows:
             for cell in row.cells:
                 yield from cell.paragraphs
+
+
+def suggested_readings(doc, slug=None):
+    """Append the same optional reading map that the website build bundles.
+
+    Keep the exploration worksheet and its answer space intact. Replacing only
+    our final section makes this safe to run on an existing public edition.
+    """
+    heading='Suggested reading and problems'
+    previous=next((p for p in doc.paragraphs if p.text==heading),None)
+    if previous is not None:
+        for element in list(previous._p.itersiblings()):
+            if element.tag!=qn('w:sectPr'): element.getparent().remove(element)
+        remove(previous)
+    font='Optima' if slug else 'Arial'
+    for name,size in [('Suggested Reading',12 if slug else 11),('Heading 1',14)]:
+        style=doc.styles[name] if name in doc.styles else doc.styles.add_style(name,WD_STYLE_TYPE.PARAGRAPH)
+        style.font.name=font;style.font.size=Pt(size);style.font.color.rgb=RGBColor(0,0,0)
+        style.paragraph_format.space_after=Pt(8)
+        style.paragraph_format.line_spacing=1.1
+    h=doc.add_paragraph(heading,'Heading 1')
+    h.paragraph_format.keep_with_next=True
+    if slug: h.paragraph_format.page_break_before=True
+    def paragraph(text): return doc.add_paragraph(text,'Suggested Reading')
+    b=READINGS['book']
+    p=paragraph('')
+    hyperlink=OxmlElement('w:hyperlink')
+    hyperlink.set(qn('r:id'),p.part.relate_to(b['url'],RT.HYPERLINK,is_external=True))
+    run=OxmlElement('w:r');hyperlink.append(run)
+    linked=Run(run,p);linked.text=f"{b['title']}, {b['edition']}"
+    linked.font.color.rgb=RGBColor.from_string('0563C1');linked.font.underline=True
+    p._p.append(hyperlink)
+    p.add_run(f" by {b['author']} (Manning, {b['year']}).")
+    if slug:
+        paragraph(READINGS['note'])
+        entry=READINGS['chapters'][slug]
+        for reading in entry['readings']:
+            p=paragraph('')
+            p.add_run(f"Chapter {reading['chapter']}: {reading['title']}. ").bold=True
+            p.add_run(reading['focus'])
+        p=paragraph('');p.add_run('Book exercises: ').bold=True;p.add_run(entry['exercises'])
+        p=paragraph('');p.add_run('Connect to the game: ').bold=True;p.add_run(entry['connection'])
+    else:
+        p.add_run(' Each exploration guide lists optional chapters, book exercises and a question connecting the reading to the game. Try the exercises before checking Appendix C.')
 
 
 def finish(doc, output):
@@ -220,6 +268,7 @@ def adapt(source, output, unit, kind, title):
         if 'classmate' in t: change(p,t.replace('classmate','learner'))
         if '(page 1)' in p.text: change(p,p.text.replace('(page 1)','above'))
     if kind=='discussion-questions': link_activity_sources(doc,slug)
+    if kind=='play-guide': suggested_readings(doc,slug)
     finish(doc,output)
 
 
@@ -256,6 +305,7 @@ def shared(output):
     ]: d.add_paragraph(text,style='List Bullet')
     d.add_heading('Investigations',1)
     d.add_paragraph('The suggested investigations describe four small experiments that reuse your code: mutation rate and motif recovery, gap penalties and alignment, initialization and Lloyd clustering, and input length, softmax base and attention.')
+    suggested_readings(d)
     finish(d,output/'learning-guide.docx')
     d=fresh('Suggested algorithm investigations')
     d.add_paragraph('Choose one question and answer it with a small experiment, using code you wrote for the coding challenges.')

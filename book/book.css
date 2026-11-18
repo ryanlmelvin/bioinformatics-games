@@ -103,6 +103,12 @@ body.bk-game details.guide>summary{font-family:var(--bk-serif);font-size:1.05rem
 @media (max-width:640px){.bk-after-grid{grid-template-columns:1fr}}
 .bk-docs{margin:0;padding-left:1.2em}
 .bk-docs li{margin-bottom:4px}
+.bk-reading{margin-top:18px;scroll-margin-top:65px;font:1rem/1.5 var(--bk-sans)}
+.bk-reading summary{cursor:pointer;font-weight:600}
+.bk-reading p{margin:10px 0}
+.bk-reading ul{margin:10px 0;padding-left:1.3em}
+.bk-reading li{margin:6px 0}
+.bk-reading a{color:var(--bk-link)}
 .bk-nextch{display:flex;align-items:center;gap:14px;color:var(--ink,var(--bk-ink));text-decoration:none}
 .bk-nextch:hover b{text-decoration:underline}
 .bk-nextch img{width:38%;aspect-ratio:16/10;object-fit:cover;flex:none;border:1px solid var(--line,var(--bk-line));border-radius:3px}

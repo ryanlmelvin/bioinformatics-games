@@ -1,0 +1,79 @@
+{
+  "book": {
+    "title": "Grokking Algorithms",
+    "author": "Aditya Y. Bhargava",
+    "edition": "2nd edition",
+    "year": 2024,
+    "url": "https://www.manning.com/books/grokking-algorithms-second-edition"
+  },
+  "note": "Optional readings and exercises from the second edition. Try the exercises before checking Appendix C for answers.",
+  "chapters": {
+    "motifs": {
+      "readings": [
+        {"chapter": 1, "title": "Introduction to algorithms", "focus": "Big O notation helps compare scanning sequence windows with enumerating every possible k-mer."},
+        {"chapter": 5, "title": "Hash tables", "focus": "Use keys and counts to organize repeated k-mers and avoid repeated scans."},
+        {"chapter": 10, "title": "Greedy algorithms", "focus": "For an extension, compare locally promising choices with a globally best motif set."}
+      ],
+      "exercises": "1.3-1.6 and 5.1-5.4; for the greedy extension, 10.1-10.2.",
+      "connection": "Count the 3-mers in ATATAT with a hash table. Then explain why the locally best next motif need not belong to the best complete motif set."
+    },
+    "genome-assembly": {
+      "readings": [
+        {"chapter": 6, "title": "Breadth-first search", "focus": "Read about directed graphs, adjacency lists, queues and keeping track of visited nodes."},
+        {"chapter": 5, "title": "Hash tables", "focus": "Review the data structure used to map each graph node to its outgoing neighbors."}
+      ],
+      "exercises": "6.1-6.4.",
+      "connection": "How does finding a shortest path differ from finding an Eulerian path? Explain why an assembly walk must track used edges, including duplicate edges, rather than simply mark each node visited."
+    },
+    "alignment": {
+      "readings": [
+        {"chapter": 11, "title": "Dynamic programming", "focus": "Focus on the longest common substring and longest common subsequence examples, and what each grid cell represents."},
+        {"chapter": 9, "title": "Dijkstra's algorithm", "focus": "For an extension, compare weighted shortest paths with alignment paths. Dijkstra's algorithm requires nonnegative edge weights; alignment grids can be solved in dependency order."}
+      ],
+      "exercises": "11.2-11.3; for the weighted-path extension, 9.1. Exercise 11.3 asks for a substring, which must be contiguous.",
+      "connection": "Use the same pair of strings for a longest common substring grid and a longest common subsequence grid. Explain how the mismatch rule changes and which rule allows letters to be skipped."
+    },
+    "hmm": {
+      "readings": [
+        {"chapter": 11, "title": "Dynamic programming", "focus": "Review how a table reuses smaller solutions. Apply that idea to one cell per hidden state and observation position."},
+        {"chapter": 3, "title": "Recursion", "focus": "Review base cases and recursive calls before comparing path enumeration with a dynamic programming table."}
+      ],
+      "exercises": "3.1 and 11.1-11.2.",
+      "connection": "For one destination state, write the contribution from each possible predecessor. Why does the forward algorithm sum these contributions while Viterbi takes their maximum? These readings provide the dynamic programming background; they do not introduce HMMs."
+    },
+    "evolutionary-trees": {
+      "readings": [
+        {"chapter": 7, "title": "Trees", "focus": "Focus on tree structure and depth-first search, then connect recursive traversal to paths in a phylogenetic tree."},
+        {"chapter": 3, "title": "Recursion", "focus": "Review the call stack and base cases for algorithms that remove a leaf, solve a smaller tree and restore the leaf."},
+        {"chapter": 8, "title": "Balanced trees", "focus": "For an extension, study how height affects lookup. These are search trees; balancing a tree is not a method for inferring evolutionary relationships."}
+      ],
+      "exercises": "3.1-3.2 and the graphs-and-trees review in 6.5.",
+      "connection": "Sketch a tree with four labeled leaves and weighted edges. Trace its unique path between two leaves and add the edge weights. Explain why rotating a search tree is different from reconstructing a tree that preserves biological distances."
+    },
+    "clustering": {
+      "readings": [
+        {"chapter": 12, "title": "K-nearest neighbors", "focus": "Focus on features, distance, normalization and choosing k. KNN predicts from labeled neighbors; k-means clustering learns centers from unlabeled points."},
+        {"chapter": 10, "title": "Greedy algorithms", "focus": "For an extension, use locally chosen moves and approximation to think about farthest-first initialization and the limits of local improvement."}
+      ],
+      "exercises": "12.1 and 12.3; for the greedy extension, 10.1-10.2.",
+      "connection": "For points described by gene expression and sequence length, predict how changing the units of sequence length changes nearest neighbors and cluster assignments. What does k count in KNN, and what does it count in k-means?"
+    },
+    "burrows-wheeler": {
+      "readings": [
+        {"chapter": 1, "title": "Introduction to algorithms", "focus": "Review binary search and Big O notation as preparation for searching a sorted suffix array."},
+        {"chapter": 4, "title": "Quicksort", "focus": "Review sorting and divide and conquer, then consider the cost of comparing suffixes instead of single numbers."},
+        {"chapter": 7, "title": "Trees", "focus": "For an extension, read the Huffman coding section as another use of structure in compression. It is separate from the Burrows-Wheeler transform and backward search."}
+      ],
+      "exercises": "1.1-1.2 and 4.4-4.8.",
+      "connection": "Why do all suffixes beginning with the same pattern form one interval in a sorted suffix array? Explain what binary search saves and why comparing a pattern with a suffix can take more than one character comparison."
+    },
+    "transformers": {
+      "readings": [
+        {"chapter": 12, "title": "K-nearest neighbors", "focus": "Focus on features, weighted recommendations, regression and the overview of training a model. These are useful analogies for representations and weighted values; the chapter does not teach attention or transformers."},
+        {"chapter": 4, "title": "Quicksort", "focus": "Review Big O notation revisited to reason about the cost of comparing every query with every key."}
+      ],
+      "exercises": "12.2 and 4.8.",
+      "connection": "Compare weighting a recommender's ratings with weighting values in attention. Which weights depend on the current query? If every one of n positions attends to every position, how many query-key scores are computed, and what happens when n doubles?"
+    }
+  }
+}

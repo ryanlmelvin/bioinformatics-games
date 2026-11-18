@@ -20,6 +20,8 @@ Also here:
 
 The public handouts are adapted editions of the current teaching masters, which remain outside this repository. Course numbers, dates, grading, submission instructions, and enrollment-specific requirements are removed; exercises, figures, examples and problem links are retained. Group activities include enough instructions to use them independently. Do not replace public editions with raw classroom files.
 
+Every textbook chapter and exploration guide includes optional **Suggested reading and problems** from Aditya Y. Bhargava's *Grokking Algorithms*, second edition (Manning, 2024). `book/readings.json` is the shared source for the chapter selections, verified second-edition exercise numbers and questions connecting them to the games. The site build bundles this map into `book/chapters.js`; `scripts/prepare_materials.py` adds it to the Word guides without replacing their worksheets. The recommendations link to the publisher; the textbook PDF is not a public site asset. Preview `_site/` after building to see the readings.
+
 Optional physical game activities link to the publisher or creator, or to a non-commercial reference. Keep these links in the discussion guides and in `ACTIVITY_SOURCES` in `scripts/prepare_materials.py` when updating the handouts.
 
 To regenerate the handouts, install `python-docx` in an authoring environment and run:

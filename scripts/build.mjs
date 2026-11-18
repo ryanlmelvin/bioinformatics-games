@@ -23,6 +23,12 @@ for(const file of publicFiles){await mkdir(path.dirname(path.join(output,file)),
 for(const [dest,src] of Object.entries(aliases)){await mkdir(path.dirname(path.join(output,dest)),{recursive:true});
   // an alias sits one folder deeper, so its links to the shared shell and the contents page need one more step up
   const html=await readFile(path.join(root,src),'utf8');await writeFile(path.join(output,dest),html.replaceAll('"../','"../../'));}
+// The website and Word guides share the same second-edition reading map.
+// Bundle it with the chapter data so it also works offline without an extra fetch.
+const readings=JSON.parse(await readFile(path.join(root,'book/readings.json'),'utf8'));
+for(const unit of units)if(!readings.chapters[unit])throw new Error(`Missing suggested readings for ${unit}`);
+const chapterFile=path.join(output,'book/chapters.js');
+await writeFile(chapterFile,(await readFile(chapterFile,'utf8'))+'\nwindow.BOOK.readings='+JSON.stringify(readings)+';\n');
 // Every published page identifies its permanent address, including the deeper practice page.
 for(const file of [...publicFiles,...Object.keys(aliases)].filter(f=>f.endsWith('.html'))){
   const html=await readFile(path.join(output,file),'utf8');
