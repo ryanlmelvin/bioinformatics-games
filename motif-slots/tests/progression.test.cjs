@@ -123,7 +123,38 @@ test('level 2: changing the mismatch limit clears the answer and requires fresh 
 test('level 3: a wrong partner letter is refused',()=>{
   const u=boot('?debug=1&level=3&seed=W3'),c=u.api.state(),I=c.inst,need=u.ctx.revcomp(I.text.substr(I.handAt,5));
   u.api.act('type',I.text[I.handAt+4]===need[0]?'A':I.text[I.handAt+4]);
-  assert.equal(c.typed,'');assert.match(c.msg.text,/pair/);
+  assert.equal(c.typed,'');assert.match(c.msg.text,/was not added/);assert.match(c.msg.text,/nucleotide 1 of 5/);
+});
+test('level 3: exactly five highlighted nucleotides match five inputs, including across a narrow row break',()=>{
+  for(const width of [900,320])for(const seed of ['W2','LKSNDR']){
+    const u=boot('?debug=1&level=3&seed='+seed),c=u.api.state(),I=c.inst;
+    const need=u.ctx.revcomp(I.text.substr(I.handAt,I.k));assert.equal(need.length,5);
+    u.el('.stage').clientWidth=width;
+    // One rejected input also forces a redraw at this viewport width.
+    u.api.act('type',need[0]==='A'?'C':'A');
+    for(let entered=0;entered<need.length;entered++){
+      const svg=u.el('#scene').innerHTML;
+      const cells=[...svg.matchAll(/<rect class="readcell( next)?" x="([\d.]+)" y="([\d.]+)" width="([\d.]+)" height="([\d.]+)"/g)]
+        .map(([,next,x,y,w,h])=>({next:!!next,x:+x,y:+y,w:+w,h:+h}));
+      const letters=[...svg.matchAll(/<text class="ch ch[ACGT]" x="([\d.]+)" y="([\d.]+)"[^>]*>([ACGT])<\/text>/g)]
+        .map(([,x,y,ch])=>({x:+x,y:+y,ch}));
+      assert.equal(cells.length,need.length);assert.equal(cells.filter(b=>b.next).length,1);
+      const selected=cells.map(b=>{
+        const inside=letters.filter(t=>t.x>b.x&&t.x<b.x+b.w&&t.y>b.y&&t.y<b.y+b.h);
+        assert.equal(inside.length,1,'each highlight contains exactly one nucleotide');
+        if(b.next)assert.equal(inside[0].ch,need[entered],'outline follows the next accepted input');
+        return inside[0].ch;
+      });
+      assert.equal(selected.reverse().join(''),need,'visible region and accepted sequence agree');
+      assert.equal((u.el('#tools').innerHTML.match(/class="tile /g)||[]).length,need.length+4,'five answer slots and four input buttons');
+      assert.doesNotMatch(u.el('#tools').innerHTML,/clamp/);
+      assert.equal(c.step,'partner','cannot advance early');
+      u.api.act('type',need[entered]);assert.equal(c.typed.length,entered+1);
+    }
+    assert.equal(c.step,'sweep','advances immediately after the fifth accepted nucleotide');
+    assert.doesNotMatch(u.el('#tools').innerHTML,/data-act="type"/);
+    u.api.act('type','A');assert.equal(c.typed,need,'a sixth nucleotide is neither required nor accepted');
+  }
 });
 test('level 4: the decoy wins the window count but lights at most three genes, and does not finish the level',()=>{
   const u=boot('?debug=1&level=4&seed=W4'),c=u.api.state(),I=c.inst;

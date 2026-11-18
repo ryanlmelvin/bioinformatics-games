@@ -67,7 +67,7 @@ svg#machine{width:100%;height:auto;display:block;touch-action:manipulation;user-
 .tile.roll{animation:roll var(--roll,140ms) ease-out}
 @keyframes roll{from{transform:translateY(-55%);opacity:.2}to{transform:none;opacity:1}}
 .board.live button{cursor:default;opacity:1}
-button.tile{cursor:pointer;min-height:40px;min-width:2.2em}
+button.tile{cursor:pointer;min-height:40px;min-width:2.2em;user-select:none;-webkit-user-select:none;touch-action:manipulation}
 .board{display:grid;grid-template-columns:repeat(auto-fill,minmax(172px,1fr));gap:4px 12px;margin:6px 0;max-height:220px;overflow:auto}
 .board button{display:flex;justify-content:space-between;align-items:center;gap:8px;font-family:ui-monospace,Menlo,monospace;min-height:40px;padding:3px 9px;user-select:none;-webkit-user-select:none;touch-action:manipulation}
 .board button.top{border:2px solid var(--m-trim)}
@@ -112,6 +112,8 @@ input.num{font:inherit;width:5.5em;padding:5px 8px;border:1px solid var(--line);
 .badcell{fill:var(--m-bad)}
 .litcell{fill:var(--m-lit);opacity:.85}
 .lit2{fill:#9fd9ff;opacity:.85}
+.readcell{fill:#9fd9ff;stroke:#2b5fb3;stroke-width:1.5;pointer-events:none}
+.readcell.next{stroke:#1f2328;stroke-width:3}
 .miss{fill:none;stroke:#6b7078;stroke-width:2;stroke-dasharray:4 3}
 .cell{fill:transparent;cursor:pointer}
 .cell:hover{fill:rgba(109,63,181,.14)}
@@ -792,7 +794,7 @@ function leverSvg(x,y,h,state){
 }
 
 /* ---------- drawing: one long strip (levels 1 to 3) ---------- */
-/* o: {text,k,partner,lit:[{pos,strand,cls}],clamp:{pos,strand,bad,slip},clickable} */
+/* o: {text,k,partner,lit:[{pos,strand,cls}],read:{pos,word,typed},clamp:{pos,strand,bad,slip},clickable} */
 function tapeSvg(o){
   const n=o.text.length,rowLen=narrow()?10:20,cw=30,X0=46,rows=Math.ceil(n/rowLen),line=36,sgap=26,rowH=o.partner?line*2+sgap+32:line+30;
   const W=X0*2+rowLen*cw,H=40+rows*rowH+10,yOf=(r,s)=>44+r*rowH+(s?line+sgap:0);
@@ -809,6 +811,10 @@ function tapeSvg(o){
   (o.lit||[]).forEach(l=>segs(l.pos,o.k).forEach(g=>{back+='<rect class="'+(l.cls||'litcell')+'" x="'+(X0+g.c*cw+1)+'" y="'+(yOf(g.r,l.strand)+2)+'" width="'+(g.w*cw-2)+'" height="'+(line-4)+'" rx="4"/>';}));
   for(let i=0;i<n;i++){
     const r=Math.floor(i/rowLen),c=i%rowLen,x=X0+c*cw+cw/2;
+    if(o.read&&i>=o.read.pos&&i<o.read.pos+o.read.word.length){
+      const next=o.read.pos+o.read.word.length-1-o.read.typed.length;
+      back+='<rect class="readcell'+(i===next?' next':'')+'" x="'+(X0+c*cw+2)+'" y="'+(yOf(r,1)+2)+'" width="'+(cw-4)+'" height="'+(line-4)+'" rx="3"/>';
+    }
     fore+=chText(x,yOf(r,0)+line/2+1,o.text[i],'',19);
     if(o.partner)fore+=chText(x,yOf(r,1)+line/2+1,COMP[o.text[i]],'',19);
     if(o.clickable){
@@ -1031,16 +1037,16 @@ LV[2]={
 };
 
 LV[3]={
-  init(){cur.step='partner';cur.typed='';cur.board=null;cur.dial=null;say('Read the lower strand under the clamp in the 5′-to-3′ direction: right to left.');},
-  rule(){return cur.step==='partner'?'Complementary bases: A–T, C–G · read the lower strand 5′ to 3′, right to left':'The clamp lights a window on either strand';},
+  init(){const I=cur.inst;cur.read={pos:I.handAt,word:revcomp(I.text.substr(I.handAt,I.k))};cur.step='partner';cur.typed='';cur.board=null;cur.dial=null;say('');},
+  rule(){return cur.step==='partner'?'Complementary bases: A–T, C–G · read the lower strand 5′ to 3′, right to left':'Matching windows light up on either strand';},
   draw(){
     const I=cur.inst,lit=[];
     if(cur.dial)stripLit(I.text,cur.dial,1,true).forEach(l=>lit.push(l));
-    const svg=tapeDraw({partner:true,lit,clamp:cur.step==='partner'?{pos:I.handAt,strand:1}:null});
+    const svg=tapeDraw({partner:true,lit,read:cur.step==='partner'?{...cur.read,typed:cur.typed}:null});
     let t='';
     if(cur.step==='partner'){
-      const need=revcomp(I.text.substr(I.handAt,5));
-      t='<div class="hand"><h3>Read the complementary strand</h3><p>Spell the five nucleotides in the clamp on the lower strand, starting from its right-hand end.</p><div class="row">'+
+      const need=cur.read.word;
+      t='<div class="hand"><h3>Read the complementary strand</h3><p>Enter the '+numWord(need.length)+' highlighted nucleotides on the lower strand, reading right to left. The dark outline marks the next nucleotide.</p><div class="row">'+
         [...need].map((c,j)=>j<cur.typed.length?'<span class="tile b'+c+' ok">'+c+'</span>':'<span class="tile blank">·</span>').join('')+'</div><div class="row">'+
         BASES.split('').map(c=>'<button class="tile b'+c+'" data-act="type" data-arg="'+c+'" style="min-width:2.4em">'+c+'</button>').join('')+'</div></div>';
     }else t=dialHtml(cur.dial,'Looking for','<span class="gmeta" style="margin-left:10px">one mismatch allowed · both strands</span>')+
@@ -1050,11 +1056,11 @@ LV[3]={
   act(a,arg){
     const I=cur.inst;
     if(a==='type'&&cur.step==='partner'){
-      const need=revcomp(I.text.substr(I.handAt,5));
+      const need=cur.read.word;
       if(need[cur.typed.length]===arg){cur.typed+=arg;log('type',{ch:arg});
-        if(cur.typed.length===5){cur.step='sweep';say('The lower strand, read 5′ to 3′, says '+need+'. The count will now read both strands.','good');}
+        if(cur.typed.length===need.length){cur.step='sweep';say('The lower strand, read 5′ to 3′, says '+need+'. The count will now read both strands.','good');}
         else say('');}
-      else{log('type_wrong',{ch:arg,want:need[cur.typed.length]});say(arg+' does not pair with the nucleotide above it there. Look at the upper strand, then take its complementary base.','warn');}
+      else{log('type_wrong',{ch:arg,want:need[cur.typed.length]});say(arg+' was not added. Enter nucleotide '+(cur.typed.length+1)+' of '+need.length+': the outlined nucleotide on the lower strand.','warn');}
     }
     if(a==='sweep'&&cur.step==='sweep'){log('sweep');sweepRun({texts:[I.text],k:5,tallyOf:t=>tally(t,5,1,true),fmt:x=>x.lit+' lit',done:()=>{cur.board=tally([I.text],5,1,true);say('Each sequence now counts its lit windows on the upper strand plus those of its backwards partner on the lower one. Click a sequence.');}});}
     if(a==='pick'&&cur.board){
