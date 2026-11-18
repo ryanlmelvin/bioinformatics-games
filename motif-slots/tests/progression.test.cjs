@@ -16,7 +16,7 @@ function boot(search,saved){
 /* Each solver plays one level the way a student would, through the same actions the page's buttons send. */
 const SOLVE={
   1(u){const I=u.api.state().inst,A=u.api.act;A('cell',String(I.sites[0]));A('grip');I.sites.slice(1).forEach(p=>A('cell',String(p)));A('counted');A('sweep');A('pick',I.word);},
-  2(u){const I=u.api.state().inst,A=u.api.act;A('sweep');I.compare.forEach((p,r)=>{const w=I.text.substr(p,5);for(let j=0;j<5;j++)if(w[j]!==I.word[j])A('mark',r+':'+j);});A('tol','1');A('sweep');A('pick',I.word);},
+  2(u){compareLevel2(u);const A=u.api.act;A('tol','1');A('sweep');A('pick',u.api.state().inst.word);A('submit');},
   3(u){const I=u.api.state().inst,A=u.api.act,need=u.ctx.revcomp(I.text.substr(I.handAt,5));[...need].forEach(c=>A('type',c));A('sweep');A('pick',I.rc);},
   4(u){const I=u.api.state().inst,A=u.api.act;A('cell','0:0');A('sweep');A('tol','2');A('count','strips');A('sweep');A('pick',I.word);},
   5(u){const c=u.api.state(),I=c.inst;for(let g=0;g<200&&!c.done;g++){const i=c.off.findIndex((o,r)=>o!==I.sites[r]);if(i<0)break;u.api.act('slide',i+':'+(I.sites[i]>c.off[i]?1:-1));}},
@@ -32,6 +32,10 @@ const SOLVE={
   10(u){const A=u.api.act;A('lift','0');A('best');A('lift','1');A('best');A('auto');},
   11(u){u.api.act('lever');}
 };
+function compareLevel2(u){
+  const I=u.api.state().inst,A=u.api.act;A('sweep');
+  I.compare.forEach((p,r)=>{const w=I.text.substr(p,5);for(let j=0;j<5;j++)if(w[j]!==I.word[j])A('mark',r+':'+j);});
+}
 
 test('a fresh save plays every level in order and ends with every term earned',()=>{
   const u=boot('?debug=1&seed=PROGRESS');
@@ -91,7 +95,30 @@ test('level 2: counting exact copies finds no winner; the winner needs one wrong
   const u=boot('?debug=1&level=2&seed=W2'),c=u.api.state(),I=c.inst;
   u.api.act('sweep');assert(c.board[0].lit<=2);assert.notEqual(c.board[0].word,I.word);assert(!c.done);
   I.compare.forEach((p,r)=>{const w=I.text.substr(p,5);for(let j=0;j<5;j++)if(w[j]!==I.word[j])u.api.act('mark',r+':'+j);});
-  u.api.act('tol','0');u.api.act('pick',I.word);assert(!c.done,'exact only: the word lights nothing');
+  u.api.act('sweep');u.api.act('pick',c.board[0].word);u.api.act('submit');
+  assert(!c.done,'exact matches cannot find the altered copies');assert.match(c.msg.text,/Allow a mismatch/);
+});
+test('level 2: choosing a result previews it; only submitting checks and completes the answer',()=>{
+  const u=boot('?debug=1&level=2&seed=ANSWER'),c=u.api.state(),A=u.api.act;
+  compareLevel2(u);assert.equal(c.dial,null);
+  A('submit');assert(!c.done);assert.match(c.msg.text,/select one before submitting/);
+  A('tol','1');A('sweep');assert.match(u.el('#tools').innerHTML,/data-act="submit" disabled/);
+  const wrong=c.board.find(x=>x.word!==c.inst.word).word;
+  A('pick',wrong);assert.equal(c.dial,wrong);assert(!c.done);
+  A('submit');assert(!c.done);assert.equal(c.msg.kind,'warn');
+  A('pick',c.inst.word);assert(!c.done,'selection is not submission');assert(!u.api.earned().includes('ham'));
+  assert.match(u.el('#tools').innerHTML,new RegExp('aria-pressed="true" aria-label="Select '+c.inst.word+'"'));
+  assert.doesNotMatch(u.el('#tools').innerHTML,/data-act="submit" disabled/);
+  A('submit');assert(c.done);assert(u.api.earned().includes('ham'));assert.match(u.el('#panel').innerHTML,/Next level/);
+});
+test('level 2: changing the mismatch limit clears the answer and requires fresh results',()=>{
+  const u=boot('?debug=1&level=2&seed=STALE'),c=u.api.state(),A=u.api.act;
+  compareLevel2(u);A('tol','1');A('sweep');A('pick',c.inst.word);
+  A('tol','1');assert.equal(c.dial,c.inst.word,'unchanged limit preserves the selection');
+  A('tol','2');assert.equal(c.board,null);assert.equal(c.dial,null);
+  A('pick',c.inst.word);A('submit');assert(!c.done);assert.equal(c.dial,null);
+  A('tol','1');A('sweep');A('submit');assert(!c.done,'new results require a new selection');
+  A('pick',c.inst.word);A('submit');assert(c.done);
 });
 test('level 3: a wrong partner letter is refused',()=>{
   const u=boot('?debug=1&level=3&seed=W3'),c=u.api.state(),I=c.inst,need=u.ctx.revcomp(I.text.substr(I.handAt,5));

@@ -66,8 +66,9 @@ svg#machine{width:100%;height:auto;display:block;touch-action:manipulation;user-
 .tile.blank{color:var(--muted)}
 button.tile{cursor:pointer;min-height:40px;min-width:2.2em}
 .board{display:grid;grid-template-columns:repeat(auto-fill,minmax(172px,1fr));gap:4px 12px;margin:6px 0;max-height:220px;overflow:auto}
-.board button{display:flex;justify-content:space-between;align-items:center;gap:8px;font-family:ui-monospace,Menlo,monospace;min-height:40px;padding:3px 9px}
+.board button{display:flex;justify-content:space-between;align-items:center;gap:8px;font-family:ui-monospace,Menlo,monospace;min-height:40px;padding:3px 9px;user-select:none;-webkit-user-select:none;touch-action:manipulation}
 .board button.top{border:2px solid var(--m-trim)}
+.board button[aria-pressed="true"]{border-color:var(--accent);background:var(--chip);box-shadow:inset 0 0 0 1px var(--accent)}
 .board b{white-space:nowrap}
 .vt{border-collapse:collapse;margin:4px 0;font-size:.95rem}
 .vt th,.vt td{border:1px solid var(--line);padding:2px 6px;text-align:center;min-width:2.6em}
@@ -896,7 +897,7 @@ function dialHtml(word,label,extra){
 function boardHtml(list,fmt,opt){
   opt=opt||{};
   return '<div class="sub">'+(opt.title||'The machine’s board')+'</div><div class="board">'+list.slice(0,opt.max||12).map((x,i)=>
-    '<button data-act="pick" data-arg="'+x.word+'" class="'+(i===0?'top':'')+'" aria-label="Set the dial to '+x.word+'"><span>'+wordHtml(x.word)+'</span><b>'+fmt(x)+'</b></button>').join('')+'</div>';
+    '<button type="button" data-act="pick" data-arg="'+x.word+'" class="'+(i===0?'top':'')+'"'+('selected' in opt?' aria-pressed="'+(x.word===opt.selected)+'"':'')+' aria-label="'+(opt.pickLabel||'Set the dial to ')+x.word+'"><span>'+wordHtml(x.word)+'</span><b>'+fmt(x)+'</b></button>').join('')+'</div>';
 }
 /* windows lit for a word: top strand within d of the word; bottom strand where the partner strand, read right to left, is within d */
 function stripLit(text,w,d,both){
@@ -967,29 +968,38 @@ LV[2]={
         '<span class="gmeta">'+(cur.marks[r].length?plural(cur.marks[r].length,'nucleotide')+' different':'')+'</span></div>').join('')+'</div></div>';
     }
     if(cur.step==='tol'||cur.step==='done'){
-      t=dialHtml(cur.dial,'Dial','<span class="sub" style="margin:0 0 0 12px">mismatches allowed</span>'+[0,1,2].map(d=>'<button class="'+(cur.d===d?'on':'')+'" data-act="tol" data-arg="'+d+'">'+d+'</button>').join(''))+
-        (cur.board&&cur.boardD===cur.d?boardHtml(cur.board,x=>x.lit+' lit'):'<div class="row"><button class="primary" data-act="sweep">Let the dial try every sequence on the strip</button></div>');
+      const hasBoard=cur.board&&cur.boardD===cur.d;
+      t=(cur.step==='tol'?'<p>'+(hasBoard?'Select the sequence with the most lit windows, then click <b>Submit answer</b>.':'Use the differences you counted to set the mismatch limit, then click <b>Find sequences</b>.')+'</p>':'')+
+        dialHtml(cur.dial,'Dial','<span class="sub" style="margin:0 0 0 12px">mismatches allowed</span>'+[0,1,2].map(d=>'<button class="'+(cur.d===d?'on':'')+'" data-act="tol" data-arg="'+d+'" aria-pressed="'+(cur.d===d)+'">'+d+'</button>').join(''))+
+        (hasBoard?boardHtml(cur.board,x=>x.lit+' lit',{selected:cur.dial,pickLabel:'Select '})+
+          (cur.step==='tol'?'<div class="row"><button class="primary" data-act="submit"'+(!cur.dial?' disabled':'')+'>Submit answer</button></div>':''):
+          '<div class="row"><button class="primary" data-act="sweep">Find sequences</button></div>');
     }
     return {svg,tools:t};
   },
   act(a,arg){
     const I=cur.inst;
-    if(a==='sweep'){
-      cur.board=tally([I.text],5,cur.d,false);cur.boardD=cur.d;log('sweep',{d:cur.d});
+    if(a==='sweep'&&(cur.step==='sweep0'||cur.step==='tol')){
+      cur.board=tally([I.text],5,cur.d,false);cur.boardD=cur.d;cur.dial=null;log('sweep',{d:cur.d});
       if(cur.step==='sweep0'){cur.step='compare';say('Nothing turns up more than '+plural(cur.board[0].lit,'time')+'. The top of the board is a tie.','warn');}
-      else say(cur.d?'Every sequence, counting each window within '+plural(cur.d,'mismatch')+'. Click a sequence to set the dial.':'Every sequence, exact copies only.');
+      else say(cur.d?'Results count windows within '+plural(cur.d,'mismatch')+'.':'Results count exact copies only.');
     }
     if(a==='mark'&&cur.step==='compare'){
       const [r,j]=arg.split(':').map(Number),w=I.text.substr(I.compare[r],5);
       if(w[j]===I.word[j]){say('That nucleotide matches the sequence above it.','warn');log('mark_wrong',{r,j});}
       else if(!cur.marks[r].includes(j)){cur.marks[r].push(j);log('mark',{r,j});say('Marked.');}
-      if(cur.marks.every(m=>m.length===1)){cur.step='tol';cur.dial=I.word;cur.d=0;cur.board=null;say('Each window differs from the sequence by one nucleotide. Set the number of mismatchs the clamp allows.','good');}
+      if(cur.marks.every(m=>m.length===1)){cur.step='tol';cur.dial=null;cur.d=0;cur.board=null;say('Each window differs from the sequence by one nucleotide.','good');}
     }
-    if(a==='tol'&&cur.step==='tol'){cur.d=+arg;log('tol',{d:cur.d});say(cur.d?'The clamp now grips windows with up to '+plural(cur.d,'mismatch')+'.':'Exact copies only.');}
-    if(a==='pick'&&cur.step==='tol'&&cur.board){
+    if(a==='tol'&&cur.step==='tol'&&cur.d!==+arg){cur.d=+arg;cur.board=null;cur.dial=null;log('tol',{d:cur.d});say(cur.d?'The clamp now grips windows with up to '+plural(cur.d,'mismatch')+'.':'Exact copies only.');}
+    if(a==='pick'&&cur.step==='tol'&&cur.board&&cur.boardD===cur.d&&cur.board.slice(0,12).some(x=>x.word===arg)){
       cur.dial=arg;const n=litPositions(I.text,arg,cur.d).length;
-      if(arg===I.word&&cur.d>=1){cur.step='done';say(arg+' lights '+n+' windows, at least two more than any other sequence, and it is never on the strip exactly.','good');finish(['ham']);}
-      else say(arg+' lights '+plural(n,'window')+'.');
+      log('select',{word:arg,d:cur.d});say(arg+' selected: '+plural(n,'lit window')+'.');
+    }
+    if(a==='submit'&&cur.step==='tol'){
+      if(!cur.board||cur.boardD!==cur.d||!cur.dial){say('Find sequences and select one before submitting.','warn');return;}
+      const n=litPositions(I.text,cur.dial,cur.d).length;log('submit',{word:cur.dial,d:cur.d});
+      if(cur.dial===I.word&&cur.d>=1){cur.step='done';say(cur.dial+' lights '+n+' windows with up to '+plural(cur.d,'mismatch')+', despite having no exact copies.','good');finish(['ham']);}
+      else say(cur.d===0?'Exact matches miss the altered copies. Allow a mismatch and find sequences again.':cur.dial+' is not the sequence shared by the altered copies. Compare the results with one mismatch allowed.','warn');
     }
   },
   reveal(){return '<p>The number of nucleotides that differ between two sequences of the same length is their '+term('ham')+'. A lit window is one within Hamming distance d of the sequence on the dial, here d = 1. The winning sequence never occurs exactly. It wins because more windows are within distance 1 of it than of any other sequence.</p>';}
