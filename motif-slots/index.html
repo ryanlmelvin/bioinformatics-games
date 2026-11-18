@@ -64,6 +64,9 @@ svg#machine{width:100%;height:auto;display:block;touch-action:manipulation;user-
 .tile.bad{background:#ffd9d6;color:#8a1010;border-color:#e0424f}
 .tile.ok{background:#d9f2e1;color:#14532d}
 .tile.blank{color:var(--muted)}
+.tile.roll{animation:roll var(--roll,140ms) ease-out}
+@keyframes roll{from{transform:translateY(-55%);opacity:.2}to{transform:none;opacity:1}}
+.board.live button{cursor:default;opacity:1}
 button.tile{cursor:pointer;min-height:40px;min-width:2.2em}
 .board{display:grid;grid-template-columns:repeat(auto-fill,minmax(172px,1fr));gap:4px 12px;margin:6px 0;max-height:220px;overflow:auto}
 .board button{display:flex;justify-content:space-between;align-items:center;gap:8px;font-family:ui-monospace,Menlo,monospace;min-height:40px;padding:3px 9px;user-select:none;-webkit-user-select:none;touch-action:manipulation}
@@ -892,12 +895,12 @@ function stackHtml(reels,off,k,opt){
 /* ================= levels 1 to 3: one long strip ================= */
 const LV={};
 function dialHtml(word,label,extra){
-  return '<div class="row"><span class="sub" style="margin:0">'+(label||'Dial')+'</span>'+(word?tiles(word):'<span class="tile blank">?</span>'.repeat(cur.inst.k))+(extra||'')+'</div>';
+  return '<div class="row"><span class="sub" style="margin:0">'+(label||'Looking for')+'</span>'+(word?tiles(word):'<span class="tile blank">?</span>'.repeat(cur.inst.k))+(extra||'')+'</div>';
 }
 function boardHtml(list,fmt,opt){
   opt=opt||{};
-  return '<div class="sub">'+(opt.title||'The machine’s board')+'</div><div class="board">'+list.slice(0,opt.max||12).map((x,i)=>
-    '<button type="button" data-act="pick" data-arg="'+x.word+'" class="'+(i===0?'top':'')+'"'+('selected' in opt?' aria-pressed="'+(x.word===opt.selected)+'"':'')+' aria-label="'+(opt.pickLabel||'Set the dial to ')+x.word+'"><span>'+wordHtml(x.word)+'</span><b>'+fmt(x)+'</b></button>').join('')+'</div>';
+  return '<div class="sub">'+(opt.title||'The machine’s board')+'</div><div class="board'+(opt.live?' live':'')+'">'+list.slice(0,opt.max||12).map((x,i)=>
+    '<button type="button" '+(opt.live?'tabindex="-1" aria-disabled="true"':'data-act="pick" data-arg="'+x.word+'"'+('selected' in opt?' aria-pressed="'+(x.word===opt.selected)+'"':'')+' aria-label="'+(opt.pickLabel||'Look for ')+x.word+'"')+' class="'+(i===0?'top':'')+'"><span>'+wordHtml(x.word)+'</span><b>'+fmt(x)+'</b></button>').join('')+'</div>';
 }
 /* windows lit for a word: top strand within d of the word; bottom strand where the partner strand, read right to left, is within d */
 function stripLit(text,w,d,both){
@@ -905,7 +908,25 @@ function stripLit(text,w,d,both){
   if(both)litPositions(text,revcomp(w),d).forEach(pos=>out.push({pos,strand:1}));
   return out;
 }
-function tapeDraw(extra){return tapeSvg(Object.assign({text:cur.inst.text,k:cur.inst.k},extra));}
+function tapeDraw(extra){const o=Object.assign({text:cur.inst.text,k:cur.inst.k},extra);if(cur.sweep&&cur.sweep.p!==undefined){o.clamp={pos:cur.sweep.p,strand:0};o.clickable=false;}return tapeSvg(o);}
+/* The count, shown: the clamp steps onto every window in turn, the readout rolls to the window it holds,
+   and the board fills in from the windows read so far. done() posts the finished board. */
+function sweepRun(o){
+  const k=o.k,wins=[];o.texts.forEach((s,i)=>{for(let p=0;p+k<=s.length;p++)wins.push([i,p]);});
+  if(reduced()){o.done();return;}
+  /* slow for the first few windows, so they can be read, then up to speed like a reel spinning up */
+  const fast=Math.max(12,Math.min(40,2400/wins.length));let n=0;
+  cur.sweep={done:o.done};say('The clamp reads every window in turn and adds it to the board.');
+  const step=()=>{
+    if(n>=wins.length){cur.sweep=null;o.done();render();return;}
+    const [i,p]=wins[n++],pre=o.texts.slice(0,i).concat([o.texts[i].slice(0,p+k)]),board=o.tallyOf(pre);
+    const ms=Math.max(fast,Math.round(480*Math.pow(0.7,n)));
+    cur.sweep={done:o.done,i,p,html:()=>'<div class="row" style="--roll:'+Math.min(140,Math.round(ms*.8))+'ms"><span class="sub" style="margin:0">Reading</span>'+tiles(o.texts[i].substr(p,k),Array(k).fill('roll'))+
+      '<span class="gmeta" style="margin-left:8px">window '+n+' of '+wins.length+'</span><button data-act="sweepnow" style="margin-left:auto">Skip to the result</button></div>'+boardHtml(board,o.fmt,{live:true,title:o.title})};
+    render();later(step,ms);
+  };
+  step();
+}
 
 LV[1]={
   init(){cur.step='guess';cur.clamp=0;cur.found=[];cur.guess=null;cur.dial=null;cur.board=null;say('Click a nucleotide. The clamp grips the five nucleotides starting there.');},
@@ -918,9 +939,9 @@ LV[1]={
     const svg=tapeDraw({lit,clamp:cur.step==='done'?null:{pos:cur.clamp,strand:0,slip:cur.slip},clickable:!cur.done});
     let t='';
     if(cur.step==='guess')t=dialHtml(I.text.substr(cur.clamp,5),'In the clamp')+'<div class="row"><button class="primary" data-act="grip">This is the sequence</button></div>';
-    if(cur.step==='count')t=dialHtml(cur.guess,'Dial')+'<p>Find every window that reads '+wordHtml(cur.guess)+'. Click its first nucleotide. Found: <b>'+cur.found.length+'</b></p><div class="row"><button class="primary" data-act="counted">That is all of them</button></div>';
-    if(cur.step==='sweep'||cur.step==='done')t=dialHtml(cur.dial||cur.guess,'Dial')+
-      (cur.board?boardHtml(cur.board,x=>'×'+x.lit):'<div class="row"><button class="primary" data-act="sweep">Let the dial try every sequence on the strip</button></div>');
+    if(cur.step==='count')t=dialHtml(cur.guess,'Looking for')+'<p>Find every window that reads '+wordHtml(cur.guess)+'. Click its first nucleotide. Found: <b>'+cur.found.length+'</b></p><div class="row"><button class="primary" data-act="counted">That is all of them</button></div>';
+    if(cur.step==='sweep'||cur.step==='done')t=dialHtml(cur.dial||cur.guess,'Looking for')+
+      (cur.board?boardHtml(cur.board,x=>'×'+x.lit):'<div class="row"><button class="primary" data-act="sweep">Count every sequence on the strip</button></div>');
     return {svg,tools:t};
   },
   act(a,arg){
@@ -935,13 +956,15 @@ LV[1]={
       }
     }
     if(a==='grip'&&cur.step==='guess'){cur.guess=I.text.substr(cur.clamp,5);cur.found=[cur.clamp];cur.step='count';log('guess',{word:cur.guess,right:cur.guess===I.word});
-      say('The dial is set to your sequence. Find the rest of its copies.');}
+      say('Now find the rest of its copies.');}
     if(a==='counted'&&cur.step==='count'){
       const all=litPositions(I.text,cur.guess,0);cur.missed=all.filter(p=>!cur.found.includes(p));cur.step='sweep';
       log('counted',{word:cur.guess,found:cur.found.length,actual:all.length});
-      say('The dial checks every window: '+cur.guess+' is here '+plural(all.length,'time')+(cur.missed.length?' (the blue one'+(cur.missed.length>1?'s':'')+' you missed).':'.'),'');
+      say('The machine checks every window: '+cur.guess+' is here '+plural(all.length,'time')+(cur.missed.length?' (the blue one'+(cur.missed.length>1?'s':'')+' you missed).':'.'),'');
     }
-    if(a==='sweep'&&cur.step==='sweep'){cur.board=tally([I.text],5,0,false);log('sweep');say('The dial tried every five-nucleotide sequence on the strip. Click a sequence on the board to set the dial to it.');}
+    if(a==='sweep'&&cur.step==='sweep'){log('sweep');cur.missed=null;cur.found=[];
+      sweepRun({texts:[I.text],k:5,tallyOf:t=>tally(t,5,0,false),fmt:x=>'×'+x.lit,done:()=>{cur.board=tally([I.text],5,0,false);
+        say('The clamp has read all '+(I.text.length-4)+' windows. The board lists each five-nucleotide sequence by how often it turned up. Click one to look for it.');}});}
     if(a==='pick'&&cur.board){
       cur.dial=arg;cur.missed=null;cur.found=litPositions(I.text,arg,0);
       if(arg===I.word){cur.step='done';say(arg+' turns up four times. No other sequence turns up more than twice.','good');finish(['kmer','freq'],{guess:cur.guess});}
@@ -960,7 +983,7 @@ LV[2]={
     if(cur.dial&&(cur.step==='tol'||cur.step==='done'))litPositions(I.text,cur.dial,cur.d).forEach(pos=>lit.push({pos,strand:0}));
     const svg=tapeDraw({lit});
     let t='';
-    if(cur.step==='sweep0')t=dialHtml(null,'Dial')+(cur.board?boardHtml(cur.board,x=>'×'+x.lit):'')+'<div class="row"><button class="primary" data-act="sweep">Let the dial try every sequence on the strip</button></div>';
+    if(cur.step==='sweep0')t=dialHtml(null,'Looking for')+(cur.board?boardHtml(cur.board,x=>'×'+x.lit):'')+'<div class="row"><button class="primary" data-act="sweep">Count every sequence on the strip</button></div>';
     if(cur.step==='compare'){
       t=boardHtml(cur.board,x=>'×'+x.lit,{max:6,title:'The board said'})+'<div class="hand"><h3>Nucleotide by nucleotide</h3><p>The sequence '+wordHtml(I.word)+' is not on the strip at all. Compare it with the three blue windows: click every nucleotide of a window that differs from the sequence above it.</p>'+
         '<div class="tscroll"><div class="comparison-row"><span class="sub">the sequence</span>'+tiles(I.word)+'</div>'+
@@ -970,7 +993,7 @@ LV[2]={
     if(cur.step==='tol'||cur.step==='done'){
       const hasBoard=cur.board&&cur.boardD===cur.d;
       t=(cur.step==='tol'?'<p>'+(hasBoard?'Select the sequence with the most lit windows, then click <b>Submit answer</b>.':'Use the differences you counted to set the mismatch limit, then click <b>Find sequences</b>.')+'</p>':'')+
-        dialHtml(cur.dial,'Dial','<span class="sub" style="margin:0 0 0 12px">mismatches allowed</span>'+[0,1,2].map(d=>'<button class="'+(cur.d===d?'on':'')+'" data-act="tol" data-arg="'+d+'" aria-pressed="'+(cur.d===d)+'">'+d+'</button>').join(''))+
+        dialHtml(cur.dial,'Selected','<span class="sub" style="margin:0 0 0 12px">mismatches allowed</span>'+[0,1,2].map(d=>'<button class="'+(cur.d===d?'on':'')+'" data-act="tol" data-arg="'+d+'" aria-pressed="'+(cur.d===d)+'">'+d+'</button>').join(''))+
         (hasBoard?boardHtml(cur.board,x=>x.lit+' lit',{selected:cur.dial,pickLabel:'Select '})+
           (cur.step==='tol'?'<div class="row"><button class="primary" data-act="submit"'+(!cur.dial?' disabled':'')+'>Submit answer</button></div>':''):
           '<div class="row"><button class="primary" data-act="sweep">Find sequences</button></div>');
@@ -980,9 +1003,11 @@ LV[2]={
   act(a,arg){
     const I=cur.inst;
     if(a==='sweep'&&(cur.step==='sweep0'||cur.step==='tol')){
-      cur.board=tally([I.text],5,cur.d,false);cur.boardD=cur.d;cur.dial=null;log('sweep',{d:cur.d});
-      if(cur.step==='sweep0'){cur.step='compare';say('Nothing turns up more than '+plural(cur.board[0].lit,'time')+'. The top of the board is a tie.','warn');}
-      else say(cur.d?'Results count windows within '+plural(cur.d,'mismatch')+'.':'Results count exact copies only.');
+      const d=cur.d;cur.dial=null;log('sweep',{d});
+      sweepRun({texts:[I.text],k:5,tallyOf:t=>tally(t,5,d,false),fmt:x=>d?x.lit+' lit':'×'+x.lit,done:()=>{
+        cur.board=tally([I.text],5,d,false);cur.boardD=d;
+        if(cur.step==='sweep0'){cur.step='compare';say('Nothing turns up more than '+plural(cur.board[0].lit,'time')+'. The top of the board is a tie.','warn');}
+        else say(d?'Results count windows within '+plural(d,'mismatch')+'.':'Results count exact copies only.');}});
     }
     if(a==='mark'&&cur.step==='compare'){
       const [r,j]=arg.split(':').map(Number),w=I.text.substr(I.compare[r],5);
@@ -1002,7 +1027,7 @@ LV[2]={
       else say(cur.d===0?'Exact matches miss the altered copies. Allow a mismatch and find sequences again.':cur.dial+' is not the sequence shared by the altered copies. Compare the results with one mismatch allowed.','warn');
     }
   },
-  reveal(){return '<p>The number of nucleotides that differ between two sequences of the same length is their '+term('ham')+'. A lit window is one within Hamming distance d of the sequence on the dial, here d = 1. The winning sequence never occurs exactly. It wins because more windows are within distance 1 of it than of any other sequence.</p>';}
+  reveal(){return '<p>The number of nucleotides that differ between two sequences of the same length is their '+term('ham')+'. A lit window is one within Hamming distance d of the sequence you are looking for, here d = 1. The winning sequence never occurs exactly. It wins because more windows are within distance 1 of it than of any other sequence.</p>';}
 };
 
 LV[3]={
@@ -1018,8 +1043,8 @@ LV[3]={
       t='<div class="hand"><h3>Read the complementary strand</h3><p>Spell the five nucleotides in the clamp on the lower strand, starting from its right-hand end.</p><div class="row">'+
         [...need].map((c,j)=>j<cur.typed.length?'<span class="tile b'+c+' ok">'+c+'</span>':'<span class="tile blank">·</span>').join('')+'</div><div class="row">'+
         BASES.split('').map(c=>'<button class="tile b'+c+'" data-act="type" data-arg="'+c+'" style="min-width:2.4em">'+c+'</button>').join('')+'</div></div>';
-    }else t=dialHtml(cur.dial,'Dial','<span class="gmeta" style="margin-left:10px">one mismatch allowed · both strands</span>')+
-      (cur.board?boardHtml(cur.board,x=>x.lit+' lit'):'<div class="row"><button class="primary" data-act="sweep">Let the dial try every sequence, on both strands</button></div>');
+    }else t=dialHtml(cur.dial,'Looking for','<span class="gmeta" style="margin-left:10px">one mismatch allowed · both strands</span>')+
+      (cur.board?boardHtml(cur.board,x=>x.lit+' lit'):'<div class="row"><button class="primary" data-act="sweep">Count every sequence, on both strands</button></div>');
     return {svg,tools:t};
   },
   act(a,arg){
@@ -1027,11 +1052,11 @@ LV[3]={
     if(a==='type'&&cur.step==='partner'){
       const need=revcomp(I.text.substr(I.handAt,5));
       if(need[cur.typed.length]===arg){cur.typed+=arg;log('type',{ch:arg});
-        if(cur.typed.length===5){cur.step='sweep';say('The lower strand, read 5′ to 3′, says '+need+'. The dial will now read both strands.','good');}
+        if(cur.typed.length===5){cur.step='sweep';say('The lower strand, read 5′ to 3′, says '+need+'. The count will now read both strands.','good');}
         else say('');}
       else{log('type_wrong',{ch:arg,want:need[cur.typed.length]});say(arg+' does not pair with the nucleotide above it there. Look at the upper strand, then take its complementary base.','warn');}
     }
-    if(a==='sweep'&&cur.step==='sweep'){cur.board=tally([I.text],5,1,true);log('sweep');say('Each sequence now counts its lit windows on the upper strand plus those of its backwards partner on the lower one. Click a sequence.');}
+    if(a==='sweep'&&cur.step==='sweep'){log('sweep');sweepRun({texts:[I.text],k:5,tallyOf:t=>tally(t,5,1,true),fmt:x=>x.lit+' lit',done:()=>{cur.board=tally([I.text],5,1,true);say('Each sequence now counts its lit windows on the upper strand plus those of its backwards partner on the lower one. Click a sequence.');}});}
     if(a==='pick'&&cur.board){
       cur.dial=arg;const n=stripLit(I.text,arg,1,true).length;
       if(arg===I.word||arg===I.rc){say(arg+' lights '+n+' windows across the two strands; read from the other strand it is '+revcomp(arg)+', which ties with it.','good');cur.step='done';finish(['rc','dnaa','ori']);}
@@ -1054,17 +1079,17 @@ function stripTally(strips,k,d){
 const clampOff=(s,k,p)=>Math.max(0,Math.min(s.length-k,p));
 
 LV[4]={
-  init(){cur.step='eye';cur.dial=null;cur.d=1;cur.count='windows';cur.board=null;say('Click a nucleotide on any strip to set the dial to the six nucleotides starting there. Each strip with a window the clamp can grip lights its gene.');},
+  init(){cur.step='eye';cur.dial=null;cur.d=1;cur.count='windows';cur.board=null;say('Click a nucleotide on any strip to look for the six nucleotides starting there. Each strip with a window the clamp can grip lights its gene.');},
   rule(){return 'One clamp per window · a gene lights when the clamp grips its strip';},
   lits(){const I=cur.inst;return I.strips.map(s=>cur.dial?litPositions(s,cur.dial,cur.d):[]);},
   draw(){
-    const I=cur.inst,lit=this.lits(),lamps=lit.map(l=>l.length>0);
-    const svg=rackSvg({reels:I.strips,k:6,mode:'strips',lit,lamps,clamps:true,click:!cur.done});
+    const I=cur.inst,sw=cur.sweep&&cur.sweep.p!==undefined?cur.sweep:null,lit=sw?I.strips.map((s,i)=>i===sw.i?[sw.p]:[]):this.lits(),lamps=lit.map(l=>!sw&&l.length>0);
+    const svg=rackSvg({reels:I.strips,k:6,mode:'strips',lit,lamps,clamps:true,click:!cur.done&&!sw});
     const nl=lamps.filter(Boolean).length,nw=lit.reduce((a,l)=>a+l.length,0);
-    let t=dialHtml(cur.dial,'Dial',cur.dial?'<span class="gmeta" style="margin-left:8px">'+plural(nw,'lit window')+' · '+nl+' of 10 genes</span>':'');
+    let t=dialHtml(cur.dial,'Looking for',cur.dial?'<span class="gmeta" style="margin-left:8px">'+plural(nw,'lit window')+' · '+nl+' of 10 genes</span>':'');
     if(cur.step!=='eye')t+='<div class="row"><span class="sub" style="margin:0">mismatches allowed</span>'+[1,2].map(d=>'<button class="'+(cur.d===d?'on':'')+'" data-act="tol" data-arg="'+d+'">'+d+'</button>').join('')+
       '<span class="sub" style="margin:0 0 0 10px">the board counts</span>'+[['windows','lit windows'],['strips','strips lit']].map(c=>'<button class="'+(cur.count===c[0]?'on':'')+'" data-act="count" data-arg="'+c[0]+'">'+c[1]+'</button>').join('')+'</div>';
-    t+=cur.board&&cur.boardKey===cur.d+cur.count?boardHtml(cur.board,x=>cur.boardKey.endsWith('strips')?x.lit+' strips':x.lit+' lit'):'<div class="row"><button class="primary" data-act="sweep">Let the dial try every six-nucleotide sequence</button></div>';
+    t+=cur.board&&cur.boardKey===cur.d+cur.count?boardHtml(cur.board,x=>cur.boardKey.endsWith('strips')?x.lit+' strips':x.lit+' lit'):'<div class="row"><button class="primary" data-act="sweep">Count every six-nucleotide sequence</button></div>';
     return {svg,tools:t};
   },
   act(a,arg){
@@ -1073,12 +1098,16 @@ LV[4]={
     if(a==='tol'){cur.d=+arg;this.report();}
     if(a==='count'){cur.count=arg;}
     if(a==='sweep'){
-      cur.board=cur.count==='windows'?tally(I.strips,6,cur.d,false):stripTally(I.strips,6,cur.d);cur.boardKey=cur.d+cur.count;log('sweep',{d:cur.d,count:cur.count,top:cur.board[0].word});
-      if(cur.step==='eye'){cur.step='mode';cur.dial=cur.board[0].word;const nl=this.lits().filter(l=>l.length).length;
-        say('The winner, '+cur.dial+', lights '+cur.board[0].lit+' windows, more than any other sequence. It lights '+numWord(nl)+' of the ten genes.','warn');}
-      else say('Click a sequence on the board to set the dial to it.');
+      const d=cur.d,byStrip=cur.count==='strips',tal=t=>byStrip?stripTally(t,6,d):tally(t,6,d,false);log('sweep',{d,count:cur.count});
+      sweepRun({texts:I.strips,k:6,tallyOf:tal,fmt:x=>byStrip?x.lit+' strips':x.lit+' lit',done:()=>this.swept(tal(I.strips))});
     }
     if(a==='pick'){cur.dial=arg;log('dial',{word:arg});this.report();}
+  },
+  swept(board){
+    cur.board=board;cur.boardKey=cur.d+cur.count;
+    if(cur.step==='eye'){cur.step='mode';cur.dial=cur.board[0].word;const nl=this.lits().filter(l=>l.length).length;
+      say('The winner, '+cur.dial+', lights '+cur.board[0].lit+' windows, more than any other sequence. It lights '+numWord(nl)+' of the ten genes.','warn');}
+    else say('Click a sequence on the board to look for it.');
   },
   report(){
     if(!cur.dial)return;
@@ -1135,14 +1164,14 @@ LV[6]={
   draw(){
     if(cur.step==='hand')return this.drawHand();
     const B=cur.big,b=cur.bot;
-    const svg=rackSvg({reels:B.strips,k:6,mode:'reels',off:cur.off,miss:true,clamps:cur.step!=='bot'||!b.running,spin:b.running&&cur.step==='bot'?B.strips.map(()=>true):null});
+    const svg=rackSvg({reels:B.strips,k:6,mode:'reels',off:cur.off,miss:true,clamps:cur.step!=='bot'||!b.running,spin:(b.running&&cur.step==='bot')||(cur.sweep&&cur.sweep.spin)?B.strips.map(()=>true):null});
     let t='';
     if(cur.step==='bot'){
       const rate=b.ms>0?b.n/(b.ms/1000):0,years=rate?SETTINGS/rate/31557600:0;
       t=b.running?'<p class="mono">Settings tried: <b>'+b.n.toLocaleString('en-US')+'</b> of '+SETTINGS.toLocaleString('en-US')+'<br>Fewest misses so far: <b>'+b.best+'</b><br>At this pace, every setting takes about <b>'+(years>=1?Math.round(years).toLocaleString('en-US')+' years':Math.round(years*365)+' days')+'</b>.</p>'
         :'<div class="row"><button class="primary" data-act="bot">Start the bot</button></div>';
     }else{
-      t=stackHtml(B.strips,cur.off,6)+(cur.board?boardHtml(cur.board,x=>x.lit+' in all',{title:'Each sequence, with its closest windows added up'}):'<div class="row"><button class="primary" data-act="dial">Let the dial try all 4,096 six-nucleotide sequences</button></div>');
+      t=stackHtml(B.strips,cur.off,6)+(cur.board?boardHtml(cur.board,x=>x.lit+' in all',{title:'Each sequence, with its closest windows added up'}):'<div class="row"><button class="primary" data-act="dial">Try all 4,096 six-nucleotide sequences</button></div>');
     }
     return {svg,tools:t};
   },
@@ -1175,20 +1204,37 @@ LV[6]={
     if(a==='better'&&cur.step==='hand'&&cur.wi===2){
       const best=H.totals[0]<H.totals[1]?H.words[0]:H.words[1];
       if(arg!==best){say(arg+'’s closest windows add up to more.','warn');return;}
-      cur.step='dial';log('better',{word:arg});say('Back to the ten big reels. The dial can do the same for every six-nucleotide sequence.','good');
+      cur.step='dial';log('better',{word:arg});say('Back to the ten big reels. The machine can do the same for every six-nucleotide sequence.','good');
     }
     if(a==='dial'&&cur.step==='dial'){
-      const B=cur.big,t=distTable(B.strips,6),list=[];
-      for(let p=0;p<t.length;p++)list.push({word:dec(p,6),lit:t[p]});
-      list.sort((x,y)=>x.lit-y.lit||(x.word<y.word?-1:1));cur.board=list;
-      const w=list[0].word;cur.off=B.strips.map(s=>closestPos(w,s));log('dial_all',{word:w,total:list[0].lit});
-      say(w+' has the smallest total mismatch count: '+list[0].lit+' mismatches in all, against '+list[1].lit+' for the next sequence. The reels snap to its windows.','good');
-      finish(['median'],{word:w});
+      const B=cur.big,t=distTable(B.strips,6);
+      if(reduced())return this.tried(t);
+      /* the trial, shown: the reels jump to each sequence's closest windows while the readout rolls through all 4,096 */
+      let n=0,best=0;const per=96;
+      cur.sweep={done:()=>this.tried(t)};say('The machine tries each sequence in turn and slides every reel to that sequence’s closest window.');
+      const step=()=>{
+        if(n>=t.length){cur.sweep=null;this.tried(t);render();return;}
+        const end=Math.min(t.length,n+per);for(;n<end;n++)if(t[n]<t[best])best=n;
+        const w=dec(n-1,6),bw=dec(best,6);cur.off=B.strips.map(s=>closestPos(w,s));
+        cur.sweep={done:()=>this.tried(t),spin:true,html:()=>'<div class="row"><span class="sub" style="margin:0">Trying</span>'+tiles(w,Array(6).fill('roll'))+
+          '<span class="gmeta" style="margin-left:8px">'+t[n-1]+' mismatches in all · sequence '+n.toLocaleString('en-US')+' of 4,096</span><button data-act="sweepnow" style="margin-left:auto">Skip to the result</button></div>'+
+          '<p class="mono">Fewest so far: '+wordHtml(bw)+', '+t[best]+' mismatches</p>'};
+        render();later(step,55);
+      };
+      step();
     }
+  },
+  tried(t){
+  const B=cur.big,list=[];
+  for(let p=0;p<t.length;p++)list.push({word:dec(p,6),lit:t[p]});
+  list.sort((x,y)=>x.lit-y.lit||(x.word<y.word?-1:1));cur.board=list;
+  const w=list[0].word;cur.off=B.strips.map(s=>closestPos(w,s));log('dial_all',{word:w,total:list[0].lit});
+  say(w+' has the smallest total mismatch count: '+list[0].lit+' mismatches in all, against '+list[1].lit+' for the next sequence. The reels snap to its windows.','good');
+  finish(['median'],{word:w});
   },
   skip(){return cur.step==='bot'&&cur.bot.running?'Stop the bot. Search the sequences instead →':'';},
   onSkip(){if(cur.step!=='bot')return;cur.step='hand';log('gave_up',{tried:cur.bot.n});timers.forEach(clearTimeout);say('Click a window on each reel.');},
-  reveal(){const B=cur.big;return '<p>Instead of 6 × 10¹² settings of the reels, the dial checked 4,096 sequences, each against every reel’s closest window. A sequence that minimises the sum of mismatches to its closest window on each reel is a '+term('median','median string')+'. '+
+  reveal(){const B=cur.big;return '<p>Instead of 6 × 10¹² settings of the reels, the machine checked 4,096 sequences, each against every reel’s closest window. A sequence that minimises the sum of mismatches to its closest window on each reel is a '+term('median','median string')+'. '+
     'Here it is '+wordHtml(B.word)+', one of the sequences that lit all ten genes in level 4. Its closest windows, stacked, score as well as the best setting of the reels.</p>';}
 };
 
@@ -1454,7 +1500,7 @@ function later(fn,ms){const mine=cur,id=setTimeout(()=>{if(cur===mine)fn();},ms)
 function loadLevel(id){
   timers.forEach(clearTimeout);timers=[];
   const L=LEVELS[id-1];
-  cur={L,variant:S.variants[id]||0,inst:genFor(id),done:false,moves:0,msg:{text:'',kind:''},t0:Date.now(),earned:[]};
+  cur={L,sweep:null,variant:S.variants[id]||0,inst:genFor(id),done:false,moves:0,msg:{text:'',kind:''},t0:Date.now(),earned:[]};
   LV[id].init();
   log('load');
   render();
@@ -1503,7 +1549,7 @@ function render(){
   const d=M.draw(),m=$('#machine');
   m.setAttribute('viewBox','0 0 '+d.svg.W+' '+d.svg.H);m.style.maxWidth=Math.round(d.svg.W*1.15)+'px';m.style.margin='0 auto';m.style.minWidth=d.svg.minW?d.svg.minW+'px':'';
   $('#scene').innerHTML=d.svg.svg;
-  $('#tools').innerHTML=d.tools||'';
+  $('#tools').innerHTML=cur.sweep&&cur.sweep.html?cur.sweep.html():(d.tools||'');
   $('#status').textContent=cur.msg.text;$('#status').className='status '+cur.msg.kind;
   const sk=$('#skip'),label=M.skip&&!cur.done?M.skip():'';
   sk.hidden=!label;sk.textContent=label;
@@ -1512,6 +1558,7 @@ function render(){
   if(M.after)M.after();
 }
 function act(a,arg){
+  if(cur.sweep){if(a==='sweepnow'){timers.forEach(clearTimeout);timers=[];const f=cur.sweep.done;cur.sweep=null;f();render();}return;}
   if(cur.done&&a!=='pick')return;
   cur.moves++;
   LV[cur.L.id].act(a,arg);
