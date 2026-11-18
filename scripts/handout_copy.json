@@ -1,0 +1,269 @@
+{
+  "shared": {
+    "Suggested coding and pen and paper tasks": "Coding and pen-and-paper tasks",
+    "Each challenge below has a pen-and-paper companion. Work the companion by hand, then run your code on the same input. The last challenge is an extension.": "The table shows where each coding challenge appears in the game. The last challenge is an optional extension.",
+    "Suggested pen and paper tasks": "Pen-and-paper exercises",
+    "Work each companion by hand first, then run your code on the same input. Record and explain any discrepancy; multiple optimal answers may be valid.": "Solve each example by hand, then compare it with your program’s output. If two alignments differ, check their scores and trace the first step where they diverge.",
+    "Test your code on these examples and on inputs of your own, whether or not you wrote it yourself. You should be able to explain how it works.": "Choose another input of your own and predict the result before running your code.",
+    "Work both problems, then compare solutions with another group.": "Solve both problems. If you are working with others, compare your reasoning.",
+    "For each term, be able to point to an example in the game as well as give its definition.": "Give an example from the game for each term you define.",
+    "The game shows a technical definition when you hover over a term. Write each definition in your own words, as you would explain it to a learner who has not played.": "Open the field guide below the game to look up the terms you have earned. Write each definition in your own words.",
+    "Work each example by hand, then run your code on the same input and record the output. If the two disagree, either one of them is wrong or there is more than one correct answer.": "Work through each example by hand, then compare your results with the corresponding steps or output from your code. If they differ, check for ties and trace the first step where the results diverge."
+  },
+  "alignment-coding-and-paper-tasks": {
+    "Rows are v (deck 1); columns are w (deck": "In the alignment grids, v (deck 1) labels the rows and w (deck 2) labels the columns. A south step uses one letter of v, an east step uses one of w, and a diagonal step pairs two letters.",
+    "At each corner, mark the street its number came by.": "At every corner except the start, mark an incoming street that gives its best score.",
+    "Pencil every corner and draw its arrow. If": "Write the best score at every corner. Except at the start, mark one incoming street that gives that score. You may choose either street in a tie.",
+    "Walk back from the far corner. Write the letters": "Trace a best route backward from the bottom right. Then read it forward to write the matched letters in sequence order. Show the full alignment with v on top.",
+    " across the top. Score as BA5E does: a diagonal": " across the top. Use the BLOSUM62 scores at right for diagonal moves. Each south or east move subtracts 5. To check the example in the workbench, choose global mode, BLOSUM62 and indel −5.",
+    " across the top. Score as BA5F does: a diagonal": " across the top. Use the PAM250 scores at right for diagonal moves. Each south or east move subtracts 5. For this local alignment the walk can start or end at any corner. In the workbench, choose local mode, PAM250 and indel −5.",
+    " across the top. Score as BA5I does: a match": " across the top. Use overlap mode with match +1, mismatch −2 and indel −2 for BA5I. Start anywhere on the left edge and finish anywhere on the bottom edge."
+  },
+  "alignment-discussion-questions": {
+    "The tourist’s pencil does not work on your": "Why can the tourist score Toll City’s corners in order? Could you use the same order on a Ticket to Ride map, where routes run both ways?",
+    "Weird Game of Chess (the rook). ": "Rook game. ",
+    "Mark every square W or L for the player about": "Start the rook in the top-left corner. Mark the lower-right square L for the player whose turn would come next. Work backward to label each other square W or L. Which squares must you label before you can decide the starting square? Compare that order with the one you used in Toll City.",
+    "Problem A: Rig the machine: beat the greedy player": "Problem A: Beat the greedy player",
+    "Build two decks of six cards on which the": "Build two six-card DNA decks for which the greedy player finishes at least two matches below par (the maximum). It takes both top cards when they match. Otherwise it discards from the deck with more cards left, or from deck 1 on a tie. Test your decks at https://bioinformatics.ryanlmelvin.com/toll-city/?bench=1.",
+    "Write your two decks. Play the greedy player": "Write your decks in play order, first card on the left. Follow the greedy rule by hand. Show the alignment with deck 1 on top and count the matching pairs.",
+    "Run your decks on the workbench. Write par and one best line-up.": "In the workbench, enter the decks as strings v and w. Choose global mode with match 1, mismatch 0 and indel 0. Select Run and record the best score and one best alignment.",
+    "Find greedy’s first wrong move: the first": "Find the first greedy move that rules out reaching par. Check possible ties. What could the player have done at that point to keep a best route open?",
+    "What can the pencil see that greedy cannot?": "Use that move to explain why looking only at the top cards and the lengths of the decks can miss the best score.",
+    "Map the legal moves to Toll City. Which information": "Trace your token moves backward on an alignment grid. What does a cell in your win/loss table tell you? What did a penciled number tell you in Toll City?"
+  },
+  "alignment-play-guide": {
+    "The game is Toll City, at https://bioinformatics.ryanlmelvin.com/toll-city/.": "Play all eleven levels of Toll City at https://bioinformatics.ryanlmelvin.com/toll-city/ and earn its 13 terms. Fill in the table as you play, then work through the three questions by hand.",
+    "Fill in every blank. Deck 1 (string v) runs": "Fill in the blanks. Deck 1 (v) runs down the left side of the city and deck 2 (w) across the top. A south step discards a card from deck 1, an east step discards a card from deck 2, and a southeast step takes both cards.",
+    "the most pairs you can take": "the most matching pairs you can take",
+    "the arrow you clicked": "an arrow you follow backward",
+    "Use the game ideas on paper: question 1 uses": "Use levels 3, 5 and 7 as a reference. In both alignment grids, deck 1 runs down the left and deck 2 across the top.",
+    "There is a unique longest common subsequence": "Find the longest common subsequence of AGACTG and GTACGA. Fill the grid and trace a best path to show how you found it.",
+    "In this 2 × 2 city the number on each street": "The numbers on the streets count the sights. At each corner, write the largest total you can reach from the top-left corner and mark the street that gives that total. Trace a best route to the bottom right."
+  },
+  "burrows-wheeler-coding-and-paper-tasks": {
+    "Burrows Wheeler transform": "Burrows–Wheeler transform",
+    "? Why must they be neighbours?": "? Why must those rows be consecutive?",
+    " on a ring and cut it before each letter, as in level 4.": " on a ring. Start at each symbol in turn and read all seven symbols to make a rotation.",
+    "Starting from row 0, follow the threads and": "Start at row 0 on the right beam. Write its letter just left of $, follow its thread to the left beam, and use that row for the next letter. Fill one box farther left on each step.",
+    "The text, from its right end:": "Fill the empty boxes from right to left.",
+    "This is the right beam of a 12-symbol DNA": "The right beam below includes the end marker $. Each tag gives a starting position divisible by 3. To test your BA9N program, reconstruct the original text and omit its final $. Enter that text on the first line, then CAT and ACA on separate lines.",
+    "At each hit, lay the whole read over the": "Align each matching half with its hit and count mismatches across the whole read. Which starting position survives? For BA9O, enter the reference, the read and the mismatch limit 1 on three separate lines."
+  },
+  "burrows-wheeler-discussion-questions": {
+    "Burrows Wheeler transform": "Burrows–Wheeler transform",
+    "Use the workbench (https://bioinformatics.ryanlmelvin.com/the-loom/?bench=1)": "Open https://bioinformatics.ryanlmelvin.com/the-loom/?bench=1. Enter two different strings of equal length in Text and Second text, then select Run. Find a pair whose tables share their first two columns. Record both strings and the shared columns. Why is the original ambiguous?",
+    "A colleague proposes keeping three leading": "Find two texts whose tables share their first three columns. Then construct a pair for any fixed number k of leading columns. Think of each row’s first k letters as a window on a ring. How can two different texts have the same collection of windows?"
+  },
+  "burrows-wheeler-play-guide": {
+    "Burrows Wheeler transform": "Burrows–Wheeler transform",
+    "a read, and the reference it came from (level 1)": "finding where each read starts in the reference (level 1)",
+    "the word’s endings, sorted, kept only as where each starts (level 2)": "the starting positions of the word’s endings, listed in alphabetical order of the endings (level 2)",
+    "the index that is too big": "an index of all suffix starts",
+    "the new sign after the last letter (level 3)": "the unique $ after the last letter (level 3)",
+    "the word on a ring, cut before each letter: the strips (level 4)": "a strip made by reading once around the ring from a chosen letter (level 4)",
+    "what read mappers store": "one part of a read mapper’s index",
+    "a half of the read that must match exactly (level 10)": "an exact match to one half of a read with at most one mismatch (level 10)",
+    "Each question repeats a step from the game.": "Use levels 4, 6 and 1 for questions 1, 2 and 3, respectively. Number rows from 0 at the top.",
+    " on a ring and cut it before each letter,": " on a ring. From each of the six symbols, read once around the ring to make a strip. Sort the strips with $ first, then copy the last column from top to bottom.",
+    "Only this right beam survived, top to bottom: ": "The right beam reads ",
+    ". As in level 6: write the left beam, number": ". Sort those symbols to fill the left beam. On each beam, number the copies of each letter from top to bottom and join matching copies. Start at row 0 on the right. Write its letter to the left of $, follow its thread, and repeat one box farther left each time.",
+    "The text, from its right end:": "Fill the empty boxes from right to left.",
+    "What is the Multiple Pattern Matching Problem,": "In level 1 you placed several reads on one reference. What inputs and output define this pattern-matching problem? Which comparisons does a fresh scan repeat for each new read?",
+    "The game is The Loom, at ": "Play the 11 levels of The Loom at https://bioinformatics.ryanlmelvin.com/the-loom/. Fill in the table as you discover its 11 terms, then solve the three paper exercises."
+  },
+  "clustering-coding-and-paper-tasks": {
+    "Six pixels on the ink map, as (red, blue).": "Start with pixel A. Choose each new pot at the pixel farthest from its nearest existing pot, as in levels 3 and 4. For BA8A, enter 3 2 (three pots, two coordinates), then list pixels A–F one per line.",
+    "With all three pots mixed, what is the worst": "With all three pots in place, what is the largest distance from a pixel to its nearest pot? Give MaxDistance in the original distance units.",
+    "Five pixels and two pots, as (red, blue).": "Print each pixel from its nearest pot. Write the five squared distances and their mean. For BA8B, enter 2 2, then the two pots, a line of eight hyphens, and the five pixels. Enter one coordinate pair per line.",
+    "Five pixels, as (red, blue). The two pots": "For BA8C, enter 2 2, then one coordinate pair per line in A–E order. Pot 1 starts at A and pot 2 at B.",
+    "Print: which pot prints each pixel? Give": "Print once. Which pot prints each pixel? Add the squared distances from the pixels to the pots that printed them.",
+    "Print again from the new pots. Has the loop": "Print again with the new pots. If any assignment changes, keep alternating the two steps. Give the final centers.",
+    "Four genes and the distance between every": "For BA8E, enter 4, then the four rows of distances without labels. Repeatedly merge the closest groups. Measure the distance between two groups by averaging the distances between all pairs with one gene in each group.",
+    "Write each join in order, with its distance.": "List the members of each newly formed group in merge order, as BA8E asks. Beside each group, record the distance at which it formed.",
+    "Draw the tree, with the height of each join.": "Draw the tree. As in level 9, use the merge distance as the height of each join."
+  },
+  "clustering-discussion-questions": {
+    "Place six points with whole-number coordinates": "Choose six distinct points with whole-number coordinates. With k = 3, find an example where one point forms a cluster by itself under farthest-first traversal but shares a cluster under the Lloyd algorithm. Test your example in the workbench.",
+    "Paste the points one per line, in your order,": "Enter one point per line in Points, in the order you chose. Set k to 3, leave Starting points blank and select Run both. Farthest-first starts at the first point. The Lloyd algorithm starts at the first three.",
+    "Your six points, in order.": "List your six points in input order.",
+    "Farthest-first traversal: the three centers": "List the three farthest-first centers in the order chosen. Identify the point in a cluster by itself. Record MaxDistance and squared error distortion. If you use squared distances, label MaxDistance².",
+    "The Lloyd algorithm from the first three": "List the final Lloyd centers. Which other points share a cluster with the point you identified? Record MaxDistance and squared error distortion.",
+    "Why does farthest-first spend a center on": "Why did the two methods group that point differently? Explain what each method tries to minimize and compare their results on both measures.",
+    "Run two rounds from the two pots shown. After": "From the two starting pots, print and then move the pots. Record the sum of squared distances after each step, keeping assignments fixed as the pots move. Repeat for round 2. Does a third print change any assignments? To check a sum after a move, multiply that round’s workbench distortion by five.",
+    "There are only finitely many ways to split": "The game resolves ties in favor of the lower-numbered pot and leaves an empty pot in place. When does moving a pot strictly lower the total? Use that fact and the finite number of possible assignments to explain why the loop stops."
+  },
+  "clustering-play-guide": {
+    "The game is Paint by k, at https://bioinformatics.ryanlmelvin.com/paint-by-k/.": "Play all 10 levels of Paint by k at https://bioinformatics.ryanlmelvin.com/paint-by-k/. As you earn the 14 terms, fill in the table, define the five terms below and solve the three pen-and-paper problems.",
+    "Each question repeats a step from the game.": "Use the worst-pixel meter from level 3, the squared error measure from level 4 and the pot average from level 5.",
+    "9. ": "1. ",
+    "Compute MaxDistance(Data, Centers) for the following Data and Centers:": "Find each point’s distance to its nearest center. What is the largest of these distances, MaxDistance?",
+    "10. ": "2. ",
+    "Compute Distortion(Data, Centers) for the following Data and Centers:": "Find each point’s squared distance to its nearest center. What is their average, the squared error distortion?",
+    "11. ": "3. ",
+    "Compute the center of gravity of the following four points:": "Compute the center of gravity of these four points."
+  },
+  "evolutionary-trees-coding-and-paper-tasks": {
+    "Here is a cave written the way the challenge": "BA7A input starts with 4, the number of leaves. Then list each edge below on its own line, in both directions as shown. Nodes 0–3 are leaves and nodes 4 and 5 are junctions.",
+    "This chart fits a cave exactly. For your": "Rows and columns A–D correspond to leaves 0–3. For BA7C, enter 4 on the first line, followed by the four rows of numbers.",
+    "Build the Y for A, B and C: give its three tunnel lengths.": "Build the Y for A, B and C. Give the three limb lengths.",
+    "Give D’s limb length, the pair of leaves": "Find D’s limb length. Name one path it attaches to and give the distance from one end of that path to the attachment point.",
+    "This chart comes from a cave dug at a steady": "This chart comes from a cave dug at a steady rate. For BA7D, enter 4, then the four numeric rows in A–D order.",
+    "Join the closest pair. How deep is their": "Join the closest pair. How high is their junction above the leaves? Write the smaller chart using average distances between members of the groups.",
+    "Repeat until one group is left. Give the depth of every junction.": "Continue until one group remains. Record each junction’s height above the leaves.",
+    "This chart fits a cave exactly. Rows A, B, C and D are 0, 1, 2 and 3.": "For BA7E, enter 4, then the four numeric rows in A–D order. Use the labels 0–3 for those leaves in your output.",
+    "The smallest value of the discounted chart": "Two pairs tie for the smallest off-diagonal value in the discounted chart. Name both and choose one to join first.",
+    "Give the two limb lengths of your pair, and": "Calculate the limb length for each of the two leaves you chose. What is the distance from their new junction to each remaining leaf?",
+    "Hand companion. ": "",
+    "Use your function on the following tree after solving it on paper.": "Work through the tree below by hand, then check both alternatives with your function."
+  },
+  "evolutionary-trees-discussion-questions": {
+    "Build a cave with four entrances and whole-number": "Build a four-leaf tree for which closest-pair joining (UPGMA) chooses two leaves that do not share a junction. Compare its choice with neighbor joining.",
+    "Draw your cave: four leaves A, B, C and D,": "Draw four leaves A, B, C and D and two internal nodes. Give every edge a positive whole-number length. Choose lengths with a single closest pair of leaves. Write the distance matrix.",
+    "Which pair does closest-pair joining join": "Which pair does UPGMA join first? Where do those leaves attach in your original tree?",
+    "Work out the row totals and the discounted": "Compute each row total and then D*(i, j) = 2 × D(i, j) − TotalDistance(i) − TotalDistance(j) for each distinct pair. Which two pairs tie for the smallest value?",
+    "Paste your chart into the workbench (the": "Open Workbench below Hollow Mountain. Enter each row as a leaf name followed by its four distances. Run both methods. Compare “Foursome score” for the shape and “Reproduces the chart” for the lengths. What does the first UPGMA merge tell you about the unrooted shape of a four-leaf tree?",
+    "Explain the Limb Length Theorem. You used": "Use the charts to explain why the limb calculation from levels 3 and 4 works when a tree fits the distances.",
+    "Draw a cave in which leaf j hangs off the": "Draw three leaves i, j and k with j’s limb attached to the path from i to k. Label the lengths. Show why (D(i, j) + D(j, k) − D(i, k)) / 2 gives j’s limb length.",
+    "A fourth leaf D arrives: D–A 14, D–B 15,": "Add leaf D to Chart 1. Its distances to A, B and C are 14, 15 and 11. Calculate a candidate limb length for each pair of existing leaves. Which paths give the minimum? Explain why a path that misses D’s junction gives a larger value, even in a bigger tree.",
+    "Chart 2 was made by counting differences": "Chart 2 gives sequence differences. Build the Y for A, B and C. Use D’s smallest candidate limb length to attach it, then check all six distances. Which pair disagrees with the chart? What does that tell you about using the formula on these data?"
+  },
+  "evolutionary-trees-play-guide": {
+    "The game is Hollow Mountain, at https://bioinformatics.ryanlmelvin.com/hollow-mountain/.": "Play all 11 levels of Hollow Mountain at https://bioinformatics.ryanlmelvin.com/hollow-mountain/. As you earn the 17 terms, fill in the table, define the five terms below and solve the three pen-and-paper problems.",
+    "Each question repeats a step from the game.": "Use the distance chart from level 1, the tree rule from level 2 and the three-tunnel calculation from level 3.",
+    "What are the three properties that a distance": "In level 1, you counted nucleotide differences between samples. What can you say about the diagonal entries, the entries on opposite sides of the diagonal and the sign of each distance?",
+    "The lamps are out. These are the rope readings": "Three tunnels meet at one junction. The chart gives the distance between each pair of entrances. How long is each entrance’s tunnel?"
+  },
+  "genome-assembly-coding-and-paper-tasks": {
+    "Which node must the Eulerian path start from?": "Use the counts of three-letter prefixes and suffixes to identify the start node. Trace the path and write the DNA string it spells.",
+    "Start at node 0 and always take the lowest-numbered": "Start at node 0. At each fork, take the unused edge leading to the lowest-numbered neighbor. Where does the walk stop, and how many edges remain?",
+    "Now do what you did with Mira: go back to": "Choose a node on the walk with an unused outgoing edge. Follow unused edges until the detour closes, then splice it into the walk. Repeat as needed and write the finished cycle.",
+    "Give a linear string having the following": "Reconstruct a linear string from these 4-mers. Check that its overlapping windows reproduce the whole collection.",
+    "There is a single (linear) string with the": "Reconstruct the linear string from these read-pairs. Each end is three letters long, with one unknown letter between the ends.",
+    "The string CATGTCGATTCC has exactly the same": "CATGTCGATTCC has the same ten 3-mers as your reconstruction. Choose a pair and show where its two ends would have to occur. Which positions rule this string out?"
+  },
+  "genome-assembly-discussion-questions": {
+    "From level 6 on, Mira found a walk through": "Suppose you have every k-mer from one linear genome, including repeats. Why must its de Bruijn graph have a walk that uses every edge exactly once? Start with this example.",
+    "Now make the argument for any genome and": "Trace the reads from left to right along any linear genome. Why are all its edges connected? Which nodes can have unequal indegree and outdegree, and by how much?",
+    "What would a genome have to look like for": "What relationship between the first and last (k−1)-mers balances every node? What kind of walk does that give Mira?",
+    "When Mira was stranded you sent Mira back": "When Mira gets stuck, she can resume at a glowing node and splice a detour into her walk. Trace Hierholzer’s algorithm on this map. Then explain why it works on any connected, balanced directed graph.",
+    "For every node, count its unused edges in": "Count the unused incoming and outgoing edges at each node. Why does removing a closed walk preserve the balance at every node it visits?",
+    "Send Mira back to B for a detour. Could the": "Start a detour at B. At D, take the edge to E first. Explain why a walk along unused edges can stop only when it returns to B.",
+    "Finish the cycle. You will need a second": "Find the remaining detour and splice it into the cycle. Write the finished cycle. If each outgoing edge is removed from its list as it is used, how many times do you take each edge?"
+  },
+  "genome-assembly-play-guide": {
+    "The game is Bridge Walker, at https://bioinformatics.ryanlmelvin.com/bridge-walker/.": "Play Bridge Walker at https://bioinformatics.ryanlmelvin.com/bridge-walker/. Complete the twelve levels. To earn the detour term, finish an edge walk with a detour and no undo or restart. Fill in the table as you play, define the terms and answer the three questions by hand.",
+    "an island in levels 6 to 11": "an island in levels 6, 7 and 9–11",
+    "a bridge in levels 6 to 11": "a bridge in those DNA maps",
+    "Mira’s walk in levels 6 to 11": "Mira’s walk in those DNA maps",
+    "the whole map in levels 6 to 11": "one of those complete DNA maps",
+    "String Reconstruction Problem": "String reconstruction",
+    "Euler’s theorem (give both halves: when is": "Euler’s theorem. For a connected directed graph, give the degree conditions for an Eulerian cycle and for an Eulerian path with distinct endpoints.",
+    "Each question repeats a step from the game.": "Use the balancing rule from level 8 for question 1. For questions 2 and 3, count prefixes or suffixes as in level 10.",
+    "Below is the adjacency list of a graph. What": "What is the fewest number of directed edges you can add to balance every node? Give one set of edges that works. Duplicate edges are allowed.",
+    "What is the indegree of GTA in the de Bruijn": "Find the indegree of GTA in the de Bruijn graph of these 4-mers. Count the relevant reads directly, including repeated copies.",
+    "What is the outdegree of AAG in the de Bruijn": "Using the same reads, find the outdegree of AAG. Which part of each read did you count?"
+  },
+  "hmm-coding-and-paper-tasks": {
+    "Companions 1 to 3 use the house card. For": "Exercises 1–3 use the house card below. In your code, A is fair, B is loaded, S is seven and O is other. Each pair starts with probability 1/2. Use the four emission fractions shown to avoid rounding intermediate results.",
+    "How likely was the dealer to play it that": "What is the probability of this hidden path? Multiply the starting probability by the probability of each stay or switch. Use 128 as the denominator.",
+    "If he did, how likely were those four calls?": "Given that path, what is the probability of the four calls? Multiply the emission probabilities and use 1,296 as the denominator.",
+    "Both together, out of 165,888. Then give (a), (b) and (c) as decimals.": "Multiply your results from (a) and (b) to find the joint probability of the path and the calls. Use denominator 165,888, then convert all three answers to decimals.",
+    "Fill the bookkeeper’s page that adds the": "Fill the forward table with whole-number weights. Start both pairs at 1. Use 3 for staying and 1 for switching. For S and O, use 1 and 5 in state A and 4 and 2 in state B.",
+    "Fill the bookkeeper’s page that keeps the": "Fill the Viterbi table with the same weights as exercise 2. From round 2 on, record which predecessor gave each entry its highest weight.",
+    "Follow the kept ways back from the larger": "Start at the larger round 3 entry and follow its predecessors backward. Write the most likely sequence of pairs in time order.",
+    "Five aligned family members. BA10E drops": "These five rows form a multiple alignment. BA10E uses a column as a match state (room) when its gap fraction is below θ. With θ = 0.5, keep columns that contain at most two gaps.",
+    "Give the letters said in room 3, as fractions.": "For room 3, give the emission probability of each letter in the alphabet A, C, D, E, F.",
+    "Give the moves out of room 3, as fractions:": "From room 3, what fraction of paths enter the next corridor, go directly to room 4 or skip room 4 through its trapdoor?",
+    "BA10F’s rule: add σ to each of the five letters’": "Using the probabilities from exercise 4, add σ to each of the five emission probabilities in room 3. Divide each result by their new sum. What are the five probabilities now?",
+    "The game’s pebbles use a different rule:": "Apply the game’s pebble rule on paper using the same five-letter alphabet. Add 1 to each raw letter count in room 3, then divide by the new total. The game workbench uses all 20 amino acids."
+  },
+  "hmm-discussion-questions": {
+    "For an optional dice game, choose one person": "For this optional game, give the dealer two dice of different colors. Behind a screen, flip a coin to choose the starting pair. Roll both dice every round. For the fair pair, call “seven” when the dice sum to 7. For the loaded pair, call “seven” when a die of one designated color shows 1–4. Otherwise call “other.” Before each later round, shuffle three KEEP cards and one SWITCH card, draw one, then put it back. The dealer records the pair and the call each round. Observers record the calls and mark suspected switches. Compare the records at the end.",
+    "The forward table estimates the current pair": "The forward table lets you identify the likelier pair after each call. Viterbi traces the most likely sequence of pairs after all the calls. Find a six-call record for which they disagree in at least one round.",
+    "Choose a six-call record other than your": "On the Calls tab, enter six calls different from your level 7 record. Use S for seven and O for other. Compare “likelier this round” with “most likely story.” If they agree throughout, change a call and try again. Record the first example with a disagreement.",
+    "Check the first two columns of both tables": "Check rounds 1 and 2 of the “adding” and “best” rows by hand. Both pairs start with weight 1. Use 3 for staying and 1 for switching. The fair pair has weights 1 for S and 5 for O. The loaded pair has weights 4 for S and 2 for O.",
+    "The bookkeeper’s page holds two numbers per": "Level 5 counts possible stories one at a time. Level 6 keeps just two weights per round. Check that both methods give the same total for two rounds, then explain why the ledger works for any number of rounds.",
+    "The dealer calls 7, other. List all four": "The dealer calls “7,” then “other.” For each of the four possible paths, multiply the starting probability, the transition probability and both emission probabilities. Use 288 as the common denominator and add the four joint probabilities. Fill the forward ledger for these two calls. Compare its final column sum, divided by 288, with your result.",
+    "Which stories add up to the fair entry of": "Group the four paths by their final pair. Which paths contribute to each round 2 entry? Explain why the same grouping works at every round.",
+    "Now the page that keeps the better way in.": "Switch to the Viterbi ledger. To find the best path ending at a given pair, why is it enough to compare the best path through each of the two predecessors?",
+    "Name the level of Toll City that asked the same question.": "In Toll City’s tourist grid, how did the best score at a corner depend on its incoming streets? Match the parts of that calculation to a Viterbi entry."
+  },
+  "hmm-play-guide": {
+    "The game is Loaded Dice, at https://bioinformatics.ryanlmelvin.com/cho-han-night/.": "Play the eleven levels of Loaded Dice at https://bioinformatics.ryanlmelvin.com/cho-han-night/. Earn all 14 terms and fill in the table as you play.",
+    "which column of the family a letter belongs to": "a position or operation in the family model",
+    "the night of pairs, round by round": "the sequence of pairs used over the night",
+    "the bookkeeper’s page that adds the two ways in": "the ledger that sums the incoming weights",
+    "the bookkeeper’s page that keeps the better way in, with its kept ways": "the ledger that records the best way into each cell",
+    "Each question repeats a step from the game.": "Use level 7 for the most likely path, level 4 for the probability of a particular path and its calls, and level 8 for the protein-family model.",
+    "A hidden switch selects either a fair pair": "The dealer calls other, other, 7, 7, other. Use the probabilities below to fill a Viterbi table with rows F (fair) and L (loaded). Trace the best path back from the final round. When does it switch pairs? Does it switch back on the final “other”?",
+    "Start with probability 1/2 for each pair.": "To work in whole numbers, give each starting pair weight 1. Use 3 for a stay and 1 for a switch. For “7” and “other,” use weights 1 and 5 with the fair pair and 4 and 2 with the loaded pair.",
+    "Keeps his pair 3 rounds in 4, swaps 1 in 4": "Between rounds: stay with probability 3/4 or switch with probability 1/4",
+    "Five members of a family:": "Five aligned protein-family members appear below. A dash marks a gap.",
+    "A column is a room when at most 2 of the": "Keep a column as a room if it contains at most two gaps. List the retained column numbers and number the rooms from left to right. Which residues occur in the third room, and what fraction of the five members has each one?"
+  },
+  "motifs-coding-and-paper-tasks": {
+    "Here is an 18-letter text. Take k = 3 and one wrong letter allowed.": "Use k = 3 and allow at most one mismatch in each window of this 18-letter text.",
+    "Which of the four wins? Does it occur exactly in the text?": "Which listed word has the highest total, and does it occur exactly? BA1J checks all 64 possible 3-mers. Which words share the highest total in your program’s output?",
+    "For each of the five words above, find its": "For each candidate, choose a closest window in each string. Add its three Hamming distances.",
+    "Which of the five is the median string among them?": "Which listed candidate has the smallest total? Compare its distance with the minimum over all 64 candidates in BA2B.",
+    "Find the most probable window in string 3.": "Multiply the three profile entries for each window in string 3. Show each product and choose the most probable window. Break ties at the leftmost window.",
+    "Re-stop every reel at its most probable stop.": "Use this same profile to choose the most probable window on each reel. Break ties at the leftmost window. Write the new windows and their score.",
+    "Has it stopped? Say how you know.": "Build the next profile and try another round. Which windows does this run keep, and why does it stop?",
+    "Make the vote from strings 1 to 3 with one": "Build a profile from strings 1–3, adding one to each count. Multiply the shares (in sevenths) for each window in string 4 to get its weight on the wheel.",
+    "Which window is the loaded wheel most likely": "Divide each weight by their sum to find the chance of drawing each window. Which is most likely? Give an example of a draw that increases the original score."
+  },
+  "motifs-discussion-questions": {
+    "Optional group activity: use nucleotide dice from ": "For this optional group activity, roll nucleotide dice from ",
+    " to make ten DNA strings of length 10. Choose": " to make ten DNA strings of length 10. Hide an exact copy of a secret 4-mer in each string. Exchange strings and record your guess and its supporting windows. Repeat with fresh strings for each round. Hide exact copies in only three or four strings, then copies with one mismatch in three or four strings, and finally copies with one mismatch in all ten. Compare your guesses with the secret after each round.",
+    "Compare two scoring rules: count windows": "Rank candidate 4-mers two ways. First, count windows within one mismatch of each candidate. Then add the distances to its closest window in each string. Which candidates tie under each rule, and which rule better distinguishes the hidden pattern on your data?",
+    "Problem A: Rig the machine: make going down the reels fail": "Problem A. When greedy motif search misses the best score",
+    "In level 8, going down the reels without": "In level 8, the first reel’s profile gave the planted window on reel 2 a probability of zero. Explore that early choice in the workbench at https://bioinformatics.ryanlmelvin.com/motif-slots/?bench=1. Enter one sequence per line, set k and select Run.",
+    "Test them on the workbench. Copy the misses": "Record the Misses values for both “Going down the reels” rows and the “Median string” row. How does the median-string search establish the lowest possible score?",
+    "Did pseudocounts fix your strings? Say why": "How did pseudocounts affect your result? Trace the window probabilities on one reel to explain why its choice changed or stayed the same.",
+    "Run two rounds by hand. In each round, make": "Run two rounds. Add one to every count, build the profile and choose the highest-probability window on each reel. Use the leftmost window for a tie. Record the windows and total misses at the start and after each round.",
+    "Misses are whole numbers and never below": "If a run starts with s misses, how many improving rounds can it accept? Include the final check when you count all the rounds it tries.",
+    "Is the answer it stops at the best possible?": "Find a choice of windows that beats this run’s final score. How does level 9 give the search another chance?"
+  },
+  "motifs-play-guide": {
+    "The game is Motif Slots, at https://bioinformatics.ryanlmelvin.com/motif-slots/.": "Play Motif Slots at https://bioinformatics.ryanlmelvin.com/motif-slots/. Complete levels 1–10, then finish level 11 to collect any remaining terms. Fill in the table as you play, define the terms and answer the three questions by hand.",
+    "letters different": "positions where two sequences differ",
+    "a lit window (“wrong letters allowed” is d)": "a window lit with d mismatches allowed",
+    "a site the protein ________________": "a possible site where the protein could _______",
+    "one string of Dna": "one DNA sequence",
+    "“fav.”: each column’s favourite letter": "the “fav.” row of most frequent letters",
+    "the word whose closest windows add up to the fewest letters different": "the word with the fewest total mismatches across its closest windows",
+    "Each question repeats a step from the game.": "Use the mismatch and strand rules from levels 2 and 3 for question 1. For questions 2 and 3, read columns as you did in levels 5 and 7.",
+    "Write the reverse complement of ATCCA. Then,": "Write the reverse complement of ATCCA. Allow one mismatch. In the text below, mark the windows that match ATCCA and those that match its reverse complement. Report the two counts separately.",
+    "Here are four windows at the payline, stacked.": "Find the score of these four payline windows. Write one consensus string and mark any column where more than one nucleotide could be chosen.",
+    "Construct all possible consensus strings": "List all consensus strings allowed by this profile matrix. A tie for the largest share in a column allows more than one choice."
+  },
+  "transformers-coding-and-paper-tasks": {
+    "Rosalind has no problems on this topic. The": "The five coding problems below include their full specifications. Read from a file or standard input and follow the output format for each problem.",
+    "Cut a DNA string into k-mers that start every s letters.": "For positive integers k and s, take a window of k letters every s positions, starting at position 0.",
+    " at distance 1, and a jack that is answered": " one plate away on either side. A jack that finds a match gains a rivet. In round 2, the gene asks for ",
+    " and run both rounds again. Which replacements switch the gene off?": " and run both rounds. Restore the original board before trying the next replacement. Which replacements switch the prediction off?",
+    ", and d = 16. Work out the two scores, and": ", and d = 16. Use values 1 and 0, respectively. Calculate both scaled scores, the two weights using base e, and the weighted output.",
+    "The game gives these two keys the weights": "With just these two keys, the game’s doubling rule gives weights of 2/3 and 1/3. Which rule favors the closer match more strongly? What factor would you multiply both scaled scores by to get the same 2-to-1 ratio?"
+  },
+  "transformers-discussion-questions": {
+    "Optional group activity: bean attention.": "For this optional activity, give one person the GATA query and 32 beans. Divide the five plate cards among the other players. For each card, start its pull at 1 and double it for every letter that matches the query in the same position. Divide the beans among the cards in proportion to their pulls. Return the beans on +1 cards to the gene. Its reading is the number returned divided by 32. Reset the beans, change seats with your cards, and repeat.",
+    "After the card holders changed seats, the": "Compare the two readings. Which inputs to your calculation stayed the same? What information about a card’s position would the query need to make the reading depend on the seating order?",
+    "You may add plates but may not touch the ": "Keep all six plates, including ",
+    ". No added plate may agree with the query": ". Each new plate may match the query in at most two positions. What is the fewest you can add to bring the reading to 1/4 or less? Give an example and explain why fewer plates cannot work.",
+    "In level 6 no query could tell apart two": "Before the distance control appears in level 6, a query can use only plate contents. Test whether order matters using the weighted rule from level 5. The query is ",
+    " sits somewhere on the board. A query here": " sits anywhere. Each query names one key and either a distance or any distance. The gene sits immediately to the right of each board. Compare P, ",
+    ", and board Q, ": ", with Q, ",
+    "Level 7. A gene must light only when a ": "Level 7. The rule should light the gene exactly when a "
+  },
+  "transformers-play-guide": {
+    "the slip a jack asks with (level 3)": "the pattern the jack asks for on its slip (level 3)",
+    "the plate a jack is found by (level 3)": "the pattern on a plate that another jack can match (level 3)",
+    "with base e in a trained model": "usually computed with base e",
+    "covering a plate and asking for it back (level 9)": "predicting a covered plate from the surrounding plates (level 9)",
+    "training without measurements": "training from the sequence itself",
+    "Each question repeats a step from the game.": "Question 1 uses level 5. Question 2 combines the rules from levels 7 and 8 as in the level 10 model. Question 3 compares levels 2 and 3. A plate’s pull starts at 1 and doubles for each letter that matches the query at the same position.",
+    " at distance 1, and a jack that is answered": " one plate away on either side. A jack that finds a match gains a rivet. In round 2, the gene asks for ",
+    "In level 2 the line of jacks could not bring": "On the longer board in level 2, why did the GATA signal fall short of the gene after three rounds? Explain how one cord reached it in level 3 and why that cord must connect to a different jack on some boards.",
+    "The game is Long Distance, at ": "Play the 10 levels of Long Distance at https://bioinformatics.ryanlmelvin.com/long-distance/. Fill in the table as you discover its 17 terms, then solve the three paper exercises."
+  }
+}

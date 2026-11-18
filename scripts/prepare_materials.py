@@ -8,7 +8,6 @@ import argparse
 import copy
 import json
 import re
-from html import escape
 from docx import Document
 from docx.shared import Inches, Pt, RGBColor
 from docx.oxml.ns import qn
@@ -16,6 +15,9 @@ from docx.opc.constants import RELATIONSHIP_TYPE as RT
 from docx.oxml import OxmlElement
 from docx.text.run import Run
 from docx.enum.style import WD_STYLE_TYPE
+
+from handout_cards import prepare_cards
+from handout_revisions import link_game_urls, link_text, revise_chapter
 
 READINGS = json.loads((Path(__file__).resolve().parent.parent/'book/readings.json').read_text())
 
@@ -42,9 +44,9 @@ PRESENTATION_NOTE='Use notes, figures or sketches as needed. If you find a bug d
 # games and discontinued puzzles. Keep sources inline with the optional activity.
 ACTIVITY_SOURCES = {
     'motifs': [('Carolina Mutation: A DNA Dice Game',
-        'https://www.carolina.com/dna-models-and-simulations/carolina-mutation%3A-a-dna-dice-game/441208.pr')],
+        'https://sites.utm.utoronto.ca/oday/content/playing-games-dna')],
     'genome-assembly': [
-        ('Triazzle', 'https://www.dangilbert.com/triazzle.php'),
+        ('Triazzle', 'https://schellgames.com/portfolio/triazzle-island'),
         ('Eternity II', 'https://en.wikipedia.org/wiki/Eternity_II_puzzle')],
     'alignment': [
         ('Ticket to Ride', 'https://www.daysofwonder.com/game/ticket-to-ride/'),
@@ -59,22 +61,7 @@ def link_activity_sources(doc, slug):
     for p in doc.paragraphs:
         if not p.text.startswith('Optional group activit'): continue
         for label, url in ACTIVITY_SOURCES.get(slug, []):
-            if any(h.text == label and h.url == url for h in p.hyperlinks): continue
-            run=next(r for r in p.runs if label in r.text)
-            before, after=run.text.split(label, 1)
-            linked=copy.deepcopy(run._r)
-            tail=copy.deepcopy(run._r)
-            run.text=before
-            # Preserve the source run's font and size for both pieces.
-            linked_run=Run(linked,p); linked_run.text=label
-            linked_run.font.color.rgb=RGBColor.from_string('0563C1')
-            linked_run.font.underline=True
-            Run(tail,p).text=after
-            hyperlink=OxmlElement('w:hyperlink')
-            hyperlink.set(qn('r:id'),p.part.relate_to(url,RT.HYPERLINK,is_external=True))
-            hyperlink.append(linked)
-            run._r.addnext(hyperlink)
-            hyperlink.addnext(tail)
+            link_text(p, label, url)
 
 def remove(p):
     p._element.getparent().remove(p._element)
@@ -152,7 +139,7 @@ def suggested_readings(doc, slug=None):
         p.add_run(' Each exploration guide lists optional chapters, book exercises and a question connecting the reading to the game. Try the exercises before checking Appendix C.')
 
 
-def finish(doc, output):
+def finish(doc, output, *, chapter=False):
     # Keep original illustrations, numerical exercises, numbering, and pagination.
     for name in ['Title','Subtitle','Heading 1','Heading 2','Heading 3']:
         if name not in doc.styles: continue
@@ -189,6 +176,14 @@ def finish(doc, output):
             if t.text and old in t.text: t.text=t.text.replace(old,BASE)
     for rel in doc.part.rels.values():
         if rel.is_external and old in rel._target: rel._target=rel._target.replace(old,BASE)
+    if chapter:
+        revise_chapter(doc, output.stem)
+        for p in doc.paragraphs:
+            if p.text.startswith(('Optional warm-up', 'Another extension')):
+                for code in re.findall(r'\bBA\d+[A-Z]\b', p.text):
+                    link_text(p, code, f'https://rosalind.info/problems/{code.lower()}/')
+    else:
+        link_game_urls(doc)
     for p in paragraphs(doc):
         assert not re.search(r'INFO\s*40[36]|INFO\s*602|class [12]|spring break|roster|\b2027\b|course points|course grade|instructor|randomly grade|turn it in',p.text,re.I), (output.name,p.text)
     doc.save(output)
@@ -289,7 +284,7 @@ def adapt(source, output, unit, kind, title):
         if '(page 1)' in p.text: change(p,p.text.replace('(page 1)','above'))
     if kind=='discussion-questions': link_activity_sources(doc,slug)
     if kind=='play-guide': suggested_readings(doc,slug)
-    finish(doc,output)
+    finish(doc,output,chapter=True)
 
 
 def fresh(title):
@@ -310,52 +305,57 @@ def fresh(title):
 
 def shared(output):
     d=fresh('Learning bioinformatics algorithms')
-    d.add_paragraph('These games and handouts cover eight topics in bioinformatics algorithms. They can be used for self-study, in a study group or in a course.')
+    d.add_paragraph('Start with the first game or choose a topic below. Each game has an exploration guide, discussion questions, coding and pen-and-paper tasks, and vocabulary cards.')
     d.add_heading('A suggested path',1)
     for _,slug,heading,topic,game,gamepath in UNITS:
         d.add_paragraph(f'{heading}: {game}, {BASE}{gamepath}/',style='List Bullet')
     d.add_heading('Working through a topic',1)
     for text in [
-      'Play the game and fill in its exploration guide. Define each term in your own words.',
-      'Work the discussion questions, preferably with a group. Some of the optional activities need a partner or a board game.',
-      'Code the suggested Rosalind problems, using their input and output formats. Each topic also lists easier warm-ups and a harder extension. The transformers topic states its own problems, because Rosalind has none.',
-      'Do each pen-and-paper task before running your code on the same input. If the results differ, find out why. Some problems have more than one correct answer.',
-      'Review the vocabulary with the Pictionary cards, which have one card for each term in the game. Print them and cut them apart. One person draws a term without letters, numbers or symbols, and the group guesses it. A wrong guess shows which terms the group confuses.',
-      'Present one algorithm to someone else, following the presentation checklist.'
+      'Fill in the exploration guide as you play. Open the field guide below the game to revisit a term you have earned.',
+      'Try the discussion problems on your own or with a partner. Each optional group activity lists the materials it uses.',
+      'Solve each pen-and-paper example, then run your code on the same input. Follow the input and output format in the linked Rosalind problem or, for Transformers, on the worksheet. If two answers differ, check for ties and trace where the calculations first diverge.',
+      'For a group vocabulary game, print and cut out the Pictionary cards. Draw the term on your card without using letters, numbers or symbols. The other players guess the term.',
+      'Use the presentation checklist to walk someone through one algorithm.'
     ]: d.add_paragraph(text,style='List Bullet')
+    link_text(d.paragraphs[-1], 'presentation checklist', BASE + 'materials/presentation-checklist.docx')
     d.add_heading('Investigations',1)
-    d.add_paragraph('The suggested investigations describe four small experiments that reuse your code: mutation rate and motif recovery, gap penalties and alignment, initialization and Lloyd clustering, and input length, softmax base and attention.')
+    p=d.add_paragraph('Pick a question from Suggested algorithm investigations to explore with your code.')
+    link_text(p, 'Suggested algorithm investigations', BASE + 'materials/suggested-investigations.docx')
     suggested_readings(d)
     finish(d,output/'learning-guide.docx')
     d=fresh('Suggested algorithm investigations')
-    d.add_paragraph('Choose one question and answer it with a small experiment, using code you wrote for the coding challenges.')
-    for h,t in [('Motif recovery','How does mutation rate affect motif recovery?'),('Sequence alignment','How does a gap penalty affect an alignment?'),('Clustering','How does initialization affect Lloyd clustering?'),('Attention','How do the length of the input and the base of the softmax affect the attention weight on one matching site?')]:
+    d.add_paragraph('Choose one question. Use your code from the chapter and start with an input small enough to check by hand.')
+    for h,t in [
+      ('Motif recovery','Plant the same short motif in several random strings and record its starting positions. Vary the chance of replacing each planted letter with a different letter. What fraction of the starting positions does your search recover? Choose the leftmost window in a tie. Repeat with several sets of strings.'),
+      ('Sequence alignment','Keep two sequences and their match and mismatch scores fixed. Vary the gap penalty for global alignment. Which alignments are optimal at each penalty, and how many gap positions do they use?'),
+      ('Clustering','Run Lloyd’s algorithm on the same points with the same number of centers. Change only the starting centers. Which runs end with the same clusters? Compare their final squared error distortion.'),
+      ('Attention','Give one plate a perfect match to the query and let every other plate match just one position. How much attention weight goes to the perfect match as you add plates? Keep the board fixed and try different softmax bases greater than one.')
+    ]:
         d.add_heading(h,1); d.add_paragraph(t)
     d.add_heading('The experiment',1)
     for text in [
-      'State the question, and choose the input data and the parameter values you will compare.',
-      'Say how you checked that the code is correct.',
-      'Report the results and what you conclude from them. Give one limitation or one alternative explanation.',
-      'Put the code and a short write-up in a notebook or repository, with enough detail for someone else to repeat the experiment.'
+      'Record your inputs, parameter values and any random seed so someone else can repeat the experiment.',
+      'Show one result you checked by hand. For the other runs, report the results in a table or plot.',
+      'Explain what changed, what you held fixed and what the results suggest. Give one limitation.',
+      'Save the code and results together in a notebook or repository.'
     ]:d.add_paragraph(text,style='List Bullet')
     d.add_heading('Questions to be ready for',1)
     for text in [
-      'How does the algorithm work, and where is one of its steps in your code?',
-      'Why did you design the experiment this way, and what does one of your results show?',
-      'What is one limitation, and what evidence would be stronger?',
-      'What will happen with a new input or a changed parameter? Predict, then run it.'
+      'Where in your code does the step you checked by hand happen?',
+      'Which result best supports your conclusion? What other input would test it?',
+      'Predict the result for that input, then run it. How does the result compare with your prediction?'
     ]:d.add_paragraph(text,style='List Bullet')
     finish(d,output/'suggested-investigations.docx')
     d=fresh('Presenting an algorithm')
     d.add_paragraph('Use this checklist when you present an algorithm to a partner or a group. Choose a small example that you can solve by hand.')
     for h,t in [
-      ('Hand solution','Work the example by hand and justify each step. Show enough intermediate work for the audience to follow.'),
-      ('Code explanation','Show where each step is in the code, and explain the data structures.'),
-      ('An unfamiliar input','Take an input you have not seen. Predict the output, run the code, and explain any difference.'),
-      ('Questions','Answer questions from the audience. If you are unsure, say what you would check.')
+      ('Hand solution','Show the input. Work through the decisions that lead to the output so your listener can follow them.'),
+      ('Code explanation','Point to the code that makes each decision. Show how it stores the intermediate results from your example.'),
+      ('An unfamiliar input','Ask a listener to choose a second small input. Predict the output before running the code. If the result surprises you, trace the first step where it differs from your prediction.'),
+      ('Questions','Invite questions. If you are unsure of an answer, explain how you would check it.')
     ]:d.add_heading(h,1);d.add_paragraph(t)
     d.add_heading('A suggested format',1)
-    d.add_paragraph('Allow about 15 minutes: four for the hand solution, four for the code, three to predict and run a new input, and four for questions.')
+    d.add_paragraph('For a 15-minute presentation, allow four minutes for the hand solution, four for the code, three for the new input and four for questions.')
     d.add_paragraph(PRESENTATION_NOTE)
     d.add_heading('Feedback',1)
     d.add_paragraph('What was clear? Where was a step missing? What example or test would fill the gap?')
@@ -372,10 +372,14 @@ def main():
     parser.add_argument('repository',type=Path)
     args=parser.parse_args()
     output=args.repository/'materials';output.mkdir(exist_ok=True)
+    card_decks = 0
     for unit in UNITS:
         for filename,kind,title in SOURCES:
             adapt(args.source/unit[0]/filename,output/f'{unit[1]}-{kind}.docx',unit,kind,title)
+        if prepare_cards(args.source / unit[0] / '8_Class2_PictionaryCards.docx',
+                         output / f'{unit[1]}-pictionary-cards.docx'):
+            card_decks += 1
     shared(output)
-    print('Prepared %d general learning documents.' % (3*len(UNITS)+3))
+    print(f'Prepared {len(UNITS) * len(SOURCES) + card_decks + 3} general learning documents.')
 
 if __name__=='__main__': main()
