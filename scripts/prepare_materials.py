@@ -180,6 +180,12 @@ def finish(doc, output):
     doc.core_properties.keywords='bioinformatics, algorithms'
     if re.search(r'INFO\s*403|INFO\s*602|python-docx',doc.core_properties.author,re.I):
         doc.core_properties.author=''
+    old='https://ryanlmelvin.github.io/bioinformatics-games/'
+    for p in paragraphs(doc):
+        for t in p._p.iter(qn('w:t')):
+            if t.text and old in t.text: t.text=t.text.replace(old,BASE)
+    for rel in doc.part.rels.values():
+        if rel.is_external and old in rel._target: rel._target=rel._target.replace(old,BASE)
     for p in paragraphs(doc):
         assert not re.search(r'INFO\s*40[36]|INFO\s*602|class [12]|spring break|roster|\b2027\b|course points|course grade|instructor|randomly grade|turn it in',p.text,re.I), (output.name,p.text)
     doc.save(output)

@@ -102,6 +102,7 @@ test('level 5: wrong numbers are not accepted',()=>{
 test('level 6: no query separates the shuffled boards until position is written on the plates',()=>{
   const api=boot('?debug=1&level=6&seed=SHUF').api,x=api.state().inst;
   assert.deepEqual([...x.boards[0].labels].sort(),[...x.boards[1].labels].sort());assert.notEqual(x.boards[0].on,x.boards[1].on);
+  api.skip();assert.equal(api.state().st.phase,'try');
   for(let i=0;i<10;i++){api.act('plate',{b:0,i});api.act('run');assert.equal(api.state().done,false);assert.match(api.state().msg.text,/same ten plates/);}
   api.skip();api.act('plate',{b:0,i:9});api.act('run');assert.equal(api.state().done,false);
   api.act('dist',{d:1});api.act('dist',{d:1});api.act('run');assert.equal(api.state().done,false);

@@ -964,9 +964,9 @@ BLOCKS.l5={src:['vaswani'],html:()=>{const x=cur.inst,s=soft(x.C.labels,x.want);
 
 /* ---------- level 6: shuffled boards and positional encoding ---------- */
 LV[6]={
-  init(){return {phase:'try',want:null,dist:null,ran:false};},
-  skipLabel(){return cur.st.phase==='try'?'No query can tell board A from board B':'';},
-  skip(){const st=cur.st;snap();st.phase='stamp';st.ran=false;log('wall');
+  init(){return {phase:'try',want:null,dist:null,ran:false,tries:0};},
+  skipLabel(){return cur.st.phase==='try'&&cur.st.tries>0?'No query can tell board A from board B':'';},
+  skip(){const st=cur.st;if(st.phase!=='try'||!st.tries)return;snap();st.phase='stamp';st.ran=false;log('wall');
     say('Correct. Cords follow keys, and a key says nothing about where its jack stands. Each plate now carries its distance from the gene, and the query can ask for a distance.','good');render();},
   view(){
     const st=cur.st,x=cur.inst,stamp=st.phase!=='try';
@@ -981,6 +981,7 @@ LV[6]={
     else if(a==='dist'&&st.phase!=='try'){snap();st.dist=stepDist(st.dist,+d.d);st.ran=false;say('');}
     else if(a==='run'){
       snap();st.ran=true;const stamp=st.phase!=='try';
+      if(!stamp&&st.want)st.tries=(st.tries||0)+1;
       const pred=x.boards.map(b=>st.want?answers(b.labels,b.labels.length,{want:[st.want],dist:stamp?st.dist:null}).length>0:false),w=firstWrong(x.boards,pred);
       log('run',{want:st.want,dist:st.dist,ok:w<0});
       if(w<0&&stamp){say('Every lamp agrees.','good');complete(['posenc'],'l6');}
