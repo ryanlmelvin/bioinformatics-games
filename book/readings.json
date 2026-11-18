@@ -12,18 +12,28 @@
       "readings": [
         {"chapter": 1, "title": "Introduction to algorithms", "focus": "Big O notation helps compare scanning sequence windows with enumerating every possible k-mer."},
         {"chapter": 5, "title": "Hash tables", "focus": "Use keys and counts to organize repeated k-mers and avoid repeated scans."},
-        {"chapter": 10, "title": "Greedy algorithms", "focus": "For an extension, compare locally promising choices with a globally best motif set."}
+        {"chapter": 10, "title": "Greedy algorithms", "focus": "For an extension, compare locally promising choices with a globally best motif set."},
+        {"chapter": 13, "title": "Where to go next", "section": "Parallel algorithms and map/reduce", "pages": "251-252", "focus": "Optional scalability extension: run independent randomized motif-search restarts in parallel, or count k-mers in separate reads and combine the counts by key."}
       ],
       "exercises": "1.3-1.6 and 5.1-5.4; for the greedy extension, 10.1-10.2.",
-      "connection": "Count the 3-mers in ATATAT with a hash table. Then explain why the locally best next motif need not belong to the best complete motif set."
+      "connection": "Count the 3-mers in ATATAT with a hash table. Then explain why the locally best next motif need not belong to the best complete motif set.",
+      "practice": [
+        "Split the reads ATAT and TATA between two workers. Count 2-mers within each read, then combine counts by key. Why should no k-mer cross the boundary between these separate reads? For independent motif-search restarts, what can run concurrently and what must be combined at the end?"
+      ]
     },
     "genome-assembly": {
       "readings": [
         {"chapter": 6, "title": "Breadth-first search", "focus": "Read about directed graphs, adjacency lists, queues and keeping track of visited nodes."},
-        {"chapter": 5, "title": "Hash tables", "focus": "Review the data structure used to map each graph node to its outgoing neighbors."}
+        {"chapter": 5, "title": "Hash tables", "focus": "Review the data structure used to map each graph node to its outgoing neighbors."},
+        {"appendix": "B", "title": "NP-hard problems", "pages": "267-276", "focus": "Read about decision problems, P, NP, reductions and NP-completeness. Use these definitions to distinguish checking a proposed Hamiltonian path from finding one, and to understand the game's change to an Eulerian formulation."},
+        {"chapter": 13, "title": "Where to go next", "section": "Bloom filters and HyperLogLog", "pages": "253-255", "focus": "Optional scalability extension: Bloom filters screen k-mer membership with possible false positives; HyperLogLog estimates how many distinct k-mers occur. Both trade exact information for lower memory use."}
       ],
       "exercises": "6.1-6.4.",
-      "connection": "How does finding a shortest path differ from finding an Eulerian path? Explain why an assembly walk must track used edges, including duplicate edges, rather than simply mark each node visited."
+      "connection": "How does finding a shortest path differ from finding an Eulerian path? Explain why an assembly walk must track used edges, including duplicate edges, rather than simply mark each node visited.",
+      "practice": [
+        "Describe how to check a proposed Hamiltonian path. Why does fast checking not imply that a fast method for finding one is known? Compare this with constructing an Eulerian path in the game's de Bruijn graph.",
+        "For a standard Bloom filter, which answer can rule out a k-mer and which needs verification before accepting an exact match? Why can't a HyperLogLog estimate of distinct k-mers recover their sequences or multiplicities for assembly?"
+      ]
     },
     "alignment": {
       "readings": [
@@ -45,27 +55,41 @@
       "readings": [
         {"chapter": 7, "title": "Trees", "focus": "Focus on tree structure and depth-first search, then connect recursive traversal to paths in a phylogenetic tree."},
         {"chapter": 3, "title": "Recursion", "focus": "Review the call stack and base cases for algorithms that remove a leaf, solve a smaller tree and restore the leaf."},
-        {"chapter": 8, "title": "Balanced trees", "focus": "For an extension, study how height affects lookup. These are search trees; balancing a tree is not a method for inferring evolutionary relationships."}
+        {"chapter": 8, "title": "Balanced trees", "focus": "For an extension, study how height affects lookup. These are search trees; balancing a tree is not a method for inferring evolutionary relationships."},
+        {"chapter": 13, "title": "Where to go next", "section": "Min heaps and priority queues", "pages": "261-263", "focus": "Optional implementation extension: UPGMA repeatedly selects a closest pair. A min-heap can organize candidate merges, provided entries for retired clusters are discarded and distances to each new cluster are inserted."}
       ],
       "exercises": "3.1-3.2 and the graphs-and-trees review in 6.5.",
-      "connection": "Sketch a tree with four labeled leaves and weighted edges. Trace its unique path between two leaves and add the edge weights. Explain why rotating a search tree is different from reconstructing a tree that preserves biological distances."
+      "connection": "Sketch a tree with four labeled leaves and weighted edges. Trace its unique path between two leaves and add the edge weights. Explain why rotating a search tree is different from reconstructing a tree that preserves biological distances.",
+      "practice": [
+        "In UPGMA, merge clusters A and B into M. Which queued pairs are now invalid, which distances between surviving clusters stay valid, and which new distances must be inserted? Explain how cluster sizes enter the new distances."
+      ]
     },
     "clustering": {
       "readings": [
         {"chapter": 12, "title": "K-nearest neighbors", "focus": "Focus on features, distance, normalization and choosing k. KNN predicts from labeled neighbors; k-means clustering learns centers from unlabeled points."},
-        {"chapter": 10, "title": "Greedy algorithms", "focus": "For an extension, use locally chosen moves and approximation to think about farthest-first initialization and the limits of local improvement."}
+        {"chapter": 10, "title": "Greedy algorithms", "focus": "For an extension, use locally chosen moves and approximation to think about farthest-first initialization and the limits of local improvement."},
+        {"chapter": 13, "title": "Where to go next", "section": "Min heaps and priority queues", "pages": "261-263", "focus": "Optional implementation extension: use a min-heap to organize closest-pair candidates in average-linkage hierarchical clustering. Each merge creates new distances and makes entries involving retired clusters obsolete."}
       ],
       "exercises": "12.1 and 12.3; for the greedy extension, 10.1-10.2.",
-      "connection": "For points described by gene expression and sequence length, predict how changing the units of sequence length changes nearest neighbors and cluster assignments. What does k count in KNN, and what does it count in k-means?"
+      "connection": "For points described by gene expression and sequence length, predict how changing the units of sequence length changes nearest neighbors and cluster assignments. What does k count in KNN, and what does it count in k-means?",
+      "practice": [
+        "After merging A and B into M in average-linkage clustering, identify the heap entries to invalidate and the distances to compute. How could you recognize and skip an obsolete entry when it reaches the top? Explain why an unchanged pair of surviving clusters keeps its distance."
+      ]
     },
     "burrows-wheeler": {
       "readings": [
         {"chapter": 1, "title": "Introduction to algorithms", "focus": "Review binary search and Big O notation as preparation for searching a sorted suffix array."},
         {"chapter": 4, "title": "Quicksort", "focus": "Review sorting and divide and conquer, then consider the cost of comparing suffixes instead of single numbers."},
-        {"chapter": 7, "title": "Trees", "focus": "For an extension, read the Huffman coding section as another use of structure in compression. It is separate from the Burrows-Wheeler transform and backward search."}
+        {"chapter": 7, "title": "Trees", "focus": "For an extension, read the Huffman coding section as another use of structure in compression. It is separate from the Burrows-Wheeler transform and backward search."},
+        {"chapter": 2, "title": "Selection sort", "section": "Memory, arrays and linked lists", "pages": "22-34", "focus": "Focus on the memory and data-structure sections and exercises 2.2-2.5. Random access and insertion costs help explain the choice of representation for a suffix index."},
+        {"chapter": 13, "title": "Where to go next", "section": "Inverted indexes", "pages": "249-250", "focus": "A word-to-location index becomes a k-mer-to-genome-position index. Compare explicit occurrence lists with the suffix-array intervals used in read mapping."}
       ],
-      "exercises": "1.1-1.2 and 4.4-4.8.",
-      "connection": "Why do all suffixes beginning with the same pattern form one interval in a sorted suffix array? Explain what binary search saves and why comparing a pattern with a suffix can take more than one character comparison."
+      "exercises": "1.1-1.2, 2.2-2.5 and 4.4-4.8.",
+      "connection": "Why do all suffixes beginning with the same pattern form one interval in a sorted suffix array? Explain what binary search saves and why comparing a pattern with a suffix can take more than one character comparison.",
+      "practice": [
+        "Why does binary search benefit from an array's random access? Explain the extra work if a linked list must be walked to reach each midpoint. Which representation would you choose for a static suffix index?",
+        "Build a 2-mer-to-position index for GATAGACA, using positions starting at 0. Use it to locate GACA. What extra checking is needed when the query is longer than an indexed k-mer?"
+      ]
     },
     "transformers": {
       "readings": [

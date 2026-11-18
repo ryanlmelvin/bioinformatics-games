@@ -106,7 +106,7 @@ body.bk-game details.guide>summary{font-family:var(--bk-serif);font-size:1.05rem
 .bk-reading{margin-top:18px;scroll-margin-top:65px;font:1rem/1.5 var(--bk-sans)}
 .bk-reading summary{cursor:pointer;font-weight:600}
 .bk-reading p{margin:10px 0}
-.bk-reading ul{margin:10px 0;padding-left:1.3em}
+.bk-reading ul,.bk-reading ol{margin:10px 0;padding-left:1.3em}
 .bk-reading li{margin:6px 0}
 .bk-reading a{color:var(--bk-link)}
 .bk-nextch{display:flex;align-items:center;gap:14px;color:var(--ink,var(--bk-ink));text-decoration:none}

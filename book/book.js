@@ -224,9 +224,13 @@ function gamePage(){
   const readingMap=BOOK.readings,reading=readingMap&&readingMap.chapters[ch.slug];
   if(!side&&reading){
     const b=readingMap.book,details=el('details','bk-reading');details.id='suggested-reading';
+    const readingLabel=r=>(r.appendix?'Appendix '+r.appendix:'Chapter '+r.chapter)+': '+r.title+
+      (r.section?' - '+r.section:'')+(r.pages?' (pp. '+r.pages+')':'');
     details.innerHTML='<summary>Suggested reading and problems</summary><p><a href="'+esc(b.url)+'"><cite>'+esc(b.title)+'</cite>, '+esc(b.edition)+'</a> by '+esc(b.author)+' ('+b.year+'). '+esc(readingMap.note)+'</p><ul>'+
-      reading.readings.map(r=>'<li><strong>Chapter '+r.chapter+': '+esc(r.title)+'.</strong> '+esc(r.focus)+'</li>').join('')+
-      '</ul><p><strong>Book exercises:</strong> '+esc(reading.exercises)+'</p><p><strong>Connect to the game:</strong> '+esc(reading.connection)+'</p>';
+      reading.readings.map(r=>'<li><strong>'+esc(readingLabel(r))+'.</strong> '+esc(r.focus)+'</li>').join('')+
+      '</ul><p><strong>Book exercises:</strong> '+esc(reading.exercises)+'</p>'+
+      (reading.practice?'<p><strong>Connect to the game (original questions):</strong></p><ol>'+[reading.connection,...reading.practice].map(q=>'<li>'+esc(q)+'</li>').join('')+'</ol>':
+        '<p><strong>Connect to the game:</strong> '+esc(reading.connection)+'</p>');
     details.open=location.hash==='#suggested-reading';
     after.append(details);
     const openReading=()=>{if(location.hash==='#suggested-reading'){details.open=true;details.scrollIntoView();}};

@@ -131,10 +131,20 @@ def suggested_readings(doc, slug=None):
         entry=READINGS['chapters'][slug]
         for reading in entry['readings']:
             p=paragraph('')
-            p.add_run(f"Chapter {reading['chapter']}: {reading['title']}. ").bold=True
+            source=f"Appendix {reading['appendix']}" if 'appendix' in reading else f"Chapter {reading['chapter']}"
+            label=f"{source}: {reading['title']}"
+            if 'section' in reading: label+=f" - {reading['section']}"
+            if 'pages' in reading: label+=f" (pp. {reading['pages']})"
+            p.add_run(label+'. ').bold=True
             p.add_run(reading['focus'])
         p=paragraph('');p.add_run('Book exercises: ').bold=True;p.add_run(entry['exercises'])
-        p=paragraph('');p.add_run('Connect to the game: ').bold=True;p.add_run(entry['connection'])
+        if entry.get('practice'):
+            p=paragraph('');p.add_run('Connect to the game (original questions)').bold=True
+            p.paragraph_format.keep_with_next=True
+            for i,question in enumerate([entry['connection'],*entry['practice']],1):
+                paragraph(f'{i}. {question}')
+        else:
+            p=paragraph('');p.add_run('Connect to the game: ').bold=True;p.add_run(entry['connection'])
     else:
         p.add_run(' Each exploration guide lists optional chapters, book exercises and a question connecting the reading to the game. Try the exercises before checking Appendix C.')
 
