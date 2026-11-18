@@ -1603,7 +1603,7 @@ function srcCard(id){
 function renderPanel(){
   if(!cur.done){$('#panel').innerHTML='';return;}
   const m=cur.mode;
-  let h='<div class="reveal"><h3>Level '+cur.L.id+' complete</h3>';
+  let h='<div class="reveal"><h3>'+(cur.gave?'Stuck is the right answer':'Level '+cur.L.id+' complete')+'</h3>';
   if(m==='cards')h+='<p>A real genome yields millions of reads, far too many to chain by trial and error.</p>';
   cur.blocks.forEach(id=>{
     const B=BLOCKS[id];

@@ -1134,7 +1134,7 @@ MODES.wall={
     return h;
   },
   skip(){return cur.w.on100?'Switch the machine off':'';},
-  onSkip(){clearInterval(cur.timer);log('gave_up',{count:cur.w.count});complete([],null,'The machine stops.');},
+  onSkip(){clearInterval(cur.timer);cur.headline='Giving up is the right answer';log('gave_up',{count:cur.w.count});complete([],null,'The machine stops.');},
   reveal(){return [{html:'Every extra round doubles the number of stories, so adding them one by one is infeasible for a real night.'}];}
 };
 ACT.run=n=>{

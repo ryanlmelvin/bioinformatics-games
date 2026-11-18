@@ -426,7 +426,7 @@ const FINDS=[
   ros:'BA3K, Generate Contigs from a Collection of Reads',clue:'It is in part 7, after you finish it once.',vis:()=>twinHTML()},
  {id:'klen',name:'Read length',lead:'That’s why <b>read length</b> matters.',
   text:'With one more nucleotide per read, the crowded node splits into separate nodes and only one strip remains.',
-  ros:'BA3J, Reconstruct a String from its Paired Composition',clue:'It is in part 8.',vis:()=>splitHTML()}
+  ros:'BA3J, Reconstruct a String from its Paired Composition',ext:'Rosalind GASM, Genome Assembly Using Reads, which adds reverse complements and a circular genome.',clue:'It is in part 8.',vis:()=>splitHTML()}
 ];
 const FIND={};FINDS.forEach(F=>{FIND[F.id]=F;});
 
@@ -813,7 +813,7 @@ function splitHTML(){
 function revealHTML(id,t){
   const F=FIND[id];let vis='';
   try{vis=F.vis?F.vis(t):'';}catch(e){vis='';}
-  return `<div class="reveal"><p class="lead">${F.lead}</p>${vis?`<div class="vis">${vis}</div>`:''}<p>${F.text}</p>${F.vocab?`<p class="vmap">${F.vocab}</p>`:''}<p class="ros">Now make a computer do it: Rosalind ${F.ros}</p></div>`;
+  return `<div class="reveal"><p class="lead">${F.lead}</p>${vis?`<div class="vis">${vis}</div>`:''}<p>${F.text}</p>${F.vocab?`<p class="vmap">${F.vocab}</p>`:''}<p class="ros">Now make a computer do it: Rosalind ${F.ros}${F.ext?`. Extension: ${F.ext}`:''}</p></div>`;
 }
 
 /* ---------- messages ---------- */
@@ -898,7 +898,7 @@ function stopReplay(){if(replay){clearTimeout(replay.timer);replay=null;}}
 function renderCodex(){
   let h='';
   for(const F of FINDS){
-    if(S.found[F.id])h+=`<div class="cx"><h3>${F.name}</h3><p>${F.text}</p><p class="ros">Rosalind ${F.ros}</p></div>`;
+    if(S.found[F.id])h+=`<div class="cx"><h3>${F.name}</h3><p>${F.text}</p><p class="ros">Rosalind ${F.ros}${F.ext?`. Extension: ${F.ext}`:''}</p></div>`;
     else h+=`<div class="cx hid"><h3>?</h3><p>Not found yet. ${F.clue}</p></div>`;
   }
   const v=VOCAB.filter(x=>S.found[x[1]]);

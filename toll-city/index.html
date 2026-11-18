@@ -1181,7 +1181,7 @@ MODES.wall={
       },100);
       say('The bot is playing every game in turn.');render();return;
     }
-    if(type==='giveup'){log('gave_up',{played:c.bot.played});clearInterval(c.timer);
+    if(type==='giveup'){log('gave_up',{played:c.bot.played});clearInterval(c.timer);c.title='Stuck is the right answer';
       say('The bot stopped after '+fmt(c.bot.played)+' games.');
       complete([],[{html:()=>'Twelve cards a deck already make '+fmt(c.total)+' different games, and the count roughly multiplies by six for every card added to both decks. Playing them all is infeasible.'}],{played:c.bot.played});return;}
     if(type==='deal'){c.g=newGame();render();return;}
