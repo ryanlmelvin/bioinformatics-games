@@ -69,6 +69,7 @@ function bar(){
     (ch?'<div class="bk-where"><span class="bk-chip">'+(side?'Side quest':'Chapter '+ch.n)+'</span><span class="bk-topic">'+(ch.short||ch.topic)+'</span></div>':'<div class="bk-where"></div>')+
     '<div class="bk-nav">'+
     (ch?(prev?'<a class="bk-step" href="'+base+prev.dir+'/" title="Chapter '+prev.n+': '+esc(prev.topic)+'" aria-label="Previous chapter">‹</a>':'<span class="bk-step off" aria-hidden="true">‹</span>')+
+        (!side&&ch.docs!==false?'<a class="bk-toc bk-hlink" href="#handouts">Handouts</a>':'')+
         '<a class="bk-toc" href="'+base+'#contents">Contents</a>'+
         (next?'<a class="bk-step" href="'+base+next.dir+'/" title="Chapter '+next.n+': '+esc(next.topic)+'" aria-label="Next chapter">›</a>':'<span class="bk-step off" aria-hidden="true">›</span>'):'')+
     '<button class="bk-sound" type="button"></button></div>';
@@ -135,19 +136,21 @@ function gamePage(){
   // the chapter cover, once, for a reader who has not started this game
   // (the game has already saved a blank state by now, so "not started" means nothing unlocked and nothing earned)
   const saved=store.get(G.key,null),begun=!!saved&&((saved.unlocked||1)>1||(Array.isArray(saved.badges)&&saved.badges.length>0)||(Array.isArray(saved.log)&&saved.log.length>2));
-  const fresh=!begun&&!store.get('book:seen:'+G.dir,false)&&!['level','seed','debug','code'].some(k=>params.has(k))&&!/level-\d+/.test(path)&&location.hash!=='#suggested-reading';
+  const fresh=!begun&&!store.get('book:seen:'+G.dir,false)&&!['level','seed','debug','code'].some(k=>params.has(k))&&!/level-\d+/.test(path)&&!['#suggested-reading','#handouts'].includes(location.hash);
   if(fresh){
     const o=el('div','bk-cover');o.setAttribute('role','dialog');o.setAttribute('aria-modal','true');o.setAttribute('aria-labelledby','bkCoverT');
     o.innerHTML='<div class="bk-cover-card"><img src="'+base+'book/art/'+G.dir+'.svg" alt=""><div class="bk-cover-body">'+
       '<p class="bk-eyebrow"><span>'+(side?'Side quest, chapter '+ch.n:'Chapter '+ch.n)+'</span>'+esc(ch.topic)+'</p>'+
       '<h2 id="bkCoverT">'+esc(G.game)+'</h2><p class="bk-hook">'+esc(G.hook)+'</p>'+
       (G.levels?'<p class="bk-meta">'+G.levels+' levels, '+G.terms+' terms</p>':'')+
+      (!side&&ch.docs!==false?'<p class="bk-meta">To fill in as you play: <a href="'+base+'materials/'+ch.slug+'-play-guide.docx">exploration guide</a> (Word). Other handouts are <a href="#handouts" class="bk-tohandouts">under the game</a>.</p>':'')+
       '<div class="bk-cover-go"><button type="button" class="bk-begin">Begin</button><a href="'+base+'">Back to the contents</a></div></div></div>';
     document.body.append(o);document.body.classList.add('bk-locked');
     const go=$('.bk-begin',o);go.focus();
     const close=()=>{store.set('book:seen:'+G.dir,true);o.remove();document.body.classList.remove('bk-locked');play('good');document.removeEventListener('keydown',key);};
     const key=e=>{if(e.key==='Escape'||e.key==='Enter'){e.preventDefault();close();}};
     go.onclick=close;document.addEventListener('keydown',key);
+    const toH=$('.bk-tohandouts',o);if(toH)toH.onclick=()=>{close();};
   }
   store.set('book:last',{dir:G.dir,t:Date.now()});
 
@@ -209,34 +212,41 @@ function gamePage(){
   if(G.keys)document.addEventListener('keydown',e=>{const n=!e.metaKey&&!e.ctrlKey&&!e.altKey&&!e.repeat&&G.keys[e.key.toLowerCase()];
     if(n&&!(e.target instanceof Element&&e.target.closest('input,textarea')))play(n);},true);
 
-  // after the game: where the chapter goes next
+  // the chapter's handouts and reading sit right under the game, named for it; the next chapter waits at the foot of the page
   const foot=$('footer',wrap);
   const i=BOOK.chapters.indexOf(ch),next=BOOK.chapters[i+1];
-  const after=el('section','bk-after');after.setAttribute('aria-labelledby','bkAfterT');
-  let h='<h2 id="bkAfterT">'+(side?'Back to the chapter':'After the game')+'</h2><div class="bk-after-grid">';
-  if(side)h+='<a class="bk-nextch" href="'+base+ch.dir+'/"><img src="'+base+'book/art/'+ch.dir+'.svg" alt=""><span><small>Chapter '+ch.n+', '+esc(ch.topic)+'</small><b>'+esc(ch.game)+'</b></span></a>';
-  else{
-    if(ch.docs!==false)h+='<ul class="bk-docs">'+BOOK.resources.map(r=>'<li><a href="'+base+'materials/'+ch.slug+'-'+r[0]+'.docx">'+r[1]+'</a> (Word)'+(r[2]?'. '+esc(r[2]):'')+'</li>').join('')+'</ul>';
-    h+=next?'<a class="bk-nextch" href="'+base+next.dir+'/"><img src="'+base+'book/art/'+next.dir+'.svg" alt=""><span><small>Next: chapter '+next.n+', '+esc(next.short||next.topic)+'</small><b>'+esc(next.game)+'</b></span></a>'
-           :'<a class="bk-nextch" href="'+base+'#glossary"><img src="'+base+'book/art/'+ch.dir+'.svg" alt=""><span><small>This was the last chapter</small><b>Your glossary</b></span></a>';
-  }
-  after.innerHTML=h+'</div>';
+  const docURL=r=>base+'materials/'+ch.slug+'-'+r[0]+'.docx';
+  const nextCard=side?'<a class="bk-nextch" href="'+base+ch.dir+'/"><img src="'+base+'book/art/'+ch.dir+'.svg" alt=""><span><small>Back to chapter '+ch.n+', '+esc(ch.topic)+'</small><b>'+esc(ch.game)+'</b></span></a>'
+    :next?'<a class="bk-nextch" href="'+base+next.dir+'/"><img src="'+base+'book/art/'+next.dir+'.svg" alt=""><span><small>Next: chapter '+next.n+', '+esc(next.short||next.topic)+'</small><b>'+esc(next.game)+'</b></span></a>'
+    :'<a class="bk-nextch" href="'+base+'#glossary"><img src="'+base+'book/art/'+ch.dir+'.svg" alt=""><span><small>This was the last chapter</small><b>Your glossary</b></span></a>';
   const readingMap=BOOK.readings,reading=readingMap&&readingMap.chapters[ch.slug];
-  if(!side&&reading){
-    const b=readingMap.book,details=el('details','bk-reading');details.id='suggested-reading';
-    const readingLabel=r=>(r.appendix?'Appendix '+r.appendix:'Chapter '+r.chapter)+': '+r.title+
-      (r.section?' - '+r.section:'')+(r.pages?' (pp. '+r.pages+')':'');
-    details.innerHTML='<summary>Suggested reading and problems</summary><p><a href="'+esc(b.url)+'"><cite>'+esc(b.title)+'</cite>, '+esc(b.edition)+'</a> by '+esc(b.author)+' ('+b.year+'). '+esc(readingMap.note)+'</p><ul>'+
-      reading.readings.map(r=>'<li><strong>'+esc(readingLabel(r))+'.</strong> '+esc(r.focus)+'</li>').join('')+
-      '</ul><p><strong>Book exercises:</strong> '+esc(reading.exercises)+'</p>'+
-      (reading.practice?'<p><strong>Connect to the game (original questions):</strong></p><ol>'+[reading.connection,...reading.practice].map(q=>'<li>'+esc(q)+'</li>').join('')+'</ol>':
-        '<p><strong>Connect to the game:</strong> '+esc(reading.connection)+'</p>');
-    details.open=location.hash==='#suggested-reading';
-    after.append(details);
-    const openReading=()=>{if(location.hash==='#suggested-reading'){details.open=true;details.scrollIntoView();}};
-    window.addEventListener('hashchange',openReading);
-    requestAnimationFrame(openReading);
+  if(!side&&(ch.docs!==false||reading)){
+    const sec=el('section','bk-handouts');sec.id='handouts';sec.setAttribute('aria-labelledby','bkHandoutsT');
+    let h='<h2 id="bkHandoutsT">Handouts and reading for '+esc(G.game)+'</h2>';
+    if(ch.docs!==false)h+='<ul class="bk-docs">'+BOOK.resources.map(r=>'<li><a href="'+docURL(r)+'">'+ICON.doc+'<b>'+r[1]+'</b> <small>Word</small></a>'+(r[2]?'<p>'+esc(r[2])+'</p>':'')+'</li>').join('')+'</ul>';
+    sec.innerHTML=h;
+    if(reading){
+      const b=readingMap.book,details=el('details','bk-reading');details.id='suggested-reading';
+      const readingLabel=r=>(r.appendix?'Appendix '+r.appendix:'Chapter '+r.chapter)+': '+r.title+
+        (r.section?' - '+r.section:'')+(r.pages?' (pp. '+r.pages+')':'');
+      details.innerHTML='<summary>Suggested reading and problems in <cite>'+esc(b.title)+'</cite></summary><p><a href="'+esc(b.url)+'"><cite>'+esc(b.title)+'</cite>, '+esc(b.edition)+'</a> by '+esc(b.author)+' ('+b.year+'). '+esc(readingMap.note)+'</p><ul>'+
+        reading.readings.map(r=>'<li><strong>'+esc(readingLabel(r))+'.</strong> '+esc(r.focus)+'</li>').join('')+
+        '</ul><p><strong>Book exercises:</strong> '+esc(reading.exercises)+'</p>'+
+        (reading.practice?'<p><strong>Connect to the game (original questions):</strong></p><ol>'+[reading.connection,...reading.practice].map(q=>'<li>'+esc(q)+'</li>').join('')+'</ol>':
+          '<p><strong>Connect to the game:</strong> '+esc(reading.connection)+'</p>');
+      details.open=location.hash==='#suggested-reading';
+      sec.append(details);
+      const openReading=()=>{if(location.hash==='#suggested-reading'){details.open=true;details.scrollIntoView();}};
+      window.addEventListener('hashchange',openReading);
+      requestAnimationFrame(openReading);
+    }
+    // under the game and its level panel, above the field guide and the progress link
+    const anchor=$('#guide',wrap)||$('#savebar',wrap)||foot;
+    if(anchor)anchor.before(sec);else wrap.append(sec);
+    if(location.hash==='#handouts')requestAnimationFrame(()=>sec.scrollIntoView());
   }
+  const after=el('section','bk-after');after.setAttribute('aria-label',side?'Back to the chapter':'Next chapter');
+  after.innerHTML=nextCard;
   if(foot)foot.before(after);else wrap.append(after);
 }
 

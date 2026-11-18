@@ -144,7 +144,7 @@ $('#toc').innerHTML=state.map(st=>{const c=st.c;
     '<a class="art" href="'+c.dir+'/" tabindex="-1" aria-hidden="true"><img src="book/art/'+c.dir+'.svg" alt="" loading="lazy"></a>'+
     '<div class="text"><h3><a href="'+c.dir+'/">'+esc(c.topic)+'</a></h3><p class="hook">'+esc(c.hook)+'</p>'+
     '<p class="meta"><a class="play" href="'+c.dir+'/">'+(st.done?'Replay ':st.started?'Continue ':'Play ')+esc(c.game)+'</a> · '+where+'</p>'+
-    (c.docs===false?'':'<p class="meta">Handouts (Word): '+B.resources.map(r=>doc('materials/'+c.slug+'-'+r[0]+'.docx',r[1])).join(', ')+'</p>')+
+    (c.docs===false?'':'<p class="meta">'+esc(c.game)+' handouts (Word): '+B.resources.map(r=>doc('materials/'+c.slug+'-'+r[0]+'.docx',r[1])).join(', ')+'</p>')+
     (B.readings?'<p class="meta">'+doc(c.dir+'/#suggested-reading','Suggested reading and problems')+'</p>':'')+
     (c.side?'<p class="meta">Side quest: <a href="'+c.side.dir+'/">'+esc(c.side.game)+'</a>. '+esc(c.side.hook)+'</p>':'')+
     '</div></li>';}).join('');

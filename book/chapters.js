@@ -21,7 +21,10 @@ window.BOOK={
     {n:8,slug:'transformers',dir:'long-distance',key:'longdistance:v1',topic:'Transformers',game:'Long Distance',levels:10,terms:17,burst:'threads',sfx:[['.stage svg','pluck']],
      hue:'#1f6f54',hook:'Predict whether a gene is switched on from its DNA, when the sequence that decides it can lie thousands of letters from the gene.'}
   ],
-  resources:[['play-guide','Exploration guide'],['discussion-questions','Discussion questions'],['coding-and-paper-tasks','Coding and pen-and-paper tasks'],
-    // a third entry is a sentence shown beside the link on the chapter page
+  resources:[
+    // [file suffix, link text, when to use it (shown beside the link on the chapter page)]
+    ['play-guide','Exploration guide','Fill it in while you play: a table that matches the game to the biology, the key terms, and three pen-and-paper questions.'],
+    ['discussion-questions','Discussion questions','For a partner or group once you have played: activities and two problems to work through together.'],
+    ['coding-and-paper-tasks','Coding and pen-and-paper tasks','Programming challenges tied to levels of the game. Work each one by hand first, then run your code on the same input.'],
     ['pictionary-cards','Pictionary cards','One card for each term in the game. Print them and cut them apart. One person draws a term without letters, numbers or symbols, and the group guesses it.']]
 };
