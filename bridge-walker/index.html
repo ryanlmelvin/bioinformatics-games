@@ -245,7 +245,7 @@ footer input{font:inherit;width:9em;padding:5px 8px;border:1px solid var(--line)
   <div class="vocabhead">Vocabulary you have earned <span style="text-transform:none;letter-spacing:0">(hover for the definition)</span></div>
   <div class="badges" id="badges"></div>
 
-  <h2 id="title"></h2>
+  <h2 id="title" tabindex="-1"></h2>
   <p id="brief"></p>
   <div class="rule" id="rule"></div>
 
@@ -300,7 +300,7 @@ footer input{font:inherit;width:9em;padding:5px 8px;border:1px solid var(--line)
         <marker id="mG" viewBox="0 0 10 10" refX="7" refY="5" markerUnits="userSpaceOnUse" markerWidth="15" markerHeight="15" orient="auto"><path class="ah-g" d="M0,0L10,5L0,10z"/></marker>
         <marker id="mN" viewBox="0 0 10 10" refX="7" refY="5" markerUnits="userSpaceOnUse" markerWidth="15" markerHeight="15" orient="auto"><path class="ah-n" d="M0,0L10,5L0,10z"/></marker>
       </defs>
-      <rect width="760" height="500" fill="url(#pWater)" data-water="1"/>
+      <rect width="760" height="500" fill="url(#pWater)" data-water="1" aria-label="Place a new node in open water" tabindex="-1"/>
       <!-- ===== SCENERY: sits under the islands and never takes a click ===== -->
       <g id="decor" pointer-events="none" aria-hidden="true">
         <defs>
@@ -583,11 +583,11 @@ $('#ant').innerHTML=$('#a-ant').innerHTML;
 
 const LEVELS=[
   {id:1,mode:'cards',k:3,n:8,minB:1,maxB:2,title:'Shredded',
-   brief:'A DNA sequence was fragmented into overlapping three-nucleotide reads, then the reads were shuffled. Rebuild it. Click reads to chain them so that each starts with the last two nucleotides of the one before. Use every read exactly once.'},
+   brief:'Rebuild a DNA sequence from these shuffled three-nucleotide reads. Choose a first read, then add one that starts with the last two nucleotides of the previous read. Use each read once.'},
   {id:2,mode:'ham',share:1,intro:'cards',title:'Put it on a map',
    brief:'The same eight reads. Each read becomes an island, with a one-way bridge from one island to another wherever the end of the first read overlaps the start of the second. Islands sink when '+ANT+' the ant leaves them.'},
   {id:3,mode:'ham',k:3,n:12,minB:2,title:'Twelve nodes',
-   brief:'Twelve reads, so twelve nodes. Some nodes have two edges leading out. Choose badly and '+ANT+' is stranded.'},
+   brief:'Each of the twelve nodes represents a read. Look ahead at forks so '+ANT+' can visit every node once.'},
   {id:4,mode:'ham',k:3,n:24,minB:6,title:'Two dozen',
    brief:'Twenty-four reads. A real sequencing run produces millions.'},
   {id:5,mode:'konig',title:'Königsberg, 1736',
@@ -595,7 +595,7 @@ const LEVELS=[
   {id:6,mode:'eul',share:1,intro:'morph',title:'Redraw the map',
    brief:'Your first eight reads again. Apply Königsberg’s rule and put each read on an edge instead of a node.'},
   {id:7,mode:'eul',k:3,n:16,minB:3,title:'Archipelago',
-   brief:'Sixteen reads, sixteen one-way edges. Where '+ANT+' starts matters, and so does what '+ANT+' does when stranded.'},
+   brief:'Sixteen reads, sixteen one-way edges. Choose where '+ANT+' starts. If unused edges remain when she gets stuck, look for a place to begin a detour.'},
   {id:8,mode:'balance',title:'Round trip',
    brief:'No DNA this time: a small graph with numbered nodes. '+ANT+' wants a round trip that crosses every edge once and ends where it began. For that, every node needs as many edges arriving as leaving. Add the fewest new edges that achieve this.'},
   {id:9,mode:'eul',k:4,n:10,minB:2,build:true,title:'Draw the map yourself',
@@ -603,7 +603,7 @@ const LEVELS=[
   {id:10,mode:'eul',k:4,n:12,minB:2,nomap:true,title:'No map',
    brief:'Twelve reads and no map. Before anything is drawn, decide where '+ANT+' has to start. Click a candidate node to see which reads start with it and which end with it.'},
   {id:11,mode:'eul',share:4,intro:'morph',noUndo:true,title:'Two dozen, again',
-   brief:'The same twenty-four reads that stranded '+ANT+' in level 4. There is no Undo this time, because an assembler working through millions of reads cannot afford to backtrack.'},
+   brief:'These are the twenty-four reads from level 4. This time you have to use every edge without undoing a move. If you get stranded, you can still add a detour.'},
   {id:12,mode:'eul',pairs:true,title:'Which one is real?',
    brief:'Twenty reads, four nucleotides each. Cross every edge once. Does finding a walk tell you which DNA sequence was really there?'}
 ];
@@ -621,7 +621,7 @@ const SRC={
     look:'Hamilton made this problem into a peg game played on the corners of a dodecahedron, in which the route must visit every corner exactly once.'},
   karp:{cite:'Karp, 1972',title:'Reducibility among combinatorial problems',where:'Complexity of Computer Computations, 85–103',
     url:'https://doi.org/10.1007/978-1-4684-2001-2_9',
-    look:'A list of 21 problems that are all as hard as one another. The Hamilton circuit problem is one of them.'},
+    look:'Karp establishes the NP-completeness of 21 problems, including the Hamiltonian circuit problem.'},
   euler:{cite:'Euler, 1736',title:'Solutio problematis ad geometriam situs pertinentis',where:'Commentarii academiae scientiarum Petropolitanae 8, 128–140 (printed 1741)',
     url:'https://scholarlycommons.pacific.edu/euler-works/53/',
     look:'Euler never draws nodes and edges. He writes a walk as a string of capital letters, one per piece of land, and counts how often each letter must appear (his paragraphs 4 to 9). In paragraph 3 he rejects listing every route as too laborious. The archive page has the Latin original and an English translation.'},
@@ -630,7 +630,7 @@ const SRC={
     look:'An early paper that puts the DNA fragments on the edges and asks for an Eulerian path. It was written for an older technology and speaks of an “l-tuple composition”, which is the k-mer composition.'},
   hierholzer:{cite:'Hierholzer, 1873',title:'Ueber die Möglichkeit, einen Linienzug ohne Wiederholung und ohne Unterbrechung zu umfahren',where:'Mathematische Annalen 6, 30–32',
     url:'https://eudml.org/doc/156599',
-    look:'Three pages, in German, printed two years after Hierholzer died; a colleague he had explained it to saw it into print. It proves the half Euler left unproved, that whenever the counts allow a walk, one can be built by joining closed loops.'},
+    look:'A colleague published Hierholzer’s proof two years after his death. It shows how to build the walk by joining closed loops whenever the degree conditions allow it.'},
   debruijn:{cite:'de Bruijn, 1946',title:'A combinatorial problem',where:'Proc. Koninklijke Nederlandse Akademie van Wetenschappen 49, 758–764',
     url:'https://dwc.knaw.nl/DL/publications/PU00018235.pdf',
     look:'De Bruijn is counting circular strings of 0s and 1s, not DNA. His graph is a network of “junctions” joined by “one-way roads”, and in section 3 every road stands for a string one digit longer than the junctions it joins.'},
@@ -691,7 +691,7 @@ const BLOCKS={
   balance:{html:'You set '+ANT+' down on the right node at the first try in two levels. <b>That’s '+term('balance','Euler’s theorem')+'.</b> Start where one more edge leaves than arrives; you will finish where one more arrives than leaves. Every other node has as many in as out.'},
   hier:{src:['hierholzer'],html:'When stranded, '+ANT+' went back to a node with unused edges and spliced in a loop instead of backing up. <b>That’s '+term('hier','Hierholzer’s algorithm')+'.</b> It touches each edge once, so it works for millions of reads.'},
   nohier:{html:ANT+' was never stranded, so one term is still hidden. Try a new puzzle and let '+ANT+' get stranded once to earn it.'},
-  finale:{src:['ptw','primer'],html:'The twenty-four reads that stranded '+ANT+' as nodes took twenty-four steps as edges, with no backing up. <b>That is why assemblers for short reads are built on de Bruijn graphs.</b>'},
+  finale:{src:['ptw','primer'],html:'With each read on an edge, '+ANT+' assembled the twenty-four reads from level 4 in twenty-four steps. <b>That is why assemblers for short reads are built on de Bruijn graphs.</b>'},
   paired:{src:['paired'],html:()=>'<b>One pair told the two walks apart.</b> '+cur.inst.repeat+' occurs more than once in the string, so it is a '+term('repeat','repeat')+'. A '+term('readpair','read-pair')+' can decide between the walks only when its two ends come from different sequence regions, so that swapping the loops pulls them apart. The other pairs on the bench fit both strings because each came from a single loop or from a region outside both loops. Adding both prefix and suffix labels to every node gives a '+term('pairedgraph','paired de Bruijn graph')+', in which the repeated nodes separate and the forks disappear. This small puzzle has one answer; real pairs have uncertain gaps and do not resolve every repeat.'}
 };
 
@@ -812,7 +812,7 @@ function setAnt(p,ang){
 function runAnt(pts){
   cancelAnimationFrame(antRaf);
   const end=pts[pts.length-1];
-  if(!antAt||pts.length<2)return setAnt(end);
+  if(!antAt||pts.length<2||matchMedia('(prefers-reduced-motion: reduce)').matches)return setAnt(end);
   const seg=[];let tot=0;
   for(let i=0;i<pts.length-1;i++){const l=Math.hypot(pts[i+1].x-pts[i].x,pts[i+1].y-pts[i].y);seg.push(l);tot+=l;}
   if(tot<1)return setAnt(end);
@@ -1159,7 +1159,7 @@ function choosePairAnswer(i){
   log('pair_answer',{candidate:i,pair:cur.pairSel,offsets:cur.pairOffsets.slice(),lined,decides:lined&&decides});
   // No verdict is given away until the pair has actually been lined up under the chosen string.
   if(!lined){
-    say('That pair is not lined up under string '+AB(i)+'. Slide it until both four-nucleotide ends match the nucleotides above, with one nucleotide between them. If it cannot be lined up anywhere, it does not belong to that string.','warn');
+    say('That pair is not lined up under string '+AB(i)+'. Slide it until both four-nucleotide ends match the nucleotides above, with one nucleotide between them. Try another position or test the other string.','warn');
     $('#status').textContent=cur.msg.text;$('#status').className='status '+cur.msg.kind;
     return;
   }
@@ -1511,6 +1511,7 @@ function runIntro(){
   const done=()=>{if(cur!==mine||cur.phase!=='intro')return;cur.phase='play';
     if(!S.intros.includes(cur.L.id)){S.intros.push(cur.L.id);save();}
     say(cards?'Click an island to set '+ANT+' down.':'Same reads, now on the edges. Click a node to set '+ANT+' down.');render();};
+  if(matchMedia('(prefers-reduced-motion: reduce)').matches)return done();
   const frame=now=>{if(cur!==mine)return;const t=(now-t0)/dur;if(t>=1)return done();frameFn(t);introRaf=requestAnimationFrame(frame);};
   introRaf=requestAnimationFrame(frame);
   setTimeout(done,dur+400); /* also finishes if the tab is hidden */
@@ -1549,7 +1550,7 @@ function complete(){
     }
   }
   unlockNext();
-  say(m==='cards'?'Every read used exactly once.':m==='balance'?'Every node is balanced. Watch '+ANT+' make the round trip.'
+  say(m==='cards'?'Every read used exactly once.':m==='balance'?'Every node is balanced. The numbered edges show '+ANT+'’s round trip.'
      :eul?'Every edge crossed exactly once.':'Every '+cur.w.n+' visited exactly once.','good');
   log('complete',{ms:Date.now()-cur.t0,undos:cur.undos,restarts:cur.restarts,strands:cur.strands,detours:cur.detours,
       firstPick:cur.firstPick,buildErrs:cur.buildErrs,misses:cur.nm?cur.nm.misses:undefined,
@@ -1565,6 +1566,7 @@ function complete(){
     setAnt(perch(cur.pos[cur.E[cur.tour[0]].from]),0);
     route=cur.tour.map(id=>perch(cur.pos[cur.E[id].to]));
   }else route=cur.b.walk.map(s=>perch(cur.pos[s[1]]));
+  if(matchMedia('(prefers-reduced-motion: reduce)').matches){setAnt(route[route.length-1]);return;}
   const mine=cur;
   cur.lap=0;clearInterval(lapTimer);
   lapTimer=setInterval(()=>{
@@ -1603,7 +1605,7 @@ function srcCard(id){
 function renderPanel(){
   if(!cur.done){$('#panel').innerHTML='';return;}
   const m=cur.mode;
-  let h='<div class="reveal"><h3>'+(cur.gave?'Stuck is the right answer':'Level '+cur.L.id+' complete')+'</h3>';
+  let h='<div class="reveal"><h3>'+(cur.gave?'Trying a different map':'Level '+cur.L.id+' complete')+'</h3>';
   if(m==='cards')h+='<p>A real genome yields millions of reads, far too many to chain by trial and error.</p>';
   cur.blocks.forEach(id=>{
     const B=BLOCKS[id];
@@ -1653,6 +1655,11 @@ function renderScene(){
   $('#cardView').hidden=!tray;
   $('#map').style.display=m==='cards'||ph==='ask'?'none':'';
   $('#map').classList.toggle('building',ph==='build');
+  const water=$('[data-water]');
+  const placing=ph==='build'&&cur.bd.sel!==null;
+  water.setAttribute('role',placing?'button':'presentation');
+  water.setAttribute('aria-hidden',String(!placing));
+  water.setAttribute('tabindex',placing?'0':'-1');
   if(tray)renderTray();
   if(ph==='paired')return pairSplitFrame(1);
   if(ph==='split')return pairSplitFrame(0);
@@ -1681,7 +1688,7 @@ function renderGuide(){
         (s?' · Source: <a href="'+s.url+'" target="_blank" rel="noopener">'+s.cite+', “'+s.title+'”</a>':'')+
         (v.code?' · Code it: <a href="https://rosalind.info/problems/'+v.code.toLowerCase()+'/" target="_blank" rel="noopener">Rosalind '+v.code+'</a>':'')+'</p></div>';
     }).join('')+
-    (got.length?'<p style="margin-top:10px"><button id="printGuide">Print field guide</button></p>':'<p class="gmeta">Nothing yet. Finish level 1.</p>');
+    (got.length?'<p style="margin-top:10px"><button id="printGuide">Print field guide</button></p>':'<p class="gmeta">Definitions appear here as you earn terms.</p>');
 }
 function ruleText(){
   const m=cur.mode,w=cur.w,ph=cur.phase;
@@ -1716,7 +1723,7 @@ function renderControls(){
   if(ph==='pre')label=cur.L.intro==='cards'?'Put the reads on a map':'Turn every node into an edge';
   else if(ph==='ask'&&cur.nm.cand!==null)label='Set '+ANT+' down on '+cur.inst.nodes[cur.nm.cand];
   else if(ph==='pairs'&&cur.pairWon)label='Add each partner’s nucleotides to the node names';
-  else if(cur.L.id===4&&!cur.done&&(cur.skipOK||cur.strands>=3))label='This is hopeless. Change the map →';
+  else if(cur.L.id===4&&!cur.done&&(cur.skipOK||cur.strands>=3))label='Try a different map →';
   else if(m==='konig'&&!cur.done&&(cur.skipOK||cur.strands>=2))label='It can’t be done';
   sk.hidden=!label;sk.textContent=label;
 }
@@ -1793,7 +1800,7 @@ document.addEventListener('click',ev=>{
   else if(d.n!==undefined)nodeClick(+d.n);
   else if(d.lvl!==undefined)loadLevel(+d.lvl);
   else if(d.water!==undefined){if(!cur.done&&cur.phase==='build')buildClick(undefined,svgPoint(ev));}
-  else if(t.id==='next')loadLevel(cur.L.id+1);
+  else if(t.id==='next'){loadLevel(cur.L.id+1);$('#title').focus();$('#title').scrollIntoView({block:'start'});}
   else if(t.id==='printGuide'){$('#guide').open=true;window.print();}
 });
 document.addEventListener('change',ev=>{
@@ -1810,6 +1817,15 @@ document.addEventListener('input',ev=>{
   }
 });
 document.addEventListener('keydown',ev=>{
+  if(ev.target.dataset?.water!==undefined&&cur.phase==='build'&&cur.bd.sel!==null&&(ev.key==='Enter'||ev.key===' ')){
+    ev.preventDefault();
+    for(let y=R+56;y<=H-R-38;y+=R*3){
+      for(let x=R+34;x<=W-R-34;x+=R*3){
+        if(cur.bd.pos.every(p=>!p||Math.hypot(p.x-x,p.y-y)>=R*3)){buildClick(undefined,{x,y});return;}
+      }
+    }
+    return;
+  }
   const t=ev.target.closest&&ev.target.closest('g[data-n]');
   if(t&&(ev.key==='Enter'||ev.key===' ')){ev.preventDefault();nodeClick(+t.dataset.n);
     const again=document.querySelector('g[data-n="'+t.dataset.n+'"]');if(again)again.focus();}

@@ -292,7 +292,7 @@ footer input{font:inherit;width:9em;padding:5px 8px;border:1px solid var(--line)
   <div class="vocabhead">Vocabulary you have earned <span style="text-transform:none;letter-spacing:0">(hover for the definition)</span></div>
   <div class="badges" id="badges"></div>
 
-  <h2 id="title"></h2>
+  <h2 id="title" tabindex="-1"></h2>
   <p id="brief"></p>
   <div class="rule" id="rule"></div>
 
@@ -325,6 +325,7 @@ footer input{font:inherit;width:9em;padding:5px 8px;border:1px solid var(--line)
     <div data-bk-app></div>
   </div>
   <footer>
+    <a href="?bench=1">Workbench</a>
     <button id="dl">Download move log</button>
   </footer>
 </div>
@@ -640,17 +641,17 @@ const LEVELS=[
   {id:1,mode:'family',title:'One of the family?',
    brief:'Five related protein sequences are written in rows so that homologous amino acid residues share a column. A dash denotes a gap in that sequence. Two newcomers claim to belong, and only one does. Pick it.'},
   {id:2,mode:'open',title:'Seven or other',
-   brief:'Compare two pairs of dice. A fair pair has 36 equally likely rolls, and six of them total 7. The loaded pair is weighted toward 7. After each roll, the dealer calls “7” for a total of 7 or “other” for any other total. Roll each pair 24 times and tally every call.'},
+   brief:'Compare two pairs of dice. A fair pair has 36 equally likely rolls, and six of them total 7. The loaded pair is weighted toward 7. After each roll, the dealer calls “7” for a total of 7 or “other” for any other total. Tally the calls for each pair. After six rolls of each, you can let the dealer finish the 24-roll samples.'},
   {id:3,mode:'swap',title:'The swap',
    brief:'The dealer now rolls one pair behind a screen, and you hear only the call. Between rounds, the dealer may switch between the fair and loaded pairs; the house card shows how often. After each of twelve calls, slide the bead toward the pair you think was rolled.'},
   {id:4,mode:'story',title:'One story',
    brief:'Use the first four calls from level 3. Make up a story by choosing which pair the dealer used in each round. Using transition weights out of 4 and emission weights out of 6, calculate the probability of that sequence of pairs, then the probability of those calls given those pairs.'},
   {id:5,mode:'wall',title:'Too many stories',
-   brief:'Your story was one of 16 for four rounds. To know how likely the calls were, whatever the dealer did, you would add the probabilities of every story. The table’s counting machine does this one story at a time.'},
+   brief:'Four rounds allow 16 possible sequences of pairs. To find the probability of the observed calls, add the probability of each sequence occurring together with those calls. The counting machine considers one sequence at a time.'},
   {id:6,mode:'ledger',title:'The bookkeeper’s ledger',
    brief:'Fill the fair and loaded rows for rounds 1–3, one column at a time. Each entry adds up the weights of all stories that match the calls so far and end with that pair. Enter whole numbers and press Enter; the bookkeeper finishes the remaining rounds and converts the totals to probabilities.'},
   {id:7,mode:'best',title:'The best story',
-   brief:'This is a different night with six calls. The bookkeeper now wants the single most likely story, not the total. Use the same page, but keep only the larger of the two ways into each entry. Click the way you keep, then write the entry. After three columns you pick the ways and the bookkeeper writes the entries. Then follow your kept ways back from the end.'},
+   brief:'On this six-call night, find the most likely sequence of pairs. For each entry after round 1, choose the incoming path with the larger weight. Fill in the first three columns yourself. After that, the bookkeeper records the weights as you choose each path. Trace your choices backward from the last round.'},
   {id:8,mode:'rooms',title:'Rooms',
    brief:'Back to the protein family from level 1. The bookkeeper builds a house for the family, with a room for each column that most members fill, a trapdoor under each room for a member with a gap there, and a corridor between rooms for residues that belong to no room. Set how many gaps a column may have and still be a room. Then send the members through, one at a time, and keep the tally for the marked room.'},
   {id:9,mode:'bouncer',title:'The bouncer',
@@ -658,7 +659,7 @@ const LEVELS=[
   {id:10,mode:'pebbles',title:'One unseen residue',
    brief:'A third newcomer is a known member of the family, a cousin. Walk the cousin through the house.'},
   {id:11,mode:'reunion',title:'Reunion',
-   brief:'Seven newcomers queue at the door. Send each one through; the bookkeeper finds each best walk, pebbles and all. Then draw the door line: family above it, strangers below.'}
+   brief:'Send each of the seven newcomers through the house. The bookkeeper uses the pebble counts to score each newcomer’s best walk. Choose a cutoff that puts all family members above the line and all strangers below.'}
 ];
 
 /* Primary sources. Each was opened (record or abstract) before it went in; see the report. */
@@ -687,7 +688,7 @@ const VOCAB=[
   {id:'hpath',name:'Hidden path',def:'The sequence of hidden states π = π₁…πₙ that an HMM passes through while emitting a string x = x₁…xₙ.'},
   {id:'trans',name:'Transition probability',src:'rabiner',code:'BA10A',def:'transition(l, k): the probability that an HMM in state l is in state k at the next step. The transition probabilities out of each state sum to 1.'},
   {id:'emit',name:'Emission probability',code:'BA10B',def:'emission(k, b): the probability that an HMM in state k emits the symbol b. The emission probabilities of each state sum to 1.'},
-  {id:'hmm',name:'Hidden Markov model',src:'rabiner',def:'A machine (Σ, States, Transition, Emission) that at each step emits a symbol from the alphabet Σ according to the emission probabilities of its current hidden state, then moves to a state chosen by the transition probabilities. Pr(x, π) is the product of the transition and emission probabilities along π.'},
+  {id:'hmm',name:'Hidden Markov model',src:'rabiner',def:'A machine (Σ, States, Transition, Emission) that at each step emits a symbol from the alphabet Σ according to the emission probabilities of its current hidden state, then moves to a state chosen by the transition probabilities. Pr(x, π) is the starting state’s probability times the product of the transition and emission probabilities along π.'},
   {id:'forward',name:'Forward algorithm',src:'baum',code:'BA10D',def:'Computes Pr(x), the probability that an HMM emits x summed over every hidden path, column by column: forward(k, i) = Σₗ forward(l, i−1) · transition(l, k) · emission(k, xᵢ). Time O(|States|² · n), not |States|ⁿ.'},
   {id:'viterbi',name:'Viterbi algorithm',src:'viterbi',code:'BA10C',def:'Finds a hidden path π maximising Pr(x, π): the forward recurrence with max in place of the sum, keeping a pointer to the better predecessor, then backtracking from the best final state.'},
   {id:'phmm',name:'Profile HMM',src:'eddy',code:'BA10E',def:'A hidden Markov model built from a multiple alignment: one match state per column kept (columns whose fraction of gaps is below a threshold θ), with insertion and deletion states, and transition and emission probabilities equal to the normalised counts in the alignment.'},
@@ -704,7 +705,7 @@ const urlSeed=params.get('seed');
 const requestedLevel=Number(params.get('level'));
 const previewLevel=Number.isInteger(requestedLevel)&&requestedLevel>=1&&requestedLevel<=LEVELS.length?requestedLevel:0;
 function load(){try{return JSON.parse(localStorage.getItem(KEY))||{};}catch(e){return {};}}
-function save(){if(previewLevel)return;if(S&&S.done)S.link=encodeProgress(S);try{localStorage.setItem(KEY,JSON.stringify(S));}catch(e){}writeLink();}
+function save(){if(TRANSIENT)return;if(S&&S.done)S.link=encodeProgress(S);try{localStorage.setItem(KEY,JSON.stringify(S));}catch(e){}writeLink();}
 function freshState(seed){return {diceModel:2,seed,unlocked:1,done:[],badges:[],earnedAt:{},variants:{},marks:{},picked:{},log:[]};}
 /* First-load puzzle codes. The tests play every level of each one. */
 const CODES='HDBUBD E4RQHD 2EM4BL SFBVT3 T4RLJ2 BPDXM7 HT663L X9DF2B QKGELR NYSA66 JCB22J E64BCP EXG6NH YELN5Q K5FNTF 4KWZZV TG6TXE T2AWKH RTYM7A KD6RES 58C9EC 4GG3GN 8BNHXC KGUAGT 8VK48W FRYX4M S5KZ6D HJPZZD X35ZYN AKSMAA VTL4GH 2GR2VS BV45C4 JB9XUW 9C7BBC 6SUTVT VPGNMN 2KUGYF BZF2SU H9VM9A M8ZPXL 8D4N65 9BEKYZ 5WUQJU CEJBDU TUSRQ5 HGV7QT ECGMR7 6VKAH8 ASB79W'.split(' ');
@@ -788,7 +789,7 @@ function useLink(){
     linkNote='Restored from your progress link: '+got.terms.length+' vocabulary term'+(got.terms.length===1?'':'s')+' and '+got.levels.length+' finished level'+(got.levels.length===1?'':'s')+'.';
   }
 }
-let S=previewLevel?freshState(urlSeed||randomCode()):load();
+let S=TRANSIENT?freshState(urlSeed||randomCode()):load();
 if(urlSeed&&urlSeed!==S.seed)S=freshState(urlSeed);
 if(!S.seed)S=freshState(randomCode());
 // Old bead guesses were made under different emissions. Keep earned progress, retire those comparisons.
@@ -868,7 +869,7 @@ function renderGuide(){
         (s?' · Source: <a href="'+s.url+'" target="_blank" rel="noopener">'+s.cite+', “'+s.title+'”</a>':'')+
         (v.code?' · Code it: <a href="https://rosalind.info/problems/'+v.code.toLowerCase()+'/" target="_blank" rel="noopener">Rosalind '+v.code+'</a>':'')+'</p></div>';
     }).join('')+
-    (got.length?'<p style="margin-top:10px"><button id="printGuide">Print field guide</button></p>':'<p class="gmeta">Nothing yet. Finish level 1.</p>');
+    (got.length?'<p style="margin-top:10px"><button id="printGuide">Print field guide</button></p>':'<p class="gmeta">Definitions appear here as you earn terms.</p>');
 }
 let rendering=false;
 function render(){
@@ -927,7 +928,7 @@ MODES.open={
     cur.o={seq,dice:seq.map(s=>s.map(c=>diceFor(c,rand))),idx:[0,0],shown:[null,null],tally:[[],[]],ans:[null,null],ok:[false,false],last:null};
     say('Roll either pair to start.');
   },
-  rule(){return 'Roll · tally the call · twenty-four rounds a pair';},
+  rule(){return '24 rolls per pair';},
   scene(){
     const o=cur.o,pairs=[0,1].map(c=>({x:c?520:240,kind:CUPS[c],label:CUP[c],lift:o.last===c&&o.shown[c]!==null?44:0,
       dice:o.shown[c]!==null?o.dice[c][o.shown[c]]:null}));
@@ -940,9 +941,9 @@ MODES.open={
     for(const c of [0,1]){
       const t=o.tally[c],done=t.length===24;
       h+='<div class="tbox '+CUPS[c]+'"><div class="row"><b>'+CUP[c][0].toUpperCase()+CUP[c].slice(1)+'</b><span class="gmeta">round '+Math.min(24,t.length+(o.shown[c]!==null?1:0))+' of 24</span></div>'+
-        '<div class="row"><button class="bigcall" id="shake'+c+'" data-act="shake" data-arg="'+c+'"'+(done?' disabled':'')+'>Roll</button>'+
-        '<button class="bigcall" id="tally'+c+'S" data-act="tally" data-arg="'+c+'S"'+(done?' disabled':'')+'>tally 7</button>'+
-        '<button class="bigcall" id="tally'+c+'O" data-act="tally" data-arg="'+c+'O"'+(done?' disabled':'')+'>tally other</button></div>'+
+        '<div class="row"><button class="bigcall" id="shake'+c+'" data-act="shake" data-arg="'+c+'"'+(done||o.shown[c]!==null||o.shown[1-c]!==null?' disabled':'')+'>Roll</button>'+
+        '<button class="bigcall" id="tally'+c+'S" data-act="tally" data-arg="'+c+'S"'+(o.shown[c]===null?' disabled':'')+'>Tally 7</button>'+
+        '<button class="bigcall" id="tally'+c+'O" data-act="tally" data-arg="'+c+'O"'+(o.shown[c]===null?' disabled':'')+'>Tally other</button></div>'+
         '<div class="marks"><span class="r"></span><span class="sub">7</span><span class="sub">other</span>';
       for(let r=0;r<4;r++){
         const row=t.slice(6*r,6*r+6);
@@ -950,13 +951,23 @@ MODES.open={
       }
       h+='</div>';
       if(both){
-        h+='<p style="margin:8px 0 2px">On average per six rolls, how many total 7?</p><div class="picker">'+[0,1,2,3,4,5,6].map(v=>
+        h+='<p style="margin:8px 0 2px">Out of every six rolls, how many totaled 7 on average?</p><div class="picker">'+[0,1,2,3,4,5,6].map(v=>
           '<button data-act="ans" data-arg="'+c+v+'" id="ans'+c+v+'" class="'+(o.ans[c]===v?'on':'')+'"'+(o.ok[c]?' disabled':'')+'>'+v+'</button>').join('')+
           (o.ok[c]?' <b style="color:var(--good)">'+v4(o.ans[c])+'</b>':'')+'</div>';
       }
       h+='</div>';
     }
     return h+'</div>';
+  },
+  skip(){
+    const o=cur.o;
+    return o.shown.every(v=>v===null)&&o.tally.every(t=>t.length>=6)&&o.tally.some(t=>t.length<24)?'Let the dealer finish the tallies':'';
+  },
+  onSkip(){
+    const o=cur.o;
+    for(const c of [0,1]){o.tally[c]=o.seq[c].slice();o.idx[c]=o.tally[c].length;}
+    log('finish_tallies');
+    say('Both pairs have 24 rolls. Use the tallies to answer the question for each pair.');
   },
   reveal(){return [{html:'The fair pair totals 7 with probability 1/6, and the loaded pair totals 7 with probability 4/6, or 2/3. These 24 rolls were arranged to match those probabilities exactly; real dice fluctuate. Neither call settles which pair was rolled. A 7 is four times likelier from the loaded pair, and an “other” is two and a half times likelier from the fair pair (5/6 against 2/6).'}];}
 };
@@ -965,7 +976,7 @@ const ACT={};
 ACT.shake=c=>{
   const o=cur.o;c=+c;if(cur.done)return;
   if(o.shown[c]!==null){say('Tally that call before you roll again.','warn');jolt('tally'+c+'S');return;}
-  if(o.idx[c]>=24)return;
+  if(o.shown[1-c]!==null||o.idx[c]>=24)return;
   o.shown[c]=o.idx[c];o.last=c;log('shake',{pair:c,round:o.idx[c],call:o.seq[c][o.idx[c]]});
   say('The '+CUP[c]+' is rolled. The dealer calls '+CALL[o.seq[c][o.idx[c]]]+'.');
 };
@@ -976,7 +987,7 @@ ACT.tally=a=>{
   if(call!==real){say('The dealer called '+CALL[real]+'. Tally that call.','warn');jolt('tally'+c+call);log('tally_wrong',{pair:c});return;}
   o.tally[c].push(call);o.idx[c]++;o.shown[c]=null;log('tally',{pair:c,call});
   const left=48-o.tally[0].length-o.tally[1].length;
-  say(left?left+(left===1?' call':' calls')+' still to tally.':'Both tallies are full. Read them off.');
+  say(left?left+(left===1?' call':' calls')+' still to tally.':'Both pairs have 24 rolls. Use the tallies to answer the question for each pair.');
 };
 ACT.ans=a=>{
   const o=cur.o,c=+a[0],v=+a[1];if(cur.done||o.ok[c])return;
@@ -1386,7 +1397,7 @@ MODES.rooms={
   rule(){return 'A room for each column most members fill · trapdoor for a gap · corridor for the rest';},
   isRoom(){return roomsOf(cur.f.aln,cur.r.gaps);},
   R(){return roomNo(this.isRoom(),cur.f.gappy-1);},
-  ok(){return cur.r.gaps<=2;},
+  ok(){return this.isRoom().every((room,j)=>room===cur.f.isRoom[j]);},
   scene(){
     const r=cur.r,isR=this.isRoom(),k=isR.filter(Boolean).length;
     const trail=r.member!==null&&this.ok()?memberWalk(cur.f.aln[r.member],isR).map(s=>({state:s.kind+s.room,letter:s.letter})):[];
@@ -1395,11 +1406,15 @@ MODES.rooms={
   moves(){const k=this.isRoom().filter(Boolean).length;return allowedNext('M'+this.R(),k);},
   work(){
     const r=cur.r,f=cur.f,isR=this.isRoom(),R=this.R(),ok=this.ok(),k=isR.filter(Boolean).length;
-    const most=[...Array(f.n).keys()].filter(j=>f.aln.filter(s=>s[j]==='-').length>2);
+    const mismatch=isR.findIndex((room,j)=>room!==f.isRoom[j]);
     let h='<div class="slider"><label for="gaps">A column may have at most <b>'+r.gaps+'</b> gap'+(r.gaps===1?'':'s')+' and still be a room</label>'+
       '<input type="range" id="gaps" min="0" max="4" step="1" value="'+r.gaps+'" data-slide="gaps"> <span class="gmeta">'+k+' rooms</span></div>';
     h+=famRows(f,{isRoom:isR,hot:f.gappy-1});
-    if(!ok){h+='<p class="status warn">With this setting, room '+roomNo(isR,most[0])+' is a column where three of the five members have a gap. The bookkeeper does not build a room that most members skip.</p>';return h;}
+    if(!ok){
+      const filled=f.aln.filter(row=>row[mismatch]!=='-').length;
+      h+='<p class="status warn">Column '+(mismatch+1)+' has a residue in '+filled+' of the five sequences. '+(isR[mismatch]?'Lower the gap limit so this column becomes a corridor.':'Raise the gap limit so this column becomes a room.')+'</p>';
+      return h;
+    }
     h+='<div class="row"><span class="sub">Send through:</span>'+f.aln.map((_,i)=>'<button id="mem'+i+'" data-act="member" data-arg="'+i+'" class="'+(r.member===i?'primary':'')+'">member '+(i+1)+'</button>').join('')+'</div>';
     h+='<div class="sub" style="margin-top:10px">Your tally for room '+R+' (outlined): where each member goes next</div><div class="moveset">'+
       this.moves().map(s=>'<div class="mv'+(r.bad&&r.bad.includes(s)?' bad':'')+'"><span>'+stName(s)+'</span><button data-act="mv" data-arg="'+s+',-1" aria-label="one fewer">−</button><b id="mv'+s+'">'+(r.mv[s]||0)+'</b><button data-act="mv" data-arg="'+s+',1" id="mvp'+s+'" aria-label="one more">+</button></div>').join('')+'</div>';
@@ -1617,7 +1632,7 @@ document.addEventListener('click',ev=>{
   const d=t.dataset;
   if(d.act!==undefined)act(d.act,d.arg);
   else if(d.lvl!==undefined)loadLevel(+d.lvl);
-  else if(t.id==='next')loadLevel(cur.L.id+1);
+  else if(t.id==='next'){loadLevel(cur.L.id+1);const title=$('#title');title.focus({preventScroll:true});title.scrollIntoView?.({block:'start'});}
   else if(t.id==='printGuide'){$('#guide').open=true;window.print();}
 });
 document.addEventListener('keydown',ev=>{
@@ -1664,19 +1679,20 @@ $('#dl').onclick=()=>{
 
 /* ---------- workbench (?bench=1): no artwork, saves nothing ---------- */
 function benchCalls(txt){
-  const calls=txt.toUpperCase().replace(/[^SO]/g,'').split('');
+  const calls=txt.toUpperCase().replace(/\s/g,'').split('');
+  if(calls.some(c=>c!=='S'&&c!=='O'))return '<p class="status warn">Use S for a seven and O for any other total.</p>';
   if(!calls.length)return '<p class="gmeta">Type calls as S (seven) and O (other).</p>';
   if(calls.length>12)return '<p class="status warn">At most 12 calls, so the whole-number weights stay exact.</p>';
   const L=sumLedger(calls),B=bestLedger(calls),bs=bestStory(calls),lk=likelierPairs(calls),P=nightProbability(calls);
   const row=(name,f)=>'<tr><th>'+name+'</th>'+calls.map((_,t)=>'<td>'+f(t)+'</td>').join('')+'</tr>';
   const cn=k=>k===-1?'tie':k?'loaded':'fair';
-  const differ=bs.story.some((k,i)=>k!==lk[i]);
+  const differences=bs.story.map((k,i)=>k!==lk[i]?i+1:0).filter(Boolean);
   return '<div class="hscroll"><table><tr><th></th>'+calls.map((c,t)=>'<th>'+(t+1)+' '+CALL[c]+'</th>').join('')+'</tr>'+
     row('adding: fair',t=>fmt(L[t][0]))+row('adding: loaded',t=>fmt(L[t][1]))+row('likelier this round',t=>cn(lk[t]))+
     row('best: fair',t=>fmt(B.cols[t][0])+(t?' ←'+cn(B.from[t][0]):''))+row('best: loaded',t=>fmt(B.cols[t][1])+(t?' ←'+cn(B.from[t][1]):''))+
     row('most likely story',t=>cn(bs.story[t]))+'</table></div>'+
-    '<p>Probability of the calls: '+fmt(P.num)+' / '+fmt(P.den)+' = '+(P.num/P.den).toPrecision(4)+'. Most likely story: '+fmt(bs.value)+' / '+fmt(P.den)+(bs.unique?'':' (not unique: a tie lies on it)')+'.</p>'+
-    '<p><b>'+(differ?'They disagree':'They agree')+'</b>: the most likely story and betting round by round on the likelier pair '+(differ?(d=>'part in round'+(d.length>1?'s ':' ')+d.join(', ')+'.')(bs.story.map((k,i)=>k!==lk[i]?i+1:0).filter(Boolean)):'pick the same pairs.')+'</p>';
+    '<p>Probability of the calls: '+fmt(P.num)+' / '+fmt(P.den)+' = '+(P.num/P.den).toPrecision(4)+'. Joint probability of these calls and the most likely story: '+fmt(bs.value)+' / '+fmt(P.den)+(bs.unique?'':' (several stories tie)')+'.</p>'+
+    '<p>'+(differences.length?'The most likely story differs from the round-by-round choices in round'+(differences.length===1?' ':'s ')+differences.join(', ')+'.':'The most likely story matches the round-by-round choices throughout.')+'</p>';
 }
 function benchFamily(txt,maxGaps,seq,add){
   const rows=txt.toUpperCase().split(/\s+/).filter(Boolean);

@@ -121,8 +121,8 @@ body.bk-game details.guide>summary{font-family:var(--bk-serif);font-size:1.05rem
 
 /* the chapter cover */
 body.bk-locked{overflow:hidden}
-.bk-cover{position:fixed;inset:0;z-index:80;display:grid;place-items:center;padding:16px;overflow:auto;background:color-mix(in srgb,var(--bk-spine) 88%,transparent)}
-.bk-cover-card{width:min(520px,100%);border-radius:6px;overflow:hidden;background:var(--bk-card);color:var(--bk-ink)}
+.bk-cover{width:min(520px,calc(100% - 32px));max-height:calc(100% - 32px);margin:auto;padding:0;border:0;border-radius:6px;overflow:auto;background:var(--bk-card);color:var(--bk-ink)}
+.bk-cover::backdrop{background:color-mix(in srgb,var(--bk-spine) 88%,transparent)}
 .bk-cover-card img{display:block;width:100%;aspect-ratio:16/10;object-fit:cover}
 .bk-cover-body{padding:18px 24px 22px}
 .bk-cover-body .bk-eyebrow,.bk-cover-body .bk-eyebrow span{color:var(--bk-dim)}

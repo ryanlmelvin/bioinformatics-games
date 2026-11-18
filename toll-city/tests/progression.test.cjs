@@ -147,3 +147,13 @@ test('every first-load code plays every level without a fallback puzzle',()=>{
     assert.equal(ui.api.earned().length,ui.api.vocab().length,code+' earns every term');assert.equal(ui.api.fell(),0,code+' needs no fallback');
   }
 });
+
+test('a taxi walk can change its starting corner without restarting',()=>{
+  for(const level of [9,10]){
+    const ui=boot(null,'?debug=1&seed=TAXI&level='+level),c=st(ui);
+    ui.api.act('corner',0,0);assert.deepEqual(Array.from(c.on),[0,0]);
+    ui.api.act('corner',0,0);assert.equal(c.on,null);
+    ui.api.act('corner',c.inst.v.length,c.inst.w.length);assert.equal(c.on,null);
+    play[level](ui);assert(c.done);
+  }
+});

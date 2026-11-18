@@ -134,6 +134,7 @@ svg.city{display:block;width:100%;height:auto;touch-action:manipulation;backgrou
 .price{font-size:13px;font-weight:700;text-anchor:middle;dominant-baseline:central;fill:var(--m-ink);paint-order:stroke;stroke:var(--m-ground);stroke-width:4px;pointer-events:none}
 .price.neg{fill:var(--m-toll)}
 .corner{fill:#fffdf6;stroke:var(--m-street);stroke-width:2}
+.hitst:focus-visible{stroke:var(--m-accent);stroke-opacity:.55;outline:none}
 .cn[data-act]{cursor:pointer}
 .cn.ready .corner{stroke:var(--m-accent);stroke-width:3.5}
 .cn.done .corner{fill:#fff3c4}
@@ -272,7 +273,7 @@ footer input{font:inherit;width:9em;padding:5px 8px;border:1px solid var(--line)
   <div class="vocabhead">Vocabulary you have earned <span style="text-transform:none;letter-spacing:0">(hover for the definition)</span></div>
   <div class="badges" id="badges"></div>
 
-  <h2 id="title"></h2>
+  <h2 id="title" tabindex="-1"></h2>
   <p id="brief"></p>
   <div class="rule" id="rule"></div>
 
@@ -583,23 +584,23 @@ const RM=()=>{try{return matchMedia('(prefers-reduced-motion: reduce)').matches;
 
 const LEVELS=[
   {id:1,mode:'strands',inst:'decks',title:'Two strands',
-   brief:'Two short homologous DNA sequences, such as orthologous genes in two species (these sequences are synthetic). Nucleotide insertions and deletions have accumulated over time, so corresponding positions no longer line up. Line up as many matching nucleotides as you can, then lock it in.'},
+   brief:'These synthetic DNA sequences represent homologous regions in two species. Insertions and deletions have shifted corresponding nucleotides into different columns. Add gaps to line up as many matches as you can, then lock in your alignment.'},
   {id:2,mode:'decks',inst:'decks',title:'Two decks',
-   brief:'The same two sequences as two decks of cards. The outlined card in each deck is the one in play. Each turn, take both outlined cards (a point if they show the same letter) or throw away the outlined card of one deck. A card that is taken or thrown away does not come back. Score as many points as you can.'},
+   brief:'The two sequences are now decks of cards. On each turn, take both outlined cards or discard one. Taking two matching cards earns a point. How many points can you score before a deck runs out?'},
   {id:3,mode:'table',inst:'decks',title:'Two games, one table',
    brief:'Two players are part-way through the same deal. They played differently, but the same cards are left on the table.'},
   {id:4,mode:'wall',inst:'twelve',title:'Too many games',
    brief:'Each deck has twelve cards. A bot will play every possible game in turn and keep the best score. Start it. You can also play yourself.'},
   {id:5,mode:'tourist',inst:'city',title:'The tourist',
-   brief:'A different city. A tourist walks from the top-left corner to the bottom-right, only east or south, never back, and counts the sights on each street they walk (the number on the street). Which route sees the most?'},
+   brief:'Help a tourist walk from the top-left corner of the city to the bottom-right. You can go east or south. The number on each street tells you how many sights you’ll see there. Which route passes the most sights?'},
   {id:6,mode:'follow',inst:'city',title:'Follow your arrows',
-   brief:'Your pencilled city from level 5. The tourist stands at the far corner. Each arrow says which street that corner’s number arrived by. Walk back to the start along the arrows.'},
+   brief:'The tourist is at the far corner of the city from level 5. Each arrow points into a corner from the street that gave its best score. Follow the arrows backward to retrace the route.'},
   {id:7,mode:'deckcity',inst:'decks',title:'The decks are a city',
    brief:'Your two decks from level 2, laid along the edges of a city: deck 1 down the left side, deck 2 across the top. A step south throws away a card from deck 1, a step east throws away a card from deck 2, and a step south-east takes both. Where the two cards match, that diagonal is gold and pays 1 point.'},
   {id:8,mode:'tolls',inst:'decks',title:'Tolls',
    brief:'The same city, but now the streets charge. A gold diagonal (two matching cards) still pays +1. A diagonal between two different cards costs 1, and every south or east street costs 2.'},
   {id:9,mode:'taxi',inst:'local',title:'Free taxi',
-   brief:'Two longer DNA sequences, mostly unrelated, priced with the same tolls. The best route from corner to corner scores below zero. Now a free taxi can drop the tourist at any corner and pick them up again at any corner further on. Where should they get on and off?'},
+   brief:'These longer DNA sequences use the same tolls. Aligning them end to end scores below zero. A free taxi lets the tourist walk just part of the route. Where should the walk start and end to earn the highest score?'},
   {id:10,mode:'overlap',inst:'overlap',title:'Overlap',
    brief:'Two sequencing reads, the kind you assembled in Bridge Walker. The end of read 1 should be the start of read 2, but one nucleotide was miscalled during sequencing. Here the taxi is free only down the left edge (skipping the start of read 1) and off the bottom edge (skipping the rest of read 2).'},
   {id:11,mode:'code',inst:null,title:'The code breakers',
@@ -828,7 +829,7 @@ function renderGuide(){
         (s?' · Source: <a href="'+s.url+'" target="_blank" rel="noopener">'+s.cite+', “'+s.title+'”</a>':'')+
         (v.code?' · Code it: <a href="https://rosalind.info/problems/'+v.code.toLowerCase()+'/" target="_blank" rel="noopener">Rosalind '+v.code+'</a>':'')+'</p></div>';
     }).join('')+
-    (got.length?'<p style="margin-top:10px"><button id="printGuide" data-act="print">Print field guide</button></p>':'<p class="gmeta">Nothing yet. Finish level 1.</p>');
+    (got.length?'<p style="margin-top:10px"><button id="printGuide" data-act="print">Print field guide</button></p>':'<p class="gmeta">Definitions appear here as you earn terms.</p>');
 }
 function render(){
   if(!cur)return;
@@ -850,7 +851,7 @@ function render(){
 
 /* one dispatcher for every move: real clicks arrive here, and so do the tests */
 function act(type,a,b,c){
-  if(type==='next')return loadLevel(cur.L.id+1);
+  if(type==='next'){loadLevel(cur.L.id+1);const title=$('#title');title.focus({preventScroll:true});title.scrollIntoView?.({block:'start'});return;}
   if(type==='lvl'){const n=+a;loadLevel(n);return;}
   if(type==='print'){$('#guide').open=true;window.print();return;}
   if(type==='skip'){if(cur.skipAct)return act(cur.skipAct[0],cur.skipAct[1],cur.skipAct[2]);return;}
@@ -893,7 +894,7 @@ function gridSvg(o){
     if(st.icon){const mx=(x1+x2)/2,my=(y1+y2)/2;labels.push('<use href="#'+st.icon+'" transform="translate('+(mx+(d==='S'?11:0))+','+(my+(d==='E'?-10:0))+') scale(.7)"/>');}
     if(st.arrow){const f=st.price!==undefined&&st.price!==null?.52:.3,ax1=x1+(x2-x1)*f,ay1=y1+(y2-y1)*f,ax2=x1+(x2-x1)*.76,ay2=y1+(y2-y1)*.76;
       labels.push('<line class="arrow'+(P<40?' sm':'')+'" x1="'+ax1+'" y1="'+ay1+'" x2="'+ax2+'" y2="'+ay2+'" marker-end="url(#mArrow'+(P<40?'S':'')+')"/>');}
-    if(st.hit)hits.push('<line class="hitst" data-act="street" data-a="'+i+'" data-b="'+j+'" data-c="'+d+'" x1="'+x1+'" y1="'+y1+'" x2="'+x2+'" y2="'+y2+'" stroke-width="'+Math.max(18,P*.5)+'"><title>'+esc(st.hit)+'</title></line>');
+    if(st.hit)hits.push('<line class="hitst" tabindex="0" role="button" aria-label="'+esc(st.hit)+' from ('+a+', '+b+') to ('+i+', '+j+')" data-act="street" data-a="'+i+'" data-b="'+j+'" data-c="'+d+'" x1="'+x1+'" y1="'+y1+'" x2="'+x2+'" y2="'+y2+'" stroke-width="'+Math.max(18,P*.5)+'"><title>'+esc(st.hit)+'</title></line>');
   }
   streets.sort((p,q)=>p.z-q.z).forEach(s=>h+=s.s);
   /* overlays: trails and routes, as lists of corners */
@@ -1211,7 +1212,7 @@ MODES.tourist={
     }
     const g=c.g,city=c.inst.big,wt=cityWeight(city);
     const route=c.phase==='bot'?penRoute(g):null;
-    let h='<div class="pad sub">This city has '+binom(8,4)+' routes from corner to corner. '+(c.phase==='big'?'Pencil each corner with the most sights the tourist can have seen on arrival: click the street that best arrival comes along.':'Your pencilled city.')+'</div>'+
+    let h='<div class="pad sub">This city has '+binom(8,4)+' routes from corner to corner. '+(c.phase==='big'?'For each highlighted corner, add the sights on each incoming street to the score at its starting corner. Choose the street with the highest total.':'Your pencilled city.')+'</div>'+
       '<div class="cityscroll">'+gridSvg({n:4,m:4,P:72,maxw:430,minw:330,label:'A four by four city',
       street:(i,j,d)=>{
         const ready=c.phase==='big'&&penReady(g,i,j),fl=c.flash&&c.flash[0]===i&&c.flash[1]===j&&c.flash[2]===d;
@@ -1294,7 +1295,7 @@ function cityPencil(){
   return g;
 }
 MODES.follow={
-  init(c){c.g=cityPencil();c.pos=[4,4];c.back=[[4,4]];say('Click the corner the arrow into the tourist’s corner comes from.');},
+  init(c){c.g=cityPencil();c.pos=[4,4];c.back=[[4,4]];say('Find the arrow pointing into the tourist’s corner. Click the corner at its tail.');},
   rule:()=>'Walk back along the arrows',
   view(c){
     const g=c.g,city=c.inst.big,wt=cityWeight(city);
@@ -1364,7 +1365,7 @@ MODES.deckcity={
   act(c,type,a,b,d){
     if(c.done)return;
     const {v,w}=c.inst;
-    if(type==='lay'&&c.phase==='pre'){c.phase='row';log('lay');say('Pencil row 1: for each corner, click the street its best arrival comes along.');render();return;}
+    if(type==='lay'&&c.phase==='pre'){c.phase='row';log('lay');say('Fill in row 1. At each corner, choose the incoming street that gives the highest total.');render();return;}
     if(type==='street'&&c.phase==='row'){
       const i=+a,j=+b;if(i!==1||!penReady(c.g,i,j))return;
       const ar=penArrivals(c.g,i,j),x=ar.find(y=>y.d===d),best=penBest(c.g,i,j);
@@ -1416,7 +1417,7 @@ MODES.tolls={
       overlays:[{corners:old,cls:'ghost',w:4}].concat(c.back&&c.back.length>1?[{corners:c.back,cls:'route',w:6}]:[]),
       corner:(i,j)=>{const base=deckCorner(c,c.phase==='back'&&!c.done?(a,b)=>'Corner '+a+','+b:null)(i,j);if(into(i,j)){base.cls+=' ready';base.num='?';}return base;},
       tourist:c.pos||null})+'</div>';
-    if(c.phase==='one')h+='<div class="entry"><label for="entry">Best arrival at the marked corner (2 cards taken or thrown away from each deck):</label><input id="entry" inputmode="numeric" autocomplete="off" data-change="typed"><button class="primary" data-act="type">Pencil it</button></div>';
+    if(c.phase==='one')h+='<div class="entry"><label for="entry">Best arrival at the marked corner (2 cards taken or thrown away from each deck):</label><input id="entry" autocomplete="off" value="'+esc(c.typed||'')+'"><button class="primary" data-act="type">Pencil it</button></div>';
     h+='<div class="pad gmeta">Dashed grey: your best route from level 7.</div>';
     if(c.done)h+=alignTiles(c.top,c.bot,{label:'The best route under tolls, as a line-up · score '+c.g.s[n][m]});
     return h;
@@ -1424,14 +1425,13 @@ MODES.tolls={
   act(c,type,a,b){
     if(c.done)return;
     const {v,w}=c.inst,[ti,tj]=TOLL_CORNER;
-    if(type==='typed'){c.typed=a;return;}
     if(type==='type'&&c.phase==='one'){
-      const raw=a!==undefined?a:c.typed;const val=Number(String(raw||'').replace('−','-').trim());
-      if(raw===undefined||String(raw).trim()===''||!Number.isFinite(val)){say('Type a whole number, such as −3.','warn');render();return;}
+      const raw=String(a!==undefined?a:$('#entry').value).trim().replace('−','-');c.typed=raw;const val=Number(raw);
+      if(!raw||!Number.isInteger(val)){say('Type a whole number, such as −3.','warn');render();$('#entry').focus();return;}
       const best=penBest(c.g,ti,tj);c.tries++;log('toll_corner',{typed:val,best});
       if(val!==best){
         const mn=n=>n<0?'−'+(-n):String(n),ar=penArrivals(c.g,ti,tj).map(x=>(x.d==='S'?'from the north ':x.d==='E'?'from the west ':'along the diagonal ')+mn(c.g.s[x.from[0]][x.from[1]])+' '+signed(x.w).replace(/^([+−])/,'$1 ')+' = '+mn(x.val));
-        stage(signed(val).replace(/^\+/,'')+' is not the best arrival. The three ways in: '+ar.join('; ')+'.','warn');render();return;
+        stage(signed(val).replace(/^\+/,'')+' is not the best arrival. The three ways in: '+ar.join('; ')+'.','warn');render();$('#entry').focus();$('#entry').select?.();return;
       }
       const ar=penArrivals(c.g,ti,tj),d=['D','S','E'].find(d=>ar.some(x=>x.d===d&&x.val===best));penSet(c.g,ti,tj,d);c.hand=1;c.stage=null;
       say('Right: '+signed(best).replace(/^\+/,'')+'. The pencil can do the rest the same way.','good');c.phase='ready';render();return;
@@ -1464,7 +1464,7 @@ function taxiRoute(p,on,off,mode){
 function taxiMode(kind){
   const overlapMode=kind==='overlap';
   const ans=c=>overlapMode?c.inst.overlap:c.inst.local;
-  const canOn=(c,i,j)=>overlapMode?j===0:true;
+  const canOn=(c,i,j)=>(!overlapMode||j===0)&&(i<c.inst.v.length||j<c.inst.w.length);
   const canOff=(c,i,j)=>c.on&&i>=c.on[0]&&j>=c.on[1]&&(overlapMode?i===c.inst.v.length:true)&&!(i===c.on[0]&&j===c.on[1]);
   return {
     init(c){c.on=null;c.off=null;c.tries=[];c.bestTry=null;c.glob=align(c.inst.v,c.inst.w,TOLLS,'global');
@@ -1482,7 +1482,8 @@ function taxiMode(kind){
         overlays:ov,
         corner:(i,j)=>{const isOn=c.on&&c.on[0]===i&&c.on[1]===j,isOff=c.off&&c.off[0]===i&&c.off[1]===j;
           const ok=c.done?false:(!c.on||c.off)?canOn(c,i,j):canOff(c,i,j);
-          return {cls:(isOn||isOff?'pick':'')+(!ok&&!isOn&&!isOff&&!c.done?' dim':''),hit:ok?((!c.on||c.off)?'Get out of the taxi here':'Call the taxi here'):undefined};},
+          const action=ok?((!c.on||c.off)?'Start the walk':'End the walk'):isOn&&!c.off?'Cancel the starting corner':null;
+          return {cls:(isOn||isOff?'pick':'')+(!ok&&!isOn&&!isOff&&!c.done?' dim':''),hit:action?action+' at ('+i+', '+j+')':undefined};},
         taxi:[c.on,c.off].filter(Boolean),tourist:c.off||c.on||[0,0]})+'</div>';
       h+='<div class="pad">'+(cur2?'This ride: '+(overlapMode?'skip '+c.on[0]+' nucleotides of read 1, ':'get out at '+c.on[0]+','+c.on[1]+', ')+(overlapMode?'leave '+(m-c.off[1])+' nucleotides of read 2':'call the taxi at '+c.off[0]+','+c.off[1])+' · the walk between scores <b>'+cur2.score+'</b>':'')+
         (c.bestTry!==null?'<div class="gmeta">Best walk so far: '+c.bestTry+' · rides tried: '+c.tries.length+'</div>':'')+'</div>';
@@ -1493,7 +1494,8 @@ function taxiMode(kind){
       if(c.done||type!=='corner')return;
       const i=+a,j=+b;
       if(!c.on||c.off){if(!canOn(c,i,j))return;c.on=[i,j];c.off=null;log('taxi_on',{at:[i,j]});
-        say(overlapMode?'Now click a corner on the bottom edge where the taxi picks the tourist up.':'Now click a corner further on where the taxi picks the tourist up.');render();return;}
+        say((overlapMode?'Choose an ending corner on the bottom edge.':'Choose an ending corner further along the grid.')+' Select the starting corner again to change it.');render();return;}
+      if(i===c.on[0]&&j===c.on[1]){c.on=null;say(overlapMode?'Choose a starting corner on the left edge.':'Choose a starting corner.');render();return;}
       if(!canOff(c,i,j))return;
       c.off=[i,j];const r=taxiRoute(c.inst,c.on,c.off);c.tries.push(r.score);c.bestTry=Math.max(c.bestTry===null?-Infinity:c.bestTry,r.score);
       log('taxi_off',{on:c.on,off:c.off,score:r.score});
@@ -1571,7 +1573,7 @@ function renderBench(){
   document.title='Toll City workbench';
   ['#pips','#badges','#rule','#skip','.controls','#guide','.vocabhead','#hdrinfo','footer'].forEach(s=>{const e=$(s);if(e)e.hidden=true;});
   $('#title').textContent='Workbench';
-  $('#brief').innerHTML='Paste two strings, set the prices, and pick where the free taxi runs. The pencil fills the table and follows the arrows; the greedy card player (take both whenever the top cards match, otherwise throw away from the deck with more cards left, deck 1 on a tie) plays the same two strings as decks. Nothing here is saved. <a href="./">Back to the game</a>.';
+  $('#brief').innerHTML='Enter two sequences, choose how to score them, and run the alignment. Compare the best alignment with a greedy card player who takes a match whenever possible. Otherwise it discards from the longer deck, choosing deck 1 on a tie. <a href="./">Back to the game</a>.';
   const q=new URLSearchParams(location.search);
   $('#view').innerHTML='<div class="pad"><div class="benchform">'+
     '<label for="bv">String v (deck 1, rows)</label><input id="bv" value="'+esc(q.get('v')||'AGACTG')+'" spellcheck="false">'+
@@ -1608,7 +1610,7 @@ document.addEventListener('click',ev=>{
   act(d.act,d.a,d.b,d.c);
 });
 document.addEventListener('keydown',ev=>{
-  const t=ev.target.closest&&ev.target.closest('g[data-act]');
+  const t=ev.target.closest&&ev.target.closest('g[data-act],line[data-act]');
   if(t&&(ev.key==='Enter'||ev.key===' ')){ev.preventDefault();const d=t.dataset;act(d.act,d.a,d.b,d.c);}
   if(ev.target.id==='entry'&&ev.key==='Enter'){ev.preventDefault();act('type',ev.target.value);}
 });

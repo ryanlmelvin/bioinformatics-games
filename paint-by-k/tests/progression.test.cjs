@@ -110,7 +110,14 @@ test('level 9: a pair that is not the closest is refused and the closest is mark
  ui.api.act('merge',wrong);assert.equal(c.st.merges.length,0);assert(c.st.hint);
  PLAY[9](boot(undefined,{search:'?debug=1&level=9&seed=TREE'}));
  const u=boot(undefined,{search:'?debug=1&level=9&seed=TREE'});const s=u.api.state();
- for(const mm of s.inst.merges){const key=g=>g.slice().sort().join(),i=s.st.groups.findIndex(g=>key(g)===key(mm.a)),j=s.st.groups.findIndex(g=>key(g)===key(mm.b));u.api.act('merge',Math.min(i,j)+','+Math.max(i,j));if(s.st.phase==='hand'){u.el('#hand').value=String(s.inst.hand.value);u.api.act('checkhand');}}
+ for(const mm of s.inst.merges){const key=g=>g.slice().sort().join(),i=s.st.groups.findIndex(g=>key(g)===key(mm.a)),j=s.st.groups.findIndex(g=>key(g)===key(mm.b));u.api.act('merge',Math.min(i,j)+','+Math.max(i,j));if(s.st.phase==='hand'){
+   u.el('#hand').value=String(s.inst.hand.value);u.api.act('checkhand');u.api.undo();
+   assert.match(u.el('#stage').innerHTML,/id="hand"/,'the distance can still be entered after undo');
+   u.el('#hand').value=String(s.inst.hand.value);u.api.act('checkhand');
+ }}
+ const targets=Array.from(u.el('#stage').innerHTML.matchAll(/data-act="cut" data-arg="(\d+)"[^>]*aria-label="Cut at distance ([\d.]+)"/g));
+ assert.equal(targets.length,8);
+ for(const [,groups,height] of targets)assert.equal(+groups,8-s.inst.merges.filter(m=>m.d<+height).length);
  u.api.act('cut','4');assert.equal(s.done,false);u.api.act('cut','3');assert(s.done);
 });
 test('undo restores the previous state',()=>{
@@ -120,6 +127,9 @@ test('undo restores the previous state',()=>{
 test('the workbench opens with ?bench=1',()=>{
  const ui=boot(undefined,{search:'?bench=1'});assert.match(ui.el('#bench').innerHTML,/Workbench/);
  ui.el('#bpts').value='0 0\n5 5\n0 5\n1 1\n2 2\n3 3\n1 2';ui.el('#bk').value='3';ui.el('#brun').click();assert.match(ui.el('#bout').innerHTML,/Farthest-first traversal/);assert.match(ui.el('#bout').innerHTML,/\(0, 0\) \(5, 5\) \(0, 5\)/);
+ ui.el('#bk').value='2.5';ui.el('#brun').click();assert.match(ui.el('#bout').innerHTML,/whole number/);
+ ui.el('#bk').value='2';ui.el('#bstart').value='1 2';ui.el('#brun').click();assert.match(ui.el('#bout').innerHTML,/Enter 2 starting points/);
+ ui.el('#bpts').value='0 0\n1 1\noops';ui.el('#brun').click();assert.match(ui.el('#bout').innerHTML,/numeric coordinates/);
 });
 test('level 8 keeps the level 1 cards: New puzzle is disabled and does nothing',()=>{
  const ui=boot(undefined,{search:'?debug=1&seed=KEEP'});PLAY[1](ui);const piles=plain(ui.persisted().piles1);ui.api.loadLevel(8);

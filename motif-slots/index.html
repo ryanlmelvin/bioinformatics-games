@@ -116,6 +116,7 @@ input.num{font:inherit;width:5.5em;padding:5px 8px;border:1px solid var(--line);
 .readcell.next{stroke:#1f2328;stroke-width:3}
 .miss{fill:none;stroke:#6b7078;stroke-width:2;stroke-dasharray:4 3}
 .cell{fill:transparent;cursor:pointer}
+.cell:focus-visible{outline:2px solid var(--m-clamp);outline-offset:-2px}
 .cell:hover{fill:rgba(109,63,181,.14)}
 .payline{fill:var(--m-lit);opacity:.22;pointer-events:none}
 .paybar{fill:none;stroke:var(--m-trim);stroke-width:3;pointer-events:none}
@@ -205,7 +206,7 @@ textarea{font:14px/1.4 ui-monospace,Menlo,monospace;width:100%;min-height:9em;pa
   <div class="vocabhead">Vocabulary you have earned <span style="text-transform:none;letter-spacing:0">(hover for the definition)</span></div>
   <div class="badges" id="badges"></div>
 
-  <h2 id="title"></h2>
+  <h2 id="title" tabindex="-1"></h2>
   <p id="brief"></p>
   <div class="rule" id="rule"></div>
 
@@ -244,6 +245,7 @@ textarea{font:14px/1.4 ui-monospace,Menlo,monospace;width:100%;min-height:9em;pa
     <div data-bk-app></div>
   </div>
   <footer>
+    <a href="?bench=1">Workbench</a>
     <button id="dl">Download move log</button>
     <a href="../">All games</a>
   </footer>
@@ -589,7 +591,7 @@ function parseNum(s){s=String(s).trim().replace(/\s+/g,'');if(!s)return NaN;cons
 
 const LEVELS=[
   {id:1,title:'A recurring sequence',
-   brief:'A bacterial DNA sequence of eighty nucleotides. One five-nucleotide sequence occurs far more often than chance would predict. Find it.'},
+   brief:'Find the five-nucleotide sequence that occurs most often in this stretch of bacterial DNA.'},
   {id:2,title:'Close enough',
    brief:'Another bacterial DNA sequence contains five variants of the same five-nucleotide sequence. Each variant has one nucleotide substitution, at a different position each time.'},
   {id:3,title:'Both strands',
@@ -599,17 +601,17 @@ const LEVELS=[
   {id:5,title:'The reels',
    brief:'Four of those strips are now reels in a machine. A reel can only slide. The clamp reads the window at the payline on every reel at once.'},
   {id:6,title:'Too many stops',
-   brief:'All ten reels. Each one has 19 stops, so the machine has 19¹⁰ settings, about 6 × 10¹².'},
+   brief:'Each of the ten reels has 19 stops. Together they give the machine 19¹⁰ possible settings, about 6 × 10¹².'},
   {id:7,title:'Let the reels vote',
-   brief:'Five reels with four nucleotides at the payline. The reels already stopped vote on what each column should be, and a reel stops where the vote favours.'},
+   brief:'Each reel shows four nucleotides at the payline. Use the first four reels to predict where the fifth should stop.'},
   {id:8,title:'One zero spoils everything',
    brief:'Back to your trip down the reels, at the moment reel 2 stopped.'},
   {id:9,title:'Spin',
-   brief:'Six reels, five nucleotides at the payline. Pull the lever and every reel stops anywhere. Then let the reels vote.'},
+   brief:'Six reels, five nucleotides at the payline. Pull the lever to give each reel a random starting position. Then let the reels vote.'},
   {id:10,title:'Hold all but one',
    brief:'The same six reels, and the machine is stuck.'},
   {id:11,title:'Dusk',
-   brief:'The ten genes from level 4 return. The machine now runs on its own, nine nucleotides wide.'}
+   brief:'The ten genes from level 4 return. This time the machine searches their upstream regions for a nine-nucleotide pattern.'}
 ];
 
 /* Primary sources. Each was opened (publisher record, Crossref or PubMed abstract) before its line was written. */
@@ -647,7 +649,7 @@ const VOCAB=[
   {id:'profile',name:'Profile matrix',src:'hertz',def:'A 4 × k table giving, for each column of a motif matrix, the fraction of its rows containing A, C, G or T. Each column adds up to 1.'},
   {id:'pmp',name:'Profile-most probable k-mer',code:'BA2C',def:'The k-mer of a string with the highest probability given a profile matrix: the product, column by column, of the profile entries for its nucleotides. A tie goes to the first such k-mer.'},
   {id:'greedy',name:'Greedy motif search',code:'BA2D',def:'GreedyMotifSearch: for each k-mer in the first string, choose a k-mer in each following string in turn, the profile-most probable one given the k-mers chosen so far; keep the collection with the lowest score.'},
-  {id:'pseudo',name:'Pseudocounts',code:'BA2E',def:'Small numbers added to every count before a profile is made, so that no nucleotide gets probability 0. Adding 1 to every count is Laplace’s Rule of Succession.'},
+  {id:'pseudo',name:'Pseudocounts',code:'BA2E',def:'Small numbers added to every count before a profile is made, so that no nucleotide gets probability 0. Adding 1 to every count is called Laplace smoothing.'},
   {id:'rand',name:'Randomized motif search',code:'BA2F',def:'RandomizedMotifSearch: start from randomly chosen k-mers; repeatedly build the profile (with pseudocounts) and replace every k-mer by the profile-most probable one in its string, until the score stops improving. Run it many times and keep the best.'},
   {id:'gibbs',name:'Gibbs sampling',src:'lawrence',code:'BA2G',def:'GibbsSampler: repeatedly set aside one randomly chosen string, build a profile from the others, and replace that string’s k-mer by one drawn at random with probability proportional to the profile. Because it can move to a worse collection, it can leave a stall.'}
 ];
@@ -659,7 +661,7 @@ const params=new URLSearchParams(location.search),urlSeed=params.get('seed');
 const requestedLevel=Number(params.get('level'));
 const previewLevel=Number.isInteger(requestedLevel)&&requestedLevel>=1&&requestedLevel<=LEVELS.length?requestedLevel:0;
 function load(){try{return JSON.parse(localStorage.getItem(KEY))||{};}catch(e){return {};}}
-function save(){if(previewLevel)return;if(S&&S.done)S.link=encodeProgress(S);try{localStorage.setItem(KEY,JSON.stringify(S));}catch(e){}writeLink();}
+function save(){if(TRANSIENT)return;if(S&&S.done)S.link=encodeProgress(S);try{localStorage.setItem(KEY,JSON.stringify(S));}catch(e){}writeLink();}
 function freshState(seed){return {seed,unlocked:1,done:[],badges:[],earnedAt:{},variants:{},log:[]};}
 /* First-load puzzle codes. The tests play every level of each one. */
 const CODES='2J2KZF 57GXSW 6A7PLJ 49DHEX K2GDFM 2FBVBU 8BRY5Q PFV7P6 FSMQQ5 BD94UU LRX5XQ MGKH6X XH2DVM 55AJNJ 9PJ7QG F3AJBB FHY3XR Y65CBJ TUS6AS FW9MEC SZHDYU ZFA4C7 P4VXTE 6QJSXF BD4EV9 KS3Y9G YNPZFX G7WF9W LY4D9H UR5PK2 STR844 FUFJ4R ED7533 XXUKF9 BR4HQR 7XD85W 5BMZYE PB3ASD LXWULC UZ984D B5XJNR LKSNDR UCQHZZ KXFYNC YQJFX9 LL7MAC E8AUVH P59PXS 56YRZ7 DGM2R3'.split(' ');
@@ -743,7 +745,7 @@ function useLink(){
     linkNote='Restored from your progress link: '+got.terms.length+' vocabulary term'+(got.terms.length===1?'':'s')+' and '+got.levels.length+' finished level'+(got.levels.length===1?'':'s')+'.';
   }
 }
-let S=previewLevel?freshState(urlSeed||randomCode()):load();
+let S=TRANSIENT?freshState(urlSeed||randomCode()):load();
 if(urlSeed&&urlSeed!==S.seed)S=freshState(urlSeed);
 if(!S.seed)S=freshState(randomCode());
 withDone(S);
@@ -795,6 +797,10 @@ function leverSvg(x,y,h,state){
 
 /* ---------- drawing: one long strip (levels 1 to 3) ---------- */
 /* o: {text,k,partner,lit:[{pos,strand,cls}],read:{pos,word,typed},clamp:{pos,strand,bad,slip},clickable} */
+function cellControl(key,word,pos,row){
+  const first=row===undefined?'0':'0:0',label=(row===undefined?'':'Reel '+(row+1)+', ')+'position '+pos+', '+word;
+  return 'class="cell" data-act="cell" data-arg="'+key+'" role="button" tabindex="'+(key===(cur.focusCell||first)?0:-1)+'" aria-label="'+label+'"';
+}
 function tapeSvg(o){
   const n=o.text.length,rowLen=narrow()?10:20,cw=30,X0=46,rows=Math.ceil(n/rowLen),line=36,sgap=26,rowH=o.partner?line*2+sgap+32:line+30;
   const W=X0*2+rowLen*cw,H=40+rows*rowH+10,yOf=(r,s)=>44+r*rowH+(s?line+sgap:0);
@@ -817,8 +823,8 @@ function tapeSvg(o){
     }
     fore+=chText(x,yOf(r,0)+line/2+1,o.text[i],'',19);
     if(o.partner)fore+=chText(x,yOf(r,1)+line/2+1,COMP[o.text[i]],'',19);
-    if(o.clickable){
-      hit+='<rect class="cell" data-act="cell" data-arg="'+i+'" x="'+(X0+c*cw)+'" y="'+yOf(r,0)+'" width="'+cw+'" height="'+line+'"/>';
+    if(o.clickable&&i+o.k<=n){
+      hit+='<rect '+cellControl(String(i),o.text.substr(i,o.k),i+1)+' x="'+(X0+c*cw)+'" y="'+yOf(r,0)+'" width="'+cw+'" height="'+line+'"/>';
     }
   }
   let cl='';
@@ -855,7 +861,7 @@ function rackSvg(o){
       const inPay=o.mode==='reels'&&c>=P0&&c<P0+k,bad=pm&&inPay&&!lift&&!dim&&pm[i][c-P0];
       if(bad)g+='<rect class="badcell" x="'+(colX(c)+2)+'" y="'+(y+3)+'" width="'+(cw-4)+'" height="'+(rh-6)+'" rx="3"/>';
       g+=chText(colX(c)+cw/2,y+rh/2+1,str[j],(dim&&!inPay)||(dim&&inPay)?'dim':bad?'bad':'',small?19:18);
-      if(o.click)g+='<rect class="cell" data-act="cell" data-arg="'+i+':'+j+'" x="'+colX(c)+'" y="'+y+'" width="'+cw+'" height="'+rh+'"/>';
+      if(o.click&&j+k<=n)g+='<rect '+cellControl(i+':'+j,str.substr(j,k),j+1,i)+' x="'+colX(c)+'" y="'+y+'" width="'+cw+'" height="'+rh+'"/>';
     }
     g+='<rect class="reelshade" x="'+(L-1)+'" y="'+y+'" width="'+(areaW+2)+'" height="'+rh+'"/>';
     if(o.mode==='strips'&&o.clamps){let last=-99;lit.forEach(p=>{if(p>=last+k){g+=clampSvg(colX(p),y,k*cw,rh,null,false,true);last=p;}});}
@@ -906,7 +912,7 @@ function dialHtml(word,label,extra){
 function boardHtml(list,fmt,opt){
   opt=opt||{};
   return '<div class="sub">'+(opt.title||'The machine’s board')+'</div><div class="board'+(opt.live?' live':'')+'">'+list.slice(0,opt.max||12).map((x,i)=>
-    '<button type="button" '+(opt.live?'tabindex="-1" aria-disabled="true"':'data-act="pick" data-arg="'+x.word+'"'+('selected' in opt?' aria-pressed="'+(x.word===opt.selected)+'"':'')+' aria-label="'+(opt.pickLabel||'Look for ')+x.word+'"')+' class="'+(i===0?'top':'')+'"><span>'+wordHtml(x.word)+'</span><b>'+fmt(x)+'</b></button>').join('')+'</div>';
+    '<button type="button" '+(opt.live?'disabled tabindex="-1"':'data-act="pick" data-arg="'+x.word+'"'+('selected' in opt?' aria-pressed="'+(x.word===opt.selected)+'"':'')+' aria-label="'+(opt.pickLabel||'Look for ')+x.word+'"')+' class="'+(i===0?'top':'')+'"><span>'+wordHtml(x.word)+'</span><b>'+fmt(x)+'</b></button>').join('')+'</div>';
 }
 /* windows lit for a word: top strand within d of the word; bottom strand where the partner strand, read right to left, is within d */
 function stripLit(text,w,d,both){
@@ -942,7 +948,7 @@ LV[1]={
     if(cur.step==='count'||cur.step==='sweep')cur.found.forEach(pos=>lit.push({pos,strand:0}));
     if(cur.missed)cur.missed.forEach(pos=>lit.push({pos,strand:0,cls:'lit2'}));
     if(cur.dial&&cur.step==='done')litPositions(I.text,cur.dial,0).forEach(pos=>lit.push({pos,strand:0}));
-    const svg=tapeDraw({lit,clamp:cur.step==='done'?null:{pos:cur.clamp,strand:0,slip:cur.slip},clickable:!cur.done});
+    const svg=tapeDraw({lit,clamp:cur.step==='done'?null:{pos:cur.clamp,strand:0,slip:cur.slip},clickable:cur.step==='guess'||cur.step==='count'});
     let t='';
     if(cur.step==='guess')t=dialHtml(I.text.substr(cur.clamp,5),'In the clamp')+'<div class="row"><button class="primary" data-act="grip">This is the sequence</button></div>';
     if(cur.step==='count')t=dialHtml(cur.guess,'Looking for')+'<p>Find every window that reads '+wordHtml(cur.guess)+'. Click its first nucleotide. Found: <b>'+cur.found.length+'</b></p><div class="row"><button class="primary" data-act="counted">That is all of them</button></div>';
@@ -991,16 +997,16 @@ LV[2]={
     let t='';
     if(cur.step==='sweep0')t=dialHtml(null,'Looking for')+(cur.board?boardHtml(cur.board,x=>'×'+x.lit):'')+'<div class="row"><button class="primary" data-act="sweep">Count every sequence on the strip</button></div>';
     if(cur.step==='compare'){
-      t=boardHtml(cur.board,x=>'×'+x.lit,{max:6,title:'The board said'})+'<div class="hand"><h3>Nucleotide by nucleotide</h3><p>The sequence '+wordHtml(I.word)+' is not on the strip at all. Compare it with the three blue windows: click every nucleotide of a window that differs from the sequence above it.</p>'+
+      t=boardHtml(cur.board,x=>'×'+x.lit,{max:6,live:true,title:'Exact-match counts'})+'<div class="hand"><h3>Nucleotide by nucleotide</h3><p>The sequence '+wordHtml(I.word)+' is not on the strip at all. Compare it with the three blue windows: click every nucleotide of a window that differs from the sequence above it.</p>'+
         '<div class="tscroll"><div class="comparison-row"><span class="sub">the sequence</span>'+tiles(I.word)+'</div>'+
         I.compare.map((p,r)=>'<div class="comparison-row"><span class="sub">at '+(p+1)+'</span>'+[...I.text.substr(p,5)].map((c,j)=>'<button class="tile b'+c+(cur.marks[r].includes(j)?' bad':'')+'" data-act="mark" data-arg="'+r+':'+j+'">'+c+'</button>').join('')+
         '<span class="gmeta">'+(cur.marks[r].length?plural(cur.marks[r].length,'nucleotide')+' different':'')+'</span></div>').join('')+'</div></div>';
     }
     if(cur.step==='tol'||cur.step==='done'){
       const hasBoard=cur.board&&cur.boardD===cur.d;
-      t=(cur.step==='tol'?'<p>'+(hasBoard?'Select the sequence with the most lit windows, then click <b>Submit answer</b>.':'Use the differences you counted to set the mismatch limit, then click <b>Find sequences</b>.')+'</p>':'')+
+      t=(cur.step==='tol'?'<p>'+(hasBoard?'Using the mismatch limit you found by hand, select the sequence with the most lit windows and submit it.':'Set the mismatch limit to the number of differences you found in each window, then click <b>Find sequences</b>.')+'</p>':'')+
         dialHtml(cur.dial,'Selected','<span class="sub" style="margin:0 0 0 12px">mismatches allowed</span>'+[0,1,2].map(d=>'<button class="'+(cur.d===d?'on':'')+'" data-act="tol" data-arg="'+d+'" aria-pressed="'+(cur.d===d)+'">'+d+'</button>').join(''))+
-        (hasBoard?boardHtml(cur.board,x=>x.lit+' lit',{selected:cur.dial,pickLabel:'Select '})+
+        (hasBoard?boardHtml(cur.board,x=>x.lit+' lit',{live:cur.done,selected:cur.dial,pickLabel:'Select '})+
           (cur.step==='tol'?'<div class="row"><button class="primary" data-act="submit"'+(!cur.dial?' disabled':'')+'>Submit answer</button></div>':''):
           '<div class="row"><button class="primary" data-act="sweep">Find sequences</button></div>');
     }
@@ -1029,8 +1035,8 @@ LV[2]={
     if(a==='submit'&&cur.step==='tol'){
       if(!cur.board||cur.boardD!==cur.d||!cur.dial){say('Find sequences and select one before submitting.','warn');return;}
       const n=litPositions(I.text,cur.dial,cur.d).length;log('submit',{word:cur.dial,d:cur.d});
-      if(cur.dial===I.word&&cur.d>=1){cur.step='done';say(cur.dial+' lights '+n+' windows with up to '+plural(cur.d,'mismatch')+', although it never occurs exactly.','good');finish(['ham']);}
-      else say(cur.d===0?'Exact matches miss the altered copies. Allow a mismatch and find sequences again.':cur.dial+' lights '+plural(n,'window')+'. Another sequence lights more.','warn');
+      if(cur.dial===I.word&&cur.d===1){cur.step='done';say(cur.dial+' lights '+n+' windows with up to '+plural(cur.d,'mismatch')+', although it never occurs exactly.','good');finish(['ham']);}
+      else say(cur.d===0?'Exact matches miss the altered copies. Allow a mismatch and find sequences again.':cur.d===2?'Two mismatches admit extra windows. Each of the three windows you compared differed at just one position. Set the limit to 1 and search again.':cur.dial+' lights '+plural(n,'window')+'. Another sequence lights more.','warn');
     }
   },
   reveal(){return '<p>The number of nucleotides that differ between two sequences of the same length is their '+term('ham')+'. A lit window is one within Hamming distance d of the sequence you are looking for, here d = '+cur.d+'. The winning sequence never occurs exactly. It wins because more windows are within distance '+cur.d+' of it than of any other sequence.</p>';}
@@ -1124,12 +1130,12 @@ LV[4]={
   },
   reveal(){const I=cur.inst;return '<p>A short sequence pattern shared, with substitutions, by the upstream regions of co-regulated genes is a '+term('motif','motif')+', and choosing one window on every strip to find it is '+term('mf','motif finding')+'. '+
     'Counting lit windows rewarded '+wordHtml(I.decoy)+', which is common on three strips and absent from the rest. The shared regulatory site must be present in every upstream region.</p>'+
-    '<p>With two mismatches allowed, '+plural(I.allTen.length,'sequence')+' light all ten genes.</p>';},
+    '<p>With two mismatches allowed, '+plural(I.allTen.length,'sequence')+(I.allTen.length===1?' lights':' light')+' all ten genes.</p>';},
   src:['pevzner']
 };
 
 LV[5]={
-  init(){cur.off=cur.inst.start.slice();say('Slide the reels with the arrows until the windows at the payline agree.');},
+  init(){cur.off=cur.inst.start.slice();say('Use the arrows to line up the reels. Aim for '+plural(cur.inst.target,'miss')+' or fewer across the highlighted columns.');},
   rule(){return 'Reels only slide · the clamp reads the payline';},
   draw(){
     const I=cur.inst;
@@ -1175,10 +1181,10 @@ LV[6]={
     let t='';
     if(cur.step==='bot'){
       const rate=b.ms>0?b.n/(b.ms/1000):0,years=rate?SETTINGS/rate/31557600:0;
-      t=b.running?'<p class="mono">Settings tried: <b>'+b.n.toLocaleString('en-US')+'</b> of '+SETTINGS.toLocaleString('en-US')+'<br>Fewest misses so far: <b>'+b.best+'</b><br>At this pace, every setting takes about <b>'+(years>=1?Math.round(years).toLocaleString('en-US')+' years':Math.round(years*365)+' days')+'</b>.</p>'
+      t=b.running?'<p class="mono">Settings tried: <b>'+b.n.toLocaleString('en-US')+'</b> of '+SETTINGS.toLocaleString('en-US')+'<br>Fewest misses so far: <b>'+b.best+'</b><br>At this pace, trying all the settings would take about <b>'+(years>=1?Math.round(years).toLocaleString('en-US')+' years':Math.round(years*365)+' days')+'</b>.</p>'
         :'<div class="row"><button class="primary" data-act="bot">Start the bot</button></div>';
     }else{
-      t=stackHtml(B.strips,cur.off,6)+(cur.board?boardHtml(cur.board,x=>x.lit+' in all',{title:'Each sequence, with its closest windows added up'}):'<div class="row"><button class="primary" data-act="dial">Try all 4,096 six-nucleotide sequences</button></div>');
+      t=stackHtml(B.strips,cur.off,6)+(cur.board?boardHtml(cur.board,x=>plural(x.lit,'mismatch'),{live:true,title:'Total mismatches across the closest windows'}):'<div class="row"><button class="primary" data-act="dial">Try all 4,096 six-nucleotide sequences</button></div>');
     }
     return {svg,tools:t};
   },
@@ -1203,7 +1209,7 @@ LV[6]={
       const far=cur.choice.map((c,i)=>hamming(w,H.reels[i].substr(c,3))>distToText(w,H.reels[i])?i+1:0).filter(Boolean);
       const got=parseNum(($('#total')||{}).value),want=cur.choice.reduce((s,c,i)=>s+hamming(w,H.reels[i].substr(c,3)),0);
       log('check',{word:w,total:got,far});
-      if(far.length){say('Reel '+far.join(' and reel ')+' has a window closer to '+w+'.','warn');return;}
+      if(far.length){say('Check '+(far.length===1?'reel ':'reels ')+far.join(', ')+'. You can find a closer match to '+w+' there.','warn');return;}
       if(got!==want){say('Count again: compare '+w+' with each chosen window nucleotide by nucleotide.','warn');return;}
       cur.totals.push(want);cur.wi++;cur.choice=[null,null,null];
       say(cur.wi<2?'Right. Now the second sequence.':'Choose the sequence that fits the three reels better.','good');
@@ -1236,7 +1242,7 @@ LV[6]={
   for(let p=0;p<t.length;p++)list.push({word:dec(p,6),lit:t[p]});
   list.sort((x,y)=>x.lit-y.lit||(x.word<y.word?-1:1));cur.board=list;
   const w=list[0].word;cur.off=B.strips.map(s=>closestPos(w,s));log('dial_all',{word:w,total:list[0].lit});
-  say(w+' has the smallest total, '+plural(list[0].lit,'mismatch')+'. The next best sequence has '+list[1].lit+'. The reels snap to its windows.','good');
+  say(w+' has the smallest total, '+plural(list[0].lit,'mismatch')+'. The reels now show its closest matches. The next best sequence has '+list[1].lit+'.','good');
   finish(['median'],{word:w});
   },
   skip(){return cur.step==='bot'&&cur.bot.running?'Stop the bot. Search the sequences instead →':'';},
@@ -1269,35 +1275,35 @@ function voteHtml(motifs,o){
 function oddsHtml(text,k,P,den,o){
   o=o||{};
   const pr=kmersOf(text,k).map(w=>prob(w,P));
-  return '<div class="sub">'+(o.title||'Odds of every stop')+'</div><div class="board">'+pr.map((p,j)=>
+  return '<div class="sub">'+(o.title||'Window probabilities')+'</div><div class="board">'+pr.map((p,j)=>
     '<button data-act="'+(o.act||'stop')+'" data-arg="'+j+'"'+(o.mark===j?' style="outline:2px solid var(--m-bad)"':'')+(o.act==='none'?' disabled':'')+'><span>'+(j+1)+' '+wordHtml(text.substr(j,k))+'</span><b title="'+p+'">'+showP(p,den)+'</b></button>').join('')+'</div>'+
-    (pr.every(p=>p===0)?'<p class="gmeta">No stop has any odds at all, so the reel stays at its first stop.'+(o.act==='none'?'':' Click stop 1.')+'</p>':'');
+    (pr.every(p=>p===0)?'<p class="gmeta">Every window has probability zero, so the leftmost stop wins the tie.'+(o.act==='none'?'':' Click stop 1.')+'</p>':'');
 }
 /* one reel of a trip down the reels: the student must click the stop the vote favours */
 function descend(j,pseudo){
   const I=cur.inst,i=cur.i,P=profileOf(motifsAt(I.dna.slice(0,i),cur.off,I.k),pseudo),best=mostProbablePos(I.dna[i],I.k,P);
   log('stop',{reel:i,pos:j,best,pseudo});
   if(j!==best){const pj=prob(I.dna[i].substr(j,I.k),P),pb=prob(I.dna[i].substr(best,I.k),P);
-    say(pj>=pb*(1-1e-9)?'A tie goes to the leftmost stop.':'Reel '+(i+1)+' will not stop there: another stop has better odds.','warn');return false;}
-  cur.off[i]=j;cur.dim[i]=false;cur.i++;say('Reel '+(i+1)+' stops at stop '+(j+1)+'.');
+    say(pj>=pb*(1-1e-9)?'A tie goes to the leftmost stop.':'Reel '+(i+1)+' will not stop there: another window is more probable.','warn');return false;}
+  cur.off[i]=j;cur.dim[i]=false;cur.i++;say('Reel '+(i+1)+' is set to window '+(j+1)+'.');
   return true;
 }
 function tripTools(pseudo){
   const I=cur.inst,i=cur.i,mot=motifsAt(I.dna.slice(0,i),cur.off,I.k),P=profileOf(mot,pseudo),den=Math.pow(i+(pseudo?4:0),I.k);
-  return voteHtml(mot,{pseudo})+oddsHtml(I.dna[i],I.k,P,den,{title:'Reel '+(i+1)+': odds of every stop, given the reels above'});
+  return voteHtml(mot,{pseudo})+oddsHtml(I.dna[i],I.k,P,den,{title:'Reel '+(i+1)+': window probabilities from the reels above'});
 }
 function reels(o){const I=cur.inst;return rackSvg(Object.assign({reels:I.dna,k:I.k,mode:'reels',off:cur.off,dim:cur.dim,miss:true,clamps:true},o));}
 
 LV[7]={
   init(){const I=cur.inst;cur.step='vote';cur.off=I.sites.slice(0,4).concat([0]);cur.dim=[false,false,false,false,true];cur.sel=[null,null,null,null];
     say('Fill in the missing column of the vote.');},
-  rule(){return cur.step==='vote'||cur.step==='prob'?'Each reel on the payline gets one vote per column':'A reel stops where the vote favours';},
+  rule(){return cur.step==='vote'||cur.step==='prob'?'Each reel on the payline gets one vote per column':'Choose the most probable window';},
   draw(){
     const I=cur.inst,m4=motifsAt(I.dna.slice(0,4),I.sites,4),P4=profileOf(m4,false),w5=I.dna[4].substr(I.sites[4],4);
     let t='';
     if(cur.step==='vote')t='<div class="hand"><h3>Count the vote</h3><p>Reels 1 to 4 are on the payline. In column '+(I.handCol+1)+', what share of the four reels shows each nucleotide?</p>'+voteHtml(m4,{editCol:I.handCol,sel:cur.sel})+'<div class="row"><button class="primary" data-act="check">Check</button></div></div>';
-    if(cur.step==='prob')t=voteHtml(m4)+'<div class="hand"><h3>Multiply it out</h3><p>Reel 5, at the window '+wordHtml(w5)+': take the share of its first nucleotide in column 1, of its second in column 2, and so on, and multiply the four shares.</p><div class="row"><label for="pin">Odds of '+w5+':</label><input id="pin" class="num" autocomplete="off" placeholder="a/b"><button class="primary" data-act="checkprob">Check</button></div></div>';
-    if(cur.step==='pick5')t=voteHtml(m4)+oddsHtml(I.dna[4],4,P4,256,{title:'Reel 5: the odds of every stop'})+'<p class="gmeta">Click the stop where reel 5 should stop.</p>';
+    if(cur.step==='prob')t=voteHtml(m4)+'<div class="hand"><h3>Multiply it out</h3><p>For the window '+wordHtml(w5)+' on reel 5, find the share for each nucleotide in its column. Multiply those four shares.</p><div class="row"><label for="pin">Probability of '+w5+':</label><input id="pin" class="num" autocomplete="off" placeholder="a/b"><button class="primary" data-act="checkprob">Check</button></div></div>';
+    if(cur.step==='pick5')t=voteHtml(m4)+oddsHtml(I.dna[4],4,P4,256,{title:'Reel 5: window probabilities'})+'<p class="gmeta">Choose the most probable window.</p>';
     if(cur.step==='top')t=voteHtml(m4)+'<div class="row"><button class="primary" data-act="top">Now start again from reel 1 alone</button></div>';
     if(cur.step==='down')t=tripTools(false);
     if(cur.step==='auto'||cur.step==='done')t=stackHtml(I.dna,cur.off,4)+(cur.step==='auto'?'<div class="row"><button class="primary" data-act="all">Let the machine try every first stop for reel 1</button></div>':'');
@@ -1319,31 +1325,35 @@ LV[7]={
     if(a==='stop'&&cur.step==='pick5'){
       const best=mostProbablePos(I.dna[4],4,profileOf(m4,false));
       if(+arg===best){cur.off[4]=best;cur.dim[4]=false;cur.step='top';log('pick5');say('Reel 5 stops where the other four agree with it most.','good');}
-      else say('Reel 5 will not stop there: another stop has better odds.','warn');
+      else say('Reel 5 will not stop there: another window is more probable.','warn');
     }
-    if(a==='top'&&cur.step==='top'){cur.step='down';cur.off=[I.sites[0],0,0,0,0];cur.dim=[false,true,true,true,true];cur.i=1;say('Only reel 1 is on the payline. Each reel below stops where the reels above it vote. Click the stop with the best odds on each reel in turn.');}
+    if(a==='top'&&cur.step==='top'){cur.step='down';cur.off=[I.sites[0],0,0,0,0];cur.dim=[false,true,true,true,true];cur.i=1;say('Start with reel 1. On each reel below it, choose the most probable window using the reels already lined up.');}
     if(a==='stop'&&cur.step==='down'){
       if(descend(+arg,false)&&cur.i===5){cur.step='auto';cur.trip=cur.off.slice();say('All five reels stopped: '+plural(scoreAt(I.dna,cur.off,4),'miss')+'.');}
     }
     if(a==='all'&&cur.step==='auto'){cur.step='done';cur.off=greedy(I.dna,4,false);const m=scoreAt(I.dna,cur.off,4);log('greedy_all',{misses:m});
       say('Starting from each of reel 1’s '+numWord(I.dna[0].length-3)+' stops in turn, the best trip ends with '+plural(m,'miss')+'.','good');finish(['profile','pmp','greedy'],{misses:m});}
   },
-  reveal(){return '<p>The table of shares is a '+term('profile','profile matrix')+'. The window it gives the best odds is the '+term('pmp','profile-most probable k-mer')+' of its string. Going down the reels one at a time, each stopping at its most probable window, and keeping the best trip over every first stop, is '+term('greedy','greedy motif search')+'.</p>';},
+  reveal(){return '<p>The table of shares is a '+term('profile','profile matrix')+'. The window with the highest probability under that profile is the '+term('pmp','profile-most probable k-mer')+' of its string. Going down the reels one at a time, each stopping at its most probable window, and keeping the best trip over every first stop, is '+term('greedy','greedy motif search')+'.</p>';},
   src:['hertz']
 };
 
+function columnUpdated(added){
+  return [0,1,2,3].some(j=>[0,1,2,3].every(r=>added[r*4+j]));
+}
 LV[8]={
   init(){const I=cur.inst;cur.step='plus';cur.off=[I.sites[0],I.fromNo[1],0,0,0];cur.dim=[false,false,true,true,true];cur.plus=Array(16).fill(false);cur.i=1;
-    say('Reel 2’s own stop gets odds 0 from this vote. Change the counts so that no stop is impossible.');},
-  rule(){return cur.step==='plus'?'Reel 2 stops where reel 1 votes':'A reel stops where the vote favours';},
+    say('Reel 1 gives the planted window on reel 2 a probability of zero. Add one to each count in the table.');},
+  rule(){return cur.step==='plus'?'Reel 2 stops where reel 1 votes':'Choose the most probable window';},
   draw(){
     const I=cur.inst,m1=[I.dna[0].substr(I.sites[0],4)],s2=I.dna[1].substr(I.sites[1],4);
     let t='';
     if(cur.step==='plus'){
       const same=[...s2].filter((x,j)=>x===m1[0][j]).length;
-      t='<p>On your trip, reel 2 stopped at stop '+(I.fromNo[1]+1)+', '+wordHtml(I.dna[1].substr(I.fromNo[1],4))+'. Its stop '+(I.sites[1]+1)+', '+wordHtml(s2,[...s2].map((x,j)=>x!==m1[0][j]))+', shares '+numWord(same)+' of its four nucleotides with reel 1, and still gets odds 0.</p>'+
-        voteHtml(m1,{plus:cur.plus,title:'The vote of reel 1 alone, as counts'})+
-        oddsHtml(I.dna[1],4,profileOf(m1,false),1,{act:'none',mark:I.sites[1],title:'Reel 2: odds of every stop'});
+      t='<p>With the original counts, reel 2 chose window '+(I.fromNo[1]+1)+', '+wordHtml(I.dna[1].substr(I.fromNo[1],4))+'. Window '+(I.sites[1]+1)+', '+wordHtml(s2,[...s2].map((x,j)=>x!==m1[0][j]))+', shares '+numWord(same)+' of its four nucleotides with reel 1. Its probability was zero because at least one nucleotide had no votes in its column.</p>'+
+        voteHtml(m1,{plus:cur.plus,title:'Counts from reel 1'})+
+        (columnUpdated(cur.plus)?'<button data-act="finishCounts">Add one to each remaining count</button>':'')+
+        oddsHtml(I.dna[1],4,profileOf(m1,false),1,{act:'none',mark:I.sites[1],title:'Reel 2: window probabilities before adding one'});
     }
     if(cur.step==='down')t=tripTools(true);
     if(cur.step==='auto'||cur.step==='done')t=stackHtml(I.dna,cur.off,4)+'<p class="gmeta">Your first trip ended with '+plural(I.fromNoScore,'miss')+'.</p>'+(cur.step==='auto'?'<div class="row"><button class="primary" data-act="all">Let the machine try every first stop, with the extra counts</button></div>':'');
@@ -1351,17 +1361,19 @@ LV[8]={
   },
   act(a,arg){
     const I=cur.inst;
-    if(a==='plus'&&cur.step==='plus'){const [r,j]=arg.split(':').map(Number);cur.plus[r*4+j]=true;log('plus',{r,j});
+    if(cur.step==='plus'&&(a==='plus'||(a==='finishCounts'&&columnUpdated(cur.plus)))){
+      if(a==='finishCounts'){cur.plus.fill(true);log('finish_counts');}
+      else{const [r,j]=arg.split(':').map(Number);cur.plus[r*4+j]=true;log('plus',{r,j});}
       if(cur.plus.every(Boolean)){cur.step='down';cur.off=[I.sites[0],0,0,0,0];cur.dim=[false,true,true,true,true];cur.i=1;
-        say('No count is zero now, so no nucleotide has odds 0. Go down the reels again with one added to every count.','good');}
-      else say(cur.plus.filter(x=>!x).length+' counts still to go.');}
+        say('Every nucleotide now has a positive count in every column. Try choosing the windows again.','good');}
+      else say(plural(cur.plus.filter(x=>!x).length,'count')+' left to update.');}
     if(a==='stop'&&cur.step==='down'){
       if(descend(+arg,true)&&cur.i===5){cur.step='auto';say('All five reels stopped: '+plural(scoreAt(I.dna,cur.off,4),'miss')+'.','good');}
     }
     if(a==='all'&&cur.step==='auto'){cur.step='done';cur.off=greedy(I.dna,4,true);const m=scoreAt(I.dna,cur.off,4);log('greedy_all',{misses:m,pseudo:true});
       say('Over every first stop, the best trip ends with '+plural(m,'miss')+', against '+I.greedyNoScore+' without the extra counts.','good');finish(['pseudo'],{misses:m});}
   },
-  reveal(){return '<p>A count of zero made a whole window impossible, however well its other nucleotides agreed. Adding one to every count before taking shares is called '+term('pseudo','pseudocounts')+' (Laplace’s Rule of Succession). With them, the trip down the reels kept every reel’s own site and ended with '+plural(cur.inst.planted,'miss')+'.</p>';}
+  reveal(){return '<p>A count of zero made a whole window impossible, however well its other nucleotides agreed. Each extra vote is a '+term('pseudo','pseudocount')+'. Adding one to every count is called Laplace smoothing. With pseudocounts, the search picked out every planted site and finished with '+plural(cur.inst.planted,'miss')+'.</p>';}
 };
 
 LV[9]={
@@ -1428,10 +1440,10 @@ LV[10]={
     if(cur.step==='stall'){
       t+='<div class="row">'+I.dna.map((_,i)=>'<button class="'+(cur.lifted===i?'on':'')+'" data-act="lift" data-arg="'+i+'">Lift reel '+(i+1)+'</button>').join('')+'</div>';
       if(cur.lifted>=0){const i=cur.lifted,others=motifsAt(I.dna,cur.pos,5).filter((_,j)=>j!==i);
-        t+=voteHtml(others,{pseudo:true})+oddsHtml(I.dna[i],5,profileOf(others,true),0,{act:'none',title:'Reel '+(i+1)+': odds of every stop, from the other five'})+
+        t+=voteHtml(others,{pseudo:true})+oddsHtml(I.dna[i],5,profileOf(others,true),0,{act:'none',title:'Reel '+(i+1)+': window probabilities from the other five reels'})+
           '<div class="row"><button class="primary" data-act="best">Re-stop reel '+(i+1)+' at its most probable stop</button></div>';}
     }else{
-      t+='<div class="called handover"><p><b>The loaded wheel.</b> Lawrence and colleagues (1993) did not send the lifted reel to its most probable stop. They drew its stop at random, from a wheel whose slices are proportional to each stop’s odds. A likely stop usually wins, but an unlikely one sometimes does, and moving to a worse stop can get the search out of a stall.</p></div>'+srcCard('lawrence');
+      t+='<div class="called handover"><p><b>The loaded wheel.</b> Lawrence and colleagues (1993) did not send the lifted reel to its most probable stop. They sampled a stop at random. On this wheel, a window with twice the profile probability gets twice the space. A spin can land on a worse window and let the search escape a stall.</p></div>'+srcCard('lawrence');
       t+='<div class="row" style="align-items:flex-start">'+(cur.wheel?wheelSvg(cur.wheel.w,cur.wheel.at):wheelSvg(I.dna[0].length-4?[1,1,1,1,1,1,1,1,1,1,1]:[1],-1))+
         '<div><p class="mono">Misses: '+cur.hist.slice(-12).join(' → ')+'</p>'+(cur.wheel?'<p>The machine lifted reel '+(cur.wheel.i+1)+'; the wheel landed on stop '+(cur.wheel.at+1)+'.</p>':'')+
         (cur.step==='wheel'?'<div class="row"><button class="primary" data-act="spinwheel">Lift a reel at random and spin the wheel</button>'+(cur.n>=5?'<button data-act="auto">Let the machine keep spinning</button>':'')+'</div>':'')+'</div></div>';
@@ -1457,7 +1469,7 @@ LV[10]={
     }
   },
   after(){const g=document.getElementById('wheelRot');if(!g)return;const to=g.dataset.to;if(reduced()){g.style.transform='rotate('+to+'deg)';return;}g.style.transform='rotate('+(+to+360)+'deg)';later(()=>{g.style.transform='rotate('+(+to+1080)+'deg)';},30);},
-  reveal(){return '<p>Lifting one reel, letting the others set the odds, and drawing its new stop from that loaded wheel, over and over, is '+term('gibbs','Gibbs sampling')+'. Because it can move to a worse stop, it can leave a setting where re-stopping every reel at its best stop changes nothing.</p>';},
+  reveal(){return '<p>Lifting one reel, using the others to weight its possible stops, and drawing its new stop from that loaded wheel, over and over, is '+term('gibbs','Gibbs sampling')+'. Because it can move to a worse stop, it can leave a setting where re-stopping every reel at its best stop changes nothing.</p>';},
 };
 
 LV[11]={
@@ -1492,9 +1504,9 @@ function bench(){
     '<label for="bdna" class="sub">DNA sequences</label><textarea id="bdna" spellcheck="false">'+sample.join('\n')+'</textarea>'+
     '<div class="row"><label for="bk">k</label><input id="bk" class="num" value="3" inputmode="numeric"><button class="primary" id="brun">Run</button></div><div id="bout"></div>';
   const run=()=>{
-    const dna=$('#bdna').value.toUpperCase().split(/\s+/).filter(Boolean),k=parseInt($('#bk').value,10),out=$('#bout');
+    const dna=$('#bdna').value.toUpperCase().split(/\s+/).filter(Boolean),k=Number($('#bk').value),out=$('#bout');
     if(!dna.length||dna.some(s=>/[^ACGT]/.test(s))){out.innerHTML='<p class="status warn">Use only A, C, G and T nucleotide symbols, one sequence per line.</p>';return;}
-    if(!(k>=1)||dna.some(s=>s.length<k)){out.innerHTML='<p class="status warn">k must be at least 1 and no longer than the shortest string.</p>';return;}
+    if(!Number.isInteger(k)||k<1||dna.some(s=>s.length<k)){out.innerHTML='<p class="status warn">Enter a whole number from 1 to the length of the shortest sequence.</p>';return;}
     out.innerHTML='<div class="tscroll"><table class="vt" style="text-align:left"><thead><tr><th>Method</th><th>Sites</th><th>Consensus</th><th>Misses</th></tr></thead><tbody>'+
       benchRun(dna,k,dna.join('|')).map(r=>'<tr><td style="text-align:left">'+r.name+'</td>'+(r.skip?'<td colspan="3">'+r.skip+'</td>':'<td>'+r.sites.join('<br>')+'</td><td>'+r.consensus+'</td><td><b>'+r.misses+'</b></td>')+'</tr>').join('')+'</tbody></table></div>';
   };
@@ -1546,7 +1558,7 @@ function renderGuide(){
         (s?' · Source: <a href="'+s.url+'" target="_blank" rel="noopener">'+s.cite+', “'+s.title+'”</a>':'')+
         (v.code?' · Code it: <a href="https://rosalind.info/problems/'+v.code.toLowerCase()+'/" target="_blank" rel="noopener">Rosalind '+v.code+'</a>':'')+'</p></div>';
     }).join('')+
-    (got.length?'<p style="margin-top:10px"><button id="printGuide">Print field guide</button></p>':'<p class="gmeta">Nothing yet. Finish level 1.</p>');
+    (got.length?'<p style="margin-top:10px"><button id="printGuide">Print field guide</button></p>':'<p class="gmeta">Definitions appear here as you earn terms.</p>');
 }
 function render(){
   const M=LV[cur.L.id];
@@ -1569,6 +1581,7 @@ function render(){
   if(M.after)M.after();
 }
 function act(a,arg){
+  if(a==='cell')cur.focusCell=arg;
   if(cur.sweep){if(a==='sweepnow'){timers.forEach(clearTimeout);timers=[];const f=cur.sweep.done;cur.sweep=null;f();render();}return;}
   if(cur.done&&a!=='pick')return;
   cur.moves++;
@@ -1576,24 +1589,36 @@ function act(a,arg){
   render();
 }
 /* the sweep redraws its Skip button many times a second, so a click could land between press and release: skip on press */
-let skipPressed=0;
+
 document.addEventListener('pointerdown',ev=>{
-  if(cur&&cur.sweep&&ev.target.closest&&ev.target.closest('[data-act="sweepnow"]')){skipPressed=Date.now();act('sweepnow');}
+  if(cur&&cur.sweep&&ev.target.closest&&ev.target.closest('[data-act="sweepnow"]')){act('sweepnow');}
 });
 document.addEventListener('click',ev=>{
-  if(skipPressed){const fresh=Date.now()-skipPressed<1000;skipPressed=0;if(fresh)return;}
   const t=ev.target.closest('[data-act],[data-lvl],#next,#printGuide');
   if(!t)return;
   const d=t.dataset;
   if(d.act!==undefined)act(d.act,d.arg);
   else if(d.lvl!==undefined)loadLevel(+d.lvl);
-  else if(t.id==='next'){loadLevel(cur.L.id+1);const ti=$('#title');if(ti&&ti.scrollIntoView)ti.scrollIntoView({block:'start'});}
+  else if(t.id==='next'){loadLevel(cur.L.id+1);$('#title').focus();$('#title').scrollIntoView({block:'start'});}
   else if(t.id==='printGuide'){$('#guide').open=true;window.print();}
 });
 document.addEventListener('keydown',ev=>{
   if(ev.key==='Enter'&&ev.target.matches&&ev.target.matches('#total,#pin')){const b=ev.target.parentNode.querySelector('button[data-act]');if(b){ev.preventDefault();act(b.dataset.act,b.dataset.arg);}return;}
-  const t=ev.target.closest&&ev.target.closest('g[data-act]');
-  if(t&&(ev.key==='Enter'||ev.key===' ')){ev.preventDefault();act(t.dataset.act,t.dataset.arg);}
+  const t=ev.target.closest&&ev.target.closest('svg [data-act]');
+  if(!t)return;
+  if(t.dataset.act==='cell'&&ev.key.startsWith('Arrow')){
+    ev.preventDefault();
+    const parts=t.dataset.arg.split(':').map(Number),vertical=ev.key==='ArrowUp'||ev.key==='ArrowDown';
+    const dir=ev.key==='ArrowLeft'||ev.key==='ArrowUp'?-1:1;
+    if(parts.length===2&&vertical)parts[0]+=dir;
+    else parts[parts.length-1]+=dir*(vertical?(narrow()?10:20):1);
+    const next=$('[data-act="cell"][data-arg="'+parts.join(':')+'"]');
+    if(next){t.setAttribute('tabindex','-1');next.setAttribute('tabindex','0');cur.focusCell=next.dataset.arg;next.focus();}
+  }else if(ev.key==='Enter'||ev.key===' '){
+    ev.preventDefault();const {act:action,arg}=t.dataset;act(action,arg);
+    const next=$('[data-act="'+action+'"]'+(arg===undefined?'':'[data-arg="'+arg+'"]'));
+    if(next)next.focus();
+  }
 });
 /* hovering a row of the stack lights the reel it came from, and the other way round */
 document.addEventListener('mouseover',ev=>{

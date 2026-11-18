@@ -111,6 +111,12 @@ test('level 2: choosing a result previews it; only submitting checks and complet
   assert.doesNotMatch(u.el('#tools').innerHTML,/data-act="submit" disabled/);
   A('submit');assert(c.done);assert(u.api.earned().includes('ham'));assert.match(u.el('#panel').innerHTML,/Next level/);
 });
+test('level 2 explains a loose mismatch limit when the player submits its highest-ranked result',()=>{
+  const u=boot('?debug=1&level=2&seed=PLAY'),c=u.api.state(),A=u.api.act;
+  compareLevel2(u);A('tol','2');A('sweep');A('pick',c.board[0].word);A('submit');
+  assert(!c.done);assert.match(c.msg.text,/Set the limit to 1/);
+  A('tol','1');A('sweep');A('pick',c.board[0].word);A('submit');assert(c.done);
+});
 test('level 2: changing the mismatch limit clears the answer and requires fresh results',()=>{
   const u=boot('?debug=1&level=2&seed=STALE'),c=u.api.state(),A=u.api.act;
   compareLevel2(u);A('tol','1');A('sweep');A('pick',c.inst.word);

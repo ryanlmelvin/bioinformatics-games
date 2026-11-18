@@ -102,3 +102,17 @@ test('every first-load code plays every level without a fallback puzzle',()=>{
   assert.equal(ui.api.earned().length,ui.api.vocab().length,code+' earns every term');assert.equal(ui.api.fell(),0,code+' needs no fallback');
  }
 });
+
+test('the final tree joins the pair selected when two minimum entries tie',()=>{
+  const ui=boot(null,{search:'?debug=1&level=11&seed=TIE'}),c=st(ui);
+  let playedTie=false;
+  while(c.stage==='join'){
+    const round=c.round,R=c.r.rounds[round],[a,b]=R.mins.at(-1);
+    if(![a,b].includes(R.a)||![a,b].includes(R.b))playedTie=true;
+    ui.api.act('cell',{i:R.labels.indexOf(a),j:R.labels.indexOf(b)});
+    const joined=c.r.tree.edges.slice(2*round,2*round+2);
+    assert.deepEqual(Array.from(joined,e=>e.b).sort(),[a,b].sort());
+  }
+  assert(playedTie);assert(ui.E.sameMatrix(ui.E.leafDist(c.r.tree),c.D));
+  ui.api.act('node',{v:2});assert(c.done);
+});

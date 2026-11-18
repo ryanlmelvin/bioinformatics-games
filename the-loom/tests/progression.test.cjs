@@ -99,6 +99,17 @@ test('level 1: a wrong start costs comparisons and places nothing',()=>{
   ui.api.act('start',{i:wrong});const st=ui.api.state().st;
   assert.equal(st.placed.length,0);assert.equal(st.comps,1);assert.match(ui.api.state().msg.text,/does not start/);
 });
+test('the scanner only places the reads still on the table',()=>{
+  for(const manual of [2,10]){
+    const {api}=boot('?debug=1&level=1&seed=MANUAL'),{short,long}=api.state().inst;
+    short.reads.forEach(r=>api.act('start',{i:r.pos}));api.skip();
+    long.reads.slice(0,manual).forEach(r=>api.act('start',{i:r.pos}));
+    const before=api.state().st.comps,remaining=long.reads.slice(manual).reduce((n,r)=>n+E.naiveScan(long.text,r.read).comps,0);
+    api.skip();const st=api.state().st;
+    assert(api.state().done);assert.equal(st.placed.length,10);assert.equal(new Set(st.placed.map(p=>p.k)).size,10);
+    assert.equal(st.comps,before+remaining);
+  }
+});
 test('level 3: both ways of keeping the sorted list overflow the shelf for a genome; only then is the handover offered',()=>{
   const ui=boot('?debug=1&level=3&seed=T3'),api=ui.api;
   api.input('len',9);assert.equal(ui.el('#skip').hidden,true);

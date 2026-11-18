@@ -5,7 +5,7 @@ function boot(game,{search='?debug=1',hash='',saved=null,confirm}={}){
   const html=fs.readFileSync(path.join(__dirname,'../..',game,'index.html'),'utf8');
   const elements=new Map(),writes=[],urls=[];
   const el=key=>{if(!elements.has(key))elements.set(key,{innerHTML:'',textContent:'',hidden:false,checked:false,disabled:false,value:'',dataset:{},style:{setProperty(){}},
-    classList:{add(){},remove(){},toggle(){}},setAttribute(k,v){this[k]=v;},focus(){},click(){this.onclick&&this.onclick();}});return elements.get(key);};
+    classList:{add(){},remove(){},toggle(){}},setAttribute(k,v){this[k]=v;},addEventListener(){},focus(){},click(){this.onclick&&this.onclick();}});return elements.get(key);};
   let storage=saved?JSON.stringify(saved):null;
   const context={module:{exports:{}},document:{querySelector:el,querySelectorAll:()=>[],getElementById:()=>null,addEventListener(){},title:''},window:{},
     location:{search,hash,pathname:'/'+game+'/',origin:'https://example.test'},URLSearchParams,history:{replaceState:(a,b,u)=>urls.push(u)},
@@ -88,6 +88,12 @@ for(const game of GAMES){
     const {saved}=someProgress(game),link=boot(game,{saved}).hash();
     const ui=boot(game,{search:'?debug=1&level=2',hash:link});
     assert.equal(ui.api.saved().badges.length,0);assert.equal(ui.urls.length,0);assert.equal(ui.writes.length,0);assert.equal(ui.el('#savebar').hidden,true);
+  });
+  if(game!=='bridge-walker')test(game+': a workbench with another puzzle code preserves the saved game',()=>{
+    const {saved}=someProgress(game);
+    const ui=boot(game,{search:'?bench=1&seed=WORKBENCH',saved});
+    assert.equal(ui.writes.length,0);
+    assert.deepEqual(ui.persisted(),saved);
   });
   test(game+': ?seed= starts that puzzle code, and the progress link carries it',()=>{
     const ui=boot(game,{search:'?debug=1&seed=CLASS'});

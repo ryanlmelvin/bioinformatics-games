@@ -88,7 +88,7 @@ table.chart{border-collapse:collapse;font-size:.95rem}
 .chart td.bad{background:var(--bad-bg);color:var(--bad-ink)}
 .chart td.ok{background:var(--ok-bg);color:var(--ok-ink)}
 .chart td.pick{cursor:pointer}
-.chart td.pick:hover{outline:2px solid var(--accent);outline-offset:-2px}
+.chart td.pick:hover,.chart td.pick:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
 .chart td.chosen{background:var(--accent);color:var(--accent-ink);font-weight:700}
 .chart td small{display:block;font-size:.7rem;line-height:1;color:var(--muted)}
 .chart td.bad small{color:inherit}
@@ -127,6 +127,7 @@ input.num:focus{outline:2px solid var(--accent);outline-offset:1px}
 .tn-chalk{fill:none;stroke:var(--chalk);stroke-width:3.2;stroke-linecap:round;stroke-dasharray:9 5}
 .tn-sel{fill:none;stroke:var(--lamp);stroke-width:14;stroke-linecap:round;opacity:.55}
 .tn-hit{fill:none;stroke:transparent;stroke-width:44;cursor:pointer}
+.tn-hit:focus-visible{outline:none;stroke:#fff;stroke-opacity:.4}
 .tn-sub0{stroke:#ff8fb1} .tn-sub1{stroke:#7fd1ff} .tn-sub2{stroke:#b5f27a} .tn-sub3{stroke:#ffd36b}
 .rope{fill:none;stroke:var(--rope);stroke-width:4;stroke-linecap:round;stroke-linejoin:round}
 .rope.b{stroke:#61d4ff}
@@ -211,7 +212,7 @@ footer input{font:inherit;width:9em;padding:5px 8px;border:1px solid var(--line)
   <div class="vocabhead">Vocabulary you have earned <span style="text-transform:none;letter-spacing:0">(hover for the definition)</span></div>
   <div class="badges" id="badges"></div>
 
-  <h2 id="title"></h2>
+  <h2 id="title" tabindex="-1"></h2>
   <p id="brief"></p>
   <div class="rule" id="rule"></div>
 
@@ -270,6 +271,7 @@ footer input{font:inherit;width:9em;padding:5px 8px;border:1px solid var(--line)
     <div data-bk-app></div>
   </div>
   <footer>
+    <a href="?bench=1">Workbench</a>
     <button id="dl">Download move log</button>
     <a href="../">All games</a>
   </footer>
@@ -365,7 +367,7 @@ function upgma(D0){
 }
 
 /* Neighbor joining (BA7E). Each round is kept so the game can show it. */
-function nj(D0){
+function nj(D0,pairChoices=[]){
   const n=D0.length,t={n,N:n,edges:[]},rounds=[];let labels=range(n),D=D0.map(r=>r.slice()),ties=false;
   while(labels.length>2){
     const m=labels.length,total=D.map(r=>r.reduce((s,x)=>s+x,0));
@@ -376,6 +378,11 @@ function nj(D0){
        With three, every entry is equal. A tie is anything else. */
     const comp=mins.length===2&&!mins[1].some(x=>mins[0].includes(x)),tie=m>=5?mins.length>1:m===4?!comp:false;
     if(tie)ties=true;
+    const choice=pairChoices[rounds.length];
+    if(choice){
+      const pair=mins.find(([i,j])=>choice.includes(labels[i])&&choice.includes(labels[j]));
+      if(pair)[bi,bj]=pair;
+    }
     const delta=(total[bi]-total[bj])/(m-2),li=(D[bi][bj]+delta)/2,lj=(D[bi][bj]-delta)/2,node=t.N++;
     t.edges.push({a:node,b:labels[bi],w:li},{a:node,b:labels[bj],w:lj});
     const keep=range(m).filter(k=>k!==bi&&k!==bj),merged=keep.map(k=>(D[k][bi]+D[k][bj]-D[bi][bj])/2);
@@ -557,10 +564,10 @@ const LET='ABCDEF';
 const reduced=()=>{try{return matchMedia('(prefers-reduced-motion: reduce)').matches;}catch(e){return true;}};
 
 const LEVELS=[
-  {id:1,mode:'count',title:'Who caught it from whom?',
+  {id:1,mode:'count',title:'Which samples are closest?',
    brief:'Four patients are infected with the same virus, and a short genomic region from each viral sample has been sequenced. Mutations accumulate during replication, so recently diverged viral sequences generally differ at fewer nucleotide positions.'},
   {id:2,mode:'lit',title:'The mountain, lights on',
-   brief:'Inside Hollow Mountain, tunnels meet at junctions, and there is exactly one way through between any two entrances. In this level the lamps are lit. The surveyor measures with a rope. Click two entrances to stretch the rope along the way between them.'},
+   brief:'With the lamps lit, you can see the only path between any two entrances. Choose two entrances to stretch a rope along that path and measure its length.'},
   {id:3,mode:'y',title:'Lights out',
    brief:'The lamps are out, and you have only the rope readings between three entrances. With three entrances and no loops, the inside can only be one internal node with a tunnel to each leaf. Work out the length of each tunnel, type the three lengths, then walk the map to compare it with the ropes.'},
   {id:4,mode:'grow',n:4,title:'A fourth entrance',
@@ -574,11 +581,11 @@ const LEVELS=[
   {id:8,mode:'fast',title:'The fast tunnel',
    brief:'A chart from a mountain where one crew dug much faster than the others. Try the level 7 method on it first.'},
   {id:9,mode:'join5',title:'Join and repeat',
-   brief:'Five leaves. The first round of neighbor joining is yours, with a calculator for the row totals; the game does the later rounds.'},
+   brief:'Perform the first round of neighbor joining for five leaves. The calculator gives you the row totals, and the game completes the later rounds.'},
   {id:10,mode:'swap',title:'One swap',
    brief:'Closest-pair joining built this map for a chart with a fast lineage. It is close but not correct. The score counts the foursomes of leaves that the map pairs the way the chart’s four-point test pairs them. Click an inner tunnel (internal nodes at both ends) to see the four groups hanging off it, and the two other ways to hang them.'},
   {id:11,mode:'final',title:'Whose virus?',
-   brief:'Coronaviruses related to the SARS virus, from people, from palm civets sold at a market in southern China, and from bats. Rebuild their tree with neighbor joining.'}
+   brief:'Use neighbor joining to reconstruct a tree of SARS-related coronaviruses sampled from people, palm civets and bats.'}
 ];
 
 /* Primary sources. Each line was written from the record that was opened (see the report). */
@@ -602,10 +609,10 @@ const SRC={
 
 /* Vocabulary in the order it is earned. */
 const VOCAB=[
-  {id:'dmat',name:'Distance matrix',code:'BA7A',def:'An n × n table D in which D(i, j) is the distance between objects i and j. It is symmetric, has zeros on the diagonal, has no negative entries, and obeys the triangle inequality D(i, j) + D(j, k) ≥ D(i, k).'},
+  {id:'dmat',name:'Distance matrix',code:'BA7A',def:'A square table of distances between pairs of objects. The distance matrices in this game are symmetric, with zero on the diagonal. For a metric distance, going from i to k via j is at least as far as going directly from i to k.'},
   {id:'tree',name:'Tree',def:'A connected graph with no cycles. There is exactly one path between any two nodes, and a tree with N nodes has N − 1 edges.'},
-  {id:'leaf',name:'Leaf',def:'A node of degree 1 in a tree. In an evolutionary tree the leaves are the present-day species or sequences.'},
-  {id:'inode',name:'Internal node',def:'A node of degree greater than 1 in a tree. In an evolutionary tree the internal nodes are ancestors that were never sampled.'},
+  {id:'leaf',name:'Leaf',def:'A node of degree 1 in a tree. In an evolutionary tree, leaves represent the sampled organisms or sequences.'},
+  {id:'inode',name:'Internal node',def:'A node of degree greater than 1 in a tree. In a rooted evolutionary tree, a branching node represents a common ancestor of its descendants.'},
   {id:'blen',name:'Branch length',code:'BA7A',def:'The weight of an edge of a tree, measuring the amount of change along that lineage. The distance between two leaves is the sum of the branch lengths on the path between them.'},
   {id:'limb',name:'Limb length',code:'BA7B',def:'The length of the edge from a leaf j to its parent. For an additive matrix it is the smallest value of (D(i, j) + D(j, k) − D(i, k)) / 2 over all pairs of other leaves i and k (the Limb Length Theorem).'},
   {id:'additive',name:'Additive matrix',def:'A distance matrix that some weighted tree fits exactly: the length of the path between every pair of leaves equals their entry in the matrix.'},
@@ -618,7 +625,7 @@ const VOCAB=[
   {id:'neighbors',name:'Neighbors',def:'Two leaves that share the same parent node.'},
   {id:'njm',name:'Neighbor-joining matrix',def:'D*(i, j) = (n − 2) · D(i, j) − TotalDistance(i) − TotalDistance(j) for i ≠ j, and 0 on the diagonal, where TotalDistance(i) is the sum of row i of D. For an additive matrix, its smallest entry is a pair of neighbors.'},
   {id:'nj',name:'Neighbor joining',src:'saitou',code:'BA7E',def:'Find the smallest entry D*(i, j); join i and j under a new node m with limb lengths (D(i, j) + Δ)/2 and (D(i, j) − Δ)/2, where Δ = (TotalDistance(i) − TotalDistance(j)) / (n − 2); replace i and j by m with D(k, m) = (D(k, i) + D(k, j) − D(i, j)) / 2; repeat. It rebuilds the tree of an additive matrix exactly.'},
-  {id:'nni',name:'Nearest neighbor interchange',def:'Removing an internal edge leaves four subtrees W, X, Y and Z. The tree WX|YZ has two nearest neighbors for that edge, WY|XZ and WZ|XY; a nearest neighbor interchange replaces the tree by one of them.'}
+  {id:'nni',name:'Nearest neighbor interchange',def:'In a binary tree, four subtrees meet at the ends of each internal edge. If W and X meet at one end and Y and Z at the other (WX|YZ), a nearest neighbor interchange swaps two subtrees across the edge to give WY|XZ or WZ|XY.'}
 ];
 const DEF={};VOCAB.forEach(v=>DEF[v.id]=v);
 function term(id,label){return '<span class="term" tabindex="0">'+label+'<span class="tip" role="tooltip"><b>'+DEF[id].name+'</b>'+DEF[id].def+'</span></span>';}
@@ -808,7 +815,7 @@ function caveSVG(t,pos,o){
     const wd=Math.max(34,15*String(txt).length+14);
     h+='<rect class="lenbg" x="'+f1(m.x-wd/2)+'" y="'+f1(m.y-16)+'" width="'+wd+'" height="32" rx="6"/><text class="len" x="'+f1(m.x)+'" y="'+f1(m.y+1)+'">'+esc(txt)+'</text>';});
   if(o.pick)t.edges.forEach((e,i)=>{const a=pos[e.a],b=pos[e.b];if(!a||!b||(o.pickable&&!o.pickable(i)))return;
-    h+='<path class="tn-hit" data-e="'+i+'" d="M'+P(a)+' L'+P(b)+'"><title>'+esc(edgeName(t,i,names))+'</title></path>';});
+    h+='<path class="tn-hit" data-e="'+i+'" tabindex="0" role="button" aria-label="Tunnel '+esc(edgeName(t,i,names))+'" d="M'+P(a)+' L'+P(b)+'"><title>'+esc(edgeName(t,i,names))+'</title></path>';});
   let jn=0;
   range(t.N).forEach(v=>{const p=pos[v];if(!p||v<t.n||!A[v].length)return;jn++;
     const root=o.root===v;h+='<circle class="jn'+(o.style==='lit'?' lit':'')+(root?' root':'')+'" cx="'+f1(p.x)+'" cy="'+f1(p.y)+'" r="'+(root?15:10)+'"/>';
@@ -820,7 +827,7 @@ function caveSVG(t,pos,o){
 function entranceSVG(v,pos,names,o){const p=pos[v];if(!p)return '';const ang=pos.angles?pos.angles[v]:90,rot=90-ang,lab=polar(RS+38,ang);
   const cls='ent'+(o.click?' click':'')+(o.hot&&o.hot.has(v)?' hot':'')+(o.selLeaf===v?' sel':'');
   const hc=polar(RS+18,ang);
-  return '<g class="'+cls+'" data-n="'+v+'"'+(o.click?' tabindex="0" role="button" aria-label="Entrance '+esc(names[v])+'"':'')+'>'+
+  return '<g class="'+cls+'"'+(o.click?' data-n="'+v+'" tabindex="0" role="button" aria-label="Entrance '+esc(names[v])+'"':'')+'>'+
     (o.click?'<circle cx="'+f1(hc.x)+'" cy="'+f1(hc.y)+'" r="38" fill="transparent"/>':'')+
     '<g transform="translate('+P(p)+') rotate('+f1(rot)+')"><circle class="ring" r="19"/><path class="door" d="M-11,9 v-9 a11,11 0 0 1 22,0 v9 z"/></g>'+
     labelSVG(names[v],lab)+'</g>';}
@@ -848,26 +855,27 @@ function chartHTML(D,names,o){o=o||{};const n=names.length;
     for(let j=0;j<n;j++){let c=o.cell?o.cell(i,j):null;
       if(!c)c=i===j?{html:'0',cls:'diag'}:{html:D&&D[i]&&D[i][j]!==null&&D[i][j]!==undefined?fmt(D[i][j]):''};
       const hot=cur&&cur.hotCells&&cur.hotCells.some(x=>(x[0]===i&&x[1]===j)||(x[0]===j&&x[1]===i));
-      h+='<td class="'+(c.cls||'')+(hot?' hot':'')+'"'+(c.attr||'')+'>'+c.html+'</td>';}
+      const action=c.attr?' tabindex="0" role="button" aria-label="'+esc(names[i]+' and '+names[j]+', '+c.html)+'"':'';
+      h+='<td class="'+(c.cls||'')+(hot?' hot':'')+'"'+(c.attr||'')+action+'>'+c.html+'</td>';}
     h+=(o.extraCol?o.extraCol(i):'')+'</tr>';}
   return h+'</table></div>';}
 function setHand(id,want,ops,label){if(!cur.hand[id])cur.hand[id]={want,ok:false,tries:0,val:'',ops:ops||[],label:label||id};}
 function handCell(id){const c=cur.hand[id];if(!c)return '';if(c.ok)return '<span class="fixed">'+fmt(c.want)+'</span>';
-  return '<input class="num'+(c.bad?' bad':'')+'" data-in="'+id+'" inputmode="numeric" autocomplete="off" aria-label="'+esc(c.label)+'" value="'+esc(c.val)+'">';}
+  return '<input class="num'+(c.bad?' bad':'')+'" data-in="'+id+'" inputmode="'+(id.startsWith('d')?'text':'decimal')+'" autocomplete="off" aria-label="'+esc(c.label)+'" value="'+esc(c.val)+'">';}
 const handOK=ids=>ids.every(id=>cur.hand[id]&&cur.hand[id].ok);
 function firstOpen(ids){return ids.find(id=>cur.hand[id]&&!cur.hand[id].ok);}
 
 /* ---------- what the game says when vocabulary is earned ---------- */
 const BLOCKS={
-  dmat:{html:()=>'Your chart of counts is a '+term('dmat','distance matrix')+': zero on the diagonal, symmetric, and never negative. Fewer differences means a closer relative. The chart gives only pairwise distances, though, and the question is about the history of transmission.'},
-  tree:{html:()=>'In biology this cave is a '+term('tree','tree')+'. Its entrances are '+term('leaf','leaves')+' (the viruses we sampled), its junctions are '+term('inode','internal nodes')+' (ancestors nobody sampled), and the number on each tunnel is its '+term('blen','branch length')+'. You counted '+cur.lit.nodes+' nodes and '+cur.lit.edges+' tunnels: one fewer tunnel than nodes. A loop would need one more, and there are no loops. <b>Later levels use these terms.</b>'},
-  limb:{html:()=>{const d=cur.D,f=(i,j)=>d[i][j];return 'The tunnel from a leaf to its internal node is the leaf’s limb, and you found all three '+term('limb','limb lengths')+'. For A: the ropes from A to B and from A to C both run along A’s limb, and the rope from B to C runs along neither, so A’s limb is ('+f(0,1)+' + '+f(0,2)+' − '+f(1,2)+') / 2 = '+fmt((f(0,1)+f(0,2)-f(1,2))/2)+'.';}},
-  additive:{html:()=>'Your four-leaf map reproduces every rope reading. A chart that some tree fits exactly is an '+term('additive','additive matrix')+'. Of the three values you worked out, the smallest was D’s limb. For a pair whose path D does not branch off, both ropes from D take a detour along that path before coming back, so the value can only come out larger.'},
+  dmat:{html:()=>'Your chart of counts is a '+term('dmat','distance matrix')+': zero on the diagonal, symmetric, and never negative. Smaller entries mark samples with fewer nucleotide differences. Identifying who infected whom would require additional evidence, such as when the infections occurred.'},
+  tree:{html:()=>'In biology this cave is a '+term('tree','tree')+'. Its entrances are '+term('leaf','leaves')+' (the viruses we sampled), its junctions are '+term('inode','internal nodes')+' (ancestors nobody sampled), and the number on each tunnel is its '+term('blen','branch length')+'. Your map has '+cur.lit.nodes+' nodes and '+cur.lit.edges+' tunnels. Every tree has one fewer edge than nodes.'},
+  limb:{html:()=>{const d=cur.D,f=(i,j)=>d[i][j];return 'The tunnel from a leaf to its internal node is the leaf’s limb, and you found all three '+term('limb','limb lengths')+'. For A: the ropes from A to B and from A to C both run along A’s limb, while the rope from B to C bypasses A’s limb. Subtracting that third reading leaves twice A’s limb length. For this map the limb measures ('+f(0,1)+' + '+f(0,2)+' − '+f(1,2)+') / 2 = '+fmt((f(0,1)+f(0,2)-f(1,2))/2)+'.';}},
+  additive:{html:()=>'Your four-leaf map reproduces every rope reading. A chart that some tree fits exactly is an '+term('additive','additive matrix')+'. Of the three values you worked out, the smallest was D’s limb. If the path between your chosen leaves passes the junction where D attaches, its length cancels out when you subtract it. Otherwise, the two ropes from D both cover an extra stretch, giving a larger estimate.'},
   addphylo:{html:()=>'Splitting a tunnel and hanging one leaf at a time, until the map reproduces the chart, is '+term('addphylo','additive phylogeny')+' (AdditivePhylogeny). A recursive implementation trims the last leaf’s limb off the chart, solves the smaller chart, then hangs the leaf back where it belongs.'},
   fourpoint:{src:['buneman'],html:()=>'In a real tree, of the three ways to pair four leaves, two pairings send both of their ropes along the middle tunnel, so those two sums are equal and the largest. That is the '+term('fourpoint','four-point condition')+', and a chart is additive exactly when every foursome meets it. In this chart the two largest sums differ by '+cur.gap+'. Look back at the new nucleotides: the same substitution occurs independently in two viral lineages that are not each other’s closest relatives. This homoplasy cannot be distinguished from shared ancestry by counting pairwise differences alone.'},
   clock:{src:['zuck'],html:()=>'Steady digging is the '+term('clock','molecular clock')+': if a sequence changes at a constant rate, every present-day leaf is equally far from the common ancestor. That first chamber is the root, and a tree with one is a '+term('rooted','rooted tree')+'. Joining the closest pair under a node at half their distance, and averaging their rows, is '+term('upgma','UPGMA')+'. Its map reproduces this chart exactly.'},
-  nj:{src:['saitou'],html:()=>'The real mountain has no first chamber to start from: it is an '+term('unrooted','unrooted tree')+'. Two leaves that share an internal node are '+term('neighbors','neighbors')+'. The closest pair here were not neighbors; the smallest entry of the discounted chart, the '+term('njm','neighbor-joining matrix')+', was. Joining that pair, replacing it by its internal node, and repeating is '+term('nj','neighbor joining')+'.'},
-  join5:{html:()=>'Neighbor joining rebuilt the mountain exactly from an additive chart. On level 6’s chart, which no tree fits, it still returned a tree, although that tree does not reproduce every rope reading. Real data resemble level 6, which is why neighbor joining is used in practice and additive phylogeny is not.'},
+  nj:{src:['saitou'],html:()=>'The real mountain has no first chamber to start from: it is an '+term('unrooted','unrooted tree')+'. Two leaves that share an internal node are '+term('neighbors','neighbors')+'. The closest pair in the original chart belonged to different branches. In the discounted chart, called the '+term('njm','neighbor-joining matrix')+', a minimum entry identified two leaves that share a junction. Joining that pair, replacing it by its internal node, and repeating is '+term('nj','neighbor joining')+'.'},
+  join5:{html:()=>'Neighbor joining rebuilt the mountain exactly from an additive chart. On level 6’s chart, which no tree fits, it still returned a tree, although that tree does not reproduce every rope reading. Measured distances often fit a tree only approximately. Neighbor joining can still construct a tree in that case.'},
   nni:{html:()=>'Re-hanging two of the four groups across one inner tunnel is a '+term('nni','nearest neighbor interchange')+'. Each inner tunnel gives a tree two nearest neighbors.'},
   finale:{src:['guan','li'],html:()=>'In this illustrative chart, the human viruses’ closest relative is the civet virus, and the bat viruses branch off further in. That is the shape of the real finding: in 2003 viruses almost identical to the human SARS virus were found in palm civets at a market in Guangdong, and in 2005 bats were shown to carry a wider family of related viruses, with the human and civet viruses nested inside it. The civets were intermediate hosts, and bats were the reservoir.'}
 };
@@ -888,7 +896,7 @@ function walkChart(c,names){const r=c.walkRes,n=c.D.length;
     const bad=r.bad.some(x=>(x[0]===i&&x[1]===j)||(x[0]===j&&x[1]===i));
     return {html:fmt(c.D[i][j])+(bad?'<small>map '+fmt(r.B[i][j])+'</small>':''),cls:bad?'bad':'ok'};}});}
 function walkSay(c,r){if(r.ok)return;const [i,j]=r.bad[0];
-  say('The surveyor walked the map: '+plural(r.bad.length,'rope')+' disagree'+(r.bad.length===1?'s':'')+'. Between '+LET[i]+' and '+LET[j]+' the map says '+fmt(r.B[i][j])+' and the rope reads '+fmt(c.D[i][j])+'.'+(c.walkLeft?'':' The lamp oil is spent: Restart to try again.'),'warn');}
+  say('The surveyor walked the map: '+plural(r.bad.length,'rope')+' disagree'+(r.bad.length===1?'s':'')+'. Between '+LET[i]+' and '+LET[j]+' the map says '+fmt(r.B[i][j])+' and the rope reads '+fmt(c.D[i][j])+'.'+(c.walkLeft||c.mode==='lie'||c.mode==='fast'?'':' You’ve used your last walk. Restart to try again.'),'warn');}
 function names4(n){return LET.slice(0,n).split('');}
 
 /* ---------- level 1: count the differences ---------- */
@@ -906,7 +914,7 @@ HANDLERS.count={
         seqRows([v.short[a],v.short[b]],[names[a],names[b]],{click:true,rows:[0,1],mark:(i,col)=>m.has(col),nod:c.nod});}
     else h+='<div class="sub">All four viruses</div>'+seqRows(v.short,names);
     h+='<div class="sub">Differences between each pair</div>'+chartHTML(c.D,names4(4),{label:'Differences chart'});
-    if(c.stage===2)h+='<p>Who caught it from whom? Pair the four patients up.</p><div class="choice">'+[1,2,3].map(p=>{const o=[1,2,3].filter(x=>x!==p);
+    if(c.stage===2)h+='<p>Which pairing gives the fewest nucleotide differences in total?</p><div class="choice">'+[1,2,3].map(p=>{const o=[1,2,3].filter(x=>x!==p);
       return '<button data-act="pick" data-v="'+p+'">A with '+LET[p]+', '+LET[o[0]]+' with '+LET[o[1]]+'</button>';}).join('')+'</div>';
     return h;},
   act(c,type,d){
@@ -934,7 +942,7 @@ HANDLERS.lit={
     return {lit:true,svg:caveSVG(c.t,c.pos,{style:'lit',click:c.stage==='rope',ropes,selLeaf:c.sel,hot:new Set(c.rope||[])}),
       surveyor:c.sel!==null?c.pos.angles[c.sel]:c.rope?c.pos.angles[c.rope[0]]:c.pos.angles[0],label:'The mountain with the lamps lit'};},
   work(c){let h='<div class="sub">Rope readings</div>'+chartHTML(c.D,names4(4),{label:'Rope chart',cell:(i,j)=>{
-      const p=c.pending;if(p&&((p[0]===i&&p[1]===j)||(p[0]===j&&p[1]===i)))return {html:handCell('r'),cls:'newrow'};return null;}});
+      const p=c.pending;if(p&&p[0]===i&&p[1]===j)return {html:handCell('r'),cls:'newrow'};return null;}});
     if(c.pending)h+='<p>The rope ran from '+LET[c.pending[0]]+' to '+LET[c.pending[1]]+'. Add up the tunnels it ran along and type the reading.</p>';
     if(c.stage==='count')h+='<div class="rows"><div class="rowline"><span class="lab">Entrances and junctions, in all:</span>'+handCell('nodes')+'</div>'+
       '<div class="rowline"><span class="lab">Tunnels:</span>'+handCell('tunnels')+'</div></div>';
@@ -1113,7 +1121,7 @@ HANDLERS.clock={
     c.focus='h';say('Both crews dug at the same rate from that junction to the surface. How deep is it?');},
   onWrong(c,id){say(id==='h'?'The rope from one leaf to the other runs up one crew’s tunnel and down the other’s, and the two are the same length.':'Average the lit readings.','warn');},
   onHand(c,id){const ids=Object.keys(c.hand);c.focus=firstOpen(ids);if(!handOK(ids))return;this.join(c);
-    if(c.j===2){this.join(c);complete(['rooted','clock','upgma'],'clock','The last two groups meet in the first chamber, '+fmt(c.forest.H[c.forest.N-1])+' deep. Walked, the map reproduces every rope.');}
+    if(c.j===2){this.join(c);complete(['rooted','clock','upgma'],'clock','The last two groups meet in the first chamber, '+fmt(c.forest.H[c.forest.N-1])+' deep. The paths on the map match all the rope readings.');}
     else say('Joined. Now the next pair whose crews split last.','good');},
   join(c){const J=c.up.joins[c.j],A=c.cl.find(x=>x.id===J.a),B=c.cl.find(x=>x.id===J.b),m=c.forest.N++;c.forest.H[m]=J.h;
     c.forest.edges.push({a:m,b:A.id,w:J.h-A.h},{a:m,b:B.id,w:J.h-B.h});
@@ -1211,7 +1219,7 @@ HANDLERS.join5={
       range(5).filter(k=>k!==i&&k!==j).forEach(k=>setHand('m'+k,(R.D[k][i]+R.D[k][j]-R.D[i][j])/2,[[k,i],[k,j],[i,j]],'D('+LET[k]+', m)'));c.focus=firstOpen(Object.keys(c.hand).filter(x=>x[0]==='m'));
       say('Now the merged row.','good');}return;}
     if(c.stage==='merge'){const ids=Object.keys(c.hand).filter(x=>x[0]==='m');c.focus=firstOpen(ids);
-      if(handOK(ids)){c.stage='built';c.walkRes=walkCompare(c.j5.nj.tree,c.D);log('nj_done');say('The game ran the later rounds the same way. Walked, the map reproduces every rope.','good');}}},
+      if(handOK(ids)){c.stage='built';c.walkRes=walkCompare(c.j5.nj.tree,c.D);log('nj_done');say('The game ran the later rounds the same way. The paths on the map match all the rope readings.','good');}}},
   skip:c=>c.stage==='built'&&!c.done?'Now try it on level 6’s chart →':null,
   skipAct(c){const v=makeViruses(keyFor(1));c.lie=nj(v.D6).tree;c.D=v.D6;c.walkRes=walkCompare(c.lie,v.D6);c.stage='lie';log('nj_lie');
     complete([],'join5','Neighbor joining still returns a tree, with '+plural(c.walkRes.bad.length,'rope')+' that disagree.');},
@@ -1257,20 +1265,24 @@ HANDLERS.swap={
 
 /* ---------- level 11: whose virus? ---------- */
 HANDLERS.final={
-  init(c){c.D=SARS.D;c.r=nj(SARS.D);c.round=0;c.stage='join';c.names=SARS.short;c.pos=caveLayout(c.r.tree);
+  init(c){c.D=SARS.D;c.r=nj(SARS.D);c.pairChoices=[];c.round=0;c.stage='join';c.names=SARS.short;c.pos=caveLayout(c.r.tree);
     say('Round 1: click the smallest entry of the discounted chart.');},
   rule:c=>c.stage==='ask'?'Find the human viruses’ closest relative':'Neighbor joining · the calculator does the arithmetic',
   scene(c){const t=c.r.tree,n=Math.min(c.round,c.r.rounds.length),part={n:6,N:t.N,edges:c.stage==='join'?t.edges.slice(0,2*n):t.edges};
     return {svg:caveSVG(part,c.pos,{style:'chalk',names:c.names,click:c.stage==='ask'&&!c.done,extraLeaves:range(6).filter(v=>!presentLeaves(part).includes(v)),hot:new Set(c.stage==='ask'?[0,1]:[])}),
       surveyor:c.pos.angles[0],label:'The coronavirus tree'};},
   work(c){const lab='<p><span class="illus">Illustrative</span> These distances were made up to have the shape of the published trees; they are not measurements.</p>';
-    if(c.stage==='ask'||c.done){return lab+'<p>Which virus hangs nearest to the two human viruses? Click its entrance.</p>'+chartHTML(c.D,c.names,{label:'Chart'});}
+    if(c.stage==='ask'||c.done){return lab+(c.done?'':'<p>Which virus is the closest relative of the two human samples? Choose its entrance.</p>')+chartHTML(c.D,c.names,{label:'Chart'});}
     const R=c.r.rounds[c.round],nm=R.labels.map(v=>labelName(c.r.tree,v,c.names));
     return lab+'<div class="sub">Round '+(c.round+1)+': the chart</div>'+chartHTML(R.D,nm,{label:'Chart',extraHead:'<th>Total</th>',extraCol:totalsCol(R,nm,false)})+
       '<div class="sub">The discounted chart</div>'+dstarChart(c,R,nm,{pick:true});},
   act(c,type,d){
     if(type==='cell'&&c.stage==='join'){const R=c.r.rounds[c.round];log('dstar_pick',{i:d.i,j:d.j,ok:isMinPair(R,d.i,d.j)});
       if(!isMinPair(R,d.i,d.j)){c.wrong++;say('D* has a smaller entry than '+fmt(R.Dstar[d.i][d.j])+'.','warn');return;}
+      c.pairChoices.push([R.labels[d.i],R.labels[d.j]]);
+      if(!c.pairChoices[c.round].includes(R.a)||!c.pairChoices[c.round].includes(R.b)){
+        c.r=nj(c.D,c.pairChoices);c.pos=caveLayout(c.r.tree);
+      }
       c.round++;const nm=v=>labelName(c.r.tree,v,c.names);
       if(c.r.rounds[c.round]&&c.r.rounds[c.round].labels.length===3){c.round=c.r.rounds.length;c.stage='ask';
         say('Joined '+nm(R.labels[d.i])+' and '+nm(R.labels[d.j])+'. The last three are joined at one internal node. The tree is built.','good');}
@@ -1287,9 +1299,10 @@ function bench(){
   document.title='Hollow Mountain workbench';
   const ex='A 0 11 10 9\nB 11 0 3 8\nC 10 3 0 7\nD 9 8 7 0';
   $('#app').innerHTML='<div class="bench"><h1>Hollow Mountain workbench</h1><p>Paste a distance chart, one row per line: a name, then its distances. Two methods run on it side by side.</p>'+
-    '<textarea id="bIn" aria-label="Distance chart" spellcheck="false">'+ex+'</textarea><p><button class="primary" id="bRun">Run both methods</button> <a href="./">Back to the game</a></p><div id="bOut"></div></div>';
-  const run=()=>{const p=parseChart($('#bIn').value||ex),out=$('#bOut');if(p.error){out.innerHTML='<p class="status warn">'+esc(p.error)+'</p>';return;}
-    const {names,D}=p,nmOf=(t,v)=>v<t.n?names[v]:'J'+(v-t.n+1),total=quads(D.length).length;
+    '<textarea id="bIn" aria-label="Distance chart" spellcheck="false"></textarea><p><button class="primary" id="bRun">Run both methods</button> <a href="./">Back to the game</a></p><div id="bOut"></div></div>';
+  $('#bIn').value=ex;
+  const run=()=>{const p=parseChart($('#bIn').value),out=$('#bOut');if(p.error){out.innerHTML='<p class="status warn">'+esc(p.error)+'</p>';return;}
+    const {names,D}=p,nmOf=(t,v)=>v<t.n?esc(names[v]):'J'+(v-t.n+1),total=quads(D.length).length;
     const show=(title,t)=>{const fits=sameMatrix(leafDist(t),D);
       return '<div><h2>'+title+'</h2><pre>'+t.edges.map(e=>nmOf(t,e.a)+' – '+nmOf(t,e.b)+': '+fmt(e.w)).join('\n')+'</pre><p>Reproduces the chart: <b>'+(fits?'yes':'no')+'</b><br>Foursome score: <b>'+quartetScore(t,D)+' of '+total+'</b></p></div>';};
     let h='<div class="side">'+show('Closest-pair joining (UPGMA)',upgma(D).tree)+show('Neighbor joining',nj(D).tree)+'</div>';
@@ -1345,7 +1358,7 @@ function renderGuide(){
       return '<div class="gentry"><h4>'+v.name+'</h4><p>'+v.def+'</p><p class="gmeta">Met in level '+(S.earnedAt[v.id]||'?')+
         (s?' · Source: <a href="'+s.url+'" target="_blank" rel="noopener">'+s.cite+', “'+s.title+'”</a>':'')+
         (v.code?' · Code it: <a href="https://rosalind.info/problems/'+v.code.toLowerCase()+'/" target="_blank" rel="noopener">Rosalind '+v.code+'</a>':'')+'</p></div>';}).join('')+
-    (got.length?'<p style="margin-top:10px"><button id="printGuide">Print field guide</button></p>':'<p class="gmeta">Nothing yet. Finish level 1.</p>');
+    (got.length?'<p style="margin-top:10px"><button id="printGuide">Print field guide</button></p>':'<p class="gmeta">Definitions appear here as you earn terms.</p>');
 }
 function renderControls(){
   const Hd=HANDLERS[cur.mode],sk=Hd.skip?Hd.skip(cur):null,b=$('#skip');
@@ -1374,7 +1387,7 @@ function render(){
 function act(type,d){
   d=d||{};
   if(type==='level')return loadLevel(d.id);
-  if(type==='next')return loadLevel(Math.min(LEVELS.length,cur.L.id+1));
+  if(type==='next'){loadLevel(Math.min(LEVELS.length,cur.L.id+1));const title=$('#title');title.focus({preventScroll:true});title.scrollIntoView?.({block:'start'});return;}
   if(type==='restart'){log('restart');return loadLevel(cur.L.id);}
   if(type==='fresh'){S.variants[cur.L.id]=(S.variants[cur.L.id]||0)+1;log('new_puzzle');save();return loadLevel(cur.L.id);}
   const Hd=HANDLERS[cur.mode];
@@ -1382,7 +1395,7 @@ function act(type,d){
   if(type==='in'){
     if(Hd.input&&!cur.hand[d.id]){Hd.input(cur,d);return render();}
     const c=cur.hand[d.id];if(!c||c.ok)return;
-    const raw=String(d.value).trim().replace(',','.');c.val=raw;if(raw==='')return render();
+    const raw=String(d.value).trim().replace('−','-').replace(',','.');c.val=raw;if(raw==='')return render();
     const v=Number(raw);
     if(isFinite(v)&&near(v,c.want)){c.ok=true;c.bad=false;cur.hotCells=[];log('hand',{id:d.id,value:v,ok:true});
       if(Hd.onHand)Hd.onHand(cur,d.id);}
@@ -1416,8 +1429,11 @@ document.addEventListener('keydown',ev=>{
   if(t&&t.dataset&&t.dataset.in!==undefined&&ev.key==='Enter'){ev.preventDefault();act('in',{id:t.dataset.in,value:t.value});return;}
   if(t&&t.id==='digX'&&ev.key==='Enter'){ev.preventDefault();$('#digL').focus();return;}
   if(t&&t.id==='digL'&&ev.key==='Enter'){ev.preventDefault();act('dig',{e:cur.sel,x:$('#digX').value,from:$('#digFrom').value,L:$('#digL').value});return;}
-  const g=t&&t.closest&&t.closest('g[data-n]');
-  if(g&&(ev.key==='Enter'||ev.key===' ')){ev.preventDefault();act('node',{v:+g.dataset.n});}
+  const control=t&&t.closest&&t.closest('[data-n],[data-e],[data-cell]');
+  if(control&&(ev.key==='Enter'||ev.key===' ')){
+    ev.preventDefault();
+    control.dispatchEvent(new MouseEvent('click',{bubbles:true}));
+  }
 });
 $('#undo').onclick=()=>act('undo');
 $('#restart').onclick=()=>act('restart');

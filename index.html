@@ -19,7 +19,6 @@ h1,h2,h3{font-family:var(--bk-serif);line-height:1.2;margin:0}
 .front{padding:52px 0 4px}
 .front h1{font-size:clamp(2rem,4.6vw,2.8rem)}
 .sub{font:italic 1.15rem/1.4 var(--bk-serif);color:var(--bk-dim);margin:6px 0 0}
-.lede{font:1.1rem/1.6 var(--bk-serif);margin:18px 0 0;max-width:36em}
 .resume{margin:16px 0 0;font-weight:600}
 section{padding-top:38px}
 .sechead{display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-between;gap:4px 20px;padding-bottom:8px;border-bottom:2px solid var(--bk-ink)}
@@ -77,7 +76,6 @@ section{padding-top:38px}
 <div class="front">
   <h1>Bioinformatics Algorithms</h1>
   <p class="sub">A playable textbook</p>
-  <p class="lede">Each chapter covers one family of algorithms and is taught through a game. Play the game before using its handouts.</p>
   <p class="resume"><a id="resume" href="motif-slots/">Start chapter 1</a></p>
 </div>
 
@@ -91,9 +89,9 @@ section{padding-top:38px}
   <div class="sechead"><h2 id="howT">How a chapter works</h2></div>
   <ol class="steps">
     <li>Play the game and fill in its exploration guide.</li>
-    <li>Work the discussion questions with a group.</li>
-    <li>Do the coding and pen-and-paper tasks.</li>
-    <li>Present one algorithm, using the presentation checklist.</li>
+    <li>Discuss the questions with a group.</li>
+    <li>Solve an example by hand, then check it with your code.</li>
+    <li>Use the presentation checklist to explain one algorithm.</li>
   </ol>
   <p class="meta" id="shelf"></p>
 </section>
@@ -105,7 +103,7 @@ section{padding-top:38px}
     <div><h3>Your book link</h3><p id="bookText"></p>
       <div class="krow" id="bookRow"><input id="bookLink" readonly aria-label="Your book link"><button type="button" id="copyBook">Copy</button></div>
       <p class="knote" id="bookNote" role="status"></p></div>
-    <div><h3>Restore from a link</h3><p>Paste a book link or a chapter’s progress link. Existing progress is kept.</p>
+    <div><h3>Restore from a link</h3><p>Paste a book or chapter link. If a chapter uses a different puzzle code, you can choose which progress to keep.</p>
       <div class="krow"><input id="pasteLink" aria-label="A book link or a progress link" placeholder="Paste a link" autocomplete="off" spellcheck="false"><button type="button" id="usePaste">Restore</button></div>
       <p class="knote" id="pasteNote" role="status"></p></div>
     <div><h3>On this device</h3><div data-bk-app></div></div>
@@ -122,7 +120,7 @@ section{padding-top:38px}
 <script src="book/book.js"></script>
 <script>
 (function(){
-const B=window.BOOK,I=B.icon,$=s=>document.querySelector(s);
+const B=window.BOOK,$=s=>document.querySelector(s);
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const read=(k,d)=>{try{const v=localStorage.getItem(k);return v==null?d:JSON.parse(v);}catch(e){return d;}};
 const doc=(href,label)=>'<a href="'+href+'">'+label+'</a>';
@@ -133,7 +131,7 @@ const state=B.chapters.map(c=>{
   const got=s&&Array.isArray(s.badges)?Math.min(s.badges.length,c.terms):0;
   // levels are open in any order, so the reader's place is how many they have finished (older saves only say how far they had reached)
   const fin=!s?0:Math.min(c.levels,Array.isArray(s.done)?s.done.length:Math.max(0,(s.unlocked||1)-1));
-  return {c,started:!!s,got,fin,done:got>=c.terms,terms,link:s&&typeof s.link==='string'&&(got||fin)?s.link:''};
+  return {c,started:!!s,got,fin,done:fin===c.levels&&got===c.terms,terms,link:s&&typeof s.link==='string'&&(got||fin)?s.link:''};
 });
 
 $('#shelf').innerHTML='Handouts for the whole book (Word): '+[doc('materials/learning-guide.docx','Learning guide'),doc('materials/suggested-investigations.docx','Suggested investigations'),doc('materials/presentation-checklist.docx','Presentation checklist')].join(', ');
@@ -153,42 +151,70 @@ $('#toc').innerHTML=state.map(st=>{const c=st.c;
 const total=B.chapters.reduce((n,c)=>n+c.terms,0),got=state.reduce((n,s)=>n+s.got,0);
 $('#overall').textContent=got?got+' of '+total+' terms earned':'';
 const last=read('book:last',null),lastSt=last&&state.find(s=>s.c.dir===last.dir&&s.started&&!s.done);
-const nextUp=lastSt||state.find(s=>s.started&&!s.done)||state.find(s=>!s.started);
-if(nextUp&&got){const r=$('#resume');r.href=nextUp.c.dir+'/';r.textContent=nextUp.started?'Continue '+nextUp.c.game:'Start chapter '+nextUp.c.n+': '+nextUp.c.game;}
+const lastSide=last&&B.chapters.map(c=>c.side).find(s=>s&&s.dir===last.dir&&read(s.key,null));
+const nextUp=lastSt||state.find(s=>s.started&&!s.done)||state.find(s=>!s.started),resume=$('#resume');
+if(lastSide){resume.href=lastSide.dir+'/';resume.textContent='Continue '+lastSide.game;}
+else if(nextUp){resume.href=nextUp.c.dir+'/';resume.textContent=nextUp.started?'Continue '+nextUp.c.game:'Start chapter '+nextUp.c.n;}
+else{resume.href='#glossary';resume.textContent='Review your glossary';}
+window.addEventListener('pageshow',e=>{if(e.persisted)location.reload();});
 
 // one link for the whole book: each game's save records its own progress link, and the book link strings them together
 // as #book=1/<game folder>:<that game's link>/... Opening it hands each part to its game, which checks and adds it.
 const mark=(key,body)=>{const s=key+'|'+body;let h=2166136261>>>0;for(let i=0;i<s.length;i++){h^=s.charCodeAt(i);h=Math.imul(h,16777619);}return (h>>>0).toString(36);};
-function sound(c,enc){const m=/^1\.([0-9a-z]+)\.([01]+)\.([0-9a-z]+)\.(.+)$/.exec(enc||'');if(!m)return false;
-  let seed;try{seed=decodeURIComponent(m[4]);}catch(e){return false;}return mark(c.key,'1.'+m[1]+'.'+m[2]+'.'+seed)===m[3];}
-const held=()=>B.chapters.reduce((n,c)=>{const s=read(c.key,null);n.t+=s&&Array.isArray(s.badges)?s.badges.length:0;n.l+=s&&Array.isArray(s.done)?s.done.length:0;return n;},{t:0,l:0});
+function sound(c,enc){
+  const m=/^1\.([0-9a-z]+)\.([01]+)\.([0-9a-z]+)\.(.+)$/.exec(enc||'');
+  if(!m||m[1].length>c.terms||m[2].length>c.levels||[...m[1]].some(l=>parseInt(l,36)>c.levels))return false;
+  let seed;try{seed=decodeURIComponent(m[4]);}catch(e){return false;}
+  return mark(c.key,'1.'+m[1]+'.'+m[2]+'.'+seed)===m[3];
+}
 const count=(n,one)=>n+' '+one+(n===1?'':'s');
 const parts=state.filter(s=>s.link).map(s=>s.c.dir+':'+s.link);
 if(parts.length){$('#bookLink').value=location.origin+location.pathname+'#book=1/'+parts.join('/');
-  $('#bookText').textContent='Progress is saved in this browser. This link restores it in any other. It changes as you earn terms, so copy it again before you leave.';}
-else{$('#bookRow').hidden=true;$('#bookText').textContent='Progress is saved in this browser. A link that restores it elsewhere appears here after you finish a level.';}
+  $('#bookText').textContent='Copy this link to take your finished levels and earned terms to another browser. Copy it again after you make more progress.';}
+else{$('#bookRow').hidden=true;$('#bookText').textContent='After you finish a level, you can copy a link here to take your progress to another browser.';}
 $('#bookLink').onclick=()=>$('#bookLink').select();
 $('#copyBook').onclick=()=>{const b=$('#bookLink'),ok=()=>{$('#bookNote').textContent='Copied.';},
   byHand=()=>{b.select();let done=false;try{done=document.execCommand('copy');}catch(e){}if(done)ok();else $('#bookNote').textContent='Could not copy. The link is selected, so copy it by hand.';};
   if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(b.value).then(ok,byHand);else byHand();};
 function restoreBook(text,say){
+  const restore=$('#usePaste');
+  if(restore.disabled)return;
   const want=[];let bad=0;
   text.split('/').filter(Boolean).forEach(p=>{const i=p.indexOf(':'),c=B.chapters.find(c=>c.dir===p.slice(0,i)),enc=p.slice(i+1);if(c&&sound(c,enc))want.push({c,enc});else bad++;});
   if(!want.length){say('That link is incomplete or was altered, so nothing was restored. Copy the whole link and try again.');return;}
-  const before=held(),lastRead=localStorage.getItem('book:last');let i=0;
+  restore.disabled=true;
+  let i=0,terms=0,levels=0,restored=0;
+  const messages=[];
   (function next(){
     if(i>=want.length){
-      try{if(lastRead==null)localStorage.removeItem('book:last');else localStorage.setItem('book:last',lastRead);}catch(e){}
-      const now=held(),t=now.t-before.t,l=now.l-before.l;
-      try{sessionStorage.setItem('book:restored',(t||l?'Restored from your link: '+[t&&count(t,'new term'),l&&count(l,'finished level')].filter(Boolean).join(' and ')+' added to this browser.':'That link held nothing this browser did not already have.')+
-        (bad?' '+(bad===1?'One part of the link was damaged and was skipped.':bad+' parts of the link were damaged and were skipped.'):''));}catch(e){}
+      if(terms||levels)messages.unshift('Restored '+[terms&&count(terms,'term'),levels&&count(levels,'finished level')].filter(Boolean).join(' and ')+'.');
+      else if(restored)messages.unshift('Your saved progress already includes these levels and terms.');
+      if(bad)messages.push('Skipped '+count(bad,'damaged chapter link')+'.');
+      try{sessionStorage.setItem('book:restored',messages.join(' '));}catch(e){restore.disabled=false;say(messages.join(' '));return;}
       history.replaceState(null,'',location.pathname+location.search+'#keep');location.reload();return;
     }
-    const w=want[i++],f=document.createElement('iframe');let over=false;
-    say('Restoring chapter '+w.c.n+': '+w.c.game+' …');
-    const go=()=>{if(over)return;over=true;clearTimeout(t);f.remove();next();},t=setTimeout(go,12000);
+    const {c,enc}=want[i++],f=document.createElement('iframe'),before=read(c.key,{});
+    const seed=decodeURIComponent(enc.split('.').slice(4).join('.'));
+    let over=false;
+    say('Restoring '+c.game+'…');
+    const finish=loaded=>{
+      if(over)return;
+      over=true;clearTimeout(timer);
+      const saved=read(c.key,null);
+      if(!loaded||!saved)messages.push('Could not restore '+c.game+'. Try opening the link again.');
+      else if(saved.seed!==seed)messages.push('Kept your current puzzle in '+c.game+'.');
+      else{
+        restored++;
+        const same=before?.seed===seed;
+        for(const term of saved.badges)if(!same||!before.badges?.includes(term))terms++;
+        for(const level of saved.done)if(!same||!before.done?.includes(level))levels++;
+        if(!same&&(before?.badges?.length||before?.done?.length))messages.push('Switched '+c.game+' to the puzzle in your link.');
+      }
+      f.remove();next();
+    };
+    const timer=setTimeout(()=>finish(false),12000);
     f.setAttribute('aria-hidden','true');f.tabIndex=-1;f.style.cssText='position:fixed;left:-9999px;top:0;width:900px;height:700px;border:0;visibility:hidden';
-    f.onload=()=>setTimeout(go,60);f.src=w.c.dir+'/#save='+w.enc;document.body.appendChild(f);
+    f.onload=()=>finish(!!f.contentDocument?.querySelector('#saveLink')?.value);f.src=c.dir+'/#save='+enc;document.body.appendChild(f);
   })();
 }
 const banner=text=>{const r=$('#restoring');r.textContent=text;r.hidden=false;};

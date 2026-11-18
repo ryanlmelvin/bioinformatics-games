@@ -180,3 +180,26 @@ test('every first-load code plays every level without a fallback puzzle',()=>{
     assert.equal(ui.api.earned().length,ui.api.vocab().length,code+' earns every term');assert.equal(ui.api.fell(),0,code+' needs no fallback');
   }
 });
+
+test('the dealer finishes the same samples once six rolls of each pair are tallied',()=>{
+  const ui=boot('?debug=1&level=2&seed=TALLIES'),a=ui.api,o=a.state().o;
+  a.act('shake','0');a.act('shake','1');assert.equal(o.shown[1],null);
+  a.act('tally','0'+o.seq[0][0]);
+  for(const c of [0,1])while(o.idx[c]<6){
+    a.act('shake',String(c));a.act('tally',c+o.seq[c][o.idx[c]]);
+    if(c===0){a.act('skip');assert.equal(o.idx[1],0);}
+  }
+  assert.equal(ui.el('#skip').hidden,false);
+  a.act('skip');assert.deepEqual(plain(o.tally),plain(o.seq));assert.deepEqual(plain(o.idx),[24,24]);
+  assert(a.state().done===false);a.act('ans','01');a.act('ans','14');assert(a.state().done);
+});
+
+test('level 8 accepts gap limits that retain every majority-filled column',()=>{
+  const ui=boot('?debug=1&level=8&seed=GAPS'),a=ui.api;
+  a.act('gaps','0');a.act('member','0');assert.equal(a.state().r.member,null);
+  assert.match(ui.el('#work').innerHTML,/Raise the gap limit/);
+  for(const limit of ['1','2']){
+    a.act('gaps',limit);a.act('member','0');assert.equal(a.state().r.member,0);
+    assert.deepEqual(plain(ui.context.roomsOf(a.answers().family.aln,+limit)),plain(a.answers().family.isRoom));
+  }
+});

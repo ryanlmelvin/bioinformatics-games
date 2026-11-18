@@ -212,6 +212,7 @@ footer input{font:inherit;width:9em;padding:5px 8px;border:1px solid var(--line)
     <div data-bk-app></div>
   </div>
   <footer>
+    <a href="?bench=1">Workbench</a>
     <a href="../">All games</a>
     <button id="dl">Download move log</button>
   </footer>
@@ -536,7 +537,7 @@ function makeLevel(seed,n){
 
 /* ---------- workbench parsing ---------- */
 function parsePoints(text){
-  return text.split(/\n/).map(l=>l.trim()).filter(l=>l&&!/^-+$/.test(l)).map(l=>l.split(/[\s,]+/).filter(Boolean).map(Number)).filter(p=>p.length&&p.every(Number.isFinite));
+  return text.split(/\n/).map(l=>l.trim()).filter(l=>l&&!/^-+$/.test(l)).map(l=>l.split(/[\s,]+/).filter(Boolean).map(Number));
 }
 function bench(points,k,start){
   const ff=farthestFirst(points,k,0);
@@ -567,23 +568,23 @@ const LEVELS=[
  {id:1,mode:'sort',title:'Which genes move together?',
   brief:'Each card is one yeast gene. Its seven dots show expression levels at seven time points, two hours apart, as the yeast depleted its glucose. Genes with correlated expression profiles may have related functions. Sort the twelve cards into three groups with similar profiles.'},
  {id:2,mode:'ruler',title:'Two inks',
-  brief:'A print shop works with two inks, red and blue. Every color in this tulip is some amount of red and some amount of blue, each from 0 to 10, so each pixel has a spot on the ink map. The shop has three pots of mixed paint, and the press prints every pixel from the pot nearest to it on the map. Do the press’s job for the eight pixels in the dashed strip: click two pots to lay the ruler from the pixel to each, then click the pot to print it from.'},
+  brief:'Each pixel in the tulip has two coordinates on the ink map, one for red and one for blue. Both range from 0 to 10. The press prints each pixel with the nearest of three paint pots. For each pixel in the dashed strip, measure the distance to at least two pots, then choose the nearest.'},
  {id:3,mode:'worst',title:'The worst pixel',
   brief:'This fish is printed from three pots. To mix a pot, click a pixel in the picture or a dot on the map, and the pot matches that ink. Pot 1 is already mixed. The meter shows how far the worst-printed pixel is from its nearest pot. Bring that number down to the shop’s mark. To pour out a pot and mix it again, click it on the map.'},
  {id:4,mode:'stray',title:'One stray pixel',
-  brief:'A fly has landed on this mushroom’s sheet. Mix three pots by the level 3 move: each new pot matches the pixel the meter is pointing at.'},
+  brief:'A fly has left one stray pixel on the mushroom print. Pot 1 is ready. Mix each remaining pot to match the pixel farthest from its nearest pot.'},
  {id:5,mode:'gravity',title:'Where should a pot sit?',
-  brief:'All the red pixels of this heart are printed from one pot, and that will not change. You choose the pot’s ink: type its red and blue amounts and watch the error of those pixels. Find the ink that makes it as small as it can be.'},
+  brief:'One pot supplies all the red pixels in this heart. Enter amounts of red and blue ink, mix the pot, and check the average squared error. Find the mix with the lowest error.'},
  {id:6,mode:'loop',title:'Repaint, re-average',
-  brief:'The three pots for this sailboat start in poor places, and the sheet is blank. There are two jobs, and you do each by hand once: print the sheet, every pixel from its nearest pot, then move each pot to the average ink of the pixels it printed. After that, alternate the two jobs until nothing changes.'},
+  brief:'The three pots start far from the colors they need to print. Assign each pixel in the marked row to its nearest pot, then calculate the average ink for one pot. After that, alternate printing the sheet and moving the pots until the print stops changing.'},
  {id:7,mode:'bad',title:'A bad start',
   brief:'Two of the three pots for this house start almost the same color. Run the two buttons until nothing changes.'},
- {id:8,mode:'cards',title:'Seven numbers a gene',
+ {id:8,mode:'cards',title:'Seven measurements per gene',
   brief:'These are your twelve cards from level 1. Each expression vector has seven coordinates, so the data occupy a seven-dimensional space. The distance calculation is the same as in two dimensions. Three cards serve as the initial centers.'},
  {id:9,mode:'tree',title:'Family tree',
-  brief:'The table gives the distance between every two of eight genes. Join the two closest groups, again and again, until one group is left. When two groups join, the distance from the new group to any other is the average over all pairs of members.'},
+  brief:'The table shows the distances between eight genes. Repeatedly join the two closest groups until one remains. To find the distance between two groups, average the distances between pairs of genes, taking one gene from each group.'},
  {id:10,mode:'shift',title:'The shift',
-  brief:'Expression of twenty-four yeast genes measured at seven time points, from six hours before glucose depletion to six hours after. Sort them with the two buttons, starting from pots chosen by the level 3 move.'}
+  brief:'These cards show expression profiles for 24 yeast genes from six hours before glucose depletion to six hours after. The starting centers were chosen by farthest-first traversal. Assign the genes to centers, then update the centers until the groups stop changing.'}
 ];
 
 /* Primary sources. Each DOI was checked in Crossref; look lines come from the abstracts (Gonzalez: title only). */
@@ -623,7 +624,7 @@ const params=new URLSearchParams(location.search),urlSeed=params.get('seed');
 const requestedLevel=Number(params.get('level'));
 const previewLevel=Number.isInteger(requestedLevel)&&requestedLevel>=1&&requestedLevel<=LEVELS.length?requestedLevel:0;
 function load(){try{return JSON.parse(localStorage.getItem(KEY))||{};}catch(e){return {};}}
-function save(){if(previewLevel)return;if(S&&S.done)S.link=encodeProgress(S);try{localStorage.setItem(KEY,JSON.stringify(S));}catch(e){}writeLink();}
+function save(){if(TRANSIENT)return;if(S&&S.done)S.link=encodeProgress(S);try{localStorage.setItem(KEY,JSON.stringify(S));}catch(e){}writeLink();}
 function freshState(seed){return {seed,unlocked:1,done:[],badges:[],earnedAt:{},variants:{},piles1:null,log:[]};}
 /* First-load puzzle codes. The tests play every level of each one. */
 const CODES='B4U3CS UPH8H6 87DWWM S6KX8K CECYCQ MG66BC R9WJN2 VAG9V7 NJH28D V5RGUE M9W97T XYVGPK NN42P2 NTPHTM G8CTWW ULGZPE CYZ9W6 TKPLZ3 VP6ZK2 TBUWXL VJLD7L ARWMX5 44GB8L P4XFA7 LWSJRX AKJWMH W5ULB6 J429UF T3ZUHG YAYRMT V9Z3CH BB59AR E6F2RY KR5QCK 4ER97L 777V74 XFXR4N EFF8GG 2JML27 MWQ49T BHU4TS 7PLSZN XQPTJF 4X635G ZXMRUX VB3BJG D86VAA MQC363 ZTDJ4H RAMJ3V'.split(' ');
@@ -707,7 +708,7 @@ function useLink(){
     linkNote='Restored from your progress link: '+got.terms.length+' vocabulary term'+(got.terms.length===1?'':'s')+' and '+got.levels.length+' finished level'+(got.levels.length===1?'':'s')+'.';
   }
 }
-let S=previewLevel?freshState(urlSeed||randomCode()):load();
+let S=TRANSIENT?freshState(urlSeed||randomCode()):load();
 if(urlSeed&&urlSeed!==S.seed)S=freshState(urlSeed);
 if(!S.seed)S=freshState(randomCode());
 withDone(S);
@@ -891,7 +892,7 @@ MODES.sort={
   pile(j){const st=cur.st;if(st.phase!=='sort')return;if(st.sel===null){say('Pick up a card first.','warn');return;}
    st.piles[st.sel]=+j;log('pile',{card:CARDN[st.sel],pile:+j});st.sel=null;
    const left=st.piles.filter(p=>p===null).length,empty=[0,1,2].filter(k=>!st.piles.includes(k)).length;
-   say(left?plural(left,'card')+' to go.':empty?'Every pile needs at least one card.':'All twelve sorted. Move any card to another pile, or confirm your piles.');},
+   say(left?plural(left,'card')+' to go.':empty?'Move a card into each empty pile.':'All twelve sorted. Move any card to another pile, or confirm your piles.');},
   judge(a){const st=cur.st;st.judged=a;S.piles1=st.piles.slice();S.alt1=cur.other.slice();
    log('judge',{answer:a,piles:st.piles});
    say(a==='cant'?'Right.':'Neither sorting can be shown to be better yet.','good');
@@ -904,7 +905,7 @@ MODES.sort={
 /* ===== level 2: the ruler ===== */
 MODES.ruler={
  init(c){c.inst=makeLevel(lseed(2),2);c.pic=c.inst.pic;c.st={pots:c.inst.pots,lab:Array(144).fill(null),s:0,measured:[],misses:0,phase:'strip'};
-  say('Pixel 1 of 8: lay the ruler to two pots.');},
+  say('Pixel 1 of 8. Click two pots to measure their distances.');},
  rule:()=>'Every pixel is printed from its nearest pot',
  stage(c){
   const st=c.st,pic=c.pic,i=st.phase==='strip'?c.inst.strip[st.s]:null,p=i!==null?pic.px[i]:null;
@@ -917,13 +918,13 @@ MODES.ruler={
  act:{
   pot(j){const st=cur.st;j=+j;if(st.phase!=='strip')return;const i=cur.inst.strip[st.s],p=cur.pic.px[i];
    if(!st.measured.includes(j)){st.measured.push(j);log('measure',{px:i,pot:j,d:dist(p,st.pots[j])});
-    say(st.measured.length<2?'The ruler says '+f1(dist(p,st.pots[j]))+' to '+POTNAME[j]+'. Now another pot.':'Click the pot to print this pixel from.');return;}
+    say(st.measured.length<2?'The ruler says '+f1(dist(p,st.pots[j]))+' to '+POTNAME[j]+'. Now another pot.':'Click a measured pot to print this pixel, or measure the third pot.');return;}
    if(st.measured.length<2){say('Lay the ruler to a second pot first.','warn');return;}
    const want=nearest(p,st.pots);st.lab[i]=want;log('print_px',{px:i,pot:j,nearest:want});
-   if(j!==want){st.misses++;say('The press took '+POTNAME[want]+' instead: it is '+f1(dist(p,st.pots[want]))+' away, '+POTNAME[j]+' is '+f1(dist(p,st.pots[j]))+'.','warn');}
+   if(j!==want){st.misses++;say('The press took '+POTNAME[want]+'. It is '+f1(dist(p,st.pots[want]))+' away, compared with '+f1(dist(p,st.pots[j]))+' for '+POTNAME[j]+'.','warn');}
    else say('Printed from '+POTNAME[j]+'.','good');
    st.s++;st.measured=[];
-   if(st.s>=8){st.phase='rest';say((st.misses?'':'All eight right. ')+'The press can do the other '+(144-8)+' the same way.','good');}
+   if(st.s>=8){st.phase='rest';cur.msg.text+=' The press can now print the remaining pixels.';}
    else if(j===want)say('Printed from '+POTNAME[j]+'. Pixel '+(st.s+1)+' of 8.','good');
    else cur.msg.text+=' Pixel '+(st.s+1)+' of 8.';
   }
@@ -1185,12 +1186,13 @@ MODES.tree={
    h+='<div class="work"><p class="cap">Distances between groups</p><div class="scroll"><table class="matrix"><tr><th></th>'+G.map(g=>'<th>'+MODES.tree.gname(g)+'</th>').join('')+'</tr>'+
     G.map((a,i)=>'<tr><th>'+MODES.tree.gname(a)+'</th>'+G.map((b,j)=>{
      if(j<=i)return '<td></td>';
-     const hand=st.phase==='hand'&&((a===st.newG&&b.length===1&&b[0]===I.hand.other)||(b===st.newG&&a.length===1&&a[0]===I.hand.other));
+     const joined=st.phase==='hand'&&(a.length===2||b.length===2);
+     const hand=joined&&(a.length===2?b[0]:a[0])===I.hand.other;
      if(hand)return '<td><input type="number" step="0.5" id="hand" aria-label="average distance" style="width:4em"></td>';
-     if(st.phase==='hand'&&(a===st.newG||b===st.newG))return '<td><button disabled aria-label="not yet worked out">?</button></td>';
+     if(joined)return '<td><button disabled aria-label="not yet worked out">?</button></td>';
      const d=groupDist(D,a,b);
      return '<td><button data-act="merge" data-arg="'+i+','+j+'"'+(st.hint===i+','+j?' class="min"':'')+(st.phase==='hand'?' disabled':'')+'>'+(Number.isInteger(d)?d:f2(d))+'</button></td>';}).join('')+'</tr>').join('')+'</table></div>';
-   if(st.phase==='hand')h+='<p>Group '+MODES.tree.gname(st.newG)+' to card '+CARDN[I.hand.other]+': the average of '+CARDN[st.newG[0]]+'–'+CARDN[I.hand.other]+' ('+D[st.newG[0]][I.hand.other]+') and '+CARDN[st.newG[1]]+'–'+CARDN[I.hand.other]+' ('+D[st.newG[1]][I.hand.other]+'). Type it. <button data-act="checkhand">Check</button></p>';
+   if(st.phase==='hand')h+='<p>Group '+MODES.tree.gname(st.newG)+' to card '+CARDN[I.hand.other]+': the average of '+CARDN[st.newG[0]]+'–'+CARDN[I.hand.other]+' ('+D[st.newG[0]][I.hand.other]+') and '+CARDN[st.newG[1]]+'–'+CARDN[I.hand.other]+' ('+D[st.newG[1]][I.hand.other]+'). Enter the average in the empty cell. <button data-act="checkhand">Check</button></p>';
    h+='</div>';
   }
   h+='<div class="work"><p class="cap">The tree your joins draw'+(st.phase==='cut'?' · click a height to cut it':'')+'</p>'+MODES.tree.dendro(c)+'</div>';
@@ -1202,7 +1204,7 @@ MODES.tree={
   const order=[];const walk=g=>g.forEach(i=>{if(!order.includes(i))order.push(i);});
   (M.length?[M[M.length-1].members]:[]).forEach(walk);st.groups.forEach(walk);
   const maxD=Math.max(...I.merges.map(m=>m.d)),W=340,H=170,X=i=>20+order.indexOf(i)*(300/7),Y=d=>H-24-d/maxD*(H-44);
-  let h='<div class="scroll"><svg viewBox="0 0 '+W+' '+H+'" style="width:100%;max-width:520px;min-width:300px" role="img" aria-label="tree of joins"><rect width="'+W+'" height="'+H+'" rx="6" fill="#fbf8f1"/>';
+  let h='<div class="scroll"><svg viewBox="0 0 '+W+' '+H+'" style="width:100%;max-width:520px;min-width:300px" role="'+(st.phase==='cut'?'group':'img')+'" aria-label="Tree of joins"><rect width="'+W+'" height="'+H+'" rx="6" fill="#fbf8f1"/>';
   const pos={};for(let i=0;i<n;i++)pos[i]={x:X(i),y:Y(0)};
   const key=g=>g.slice().sort((a,b)=>a-b).join(',');
   M.forEach(m=>{const a=pos[key(m.a)]||pos[m.a[0]],b=pos[key(m.b)]||pos[m.b[0]],y=Y(m.d);
@@ -1211,9 +1213,9 @@ MODES.tree={
   for(let i=0;i<n;i++)h+='<text x="'+f1(X(i))+'" y="'+(H-8)+'" font-size="12" font-weight="700" text-anchor="middle" fill="'+(st.cut?PILECOL[st.cut.findIndex(g=>g.includes(i))]:'#2a2416')+'">'+CARDN[i]+'</text>';
   if(st.phase==='cut'){
    // a band between successive join heights leaves k groups
-   const hs=[0].concat(I.merges.map(m=>m.d));
-   for(let t=0;t<hs.length-1;t++){const k=n-t-1,y0=Y(hs[t+1]),y1=Y(hs[t]);
-    h+='<rect x="10" y="'+f1(y0)+'" width="320" height="'+f1(Math.max(4,y1-y0))+'" fill="rgba(194,65,12,'+(t%2?.05:.1)+')" data-act="cut" data-arg="'+(k)+'" style="cursor:pointer"><title>cut here: '+k+' groups</title></rect>';}
+   const hs=[0,...I.merges.map(m=>m.d),maxD*1.1];
+   for(let t=0;t<hs.length-1;t++){const k=n-t,y0=Y(hs[t+1]),y1=Y(hs[t]),height=f2((hs[t]+hs[t+1])/2);
+    h+='<rect x="10" y="'+f1(y0)+'" width="320" height="'+f1(y1-y0)+'" fill="rgba(194,65,12,'+(t%2?.05:.1)+')" data-act="cut" data-arg="'+(k)+'" role="button" tabindex="0" aria-label="Cut at distance '+height+'" style="cursor:pointer"><title>Cut at distance '+height+'</title></rect>';}
   }
   if(st.cut){const y=Y((I.merges[4].d+I.merges[5].d)/2);h+='<line x1="10" x2="330" y1="'+f1(y)+'" y2="'+f1(y)+'" stroke="#c2410c" stroke-width="2" stroke-dasharray="6 3"/>';}
   return h+'</svg></div>';
@@ -1310,7 +1312,7 @@ function renderGuide(){
     (s?' · Source: <a href="'+s.url+'" target="_blank" rel="noopener">'+s.cite+', “'+s.title+'”</a>':'')+
     (v.code?' · Code it: <a href="https://rosalind.info/problems/'+v.code.toLowerCase()+'/" target="_blank" rel="noopener">Rosalind '+v.code+'</a>':'')+'</p></div>';}).join('')+
   (S.badges.includes('lloyd')?'<div class="gentry"><h4>A note on starting the loop</h4><p>Real k-means software usually chooses its starting centers at random, each new one with probability proportional to its squared distance from the centers already chosen (k-means++), and keeps the best of several runs.</p></div>':'')+
-  (got.length?'<p style="margin-top:10px"><button id="printGuide">Print field guide</button></p>':'<p class="gmeta">Nothing yet. Finish level 1.</p>');
+  (got.length?'<p style="margin-top:10px"><button id="printGuide">Print field guide</button></p>':'<p class="gmeta">Terms appear here as you earn them.</p>');
 }
 function renderPanel(){
  if(!cur.done){$('#panel').innerHTML='';return;}
@@ -1353,8 +1355,10 @@ function renderBench(){
  const fmt=c=>'('+c.map(x=>Math.round(x*1000)/1000).join(', ')+')';
  const run=()=>{
   const P=parsePoints($('#bpts').value),k=+$('#bk').value,st=parsePoints($('#bstart').value);
-  if(!P.length||!(k>=1)||k>P.length||P.some(p=>p.length!==P[0].length)){$('#bout').innerHTML='<p class="status warn">Need at least k points, all with the same number of coordinates.</p>';return;}
-  const r=bench(P,k,st.length===k&&st.every(p=>p.length===P[0].length)?st:null);
+  if(!P.length||!P[0].length||P.some(p=>p.length!==P[0].length||!p.every(Number.isFinite))){$('#bout').innerHTML='<p class="status warn">Enter one point per line, with the same number of numeric coordinates on every line.</p>';return;}
+  if(!Number.isInteger(k)||k<1||k>P.length){$('#bout').innerHTML='<p class="status warn">Choose a whole number for k between 1 and '+P.length+'.</p>';return;}
+  if(st.length&&(st.length!==k||st.some(p=>p.length!==P[0].length||!p.every(Number.isFinite)))){$('#bout').innerHTML='<p class="status warn">Enter '+plural(k,'starting point')+' with '+plural(P[0].length,'coordinate')+' each, or leave the starting points blank.</p>';return;}
+  const r=bench(P,k,st);
   let h='<div class="compare"><div class="reveal"><h3>Farthest-first traversal</h3><p>Centers: '+r.ff.centers.map(fmt).join(' ')+'</p><p>MaxDistance '+f2(r.ff.max)+' · squared error distortion '+f2(r.ff.err)+'</p></div>'+
    '<div class="reveal"><h3>Lloyd algorithm</h3><p>Start: '+r.lloyd.start.map(fmt).join(' ')+'</p><table class="work">'+
    r.lloyd.steps.filter(s=>s.kind==='move').map((s,i)=>'<tr><td>round '+(i+1)+'</td><td>'+s.centers.map(fmt).join(' ')+'</td><td>'+f2(s.err)+'</td></tr>').join('')+

@@ -126,7 +126,9 @@ function toast(title,lines){
 function gamePage(){
   document.body.classList.add('bk-game','bk-g-'+G.dir);
   document.body.style.setProperty('--bk-hue',G.hue||ch.hue);
-  document.title=G.game+' · '+(side?'Side quest':'Chapter '+ch.n)+' · '+BOOK.title;
+  const workbench=!!params.get('bench');
+  const practice=workbench||$('#savebar')?.hidden===true;
+  document.title=G.game+(workbench?' workbench':'')+' · '+(side?'Side quest':'Chapter '+ch.n)+' · '+BOOK.title;
   const wrap=$('.wrap')||$('main')||document.body;
 
   // the chapter line above the game's own header
@@ -136,30 +138,31 @@ function gamePage(){
   // the chapter cover, once, for a reader who has not started this game
   // (the game has already saved a blank state by now, so "not started" means nothing unlocked and nothing earned)
   const saved=store.get(G.key,null),begun=!!saved&&((saved.unlocked||1)>1||(Array.isArray(saved.badges)&&saved.badges.length>0)||(Array.isArray(saved.log)&&saved.log.length>2));
-  const fresh=!begun&&!store.get('book:seen:'+G.dir,false)&&!['level','seed','debug','code'].some(k=>params.has(k))&&!/level-\d+/.test(path)&&!['#suggested-reading','#handouts'].includes(location.hash);
+  const readingLink=['#suggested-reading','#handouts'].includes(location.hash);
+  const fresh=!practice&&window.top===window&&!begun&&!store.get('book:seen:'+G.dir,false)&&!['seed','debug','code'].some(k=>params.has(k))&&!readingLink;
   if(fresh){
-    const o=el('div','bk-cover');o.setAttribute('role','dialog');o.setAttribute('aria-modal','true');o.setAttribute('aria-labelledby','bkCoverT');
+    const o=el('dialog','bk-cover');o.setAttribute('aria-labelledby','bkCoverT');
     o.innerHTML='<div class="bk-cover-card"><img src="'+base+'book/art/'+G.dir+'.svg" alt=""><div class="bk-cover-body">'+
       '<p class="bk-eyebrow"><span>'+(side?'Side quest, chapter '+ch.n:'Chapter '+ch.n)+'</span>'+esc(ch.topic)+'</p>'+
       '<h2 id="bkCoverT">'+esc(G.game)+'</h2><p class="bk-hook">'+esc(G.hook)+'</p>'+
       (G.levels?'<p class="bk-meta">'+G.levels+' levels, '+G.terms+' terms</p>':'')+
-      (!side&&ch.docs!==false?'<p class="bk-meta">Fill in the <a href="'+base+'materials/'+ch.slug+'-play-guide.docx">exploration guide</a> (Word) as you play. The other handouts are <a href="#handouts" class="bk-tohandouts">under the game</a>.</p>':'')+
-      '<div class="bk-cover-go"><button type="button" class="bk-begin">Begin</button><a href="'+base+'">Back to the contents</a></div></div></div>';
+      (!side&&ch.docs!==false?'<p class="bk-meta">Use the <a href="'+base+'materials/'+ch.slug+'-play-guide.docx">exploration guide</a> (Word) as you play, or <a href="#handouts" class="bk-tohandouts">browse all chapter handouts</a>.</p>':'')+
+      '<div class="bk-cover-go"><button type="button" class="bk-begin" autofocus>Begin</button><a href="'+base+'#contents">Back to contents</a></div></div></div>';
     document.body.append(o);document.body.classList.add('bk-locked');
-    const go=$('.bk-begin',o);go.focus();
-    const close=()=>{store.set('book:seen:'+G.dir,true);o.remove();document.body.classList.remove('bk-locked');play('good');document.removeEventListener('keydown',key);};
-    const key=e=>{if(e.key==='Escape'||e.key==='Enter'){e.preventDefault();close();}};
-    go.onclick=close;document.addEventListener('keydown',key);
-    const toH=$('.bk-tohandouts',o);if(toH)toH.onclick=()=>{close();};
+    o.addEventListener('keydown',e=>e.stopPropagation()); // Leave native link and button keys inside the cover.
+    o.addEventListener('close',()=>{store.set('book:seen:'+G.dir,true);o.remove();document.body.classList.remove('bk-locked');});
+    $('.bk-begin',o).onclick=()=>{o.close();play('good');};
+    const toH=$('.bk-tohandouts',o);if(toH)toH.onclick=()=>o.close();
+    o.showModal();
   }
-  store.set('book:last',{dir:G.dir,t:Date.now()});
+  if(!practice&&!readingLink&&window.top===window)store.set('book:last',{dir:G.dir,t:Date.now()});
 
   // "Level 5: The tourist" becomes a small level tag and a title
   const title=$('#title');
   function dressTitle(){
     if(!title||title.querySelector('.bk-lv'))return '';
     const m=/^\s*(Level\s+\d+)\s*[:.]\s*(.+)$/s.exec(title.textContent);if(!m)return '';
-    title.innerHTML='<span class="bk-lv">'+esc(m[1])+'</span>'+esc(m[2]);return m[1];
+    title.innerHTML='<span class="bk-lv">'+esc(m[1])+'</span> '+esc(m[2]);return m[1];
   }
   if(title){dressTitle();new MutationObserver(dressTitle).observe(title,{childList:true,characterData:true,subtree:true});}
 
@@ -176,7 +179,7 @@ function gamePage(){
       if(add.length){add.forEach(n=>freshUntil[n]=now+2600);events.terms=events.terms.concat(add);flush();}}
     known=names;
     got.forEach(t=>{if(freshUntil[t.name]>now)t.node.classList.add('bk-fresh');});
-    if(!params.has('level'))store.set('book:terms:'+G.dir,got.map(t=>({name:t.name,def:t.def})));
+    if(!practice)store.set('book:terms:'+G.dir,got.map(t=>({name:t.name,def:t.def})));
   }
   if(badges){onBadges();new MutationObserver(onBadges).observe(badges,{childList:true});}
 
@@ -210,7 +213,7 @@ function gamePage(){
 
   // Lockpick's keypad sings: one note per letter, typed or clicked
   if(G.keys)document.addEventListener('keydown',e=>{const n=!e.metaKey&&!e.ctrlKey&&!e.altKey&&!e.repeat&&G.keys[e.key.toLowerCase()];
-    if(n&&!(e.target instanceof Element&&e.target.closest('input,textarea')))play(n);},true);
+    if(n&&!(e.target instanceof Element&&e.target.closest('input,textarea,dialog')))play(n);},true);
 
   // the chapter's handouts and reading sit right under the game, named for it; the next chapter waits at the foot of the page
   const foot=$('footer',wrap);
@@ -264,17 +267,15 @@ function app(){
   let offer=null,kept=null,refused=false,justInstalled=false;
   function draw(){
     let h='<p class="bk-app-line">';
-    if(!can)h+='This browser cannot guarantee saved progress, so rely on your progress link.';
-    else if(kept)h+='<b class="bk-app-ok">Kept.</b> This browser will not clear your progress to free up space.';
-    else h+='Browsers can clear what a site has saved when space runs low or after a long time away. '+
-      (refused?'<b>The browser declined.</b> It is more likely to agree once the book is installed or bookmarked. Your progress link works either way.'
-        :'You can ask this one not to.')+'</p><p class="bk-app-line"><button type="button" data-bk-do="keep">Ask this browser to keep my progress</button>';
+    if(!can)h+='Keep a copy of your progress link in case this browser clears its storage.';
+    else if(kept)h+='This browser will keep your progress when it frees up space.';
+    else h+=(refused?'The browser declined the storage request. Copy your progress link for safekeeping.'
+        :'This browser may clear saved progress when space runs low.')+'</p><p class="bk-app-line"><button type="button" data-bk-do="keep">Keep progress on this device</button>';
     h+='</p><p class="bk-app-line">';
     if(installed||justInstalled)h+='<b class="bk-app-ok">Installed.</b> The book opens in its own window and works offline.';
     else if(offer)h+='<button type="button" data-bk-do="install">Install the book as an app</button> It opens in its own window and works offline.';
-    else if(ios)h+='<b>To install on an iPhone or iPad:</b> tap Share, then Add to Home Screen. The installed book starts empty, so copy your book link first and paste it into the installed book’s front page.';
-    else if(safari)h+='<b>To install in Safari on a Mac:</b> File menu, then Add to Dock. The installed book starts empty, so copy your book link first and paste it into the installed book’s front page.';
-    else h+='If your browser’s menu offers Install or Add to Home Screen, the book can be installed and used offline.';
+    else if(ios||safari)h+='To install, choose '+(ios?'Share, then Add to Home Screen':'File, then Add to Dock')+'. Copy your book link first so you can restore your progress on the app’s contents page.';
+    else h+='For offline play, choose Install or Add to Home Screen if your browser offers it.';
     h+='</p>';
     slots.forEach(s=>{s.classList.add('bk-app');s.innerHTML=h;});
   }

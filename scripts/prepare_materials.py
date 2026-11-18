@@ -35,6 +35,9 @@ SOURCES = [
  ('4_Homework_CodeAndPaper.docx','coding-and-paper-tasks','Suggested coding and pen and paper tasks'),
 ]
 BASE='https://bioinformatics.ryanlmelvin.com/'
+DICE_ACTIVITY='For an optional dice game, choose one person to deal. Behind a screen, the dealer flips a fair coin to choose the starting pair. For the fair pair, roll two dice and call “seven” or “other” according to their sum. To simulate the loaded pair, roll one die and call “seven” on 1–4 or “other” on 5–6. Before each later round, draw from three KEEP cards and one SWITCH card, then replace the card and shuffle. The dealer records the pair and the call each round. The observers record the calls and mark where they think the dealer switched. Compare both records at the end.'
+DICE_QUESTION='What were the hidden states and what could the observers hear? Use the dealer’s record to estimate the probability of a switch and the probability of a seven for each pair. Which call gives stronger evidence about the pair in play? Can either call identify it with certainty?'
+PRESENTATION_NOTE='Use notes, figures or sketches as needed. If you find a bug during the presentation, show which step went wrong and how you noticed it. Be ready to explain each step in the code.'
 # Prefer the publisher or creator, or a non-commercial reference for traditional
 # games and discontinued puzzles. Keep sources inline with the optional activity.
 ACTIVITY_SOURCES = {
@@ -216,7 +219,8 @@ def adapt(source, output, unit, kind, title):
         elif slug=='alignment':
             change(ps[6],'Optional group activities: compare a Ticket to Ride route map with the directed streets in Toll City. On a chessboard, take turns moving a rook right or down by any positive distance; the player who reaches the lower-right square wins. Use the questions below to connect each activity to the algorithm.')
         elif slug=='hmm':
-            change(ps[6],re.sub(r'^Play a 40-minute loaded-dice investigation:.*?The dealer', 'Optional group activity: conduct a loaded-dice investigation. The dealer',ps[6].text))
+            change(ps[6],DICE_ACTIVITY)
+            change(ps[7],DICE_QUESTION)
         elif slug=='evolutionary-trees':
             change(ps[6],'Optional group activity: photograph the starting board of a game such as Pandemic, play, then photograph the final board. Exchange only final photographs and reconstruct possible earlier states before revealing the starting photographs.')
         elif slug=='transformers':
@@ -352,7 +356,7 @@ def shared(output):
     ]:d.add_heading(h,1);d.add_paragraph(t)
     d.add_heading('A suggested format',1)
     d.add_paragraph('Allow about 15 minutes: four for the hand solution, four for the code, three to predict and run a new input, and four for questions.')
-    d.add_paragraph('Notes, figures and sketches are fine. Finding and explaining a bug during the presentation counts in your favour. You should be able to explain the code whether or not you wrote it yourself.')
+    d.add_paragraph(PRESENTATION_NOTE)
     d.add_heading('Feedback',1)
     d.add_paragraph('What was clear? Where was a step missing? What example or test would fill the gap?')
     finish(d,output/'presentation-checklist.docx')

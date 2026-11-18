@@ -526,7 +526,7 @@ const LEVELS=[
   {id:6,title:'Unweave',rule:'Threads of the same letter never cross',
    brief:'Only the right beam survives. Rebuild everything else from it, and read off the word.'},
   {id:7,title:'Two fingers',rule:'Read the pattern from its last letter',
-   brief:'Count how many times the pattern occurs in the word, using only the two beams and their threads. Two fingers mark a band of rows, starting with the whole loom. For each letter of the pattern, from the last, click the band rows whose right-beam letter it is, then move the fingers to where their threads land.'},
+   brief:'Count how many times the pattern occurs in the word, using only the two beams and their threads. Two fingers mark a band of rows, starting with the whole loom. Read the pattern from right to left. For each letter, select every matching letter on the right beam inside the band. Follow those threads and mark the top and bottom rows they reach.'},
   {id:8,title:'Where, exactly?',rule:'Follow threads to a tag · add the steps',
    brief:'Backward search counts the matches but does not say where they are. A tag on every row giving the start of its strip would cost as much as the full list in level 3, so only the rows whose strips start at 0, 4, 8 and 12 carry a tag.'},
   {id:9,title:'Tally boards',rule:'Count from the nearest board',
@@ -534,7 +534,7 @@ const LEVELS=[
   {id:10,title:'One sequencing error',rule:'The loom only finds exact matches',
    brief:'Reads can contain sequencing errors. This read came from the reference sequence below, but one nucleotide was miscalled.'},
   {id:11,title:'The patient',rule:'Look down each column',
-   brief:'Eight reads from a patient, placed against a short region of the reference genome with backward search for the seeds, threads to the tags for the positions, and one mismatch allowed. Most columns agree with the reference. Click the column that shows a real difference from the reference.'}
+   brief:'Eight reads map to the same region of a reference genome with at most one mismatch per read. Compare the reads in each column. Which column shows consistent evidence of a difference? Select it in the reference row.'}
 ];
 
 /* Primary sources. Each link was opened and checked. */
@@ -554,12 +554,12 @@ const SRC={
 const VOCAB=[
   {id:'mapping',name:'Read mapping',code:'BA9N',def:'Finding where each sequencing read (a pattern) occurs in a reference genome (the text). With many reads this is the Multiple Pattern Matching Problem: find every position in Text where a string from Patterns occurs.'},
   {id:'sa',name:'Suffix array',src:'manber',code:'BA9G',def:'The start positions of a text’s suffixes, listed in lexicographic order of the suffixes. SuffixArray(“cocoacoconut$”) = 12, 4, 2, 0, 5, 7, 9, 3, 1, 6, 8, 11, 10.'},
-  {id:'end',name:'End marker',def:'The symbol $, added once to the end of a text and sorted before every letter. It makes the suffixes of the text all different and marks where the text stops.'},
+  {id:'end',name:'End marker',def:'The symbol $, added once to the end of a text and sorted before every letter. It marks the original end of the text and makes every cyclic rotation distinct.'},
   {id:'bwt',name:'Burrows–Wheeler transform',code:'BA9I',def:'Sort all cyclic rotations of Text into lexicographic order to form the Burrows–Wheeler matrix. BWT(Text) is the matrix’s last column. BWT(“cocoacoconut$”) = too$aooccccun.'},
   {id:'rot',name:'Cyclic rotation',def:'A string formed by moving a suffix of Text to its front: the text read around a ring, starting from one of its letters. A text of length n has n cyclic rotations.'},
   {id:'fl',name:'First-last property',def:'The k-th occurrence of a symbol in the first column and the k-th occurrence of that symbol in the last column correspond to the same position of that symbol in Text.'},
   {id:'lf',name:'Last-to-first mapping',code:'BA9K',def:'LastToFirst(i) is the row, in the first column, of the symbol at row i of the last column. Following it from the row that begins with $ spells Text from right to left, which inverts the transform (BA9J).'},
-  {id:'bs',name:'Backward search',src:'ferragina',code:'BA9L',def:'BWMatching: count a pattern from the first and last columns alone. Start with every row in the band (top and bottom pointers). For each symbol of the pattern, last to first, keep the band rows whose last-column symbol it is and follow them with LastToFirst. The rows reached form the new band; its size at the end is the number of matches.'},
+  {id:'bs',name:'Backward search',src:'ferragina',code:'BA9L',def:'BWMatching: count a pattern from the first and last columns alone. Start with every row in the band (top and bottom pointers). For each symbol of the pattern, last to first, keep the rows in the band that end in that symbol, then follow their LastToFirst links. The rows reached form the new band; its size at the end is the number of matches.'},
   {id:'psa',name:'Partial suffix array',src:'langmead',code:'BA9Q',def:'SuffixArray_K(Text): only the suffix array entries that are multiples of K, kept with their rows. To place a match, follow LastToFirst from its row until a row with an entry, and add the number of steps taken.'},
   {id:'ckpt',name:'Checkpoint arrays',src:'li',code:'BA9M',def:'Count_symbol(i, LastColumn), the number of each symbol in the first i rows of the last column, stored only for rows i divisible by C. With FirstOccurrence(symbol), its first row in the first column, a band step is top ← FirstOccurrence(symbol) + Count_symbol(top) and bottom ← FirstOccurrence(symbol) + Count_symbol(bottom + 1) − 1.'},
   {id:'seed',name:'Seed',src:'langmead',code:'BA9O',def:'If a pattern matches a text with at most d mismatches, then cutting the pattern into d + 1 pieces leaves at least one piece that matches exactly. Those pieces are seeds: find them exactly, then extend each hit across the whole pattern and count mismatches.'}
@@ -799,7 +799,7 @@ function renderGuide(){
       return '<div class="gentry"><h4>'+v.name+'</h4><p>'+v.def+'</p><p class="gmeta">Met in level '+(S.earnedAt[v.id]||'?')+
         (s?' · Source: <a href="'+s.url+'" target="_blank" rel="noopener">'+s.cite+', “'+s.title+'”</a>':'')+
         (v.code?' · Code it: <a href="https://rosalind.info/problems/'+v.code.toLowerCase()+'/" target="_blank" rel="noopener">Rosalind '+v.code+'</a>':'')+'</p></div>';}).join('')+
-    (got.length?'<p style="margin-top:10px"><button id="printGuide">Print field guide</button></p>':'<p class="gmeta">Nothing yet. Finish level 1.</p>');
+    (got.length?'<p style="margin-top:10px"><button id="printGuide">Print field guide</button></p>':'<p class="gmeta">Terms appear here as you earn them.</p>');
 }
 function render(){
   const ae=document.activeElement,fid=ae&&ae.id,pos=ae&&ae.selectionStart;
@@ -917,30 +917,30 @@ LV[1]={
     if(r.match){
       st.placed.push({k:st.cur,pos});st.cur++;
       if(st.stage===1)say(st.cur<g.reads.length?read+' starts at '+pos+'. Next read.':'All three placed. '+st.comps+' nucleotides compared along the way.','good');
-      else say(read+' starts at '+pos+'. It took '+st.comps+' nucleotide comparisons to place one read.','good');
+      else say(read+' starts at '+pos+'. You have placed '+st.cur+' of '+g.reads.length+' reads.','good');
     }else say(read+' does not start at '+pos+': nucleotide '+(r.miss+1)+' differs. '+plural(r.comps,'nucleotide')+' compared.','warn');
     render();
   },
   skipLabel(){const st=cur.st;
     if(st.stage===1&&st.cur===3)return 'Now ten reads against 200 nucleotides →';
-    if(st.stage===2&&st.cur>=1&&!st.auto)return 'Let a scanner place the other nine';
+    if(st.stage===2&&st.cur>=1&&!st.auto){const left=cur.inst.long.reads.length-st.cur;return left?'Let the scanner place the remaining '+plural(left,'read'):'Compare with a full scan';}
     return '';},
   skip(){const st=cur.st,x=cur.inst;
     if(st.stage===1){snap();Object.assign(st,{stage:2,placed:[],cur:0,comps:0,last:null});cur.hist=[];log('stage',{stage:2});
       say('Find where the first read starts. Every try costs nucleotide comparisons.');return render();}
     if(st.stage===2&&!st.auto){
-      const g=x.long;let total=0;
-      g.reads.forEach((r,k)=>{const s=naiveScan(g.text,r.read);if(k>0){total+=s.comps;st.placed.push({k,pos:s.pos[0]});}});
+      const g=x.long;let total=0;st.scan=0;
+      g.reads.forEach((r,k)=>{const scan=naiveScan(g.text,r.read);st.scan+=scan.comps;
+        if(k>=st.cur){total+=scan.comps;st.placed.push({k,pos:scan.pos[0]});}});
       st.comps+=total;st.auto=true;st.cur=g.reads.length;st.last=null;
-      st.scan=g.reads.reduce((a,r)=>a+naiveScan(g.text,r.read).comps,0);
       log('scanner',{comps:total});
-      say('The scanner tried every start for each read, left to right: '+total.toLocaleString('en-US')+' more nucleotide comparisons.','good');
+      say(total?'The scanner placed the remaining reads in '+total.toLocaleString('en-US')+' more nucleotide comparisons.':'You placed all ten reads by hand.','good');
       complete(['mapping'],'mapping');render();
     }
   }
 };
 BLOCKS.mapping={html:()=>{const s=cur.st.scan,per=s/(10*195);
-  return 'A scanner needed '+s.toLocaleString('en-US')+' nucleotide comparisons to place ten reads against 200 nucleotides, about '+per.toFixed(2)+' per read per nucleotide of reference. '+
+  return 'A scanner needed '+s.toLocaleString('en-US')+' nucleotide comparisons to place ten reads against 200 nucleotides, about '+per.toFixed(2)+' per possible starting position for a read. '+
   'A human genome has approximately three billion nucleotides and a single run of a sequencing machine produces hundreds of millions of reads. At this rate a hundred million reads would cost about '+sci(per*3e9*1e8)+' comparisons. '+
   '<b>Finding where every read came from is called '+term('mapping','read mapping')+'.</b>';}};
 /*@end l1.js*/
@@ -949,7 +949,7 @@ BLOCKS.mapping={html:()=>{const s=cur.st.scan,per=s/(10*195);
 function renderBench(){
   document.title='The Loom: workbench';
   $('.wrap').innerHTML='<header><h1><a href="./">The Loom</a>: workbench</h1></header><div class="bench">'+
-    '<p>Paste a text (a $ is added at the end if it has none) and some patterns separated by spaces. The workbench shows the sorted rotations with the first, second and last columns picked out, the suffix array, and for each pattern the band after every step of backward search and where its matches start. A second text, if given, is shown beside the first with the number of leading columns the two tables share.</p>'+
+    '<p>Enter a text and separate search patterns with spaces. The workbench adds a final $ and shows the sorted rotations, suffix array, and matching positions. Add a second text to compare the leading columns of the two rotation tables.</p>'+
     '<label>Text<textarea id="bt" spellcheck="false">cocoacoconut</textarea></label>'+
     '<label>Patterns <input type="text" id="bp" value="coco nut xyz" style="width:100%"></label>'+
     '<label>Second text (optional) <input type="text" id="bt2" value="" style="width:100%" spellcheck="false"></label>'+
@@ -960,9 +960,9 @@ function renderBench(){
   const run=()=>{
     const t=$('#bt').value.replace(/\s+/g,''),pats=$('#bp').value.split(/\s+/).filter(Boolean),t2=$('#bt2').value.replace(/\s+/g,'');
     if(!t){$('#bout').innerHTML='<p>Type a text first.</p>';return;}
-    if((t.match(/\$/g)||[]).length>1||(t.includes('$')&&!t.endsWith('$'))){$('#bout').innerHTML='<p>Use at most one $, at the very end.</p>';return;}
+    if([t,t2].some(value=>value.includes('$')&&value.indexOf('$')!==value.length-1)){$('#bout').innerHTML='<p>Each text can have one $ at the very end.</p>';return;}
     const r=benchReport(t,pats);let h='<h2>'+esc(r.text)+'</h2>'+table(r);
-    h+=r.patterns.map(p=>'<p class="mono"><b>'+esc(p.pattern)+'</b>: start rows 0–'+(r.text.length-1)+' · '+p.steps.map(s=>s.sym+' → '+(s.band?'rows '+s.band[0]+'–'+s.band[1]:'empty')).join(' · ')+' · '+plural(p.count,'match')+(p.positions.length?' at '+p.positions.join(', '):'')+'</p>').join('');
+    h+=r.patterns.map(p=>'<p class="mono"><b>'+esc(p.pattern)+'</b>: start rows 0–'+(r.text.length-1)+' · '+p.steps.map(s=>esc(s.sym)+' → '+(s.band?'rows '+s.band[0]+'–'+s.band[1]:'empty')).join(' · ')+' · '+plural(p.count,'match')+(p.positions.length?' at '+p.positions.join(', '):'')+'</p>').join('');
     if(t2){const r2=benchReport(t2,[]);h+='<h2>'+esc(r2.text)+'</h2>'+table(r2);
       if(r2.text.length===r.text.length){let k=0;while(k<r.text.length&&r.rows.every((row,i)=>row.slice(0,k+1)===r2.rows[i].slice(0,k+1)))k++;
         h+='<p><b>'+(r2.text===r.text?'The two texts are the same.':'The two tables share their first '+plural(k,'column')+'.')+'</b></p>';}
@@ -1003,7 +1003,7 @@ LV[2]={
     const foundStarts=st.phase!=='sort'?st.found.map(s=>x.rows[st.order[s]].start):[];
     if(st.phase==='find'||st.phase==='done')hi=st.found.length?i=>foundStarts.some(p=>i>=p&&i<p+2):hi;
     let h='<div class="sub">The word, with each letter’s position</div>'+wordCells(x.word,hi);
-    h+='<div class="sub">'+(st.phase==='sort'?'Its seven suffixes. Drag them into lexicographic order (as comes before ass)':
+    h+='<div class="sub">'+(st.phase==='sort'?'Sort the seven suffixes in dictionary order. Select a strip, then its destination. A shorter suffix comes first when it is a prefix of the longer one.':
       st.phase==='num'?'Sorted. Beside each suffix, type the position where it starts':
       'Click every suffix that begins with '+x.pattern)+'</div>';
     h+=stripsHtml(texts,{cls,act:st.phase==='find'?'find':null,drag:st.phase==='sort'?undefined:false,
@@ -1130,7 +1130,7 @@ LV[4]={
     const x=cur.inst,st=cur.st,texts=st.order.map(i=>x.ring[i]),cls={};
     let h='<div class="sub">'+esc(x.word)+' and its $ on a ring, cut before every letter</div>'+ringSvg(x.text);
     if(st.phase==='read'){const t=st.typed;texts.forEach((s,k)=>{if(k<t.length)cls[k]=t[k]===s[s.length-1]?'match':'nope';});}
-    h+='<div class="sub">'+(st.phase==='sort'?'The strips. Drag them into lexicographic order ($ sorts before every letter)':'Sorted. Read the last letter of each strip, top to bottom')+'</div>';
+    h+='<div class="sub">'+(st.phase==='sort'?'Sort the strips in dictionary order. Select a strip, then its destination. The $ comes first.':'Sorted. Read the last letter of each strip, top to bottom')+'</div>';
     h+=stripsHtml(texts,{cls,last:st.phase!=='sort',drag:st.phase==='sort'?undefined:false});
     if(st.phase!=='sort')h+='<label class="sub" for="lastcol">The last column, top to bottom</label><input type="text" id="lastcol" data-inp="lastcol" autocomplete="off" spellcheck="false" maxlength="'+x.text.length+'" value="'+esc(st.typed)+'" style="font-family:ui-monospace,Menlo,monospace;letter-spacing:.2em;width:14em"'+(st.phase==='done'?' readonly':'')+'>';
     return h;
@@ -1167,7 +1167,7 @@ function outStrip(n,letters){   /* letters fill from the right end */
 /* ---------- level 5: tie the threads on the full table ---------- */
 LV[5]={
   init(){return {tied:{},last:null,bad:null};},
-  brief(){const w=cur.inst.word,c=[...w].find(ch=>repeated(cur.inst.text,ch));return 'The sorted strips of '+esc(cur.inst.text)+', on a loom. The left beam holds the first column and the right beam holds the last. Every letter is numbered by where it sits in the word: '+c+sub(1)+' is the first '+c+', '+c+sub(2)+' the second. Tie a thread from each letter on the right beam to the very same letter on the left beam.';},
+  brief(){const w=cur.inst.word,c=[...w].find(ch=>repeated(cur.inst.text,ch));return 'The sorted strips of '+esc(cur.inst.text)+' are on the loom. The left beam holds their first letters and the right beam holds their last letters. Subscripts identify repeated letters in the original word. For example, '+c+sub(1)+' is the first '+c+' and '+c+sub(2)+' is the second. Select a letter on the right, then its matching copy on the left.';},
   view(){
     const x=cur.inst,t=x.text,n=t.length,occ=occNums(t),st=cur.st,rows=x.rows;
     const idAt=p=>repeated(t,t[p])?occ[p]:0;
@@ -1481,7 +1481,7 @@ LV[11]={
   init(){return {tries:[]};},
   view(){
     const x=cur.inst,st=cur.st,n=x.ref.length,done=cur.done;
-    let h='<p class="shelfnote">Illustrative reads, made up for this level. They are not data from a real patient.</p><div class="pile">';
+    let h='<p class="shelfnote">This example uses simulated patient reads.</p><div class="pile">';
     h+='<div class="prow">'+[...x.ref].map((c,i)=>'<button class="pc'+(done&&i===x.v?' colhit':st.tries.includes(i)?' done':'')+'" data-act="col" data-i="'+i+'" aria-label="Column '+i+', reference '+c+'" style="color:'+colorOf(c)+'">'+c+'</button>').join('')+'<span style="margin-left:8px;font-family:system-ui;font-weight:600">reference</span></div>';
     h+='<div class="prow" style="height:4px;border-bottom:2px solid #8a6a4a;margin-bottom:4px"></div>';
     x.reads.slice().sort((a,b)=>a.start-b.start).forEach(r=>{

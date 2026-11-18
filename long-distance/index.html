@@ -403,23 +403,23 @@ const LEVELS=[
   {id:1,title:'Which genes are expressed?',rule:'Click the first nucleotide of the shared sequence',
    brief:'Each strand is the DNA upstream of one gene, with the gene at its right end. A lit lamp indicates measured gene expression. The three lit strands share one four-nucleotide sequence that the unlit strands lack. Click its first nucleotide in each lit strand.'},
   {id:2,title:'Pass it along',rule:'A jack hears only the jacks beside it',
-   brief:'Put a jack under every nucleotide and wire each jack to its two neighbors. In one round every jack tells its neighbors what it has heard. The line carries three rounds. Get the news of the GATA to the gene.'},
+   brief:'Each nucleotide has a jack connected to its neighbors. In each round the signal from GATA travels one jack farther in both directions. Run the rounds and see whether the signal reaches the gene.'},
   {id:3,title:'A direct line',rule:'One slip for every board',
-   brief:'Each jack now stands for four nucleotides and shows them on its plate. A cord can run from the gene’s jack to any other jack in one step. On each board measured on, click the plate the gene should be wired to.'},
+   brief:'Each jack now has a plate showing four nucleotides. The gene’s jack can connect directly to any plate. On each board labeled “on,” select the plate shared by the active genes.'},
   {id:4,title:'What comes down the cord',rule:'Cords share the gene’s current equally',
-   brief:'Two of these genes hold a GATA and were measured off. Find what else those boards share. Then change the query, and what each plate sends, until every lamp agrees with its measurement. Click a plate to select it.'},
+   brief:'Two boards contain GATA even though their genes are off. Look for another plate those boards share. Select a plate to change whether it answers the query and what value it sends. Match each lamp to the measured result.'},
   {id:5,title:'One unit of current',rule:'Each agreeing nucleotide doubles a jack’s pull',
-   brief:'The transcription factor that binds GATA has lower binding affinity for a variant such as GATT. From now on every jack takes some of the gene’s one unit of current, and a key closer to the query takes more. A jack’s pull starts at 1 and doubles for each nucleotide of its key that agrees with the query. Work out the gene’s reading on board A.'},
+   brief:'In this model, a near match such as GATT responds more weakly than an exact GATA match. Every jack now receives a share of the gene’s one unit of current. Closer matches receive larger shares. A jack’s pull starts at 1 and doubles for each nucleotide of its key that agrees with the query. Work out the gene’s reading on board A.'},
   {id:6,title:'Shuffled',rule:'The same query on every board',
-   brief:'These measurements follow a rule about the transcription start site. Boards A and B were measured differently. Write one query that predicts all five boards. Click a plate to put its key in the query.'},
+   brief:'The gene is on in board A and off in board B. Choose a plate to use as the query and test it on all five boards. Compare its predictions for A and B.'},
   {id:7,title:'Two questions',rule:'One query asks one question',
    brief:'These genes are on only when a TATA sits one place from the gene and a GATA sits anywhere on the board. Predict all five boards. Click a query to work on it, then click a plate to put its key in.'},
   {id:8,title:'Two rounds',rule:'Round 2 reads what round 1 wrote',
-   brief:'The transcription factor bound to GATA activates transcription only when a second factor binds the adjacent CAGC site. Boards A and C hold the same ten plates. Set up two rounds that predict all five boards. Click a blank in a round, then click a plate to fill it.'},
+   brief:'In this model, GATA activates the gene only when CAGC is beside it. Boards A and C hold the same ten plates. Set up two rounds that predict all five boards. Click a blank in a round, then click a plate to fill it.'},
   {id:9,title:'Nobody measured these',rule:'The covered plate is the answer key',
-   brief:'One plate on each board is covered. Click the jack you would wire the covered jack to. That jack’s plate comes down the cord, and the cover is lifted to check it.'},
+   brief:'One plate on each board is covered. Look for a pattern in the surrounding plates. Select the jack whose plate you predict is under the cover, or indicate that the board gives too little information.'},
   {id:10,title:'One nucleotide',rule:'Change one nucleotide · run the exchange again',
-   brief:'This board is a reference sequence. The exchange uses the two rounds of level 8 and the TATA question of level 7, and it predicts that the gene is on. In a patient the gene is off, and the patient has three single-nucleotide variants relative to the reference. Find the variant that changes the prediction.'}
+   brief:'The model predicts that the reference gene is on. It uses the two rounds from level 8 and the TATA query from level 7. The patient’s gene is off, and the sequence differs from the reference at three positions. Test the variants one at a time to find which changes the prediction.'}
 ];
 
 const SRC={
@@ -457,7 +457,7 @@ const VOCAB=[
   {id:'token',name:'Token',src:'ji',def:'The unit a sequence model reads. DNA can be cut into single nucleotides, into k-mers or into longer sequence segments, and each piece becomes one token. This game uses non-overlapping 4-mers.'},
   {id:'attention',name:'Attention',src:'bahdanau',def:'An operation in which each token gathers information from other tokens chosen by comparing their contents, so that one rule connects different positions in different sequences.'},
   {id:'query',name:'Query',def:'What a token is looking for, computed from the token as a vector. It is compared with the key of every other token.'},
-  {id:'key',name:'Key',def:'What a token can be found by, computed from the token as a vector. A token attends most to the tokens whose keys best match its query.'},
+  {id:'key',name:'Key',def:'A vector that describes a token to other tokens. Each query is compared with the keys to determine how much attention each token receives.'},
   {id:'value',name:'Value',def:'What a token sends to a token that attends to it. The receiver’s result is the sum of the values, each multiplied by its attention weight.'},
   {id:'weight',name:'Attention weight',def:'The share of one token’s attention that goes to another token. For each asking token the weights are positive and add up to 1.'},
   {id:'softmax',name:'Softmax',src:'vaswani',def:'The rule that turns scores into attention weights: raise a fixed base to each score, then divide by the total. Trained models use the base e, about 2.718. This game uses 2, so a score higher by one doubles the weight.'},
@@ -634,7 +634,7 @@ function renderGuide(){
       return '<div class="gentry"><h4>'+v.name+'</h4><p>'+v.def+'</p><p class="gmeta">Met in level '+(S.earnedAt[v.id]||'?')+
         (s?' · Source: <a href="'+s.url+'" target="_blank" rel="noopener">'+s.cite+', “'+s.title+'”</a>':'')+
         (v.code?' · Code it: <a href="https://rosalind.info/problems/'+v.code.toLowerCase()+'/" target="_blank" rel="noopener">Rosalind '+v.code+'</a>':'')+'</p></div>';}).join('')+
-    (got.length?'<p style="margin-top:10px"><button id="printGuide">Print field guide</button></p>':'<p class="gmeta">Nothing yet. Finish level 1.</p>');
+    (got.length?'<p style="margin-top:10px"><button id="printGuide">Print field guide</button></p>':'<p class="gmeta">Terms appear here as you earn them.</p>');
 }
 function render(){
   const ae=document.activeElement,fid=ae&&ae.id,pos=ae&&ae.selectionStart;
@@ -722,8 +722,11 @@ const boardsHtml=(list,cap)=>(cap===false?'':'<div class="sub">'+(cap||'Each lam
 const chip=(html,act,attrs,cls)=>'<button class="chip '+(cls||'')+'" data-act="'+act+'"'+(attrs||'')+'>'+html+'</button>';
 const blank=w=>w?colour(w):'<b class="w">· · · ·</b>';
 const fromGene=(js,n,w)=>js.map(j=>({from:n,to:j,w:w==null?1/js.length:w}));
-function distChip(d,act){return '<span class="step">'+chip('−',act,' data-d="-1" aria-label="Nearer"')+'<b>'+(d==null?'any':d)+'</b>'+chip('+',act,' data-d="1" aria-label="Farther"')+'</span>';}
-function stepDist(d,by){const v=(d==null?0:d)+by;return v<=0?null:Math.min(9,v);}
+function distChip(d,limit,query){
+  const q=query===undefined?'':' data-q="'+query+'"';
+  return '<span class="step">'+chip('−','dist',q+' data-d="-1" aria-label="Decrease distance"'+(d==null?' disabled':''))+'<b>'+(d==null?'any':d)+'</b>'+chip('+','dist',q+' data-d="1" aria-label="Increase distance"'+(d===limit?' disabled':''))+'</span>';
+}
+function stepDist(d,by,limit){const v=(d||0)+by;return v<=0?null:Math.min(limit,v);}
 function runButton(st){return '<p><button class="primary" data-act="run">Run on every board</button></p>';}
 /* compare predictions with measurements; returns the index of the first board that disagrees, or -1 */
 function firstWrong(boards,pred){return boards.findIndex((b,i)=>pred[i]!==b.on);}
@@ -800,7 +803,7 @@ LV[2]={
     if(st.phase==='window')h+='<p>'+(st.peek===null?'':'This jack has heard of '+plural(Math.min(len-1,st.peek+3)-Math.max(0,st.peek-3)+1,'nucleotide')+'. ')+
       (st.peeks?'<button class="primary" data-act="cut">Give every four nucleotides one jack and one plate</button>':'')+'</p>';
     else h+='<p><span class="meter">Round '+st.r+' of '+x.rounds+'</span> <button data-act="round"'+(st.r>=x.rounds||reached?' disabled':'')+'>Run one round</button>'+
-      (st.phase==='mini'&&reached?' <button class="primary" data-act="bigger">Try a real strand</button>':'')+'</p>';
+      (st.phase==='mini'&&reached?' <button class="primary" data-act="bigger">Try strand A from level 1</button>':'')+'</p>';
     return h;
   },
   act(a,d){
@@ -849,7 +852,7 @@ LV[3]={
       if(i===b.at){st.plug[d.b]=i;log('plug',{b:+d.b,ok:true});
         if(Object.keys(st.plug).length===3){st.phase='slip';say('A human genome has about 20,000 genes, so nobody plugs cords by hand. The gene’s jack carries a written slip, and the same slip is used on every board. Choose a slip and fill it in.','good');}
         else say('One step, whatever the distance.','good');
-      }else{log('plug',{b:+d.b,ok:false});say('That plate reads '+b.labels[i]+'. The boards measured on share one plate.','warn');}
+      }else{log('plug',{b:+d.b,ok:false});say('That plate reads '+b.labels[i]+'. Look for the plate shared by all three boards labeled “on.”','warn');}
       return render();
     }
     if(st.phase!=='slip')return;
@@ -869,7 +872,7 @@ LV[3]={
   }
 };
 BLOCKS.l3={src:['bahdanau'],html:()=>'The cord lands in a different place on every board because it follows what the plates say. '+
-  '<b>The slip a jack asks with is its '+term('query','query')+'. What a jack answers to, here its plate, is its '+term('key','key')+'. Wiring each jack to the jacks whose keys match its query is called '+term('attention','attention')+'.</b> '+
+  '<b>The request written on the slip is the jack’s '+term('query','query')+'. The label on a jack’s plate is its '+term('key','key')+'. Wiring each jack to the jacks whose keys match its query is called '+term('attention','attention')+'.</b> '+
   'The game uses those three words from here on.'};
 
 /* ---------- level 4: values ---------- */
@@ -906,7 +909,7 @@ LV[4]={
 };
 BLOCKS.l4={html:()=>{const b=cur.inst.boards[4];
   return 'The key decides whether a jack answers, and a separate quantity decides what it sends. <b>What a jack sends down the cord is its '+term('value','value')+'.</b> '+
-    'The gene’s reading is each value times the share of current on its cord, added up. On board E that is (+1 +1 −1) ÷ 3, which is above 0, and on board F it is (+1 −1 −1) ÷ 3. '+
+    'To get the gene’s reading, multiply each value by its cord’s share of the current, then add the products. On board E that is (+1 +1 −1) ÷ 3, which is above 0, and on board F it is (+1 −1 −1) ÷ 3. '+
     'CTCC stands here for a silencer, a regulatory sequence whose bound protein represses transcription.';}};
 
 /* ---------- level 5: pulls, shares and the softmax ---------- */
@@ -972,20 +975,20 @@ LV[6]={
     const st=cur.st,x=cur.inst,stamp=st.phase!=='try';
     let h=boardsHtml(x.boards.map((b,i)=>{const n=b.labels.length,js=st.want?answers(b.labels,n,{want:[st.want],dist:stamp?st.dist:null}):[];
       return boardSvg({labels:b.labels,b:i,tag:TAGS[i],meas:b.on,lamp:js.length>0,sets:[{cords:fromGene(js,n)}],act:'plate',top:stamp?b.labels.map((l,j)=>n-j):null,verdict:st.ran?(js.length>0)===b.on:undefined});}));
-    h+='<div class="slip on">Query: wire me to every jack whose key is '+blank(st.want)+(stamp?' and whose distance from me is '+distChip(st.dist,'dist'):'')+'.</div>';
-    return h+runButton();
+    h+='<div class="slip on">Query: wire me to every jack whose key is '+blank(st.want)+(stamp?' and whose distance from me is '+distChip(st.dist,N):'')+'.</div>';
+    return h+(st.want?runButton():'');
   },
   act(a,d){
     const st=cur.st,x=cur.inst;
     if(a==='plate'){snap();st.want=x.boards[+d.b].labels[+d.i];st.ran=false;say('');}
-    else if(a==='dist'&&st.phase!=='try'){snap();st.dist=stepDist(st.dist,+d.d);st.ran=false;say('');}
+    else if(a==='dist'&&st.phase!=='try'){snap();st.dist=stepDist(st.dist,+d.d,N);st.ran=false;say('');}
     else if(a==='run'){
       snap();st.ran=true;const stamp=st.phase!=='try';
       if(!stamp&&st.want)st.tries=(st.tries||0)+1;
       const pred=x.boards.map(b=>st.want?answers(b.labels,b.labels.length,{want:[st.want],dist:stamp?st.dist:null}).length>0:false),w=firstWrong(x.boards,pred);
       log('run',{want:st.want,dist:st.dist,ok:w<0});
       if(w<0&&stamp){say('Every lamp agrees.','good');complete(['posenc'],'l6');}
-      else if(!stamp)say('Boards A and B hold the same ten plates, so this query gives both the same reading. They were measured differently.','warn');
+      else if(!stamp)say('Boards A and B have the same ten plates in different orders. This query gives both boards the same reading, although only A is on.','warn');
       else say('Board '+TAGS[w]+' is predicted '+onOff(pred[w])+' and was measured '+onOff(x.boards[w].on)+'.','warn');
     }else return;
     render();
@@ -1005,7 +1008,7 @@ LV[7]={
     let h=boardsHtml(x.boards.map((b,i)=>{const n=b.labels.length,p=l7pred(b,st);
       return boardSvg({labels:b.labels,b:i,tag:TAGS[i],meas:b.on,lamp:p.on,sets:p.sets.map(js=>({cords:fromGene(js,n)})),act:'plate',top:b.labels.map((l,j)=>n-j),verdict:st.ran?p.on===b.on:undefined});}));
     st.q.forEach((q,i)=>{h+='<div class="slip'+(st.active===i?' on':'')+'" style="border-left:6px solid '+CORDC[i]+'">'+chip('Query '+(i+1),'pickq',' data-q="'+i+'"',st.active===i?'sel':'')+
-      ' key '+blank(q.want)+' at distance '+distChip(q.dist,'dist" data-q="'+i)+'</div>';});
+      ' key '+blank(q.want)+' at distance '+distChip(q.dist,N,i)+'</div>';});
     if(st.q.length<2)h+='<p><button data-act="addq">Add a second query with its own cords</button></p>';
     else h+='<div class="slip">The lamp lights when '+chip('either query is answered','rule',' data-r="either"',st.rule==='either'?'sel':'')+' '+chip('both queries are answered','rule',' data-r="both"',st.rule==='both'?'sel':'')+'</div>';
     return h+runButton();
@@ -1014,7 +1017,7 @@ LV[7]={
     const st=cur.st,x=cur.inst;
     if(a==='plate'){snap();st.q[st.active].want=x.boards[+d.b].labels[+d.i];st.ran=false;say('');}
     else if(a==='pickq'){st.active=+d.q;say('');}
-    else if(a==='dist'){snap();st.active=+d.q;st.q[+d.q].dist=stepDist(st.q[+d.q].dist,+d.d);st.ran=false;say('');}
+    else if(a==='dist'){snap();st.active=+d.q;st.q[+d.q].dist=stepDist(st.q[+d.q].dist,+d.d,N);st.ran=false;say('');}
     else if(a==='addq'&&st.q.length<2){snap();st.q.push({want:null,dist:null});st.active=1;st.ran=false;say('The second query has its own unit of current and its own cords.');}
     else if(a==='rule'){snap();st.rule=d.r;st.ran=false;say('');}
     else if(a==='run'){
@@ -1038,7 +1041,7 @@ LV[8]={
     const st=cur.st,x=cur.inst,f=(k,w)=>chip(blank(w),'arm',' data-f="'+k+'" aria-label="Fill this blank"',st.arm===k?'sel':'');
     let h=boardsHtml(x.boards.map((b,i)=>{const n=b.labels.length,p=l8pred(b,st);
       return boardSvg({labels:p.labels,b:i,tag:TAGS[i],meas:b.on,lamp:p.on,sets:[{cords:fromGene(p.js,n)},{cords:p.links.map(l=>({from:l[0],to:l[1],w:.5}))}],act:'plate',verdict:st.ran?p.on===b.on:undefined});}));
-    h+='<div class="slip" style="border-left:6px solid '+CORDC[1]+'"><b>Round 1.</b> Every jack whose key is '+f('who',st.r1.who)+' asks for key '+f('want',st.r1.want)+' at distance '+distChip(st.r1.dist,'dist')+'. A jack that is answered gains a rivet.</div>'+
+    h+='<div class="slip" style="border-left:6px solid '+CORDC[1]+'"><b>Round 1.</b> Every jack whose key is '+f('who',st.r1.who)+' asks for key '+f('want',st.r1.want)+' at distance '+distChip(st.r1.dist,N-1)+'. A jack that is answered gains a rivet.</div>'+
       '<div class="slip" style="border-left:6px solid '+CORDC[0]+'"><b>Round 2.</b> The gene asks for key '+f('r2',st.r2.want)+' '+chip(st.r2.riv?'with a rivet':'with or without a rivet','riv','',st.r2.riv?'sel':'')+'.</div>';
     return h+runButton();
   },
@@ -1048,13 +1051,13 @@ LV[8]={
     else if(a==='plate'){snap();const w=x.boards[+d.b].labels[+d.i];
       if(st.arm==='r2')st.r2.want=w;else st.r1[st.arm]=w;
       st.arm=st.arm==='who'&&!st.r1.want?'want':st.arm==='want'&&!st.r2.want?'r2':st.arm;st.ran=false;say('');}
-    else if(a==='dist'){snap();st.r1.dist=stepDist(st.r1.dist,+d.d);st.ran=false;say('');}
+    else if(a==='dist'){snap();st.r1.dist=stepDist(st.r1.dist,+d.d,N-1);st.ran=false;say('');}
     else if(a==='riv'){snap();st.r2.riv=!st.r2.riv;st.ran=false;say('');}
     else if(a==='run'){
       snap();st.ran=true;const pred=x.boards.map(b=>l8pred(b,st).on),w=firstWrong(x.boards,pred);
       log('run',{r1:Object.assign({},st.r1),r2:Object.assign({},st.r2),ok:w<0});
       if(w<0){say('Every lamp agrees.','good');complete(['layer','embedding','transformer'],'l8');}
-      else say('Board '+TAGS[w]+' is predicted '+onOff(pred[w])+' and was measured '+onOff(x.boards[w].on)+'.'+(w===2||w===0?' The gene cannot see from its own jack whether two other jacks are neighbors.':''),'warn');
+      else say('Board '+TAGS[w]+' is predicted '+onOff(pred[w])+' and was measured '+onOff(x.boards[w].on)+'.'+(w===2||w===0?' Use round 1 to record which plates are neighbors. The gene can read that result in round 2.':''),'warn');
     }else return;
     render();
   }
@@ -1067,7 +1070,7 @@ BLOCKS.l8={src:['vaswani8','avsec'],html:()=>'In round 1 the jacks ask each othe
 /* ---------- level 9: covered plates ---------- */
 LV[9]={
   init(){return {b:0,got:{},shown:false};},
-  skipLabel(){return cur.st.b<3?'Nothing on board '+TAGS[cur.st.b]+' tells me':'';},
+  skipLabel(){return cur.st.b<3?'Too little information on board '+TAGS[cur.st.b]:'';},
   skip(){
     const st=cur.st,x=cur.inst,b=x.boards[st.b];snap();
     if(b.src===null){st.got[st.b]=-1;st.b=3;log('cannot',{ok:true});
@@ -1139,8 +1142,14 @@ function renderBench(){
   $('.wrap').innerHTML='<header><h1><a href="./">Long Distance</a>: workbench</h1></header><div class="bench">'+
     '<p>Type a DNA sequence and a four-nucleotide query. The strand is cut into plates of four nucleotides, and one unit of current is shared among them: a plate’s pull is 1, doubled for each nucleotide that agrees with the query.</p>'+
     '<p><label>Strand<br><textarea id="bs">TTGGGATACAGCGATTACGTTATA</textarea></label></p><p><label>Query <input type="text" id="bq" value="GATA" maxlength="4" size="6"></label></p><div id="bo"></div></div>';
-  const draw=()=>{const r=benchReport($('#bs').value,$('#bq').value);
-    $('#bo').innerHTML=r.labels.length?'<table><tr><th>Plate</th><th>Nucleotides that agree</th><th>Pull</th><th>Weight</th></tr>'+r.labels.map((l,j)=>'<tr><td>'+l+'</td><td>'+r.sc[j]+'</td><td>'+r.pull[j]+'</td><td>'+r.pull[j]+'/'+r.tot+' = '+r.w[j].toFixed(3)+'</td></tr>').join('')+'</table>':'<p>The strand needs at least four nucleotides.</p>';};
+  const draw=()=>{
+    const strand=$('#bs').value.toUpperCase().replace(/\s+/g,''),query=$('#bq').value.toUpperCase(),out=$('#bo');
+    if(!/^[ACGT]{4}$/.test(query)){out.textContent='Enter four nucleotides (A, C, G or T) for the query.';return;}
+    if(/[^ACGT]/.test(strand)){out.textContent='Use only A, C, G and T in the strand.';return;}
+    if(strand.length<4){out.textContent='The strand needs at least four nucleotides.';return;}
+    const r=benchReport(strand,query),extra=strand.length%4;
+    out.innerHTML=(extra?'<p>The last '+plural(extra,'nucleotide')+' '+(extra===1?'does':'do')+' not form a full plate.</p>':'')+
+      '<table><tr><th>Plate</th><th>Nucleotides that agree</th><th>Pull</th><th>Weight</th></tr>'+r.labels.map((l,j)=>'<tr><td>'+l+'</td><td>'+r.sc[j]+'</td><td>'+r.pull[j]+'</td><td>'+r.pull[j]+'/'+r.tot+' = '+r.w[j].toFixed(3)+'</td></tr>').join('')+'</table>';};
   $('#bs').oninput=$('#bq').oninput=draw;draw();
 }
 

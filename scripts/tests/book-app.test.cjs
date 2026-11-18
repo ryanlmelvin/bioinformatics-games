@@ -15,7 +15,7 @@ function gameLink(c){
   return JSON.parse(stored).link;
 }
 test('the front page checks a chapter’s link exactly as the chapter’s game writes it',()=>{
-  const src=/const mark=[^\n]+\nfunction sound\(c,enc\)\{[^\n]+\n[^\n]+\}/.exec(home);assert(src,'front page still has mark() and sound()');
+  const src=/const mark=[^\n]+\nfunction sound\(c,enc\)\{[\s\S]*?\n\}/.exec(home);assert(src,'front page still has mark() and sound()');
   const sound=vm.runInNewContext(src[0]+';sound');
   assert.equal(book.BOOK.chapters.length,8);
   for(const c of book.BOOK.chapters){
@@ -25,6 +25,26 @@ test('the front page checks a chapter’s link exactly as the chapter’s game w
     assert.equal(sound(c,link),true,c.dir);assert.equal(sound(c,link.replace('.0','.1')),false,c.dir+' changed');
     assert.equal(sound(book.BOOK.chapters.find(x=>x!==c),link),false,c.dir+' offered to another chapter');
   }
+});
+test('the contents can resume a chapter before the reader earns a term, or open the completed glossary',()=>{
+  const script=[...home.matchAll(/<script>([\s\S]*?)<\/script>/g)].at(-1)[1];
+  function resume(saved){
+    const controls=new Map();
+    const querySelector=selector=>{
+      if(!controls.has(selector))controls.set(selector,{addEventListener(){}});
+      return controls.get(selector);
+    };
+    vm.runInNewContext(script,{window:{BOOK:book.BOOK,addEventListener(){}},document:{querySelector},
+      localStorage:{getItem:key=>key in saved?JSON.stringify(saved[key]):null},sessionStorage:{getItem:()=>null},location:{hash:''}});
+    return querySelector('#resume');
+  }
+  const {chapters}=book.BOOK,last=chapters.at(-1);
+  const begun=resume({[last.key]:{badges:[],done:[]},'book:last':{dir:last.dir}});
+  assert.equal(begun.href,last.dir+'/');assert.equal(begun.textContent,'Continue '+last.game);
+  const all=Object.fromEntries(chapters.map(c=>[c.key,{badges:Array(c.terms).fill('earned'),done:Array.from({length:c.levels},(_,i)=>i+1)}]));
+  assert.equal(resume(all).href,'#glossary');
+  all[last.key].done.pop();
+  assert.equal(resume(all).href,last.dir+'/','a level can remain after all its chapter’s terms are earned');
 });
 test('every page offers the app, and the manifest and worker are ready for the build',()=>{
   const m=JSON.parse(read('manifest.webmanifest'));
