@@ -55,8 +55,8 @@ function solve(api,id){
     for(let r=b;r<B;r++)if(x.L[r]===x.sym)api.act('cell',{i:r});
     api.input('vt',x.band[0]);api.input('vb',x.band[1]);
   }else if(id===10){
-    api.act('whole');api.act('cut');
-    x.hits.forEach(h=>api.act(E.mismatches(x.text.slice(h.start,h.start+8),x.read)<=1?'fit':'no',{s:h.start}));
+    api.act('whole');api.act('cut',{g:4});
+    st().hits.forEach(h=>api.input('mm',E.mismatches(x.text.slice(h.start,h.start+8),x.read),{s:h.start}));
   }else if(id===11){api.act('col',{i:x.v});}
 }
 
@@ -114,9 +114,31 @@ test('level 3: both ways of keeping the sorted list overflow the shelf for a gen
   const ui=boot('?debug=1&level=3&seed=T3'),api=ui.api;
   api.input('len',9);assert.equal(ui.el('#skip').hidden,true);
   api.act('shelf',{k:'A'});api.act('shelf',{k:'B'});
-  const t=api.state().st.tried;assert(t.A.over&&t.B.over);assert(t.A.ratio>1e9);assert.equal(Math.round(t.B.ratio),16);
+  const t=api.state().st.tried;assert(t.A.over&&t.B.over);assert(t.A.ratio>1e9);assert.equal(Math.round(t.B.ratio),12);
   assert.equal(ui.el('#skip').hidden,false);
   api.act('shelf',{k:'C'});assert.equal(api.state().done,false);   // locked until the handover and the run meter
+});
+test('level 3 names only the end marker; level 4, where the last column is built, names the transform',()=>{
+  const ui=boot('?debug=1&seed=T34'),api=ui.api;
+  api.loadLevel(3);solve(api,3);assert.deepEqual(JSON.parse(JSON.stringify(api.earned())),['end']);
+  api.loadLevel(4);solve(api,4);assert.deepEqual(JSON.parse(JSON.stringify(api.earned())),['end','bwt','rot']);
+});
+test('level 3: small texts fit on the 1 GB shelf, so the slider matters',()=>{
+  const ui=boot('?debug=1&level=3&seed=T3'),api=ui.api;
+  api.act('shelf',{k:'B'});assert.equal(api.state().st.tried.B.over,false);
+  api.input('len',7);api.act('shelf',{k:'B'});assert.equal(api.state().st.tried.B.over,false);   // 70 million numbers, 280 MB
+  api.input('len',8);api.act('shelf',{k:'B'});assert.equal(api.state().st.tried.B.over,true);    // 700 million numbers, 2.8 GB
+});
+test('level 5: pegs show no subscripts until tied, and a tie to the other copy of a letter says what follows it',()=>{
+  const ui=boot('?debug=1&level=5&seed=T5'),api=ui.api,x=api.state().inst,n=x.text.length;
+  assert.doesNotMatch(ui.el('#stage').innerHTML,/aria-label="(Left|Right) beam, row \d+, \S+ \d/);
+  const t=x.text,rep=[...new Set(t)].find(c=>t.split(c).length>2);
+  const i=x.rows.findIndex(r=>t[(r.start+n-1)%n]===rep),good=x.rows.findIndex(q=>q.start===(x.rows[i].start+n-1)%n);
+  const other=x.rows.findIndex((q,j)=>j!==good&&t[q.start]===rep);
+  api.drop('peg',i,'lpeg',other);assert.equal(Object.keys(api.state().st.tied).length,0);
+  assert.match(api.state().msg.text,/comes just before .*Find the row on the left that starts/);
+  const hint=api.state().msg.text.match(/starts (\S+)\.$/)[1];
+  assert.equal(x.rows.filter(r=>r.rot.startsWith(hint)).length,1);assert(x.rows[good].rot.startsWith(hint));
 });
 test('level 5: a thread between two different letters of the word will not hold',()=>{
   const ui=boot('?debug=1&level=5&seed=T5'),api=ui.api,x=api.state().inst,n=x.text.length;
@@ -146,12 +168,36 @@ test('level 7: a finger only stays where a kept thread lands',()=>{
   api.act('finger',{i:wrong});assert.equal(api.state().st.newTop,null);
   api.act('finger',{i:Math.max(...land)});assert.equal(api.state().st.newTop,land.length>1?null:Math.max(...land));
 });
-test('level 10: the whole read finds nothing, and the decoy hit cannot be accepted',()=>{
+test('level 10: the whole read finds nothing, and a wrong mismatch count is not accepted',()=>{
   const ui=boot('?debug=1&level=10&seed=T10'),api=ui.api,x=api.state().inst;
-  api.act('whole');assert.equal(api.state().st.phase,'cut');api.act('cut');
-  const decoy=x.hits.find(h=>h.start!==x.at);api.act('fit',{s:decoy.start});
-  assert.equal(api.state().st.judged[decoy.start],undefined);assert.match(api.state().msg.text,/nucleotides differ/);
+  api.act('whole');assert.equal(api.state().st.phase,'cut');api.act('cut',{g:4});
+  const st=api.state().st,decoy=st.hits.find(h=>h.start!==x.at),mm=E.mismatches(x.text.slice(decoy.start,decoy.start+8),x.read);
+  api.input('mm',mm+1,{s:decoy.start});assert.equal(st.judged[decoy.start],undefined);assert.equal(st.bad,null);
+  api.input('mmc',mm+1,{s:decoy.start});assert.equal(st.judged[decoy.start],undefined);assert.equal(st.bad,decoy.start);assert.match(api.state().msg.text,/^Not /);
+  api.input('mm',mm,{s:decoy.start});assert.equal(st.judged[decoy.start],mm);
 });
+test('level 10: every cut the student can choose finds the true start and finishes',()=>{
+  for(let k=0;k<20;k++)for(const g of [2,3,4,5,6]){
+    const ui=boot('?debug=1&level=10&seed=CUT'+k),api=ui.api,x=api.state().inst;
+    api.act('whole');api.act('cut',{g});const st=api.state().st;
+    assert.equal(st.cut,g);assert(st.hits.some(h=>h.start===x.at),'code '+k+' cut '+g);
+    assert.equal(new Set(st.hits.map(h=>h.start)).size,st.hits.length);
+    st.hits.forEach(h=>api.input('mm',E.mismatches(x.text.slice(h.start,h.start+8),x.read),{s:h.start}));
+    assert(api.state().done);
+  }
+  const ui=boot('?debug=1&level=10&seed=CUTX'),api=ui.api;api.act('whole');api.act('cut',{g:1});assert.equal(api.state().st.phase,'cut');
+});
+test('level 9: a wrong finger row gets a hint once the box is left',()=>{
+  const ui=boot('?debug=1&level=9&seed=T9'),api=ui.api;solve9upToJump(api);const x=api.state().inst;
+  assert.match(ui.el('#stage').innerHTML,new RegExp('Pattern '+x.pattern));
+  api.input('vt',x.band[0]+1);assert.equal(api.state().msg.text.startsWith('Not'),false);
+  api.input('vtc',x.band[0]+1);assert.match(api.state().msg.text,/^Not row .* start at row /);
+  api.input('vt',x.band[0]);api.input('vb',x.band[1]);assert(api.state().done);
+});
+function solve9upToJump(api){const x=api.state().inst;
+  for(let r=0;r<x.top;r++)if(x.L[r]===x.sym)api.act('cell',{i:r});
+  const B=x.bottom+1,b=B-B%4;api.act('board',{i:b});for(let r=b;r<B;r++)if(x.L[r]===x.sym)api.act('cell',{i:r});
+  assert.equal(api.state().st.phase,'jump');}
 test('plural of match and the level 11 brief agree with the screen',()=>{
   const ui=boot('?debug=1&level=7&seed=PL');solve(ui.api,7);assert.doesNotMatch(ui.el('#stage').innerHTML,/matchs/);
   const u11=boot('?debug=1&level=11&seed=PL');assert.equal(u11.api.state().inst.reads.length,8);assert.match(u11.el('#brief').innerHTML,/^Eight reads/);
