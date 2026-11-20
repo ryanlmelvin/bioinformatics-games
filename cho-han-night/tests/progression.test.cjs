@@ -93,15 +93,16 @@ test('level 6: a wrong entry is refused and a later column cannot be filled firs
   a.cell('c10',String(c[1][0]));assert(!a.state().lg.ok.c10);
   assert.match(a.state().msg.text,/Fill both entries in round 1 first/);
   a.cell('c00',String(c[0][0]+1));assert.equal(a.state().lg.bad,'c00');
-  assert.match(a.state().msg.text,/Round 1, fair pair: calculate 1 × [15]/);
+  assert.match(a.state().msg.text,/Round 1, fair pair: start at 1/);
+  a.cell('c00',String(c[0][0]+2));assert.match(a.state().msg.text,/Round 1, fair pair: calculate 1 × [15]/);
 });
 
-test('level 6: the worked example follows the current night and leads into a solvable three-column ledger',()=>{
+test('level 6: the worked example uses a different opening than the current night and leads into a solvable three-column ledger',()=>{
   const cases=[
-    {seed:'EXAMPLE5',calls:'OOO',entries:[[5,2],[85,22],[1385,302]],example:['1 × 5 = 5','1 × 2 = 2','(5 × 3 + 2 × 1) × 5 = 85']},
-    {seed:'EXAMPLE2',calls:'OOS',entries:[[5,2],[85,22],[277,604]],example:['1 × 5 = 5','1 × 2 = 2','(5 × 3 + 2 × 1) × 5 = 85']},
-    {seed:'EXAMPLE0',calls:'OSS',entries:[[5,2],[17,44],[95,596]],example:['1 × 5 = 5','1 × 2 = 2','(5 × 3 + 2 × 1) × 1 = 17']},
-    {seed:'EXAMPLE3',calls:'SSO',entries:[[1,4],[7,52],[365,326]],example:['1 × 1 = 1','1 × 4 = 4','(1 × 3 + 4 × 1) × 1 = 7']}
+    {seed:'EXAMPLE5',calls:'OOO',entries:[[5,2],[85,22],[1385,302]],example:['1 × 1 = 1','1 × 4 = 4','(1 × 3 + 4 × 1) × 1 = 7']},
+    {seed:'EXAMPLE2',calls:'OOS',entries:[[5,2],[85,22],[277,604]],example:['1 × 1 = 1','1 × 4 = 4','(1 × 3 + 4 × 1) × 1 = 7']},
+    {seed:'EXAMPLE0',calls:'OSS',entries:[[5,2],[17,44],[95,596]],example:['1 × 1 = 1','1 × 4 = 4','(1 × 3 + 4 × 1) × 5 = 35']},
+    {seed:'EXAMPLE3',calls:'SSO',entries:[[1,4],[7,52],[365,326]],example:['1 × 5 = 5','1 × 2 = 2','(5 × 3 + 2 × 1) × 5 = 85']}
   ];
   for(const c of cases){
     const ui=boot('?debug=1&level=6&seed='+c.seed),a=ui.api,work=ui.el('#work').innerHTML;
@@ -202,4 +203,20 @@ test('level 8 accepts gap limits that retain every majority-filled column',()=>{
     a.act('gaps',limit);a.act('member','0');assert.equal(a.state().r.member,0);
     assert.deepEqual(plain(ui.context.roomsOf(a.answers().family.aln,+limit)),plain(a.answers().family.isRoom));
   }
+});
+
+test('review fixes: neutral wrong pick, two-step ledger hint, way-in products, room pebble shortcut, labelled reunion',()=>{
+  let ui=boot('?debug=1&seed=FIX&level=1');let a=ui.api;
+  a.act('pick',String(a.answers().order.indexOf('stranger')));
+  assert(a.state().done);assert.equal(a.state().msg.kind,'');assert.match(a.state().msg.text,/is family/);
+  a.loadLevel(6);a.cell('c00','999');assert.doesNotMatch(a.state().msg.text,/calculate/);a.cell('c00','998');assert.match(a.state().msg.text,/calculate/);
+  a.loadLevel(7);const bl=a.state().bl;a.cell('c00','999');assert.match(a.state().msg.text,/no way in/);
+  a.cell('c00',String(bl.cols[0][0]));a.cell('c01',String(bl.cols[0][1]));
+  a.act('way','1,0,'+(1-bl.from[1][0]));assert.match(a.state().msg.text,/From fair: .* From loaded: .*Keep the larger/);assert.equal(a.state().b.pick['1,0'],undefined);
+  a.loadLevel(10);const k=a.state().P.k;for(let j=1;j<=k;j++)a.act('step','M'+j);a.act('step','E');a.act('skip');
+  const u=a.state().f.unseen,others='ACDEFGHIKLMNPQRSTVWY'.split('').filter(x=>x!==u);
+  a.act('peb','L'+u);a.act('peb','L'+others[0]);a.act('peb','L'+others[1]);a.act('skip');assert(!a.state().pb.spread);
+  a.act('skip');assert(a.state().pb.spread);for(const s of a.answers().best)a.act('step',s);a.act('step','E');assert(a.state().done);
+  a.loadLevel(11);for(let i=0;i<7;i++)a.act('send',String(i));
+  assert.equal(a.state().q.filter(x=>x.who).length,3);assert.match(ui.el('#work').innerHTML,/the cousin/);
 });

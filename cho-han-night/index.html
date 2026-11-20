@@ -656,17 +656,17 @@ const LEVELS=[
   {id:5,mode:'wall',goal:'Run the counting machine on four rounds, then on longer nights. Stop it once you can see that counting stories one at a time will not get there.',title:'Too many stories',
    brief:'Four rounds allow 16 possible sequences of pairs. To find the probability of the observed calls, add the probability of each sequence occurring together with those calls. The counting machine considers one sequence at a time.'},
   {id:6,mode:'ledger',goal:'Fill in the fair and loaded rows for rounds 1 to 3, one column at a time.',title:'The bookkeeper’s ledger',
-   brief:'Fill the fair and loaded rows for rounds 1–3, one column at a time. Each entry adds up the weights of all stories that match the calls so far and end with that pair. Enter whole numbers and press Enter; the bookkeeper finishes the remaining rounds and converts the totals to probabilities.'},
+   brief:'Each entry adds up the weights of every story that matches the calls so far and ends with that pair. Type whole numbers and press Enter. The bookkeeper fills rounds 4 to 12 and turns the totals into probabilities.'},
   {id:7,mode:'best',goal:'Find the most likely sequence of pairs for six calls. Fill in the first three columns, pick the better incoming path for each entry, then trace back from the last round.',title:'The best story',
-   brief:'On this six-call night, find the most likely sequence of pairs. For each entry after round 1, choose the incoming path with the larger weight. Fill in the first three columns yourself. After that, the bookkeeper records the weights as you choose each path. Trace your choices backward from the last round.'},
+   brief:'This night has six calls. Each entry after round 1 keeps only the larger of its two ways in. From round 4 on, the bookkeeper writes each entry once you pick its way in.'},
   {id:8,mode:'rooms',goal:'Choose how many gaps a column may have and still be a room. Then send each family member through the house and record the tally for the marked room.',title:'Rooms',
-   brief:'Back to the protein family from level 1. The bookkeeper builds a house for the family, with a room for each column that most members fill, a trapdoor under each room for a member with a gap there, and a corridor between rooms for residues that belong to no room. Set how many gaps a column may have and still be a room. Then send the members through, one at a time, and keep the tally for the marked room.'},
+   brief:'Back to the protein family from level 1. The bookkeeper builds a house for it. Each column that most members fill becomes a room. A member with a gap in a room’s column drops through that room’s trapdoor. Residues outside any room go into the corridor between rooms.'},
   {id:9,mode:'bouncer',goal:'Walk both newcomers through the house, then let in the one whose best walk is more likely.',title:'The bouncer',
    brief:'The two newcomers from level 1 are at the door. Every door and every room of the house now carries its tally. Walk each newcomer through, choosing each step yourself. Each step multiplies the probability by the corresponding transition and emission frequencies. Then the bookkeeper shows the best walk there is.'},
   {id:10,mode:'pebbles',goal:'Walk the cousin through the house. If the house turns them away, change it so that the cousin’s best walk beats the stranger’s.',title:'One unseen residue',
    brief:'A third newcomer is a known member of the family, a cousin. Walk the cousin through the house.'},
-  {id:11,mode:'reunion',goal:'Send all seven newcomers through the house, then set a cutoff with every family member above it and every stranger below it.',title:'Reunion',
-   brief:'Send each of the seven newcomers through the house. The bookkeeper uses the pebble counts to score each newcomer’s best walk. Choose a cutoff that puts all family members above the line and all strangers below.'}
+  {id:11,mode:'reunion',goal:'Send all seven newcomers through the house, then draw the door line with the four family members above it and the three strangers below.',title:'Reunion',
+   brief:'The house now has a pebble on every tally. Four of the seven newcomers are family. You have met three of them before, and they are labelled.'}
 ];
 
 /* Primary sources. Each was opened (record or abstract) before it went in; see the report. */
@@ -1201,16 +1201,16 @@ function ledgerCalculation(calls,cols,t,k){
 }
 function ledgerExample(calls,cols){
   const equation=(t,k)=>'<span class="frac">'+ledgerCalculation(calls,cols,t,k)+' = '+cols[t][k]+'</span>';
-  return '<section class="ledger-example" aria-label="Worked example"><h3>Worked example for this night</h3>'+
+  return '<section class="ledger-example" aria-label="Worked example"><h3>Worked example on a different night, which opens “'+CALL[calls[0]]+'”, “'+CALL[calls[1]]+'”</h3>'+
     '<p>Use whole-number weights to avoid fractions: start at <b>1</b> for either pair (1/2 each), then <b>×3 to keep</b> the pair or <b>×1 to swap</b> (out of 4). The call multiplier printed in each box is out of 6: for example, a probability of 5/6 becomes ×5.</p>'+
     '<ol><li><b>Round 1, call “'+CALL[calls[0]]+'”.</b> Multiply the start weight by each pair’s call multiplier.'+
     '<div class="eq"><span>fair: '+equation(0,0)+'</span><span>loaded: '+equation(0,1)+'</span></div></li>'+
     '<li><b>Round 2, fair row, call “'+CALL[calls[1]]+'”.</b> Use both entries from round 1. Keeping the fair pair contributes '+cols[0][0]+' × '+ODDS.keep+'; switching from the loaded pair contributes '+cols[0][1]+' × '+ODDS.swap+'. Add those contributions, then multiply by the fair pair’s call multiplier.'+
     '<div class="eq">'+equation(1,0)+'</div></li></ol>'+
-    '<p>For the loaded row, use <b>fair ×1 + loaded ×3</b>, then multiply by the loaded pair’s call multiplier. For round 3, use the entries from round 2.</p></section>';
+    '<p>For the loaded row, use <b>fair ×1 + loaded ×3</b>, then multiply by the loaded pair’s call multiplier. Your night below has its own calls, so its entries differ. For round 3, use your entries from round 2.</p></section>';
 }
 MODES.ledger={
-  init(){cur.N=night();cur.cols=sumLedger(cur.N.calls);cur.lg={v:{},ok:{},bad:null,lit:null};say('');},
+  init(){cur.N=night();cur.cols=sumLedger(cur.N.calls);cur.lg={v:{},ok:{},bad:null,lit:null,miss:{}};say('');},
   rule(){return 'Each entry: add the ways in, then multiply by the weight for that call';},
   scene(){return '';},
   work(){
@@ -1222,7 +1222,8 @@ MODES.ledger={
     };
     let extra='';
     if(done)extra='<span class="lrow">loaded share</span>'+cols.map(c=>'<span class="share">'+Math.round(100*c[1]/(c[0]+c[1]))+'%</span>').join('')+pairRow('truth',N.truth);
-    let h=(done?'':ledgerExample(N.calls,cols))+ledgerGrid(done?N.calls:N.calls.slice(0,3),cell,extra);
+    const exCalls=N.calls.slice(0,2).map(c=>c==='S'?'O':'S');
+    let h=(done?'':ledgerExample(exCalls,sumLedger(exCalls)))+ledgerGrid(done?N.calls:N.calls.slice(0,3),cell,extra);
     if(done){
       const p3=cols[2][0]+cols[2][1],tot=cols[11][0]+cols[11][1],d=ledgerDenominator(12);
       h+='<div class="prob">After three calls the column adds to <b class="frac">'+p3+'</b>. Divide by 2 for the start, by 6 for each of the 3 calls and by 4 for each of the 2 steps between rounds: <b class="frac">'+p3+' / '+fmt(ledgerDenominator(3))+' = '+(p3/ledgerDenominator(3)).toFixed(4)+'</b>, the probability of those three calls whatever the dealer did.</div>'+
@@ -1243,8 +1244,9 @@ function checkLedger(id,val){
     const next=order.find(x=>!lg.ok[x]);
     if(!next){complete(['forward'],null,'The bookkeeper takes it from here and fills the rest of the night.');return;}
     cur.focus=next;say('Written in.');
-  }else{lg.bad=id;lg.lit=t+','+k;log('cell',{id,ok:false,val:n});jolt(id);cur.focus=id;
-    say('Round '+(t+1)+', '+CUP[k]+': calculate '+ledgerCalculation(cur.N.calls,cur.cols,t,k)+'. '+(t===0?'Start at 1, then apply the call multiplier.':'Use both entries from round '+t+'; add the two products before the final multiplication.'),'warn');}
+  }else{lg.bad=id;lg.lit=t+','+k;log('cell',{id,ok:false,val:n});jolt(id);cur.focus=id;lg.miss[id]=(lg.miss[id]||0)+1;
+    if(lg.miss[id]<2)say(t===0?'Round 1, '+CUP[k]+': start at 1, then multiply by the weight printed for this call.':'Round '+(t+1)+', '+CUP[k]+': multiply the fair entry from round '+t+' by its way-in weight and the loaded entry by its way-in weight, add the two, then multiply by the weight printed for this call.','warn');
+    else say('Round '+(t+1)+', '+CUP[k]+': calculate '+ledgerCalculation(cur.N.calls,cur.cols,t,k)+'.','warn');}
 }
 
 /* ================= Level 7: the best story ================= */
@@ -1290,7 +1292,7 @@ MODES.best={
 ACT.way=a=>{
   const b=cur.b,[t,k,j]=a.split(',').map(Number);if(cur.done||b.pick[t+','+k]!==undefined)return;
   if(!MODES.best.colDone(t-1)){say('Finish round '+t+' first.','warn');jolt('w'+t+k+j);return;}
-  if(cur.bl.from[t][k]!==j){say('Work out both ways in. The other one is larger.','warn');jolt('w'+t+k+j);log('way',{t,k,j,ok:false});return;}
+  if(cur.bl.from[t][k]!==j){const pc=cur.bl.cols[t-1];say('From fair: '+fmt(pc[0])+' × '+trans(0,k)+' = '+fmt(pc[0]*trans(0,k))+'. From loaded: '+fmt(pc[1])+' × '+trans(1,k)+' = '+fmt(pc[1]*trans(1,k))+'. Keep the larger.','warn');jolt('w'+t+k+j);log('way',{t,k,j,ok:false});return;}
   b.pick[t+','+k]=j;log('way',{t,k,j,ok:true});
   if(t<=2){cur.focus='c'+t+k;say('Kept. Now write the entry.');}else say('Kept. The bookkeeper writes it in.');
   if(MODES.best.allDone()){b.stage='back';say('The page is full. Now follow the kept ways back: start at the larger entry in the last round.');}
@@ -1301,7 +1303,7 @@ function checkBest(id,val){
   if(t>0&&b.pick[t+','+k]===undefined){say('Choose the way in to keep first.','warn');return;}
   if(n===cur.bl.cols[t][k]){b.ok[id]=true;b.bad=null;log('cell',{id,ok:true});say('Written in.');
     if(MODES.best.allDone()){b.stage='back';say('The page is full. Now follow the kept ways back: start at the larger entry in the last round.');}
-  }else{b.bad=id;log('cell',{id,ok:false,val:n});jolt(id);cur.focus=id;say(n+' is not right. Multiply the larger way in by this pair’s weight for the call.','warn');}
+  }else{b.bad=id;log('cell',{id,ok:false,val:n});jolt(id);cur.focus=id;say(t===0?n+' is not right. Round 1 has no way in. Multiply the start weight 1 by this pair’s weight for the call.':n+' is not right. Multiply the larger way in by this pair’s weight for the call.','warn');}
 }
 ACT.back=a=>{
   const b=cur.b,[t,k]=a.split(',').map(Number),n=cur.calls.length;if(cur.done||!MODES.best.allDone())return;
@@ -1318,7 +1320,7 @@ const AB='ABCDEFG';
 function famRows(f,opts){
   opts=opts||{};const isRoom=opts.isRoom;
   let h='<div class="hscroll">';
-  if(isRoom)h+='<div class="seq"><span class="seqname">room</span>'+f.aln[0].split('').map((_,j)=>'<span class="gap" style="font-size:.75rem">'+(isRoom[j]?isRoom.slice(0,j+1).filter(Boolean).length:'')+'</span>').join('')+'</div>';
+  if(isRoom)h+='<div class="seq"><span class="seqname">room</span>'+f.aln[0].split('').map((_,j)=>'<span class="gap"><small style="font-size:.75rem">'+(isRoom[j]?isRoom.slice(0,j+1).filter(Boolean).length:'')+'</small></span>').join('')+'</div>';
   f.aln.forEach((r,i)=>{h+='<div class="seq"><span class="seqname">member '+(i+1)+'</span>'+r.split('').map((ch,j)=>'<span class="'+(ch==='-'?'gap':'')+(isRoom&&!isRoom[j]?' off':'')+(isRoom&&isRoom[j]?' room':'')+(opts.hot===j?' hot':'')+'">'+ch+'</span>').join('')+'</div>';});
   return h+'</div>';
 }
@@ -1345,7 +1347,7 @@ MODES.family={
       {html:'Proteins descended from one ancestor form a '+term('family','protein family')+'. Rows written one above another, with gap symbols so that homologous residues share a column, are a '+term('msa','multiple alignment')+'.'}];
   }
 };
-ACT.pick=i=>{if(cur.done)return;cur.pick=+i;S.picked.l1=cur.order[+i];log('pick',{newcomer:AB[+i],who:cur.order[+i]});complete(['family','msa'],null,'The door opens for newcomer '+AB[cur.order.indexOf('relative')]+'.');};
+ACT.pick=i=>{if(cur.done)return;cur.pick=+i;S.picked.l1=cur.order[+i];log('pick',{newcomer:AB[+i],who:cur.order[+i]});const r=cur.order.indexOf('relative');complete(['family','msa'],null,cur.pick===r?'The door opens for newcomer '+AB[r]+'.':null);if(cur.pick!==r)say('Newcomer '+AB[r]+' is family. The door opens for it, not for newcomer '+AB[cur.pick]+'.');};
 
 /* ================= the house ================= */
 function houseFront(){
@@ -1570,10 +1572,13 @@ MODES.pebbles={
   },
   skip(){const pb=cur.pb;
     if(!pb.on&&cur.best0&&cur.best0.prob===0)return 'Bring the bookkeeper’s pebble bag';
-    if(pb.on&&!pb.spread&&AMINO.every(x=>pb.letters[x])&&this.moves().every(s=>pb.moves[s]))return 'Let the bookkeeper drop one on everything else';
+    const full=AMINO.every(x=>pb.letters[x])&&this.moves().every(s=>pb.moves[s]);
+    if(pb.on&&!pb.spread&&full)return 'Let the bookkeeper drop one on everything else';
+    if(pb.on&&!pb.spread&&pb.letters[cur.f.unseen]&&AMINO.filter(x=>pb.letters[x]).length>=3)return 'Drop one on every other residue and way out of room '+cur.f.slipRoom;
     return '';},
   onSkip(){const pb=cur.pb;
     if(!pb.on){pb.on=true;log('pebbles_open');say('One pebble on each residue of room '+cur.f.slipRoom+', and one on each way out.');return;}
+    if(!(AMINO.every(x=>pb.letters[x])&&MODES.pebbles.moves().every(s=>pb.moves[s]))){AMINO.forEach(x=>pb.letters[x]=true);MODES.pebbles.moves().forEach(s=>pb.moves[s]=true);log('pebbles_room');say('Room '+cur.f.slipRoom+' is done.');return;}
     pb.spread=true;cur.P=profileHMM(cur.f.aln,{maxGaps:DEFAULT_GAPS,add:1});cur.walk=newWalk(cur.f.second);log('pebbles_spread');
     say('Every room, corridor and trapdoor has a pebble on every residue and move. Walk the cousin through again.');
   },
@@ -1589,18 +1594,18 @@ ACT.peb=a=>{const pb=cur.pb;if(!pb||!pb.on||pb.spread)return;
 /* ================= Level 11: reunion ================= */
 MODES.reunion={
   init(){const f=cur.f=family();cur.P=profileHMM(f.aln,{maxGaps:DEFAULT_GAPS,add:1});
-    const all=[{s:f.relative,fam:1},{s:f.stranger,fam:0},{s:f.second,fam:1},{s:f.others[0],fam:1},{s:f.others[1],fam:1},{s:f.others[2],fam:0},{s:f.others[3],fam:0}];
+    const all=[{s:f.relative,fam:1,who:'level 9’s family newcomer'},{s:f.stranger,fam:0,who:'level 9’s stranger'},{s:f.second,fam:1,who:'the cousin'},{s:f.others[0],fam:1},{s:f.others[1],fam:1},{s:f.others[2],fam:0},{s:f.others[3],fam:0}];
     cur.q=shuffled(7,rng(hashStr(f.key+'|queue'))).map(i=>all[i]);cur.sc={};cur.line=null;cur.show=null;say('');},
   rule(){return 'Score everyone · draw the door line';},
   scene(){const i=cur.show;if(i===null)return houseFront();const b=cur.sc[i];return houseSvg(cur.P.k,{trail:b.walk.map(w=>({state:w.state,letter:w.letter})),out:true,col:'#2b5fb3'});},
   work(){
-    let h='<div class="row">'+cur.q.map((n,i)=>'<button id="send'+i+'" data-act="send" data-arg="'+i+'"'+(cur.sc[i]?' disabled':'')+'>Send in '+AB[i]+': <span class="mono">'+n.s+'</span></button>').join('')+'</div>';
+    let h='<div class="row">'+cur.q.map((n,i)=>'<button id="send'+i+'" data-act="send" data-arg="'+i+'"'+(cur.sc[i]?' disabled':'')+'>Send in '+AB[i]+': <span class="mono">'+n.s+'</span>'+(n.who?' ('+n.who+')':'')+'</button>').join('')+'</div>';
     const done=Object.keys(cur.sc).length===7;
     const order=Object.keys(cur.sc).map(Number).sort((a,b)=>cur.sc[b].prob-cur.sc[a].prob),top=order.length?Math.log10(cur.sc[order[0]].prob):0;
     h+='<div class="ladder">';
     order.forEach((i,r)=>{
       const lg=Math.log10(cur.sc[i].prob),wpx=Math.max(4,100-(top-lg)*9);
-      h+='<div class="score'+(cur.done&&!cur.q[i].fam?' str':'')+'"><b>'+AB[i]+'</b> <span class="mono">'+cur.q[i].s+'</span> '+oneIn(cur.sc[i].prob)+' <span class="bar" style="width:'+wpx.toFixed(0)+'px"></span></div>';
+      h+='<div class="score'+(cur.done&&!cur.q[i].fam?' str':'')+'"><b>'+AB[i]+'</b> <span class="mono">'+cur.q[i].s+'</span>'+(cur.q[i].who?' <span class="gmeta">'+cur.q[i].who+'</span>':'')+' '+oneIn(cur.sc[i].prob)+' <span class="bar" style="width:'+wpx.toFixed(0)+'px"></span></div>';
       if(done&&r<6)h+='<button class="line'+(cur.line===r?' on':'')+'" id="line'+r+'" data-act="line" data-arg="'+r+'">'+(cur.line===r?'door line':'draw the door line here')+'</button>';
     });
     return h+'</div>';
