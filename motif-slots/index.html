@@ -52,6 +52,8 @@ span.term:not(.badge){border-bottom:1px dotted currentColor;font-weight:600}
 .tip b{display:block;margin-bottom:2px;color:inherit}
 .term:hover>.tip,.term:focus>.tip{display:block}
 .rule{display:inline-flex;align-items:center;gap:8px;font-size:.9rem;font-weight:600;padding:3px 12px;border-radius:999px;background:var(--chip);margin-bottom:8px}
+.goal{margin:4px 0 8px;padding:6px 10px;border-left:4px solid var(--m-clamp);max-width:70ch}
+.goal b{margin-right:4px}
 .stage{border:1px solid var(--line);border-radius:12px;overflow:hidden;background:var(--panel)}
 svg#machine{width:100%;height:auto;display:block;touch-action:manipulation;user-select:none;-webkit-user-select:none}
 .tools{padding:10px 14px 12px;border-top:1px solid var(--line)}
@@ -207,6 +209,7 @@ textarea{font:14px/1.4 ui-monospace,Menlo,monospace;width:100%;min-height:9em;pa
   <div class="badges" id="badges"></div>
 
   <h2 id="title" tabindex="-1"></h2>
+  <p id="goal" class="goal"></p>
   <p id="brief"></p>
   <div class="rule" id="rule"></div>
 
@@ -590,27 +593,27 @@ function showP(x,den){const f=den?fracOf(x,den):null;if(f)return f;if(!x)return 
 function parseNum(s){s=String(s).trim().replace(/\s+/g,'');if(!s)return NaN;const m=s.match(/^(\d+)\/(\d+)$/);if(m)return +m[2]?+m[1]/+m[2]:NaN;return Number(s);}
 
 const LEVELS=[
-  {id:1,title:'A recurring sequence',
-   brief:'Find the five-nucleotide sequence that occurs most often in this stretch of bacterial DNA.'},
-  {id:2,title:'Close enough',
+  {id:1,title:'A recurring sequence',goal:'Find the five-nucleotide sequence that occurs most often on the strip. Click to guess one, mark its copies, then check your guess against the machine’s count.',
+   brief:'The strip is a stretch of bacterial DNA, read left to right.'},
+  {id:2,title:'Close enough',goal:'Find the five-nucleotide sequence with the most near copies on the strip, allowing one substitution, and submit it.',
    brief:'Another bacterial DNA sequence contains five variants of the same five-nucleotide sequence. Each variant has one nucleotide substitution, at a different position each time.'},
-  {id:3,title:'Both strands',
+  {id:3,title:'Both strands',goal:'Find the five-nucleotide sequence with the most near copies when both strands are read. First enter the lower strand at the outlined spot, then count.',
    brief:'The DNA strands are antiparallel, with complementary base pairing: A–T and C–G. Read each strand 5′ to 3′; the lower strand runs right to left.'},
-  {id:4,title:'Ten genes, one switch',
-   brief:'Ten genes are co-regulated. Each strip shows 24 nucleotides upstream of one gene. A transcription factor binds a six-nucleotide site in each upstream region to activate transcription, and the site varies slightly among genes. Find one six-nucleotide sequence that has a close match on all ten strips.'},
-  {id:5,title:'The reels',
+  {id:4,title:'Ten genes, one switch',goal:'Find one six-nucleotide sequence that has a close match on all ten strips.',
+   brief:'Ten genes are co-regulated. Each strip shows 24 nucleotides upstream of one gene. A transcription factor binds a six-nucleotide site in each upstream region to activate transcription, and the site varies slightly among genes.'},
+  {id:5,title:'The reels',goal:()=>'Slide the four reels until the windows on the payline have '+plural(cur.inst.target,'miss')+' or fewer.',
    brief:'Four of those strips are now reels in a machine. A reel can only slide. The clamp reads the window at the payline on every reel at once.'},
-  {id:6,title:'Too many stops',
+  {id:6,title:'Too many stops',goal:'Find the six-nucleotide sequence closest to all ten strips. Start the bot to see why trying every setting fails, score two sequences by hand, then try all 4,096.',
    brief:'Each of the ten reels has 19 stops. Together they give the machine 19¹⁰ possible settings, about 6 × 10¹².'},
-  {id:7,title:'Let the reels vote',
+  {id:7,title:'Let the reels vote',goal:'Stop five reels using the reels above as a guide. Fill in the vote, work out one probability, stop reel 5, then stop every reel from the top down.',
    brief:'Each reel shows four nucleotides at the payline. Use the first four reels to predict where the fifth should stop.'},
-  {id:8,title:'One zero spoils everything',
+  {id:8,title:'One zero spoils everything',goal:'Fix the zero in the vote by adding one to every count, then stop reels 2 to 5 again from the top down.',
    brief:'Back to your trip down the reels, at the moment reel 2 stopped.'},
-  {id:9,title:'Spin',
+  {id:9,title:'Spin',goal:'Pull the lever and re-stop the reels until nothing improves. Do this twenty times and keep the best spin.',
    brief:'Six reels, five nucleotides at the payline. Pull the lever to give each reel a random starting position. Then let the reels vote.'},
-  {id:10,title:'Hold all but one',
+  {id:10,title:'Hold all but one',goal:'Get the machine out of its stall. Lift one reel at a time, and when that stops helping, spin the loaded wheel until the misses drop.',
    brief:'The same six reels, and the machine is stuck.'},
-  {id:11,title:'Dusk',
+  {id:11,title:'Dusk',goal:'Pull the lever and watch the machine find a nine-nucleotide pattern shared by the ten upstream regions.',
    brief:'The ten genes from level 4 return. This time the machine searches their upstream regions for a nine-nucleotide pattern.'}
 ];
 
@@ -987,7 +990,7 @@ LV[1]={
 };
 
 LV[2]={
-  init(){cur.step='sweep0';cur.d=0;cur.board=null;cur.marks=[[],[],[]];cur.dial=null;say('Try the method that worked last time.');},
+  init(){cur.step='sweep0';cur.d=0;cur.board=null;cur.marks=[[],[],[]];cur.dial=null;say('Start by counting every five-nucleotide sequence on the strip.');},
   rule(){return cur.d?'The clamp now tolerates '+plural(cur.d,'mismatch'):'The clamp grips five nucleotides at a time';},
   draw(){
     const I=cur.inst,lit=[];
@@ -1567,6 +1570,7 @@ function render(){
   const M=LV[cur.L.id];
   renderHeader();
   $('#title').textContent='Level '+cur.L.id+': '+cur.L.title;
+  $('#goal').innerHTML='<b>Goal:</b>'+esc(typeof cur.L.goal==='function'?cur.L.goal():cur.L.goal);
   $('#brief').textContent=cur.L.brief;
   $('#rule').textContent=M.rule();
   const d=M.draw(),m=$('#machine');
