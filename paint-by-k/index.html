@@ -564,6 +564,7 @@ const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'
 const plural=(n,w)=>n+' '+w+(n===1?'':'s');
 const same=(a,b)=>a.length===b.length&&a.every((x,i)=>Math.abs(x-b[i])<1e-9);
 const POTNAME=['pot 1','pot 2','pot 3','pot 4','pot 5'];
+const CTRNAME=['center 1','center 2','center 3'];
 const cap=s=>s.charAt(0).toUpperCase()+s.slice(1);
 const CARDN='ABCDEFGHIJKLMNOPQRSTUVWX';
 const PILECOL=['#c2410c','#2b5fb3','#2e7d4f'];
@@ -577,15 +578,15 @@ const LEVELS=[
   brief:'Each pixel in the tulip has two coordinates on the ink map, one for red and one for blue. Both range from 0 to 10. The press prints each pixel with the nearest of three paint pots. For each pixel in the dashed strip, measure the distance to at least two pots, then choose the nearest.'},
  {id:3,mode:'worst',goal:'Mix pots 2 and 3 so that the meter’s worst-pixel distance comes down to the shop’s mark.',title:'The worst pixel',
   brief:'This fish is printed from three pots. To mix a pot, click a pixel in the picture or a dot on the map, and the pot matches that ink. Pot 1 is already mixed. The meter shows how far the worst-printed pixel is from its nearest pot. Bring that number down to the shop’s mark. To pour out a pot and mix it again, click it on the map.'},
- {id:4,mode:'stray',goal:'Mix pots 2 and 3, then move the pots until the average error is under the mark.',title:'One stray pixel',
+ {id:4,mode:'stray',goal:'Mix pots 2 and 3 on the pixels the meter points at, and fill in six squared lengths. Then move the pots until the average squared length is under the mark.',title:'One stray pixel',
   brief:'A fly has left one stray pixel on the mushroom print. Pot 1 is ready. Mix each remaining pot to match the pixel farthest from its nearest pot.'},
- {id:5,mode:'gravity',goal:'Find the amounts of red and blue that give this pot the lowest average squared error.',title:'Where should a pot sit?',
+ {id:5,mode:'gravity',goal:'Find the red and blue amounts that give this pot the lowest average squared error. Then work out the best pot for the four marked highlight pixels.',title:'Where should a pot sit?',
   brief:'One pot supplies all the red pixels in this heart. Enter amounts of red and blue ink, mix the pot, and check the average squared error. Find the mix with the lowest error.'},
  {id:6,mode:'loop',goal:'Assign each pixel in the marked row to its nearest pot and work out one pot’s average ink. Then press the two buttons in turn until the print stops changing.',title:'Repaint, re-average',
   brief:'The three pots start far from the colors they need to print. Assign each pixel in the marked row to its nearest pot, then calculate the average ink for one pot. After that, alternate printing the sheet and moving the pots until the print stops changing.'},
  {id:7,mode:'bad',goal:'Press the two buttons in turn from the bad start until nothing changes. Then start again from better pots and compare the two errors.',title:'A bad start',
   brief:'Two of the three pots for this house start almost the same color. Run the two buttons until nothing changes.'},
- {id:8,mode:'cards',goal:'Fill in the six sums and assign each card to its nearest center. Then press the two buttons in turn until nothing changes.',title:'Seven measurements per gene',
+ {id:8,mode:'cards',goal:'Fill in the six sums and assign each card to its nearest center. Work out one height of a moved center, then assign the cards again until nothing changes.',title:'Seven measurements per gene',
   brief:'These are your twelve cards from level 1. Each expression vector has seven coordinates, so the data occupy a seven-dimensional space. The distance calculation is the same as in two dimensions. Three cards serve as the initial centers.'},
  {id:9,mode:'tree',goal:'Join the two closest groups, again and again, until one group remains. Then cut the tree into three groups.',title:'Family tree',
   brief:'The table shows the distances between eight genes. Repeatedly join the two closest groups until one remains. To find the distance between two groups, average the distances between pairs of genes, taking one gene from each group.'},
@@ -596,9 +597,9 @@ const LEVELS=[
 /* Primary sources. Each DOI was checked in Crossref; look lines come from the abstracts (Gonzalez: title only). */
 const SRC={
  derisi:{cite:'DeRisi, Iyer & Brown, 1997',title:'Exploring the metabolic and genetic control of gene expression on a genomic scale',where:'Science 278, 680–686',
-  url:'https://doi.org/10.1126/science.278.5338.680',look:'Its abstract describes microarrays carrying virtually every yeast gene, used to follow expression through the metabolic shift from fermentation to respiration: the diauxic shift. Look for which known metabolic genes changed, and for the many unknown genes whose expression profiles suggested their functions.'},
+  url:'https://doi.org/10.1126/science.278.5338.680',look:'Its abstract describes microarrays carrying virtually every yeast gene, used to follow expression through the metabolic shift from fermentation to respiration, called the diauxic shift. Look for which known metabolic genes changed, and for the many unknown genes whose expression profiles suggested their functions.'},
  gonzalez:{cite:'Gonzalez, 1985',title:'Clustering to minimize the maximum intercluster distance',where:'Theoretical Computer Science 38, 293–306',
-  url:'https://doi.org/10.1016/0304-3975(85)90224-5',look:'The 1985 paper behind farthest-first traversal, on choosing clusters so that the largest distance is as small as possible: your worst-pixel meter.'},
+  url:'https://doi.org/10.1016/0304-3975(85)90224-5',look:'The 1985 paper behind farthest-first traversal, on choosing clusters so that the largest distance is as small as possible. This is your worst-pixel meter.'},
  lloyd:{cite:'Lloyd, 1982',title:'Least squares quantization in PCM',where:'IEEE Transactions on Information Theory 28, 129–137',
   url:'https://doi.org/10.1109/TIT.1982.1056489',look:'Written about pulse-code modulation: where to put a fixed number of signal levels so that the average quantization noise power, a squared error, is least. Look for the necessary conditions that an optimal scheme must satisfy.'},
  eisen:{cite:'Eisen, Spellman, Brown & Botstein, 1998',title:'Cluster analysis and display of genome-wide expression patterns',where:'PNAS 95, 14863–14868',
@@ -610,10 +611,10 @@ const VOCAB=[
  {id:'point',name:'Data point',def:'One item to be clustered, written as a point in m-dimensional space: here a pixel with its two ink amounts; for a gene, its expression vector.'},
  {id:'center',name:'Center',def:'A point chosen to stand for a cluster. Each data point belongs to the cluster of its nearest center.'},
  {id:'cluster',name:'Cluster',def:'The set of data points whose nearest center is the same center.'},
- {id:'euclid',name:'Euclidean distance',def:'d(v, w) = √((v1 − w1)² + … + (vm − wm)²): the length of the straight segment between points v and w in m-dimensional space.'},
+ {id:'euclid',name:'Euclidean distance',def:'d(v, w) = √((v1 − w1)² + … + (vm − wm)²). It is the length of the straight segment between points v and w in m-dimensional space.'},
  {id:'kcenter',name:'k-center clustering',def:'Given data points and k, find k centers minimizing MaxDistance(Data, Centers), the largest distance from any data point to its nearest center. The problem is NP-hard.'},
  {id:'fft',name:'Farthest-first traversal',src:'gonzalez',code:'BA8A',def:'Choose any data point as the first center; then, until there are k, add the data point farthest from all centers chosen so far. Its MaxDistance is never more than twice the best possible.'},
- {id:'distortion',name:'Squared error distortion',code:'BA8B',def:'Distortion(Data, Centers) = (1/n) · Σ d(DataPoint, Centers)²: the average, over the n data points, of the squared distance to the nearest center.'},
+ {id:'distortion',name:'Squared error distortion',code:'BA8B',def:'Distortion(Data, Centers) = (1/n) · Σ d(DataPoint, Centers)². It is the average, over the n data points, of the squared distance to the nearest center.'},
  {id:'kmeans',name:'k-means clustering',def:'Given data points and k, find k centers, anywhere in space, minimizing the squared error distortion. The problem is NP-hard in general.'},
  {id:'gravity',name:'Center of gravity',def:'The point whose i-th coordinate is the average of the i-th coordinates of a set of points. It is the one point that minimizes the sum of squared distances to them (the Center of Gravity Theorem).'},
  {id:'lloyd',name:'Lloyd algorithm',src:'lloyd',code:'BA8C',def:'Start from k centers and repeat two steps until the clusters stop changing: assign every data point to its nearest center (centers to clusters); move every center to its cluster’s center of gravity (clusters to centers). The distortion never rises, but where it stops depends on the start.'},
@@ -813,13 +814,15 @@ function gaugeSvg(label,value,max,mark,good){
   '<text x="10" y="10" font-size="11" fill="#6b7078">'+esc(label)+'</text><text x="390" y="10" font-size="11" text-anchor="end" font-weight="700">'+f2(value)+'</text></svg></div>';
 }
 /* the error after each half-step, as bars */
+/* the gene levels (8 and 10) have no ink or press: they use the earned words, center and assign */
+const geneMode=()=>!!cur&&(cur.mode==='cards'||cur.mode==='shift');
 function historySvg(errs){
  if(!errs.length)return '';
  const m=Math.max(...errs.map(e=>e.err)),W=Math.max(200,errs.length*34+20);
  let h='<div class="scroll"><svg viewBox="0 0 '+W+' 90" style="width:'+W+'px;max-width:none;height:90px" role="img" aria-label="Error after each step"><rect width="'+W+'" height="90" rx="6" fill="#fbf8f1"/>';
  errs.forEach((e,i)=>{const hh=Math.max(2,e.err/m*48),x=12+i*34;
   h+='<rect x="'+x+'" y="'+(64-hh)+'" width="24" height="'+hh+'" fill="'+(e.kind==='assign'?'#2b5fb3':'#c2410c')+'"/><text x="'+(x+12)+'" y="'+(60-hh)+'" font-size="9" text-anchor="middle">'+f2(e.err)+'</text>'+
-   '<text x="'+(x+12)+'" y="78" font-size="9" text-anchor="middle" fill="#6b7078">'+(e.kind==='assign'?'print':'move')+'</text>';});
+   '<text x="'+(x+12)+'" y="78" font-size="9" text-anchor="middle" fill="#6b7078">'+(e.kind==='assign'?(geneMode()?'assign':'print'):'move')+'</text>';});
  return h+'</svg></div>';
 }
 
@@ -833,7 +836,7 @@ function setHover(k){
  st.textContent='rect'+c+'{stroke:#111;stroke-width:3px}circle.dot'+c+'{stroke:#111;stroke-width:3.5px}';
  const hi=$('#hoverinfo');if(hi)hi.textContent=hoverText(k.split(',').map(Number));
 }
-function hoverHint(){return cur&&cur.pic?'Point at a pixel or a dot: the pixel and its spot on the map light up together.':'';}
+function hoverHint(){return cur&&cur.pic?'Point at a pixel or a dot to light up both the pixel and its spot on the map.':'';}
 function hoverText(p){
  const pic=cur.pic;if(!pic)return '';
  const n=pic.px.filter(q=>q[0]===p[0]&&q[1]===p[1]).length;
@@ -856,9 +859,9 @@ const own=pic=>i=>inkOf(pic.px[i]);
 function liveLab(){const st=cur.st;st.lab=assign(cur.pic.px,st.pots);}
 /* the Lloyd buttons, for the levels where the student has already done both by hand */
 function loopButtons(st,unit){
- unit=unit||'pixel';
- return '<div class="btnrow"><button data-act="repaint"'+(st.next!=='assign'?' disabled':'')+'>Print: every '+unit+' from its nearest pot</button>'+
-  '<button data-act="reavg"'+(st.next!=='move'?' disabled':'')+'>Move every pot to the average of its '+unit+'s</button></div>'+
+ unit=unit||'pixel';const g=geneMode();
+ return '<div class="btnrow"><button data-act="repaint"'+(st.next!=='assign'?' disabled':'')+'>'+(g?'Assign every '+unit+' to its nearest center':'Print: every '+unit+' from its nearest pot')+'</button>'+
+  '<button data-act="reavg"'+(st.next!=='move'?' disabled':'')+'>'+(g?'Move every center to the average of its '+unit+'s':'Move every pot to the average of its '+unit+'s')+'</button></div>'+
   '<div class="work"><p class="cap">Average squared error after each step</p>'+historySvg(st.hist)+'</div>';
 }
 function doRepaint(points,onSettle){
@@ -866,12 +869,12 @@ function doRepaint(points,onSettle){
  st.lab=nl;st.next='move';cur.justPrinted=changed;
  if(!changed){st.next='none';log('settled',{rounds:st.rounds});onSettle();return;}
  st.hist.push({kind:'assign',err:labelError(points,st.pots,nl)});log('repaint',{err:st.hist[st.hist.length-1].err});
- say('Printed. Error '+f2(st.hist[st.hist.length-1].err)+'.');
+ say((geneMode()?'Assigned':'Printed')+'. Error '+f2(st.hist[st.hist.length-1].err)+'.');
 }
 function doReavg(points){
  const st=cur.st;st.pots=moveCenters(points,st.pots,st.lab);st.next='assign';st.rounds=(st.rounds||0)+1;
  st.hist.push({kind:'move',err:labelError(points,st.pots,st.lab)});log('reaverage',{err:st.hist[st.hist.length-1].err});
- say('Pots moved. Error '+f2(st.hist[st.hist.length-1].err)+' with the same print.');
+ say(geneMode()?'Centers moved. Error '+f2(st.hist[st.hist.length-1].err)+' with the same groups.':'Pots moved. Error '+f2(st.hist[st.hist.length-1].err)+' with the same print.');
 }
 
 const MODES={};
@@ -1005,7 +1008,7 @@ MODES.stray={
   spot(k){const st=cur.st;if(st.phase!=='place')return;if(st.sel===null){say('Click a pot first, then the spot to move it to.','warn');return;}
    st.pots[st.sel]=k.split(',').map(Number);log('place',{pot:st.sel,ink:st.pots[st.sel]});st.sel=null;liveLab();
    const e=distortion(cur.pic.px,st.pots);
-   if(e<=cur.inst.target+1e-9){say('Average '+f2(e)+': under the mark, and the print looks like a mushroom again.','good');complete(['distortion','kmeans'],'L4');}
+   if(e<=cur.inst.target+1e-9){say('Average '+f2(e)+' is under the mark, and the print looks like a mushroom again.','good');complete(['distortion','kmeans'],'L4');}
    else say('Average now '+f2(e)+'. The mark is '+f2(cur.inst.target)+'.');}
  },
  settle(){const st=cur.st,m=maxDistance(cur.pic.px,st.pots);
@@ -1106,12 +1109,12 @@ MODES.bad={
   return h;
  },
  badCard(c){const b=c.badPrint;return '<div class="work"><div class="row two"><div class="fig"><p class="cap">From the bad start: error '+f2(b.err)+'</p>'+sheetSvg(c.pic,i=>inkOf(b.pots[b.lab[i]]),{label:'print from the bad start'})+'</div>'+
-  (c.goodPrint?'<div class="fig"><p class="cap">From the level 3 move: error '+f2(c.goodPrint.err)+'</p>'+sheetSvg(c.pic,i=>inkOf(c.goodPrint.pots[c.goodPrint.lab[i]]),{label:'print from the level 3 start'})+'</div>':'')+'</div></div>';},
+  (c.goodPrint?'<div class="fig"><p class="cap">From spread-out pots: error '+f2(c.goodPrint.err)+'</p>'+sheetSvg(c.pic,i=>inkOf(c.goodPrint.pots[c.goodPrint.lab[i]]),{label:'print from spread-out pots'})+'</div>':'')+'</div></div>';},
  act:{
   repaint(){const st=cur.st,c=cur;doRepaint(c.pic.px,()=>{
    const rec={pots:st.pots.map(p=>p.slice()),lab:st.lab.slice(),err:labelError(c.pic.px,st.pots,st.lab)};
    if(st.phase==='bad'){c.badPrint=rec;st.phase='ff';st.pots=[c.pic.px[0].slice()];st.locked=[0];liveLab();
-    say('The loop stopped at error '+f2(rec.err)+'. Start again. Pot 1 now matches the top-left pixel; place each new pot by the level 3 move.');}
+    say('The loop stopped at error '+f2(rec.err)+'. Start again. Pot 1 matches the top-left pixel. Mix each new pot on the ringed pixel, the one farthest from every pot so far.');}
    else{c.goodPrint=rec;say('The loop stopped at error '+f2(rec.err)+', against '+f2(c.badPrint.err)+' from the bad start.','good');complete([],'L7',{bad:c.badPrint.err,good:rec.err});}
   });},
   reavg(){doReavg(cur.pic.px);},
@@ -1127,27 +1130,27 @@ MODES.bad={
 MODES.cards={
  init(c){c.inst=makeLevel(lseed(8),8);const I=c.inst;c.st={pots:I.start.map(i=>I.data[i].slice()),lab:null,phase:'sq',hist:[],next:'assign',rounds:0,ans:Array(6).fill(null),picked:[null,null]};
   say('Fill in the six sums.');},
- rule:()=>'A card goes to its nearest pot · seven directions, no map',
+ rule:()=>'A card goes to its nearest center · seven heights, no map',
  stage(c){
   const st=c.st,I=c.inst,D=I.data;
-  let h='<p class="cap">The three pots</p><div class="deck">'+st.pots.map((p,j)=>cardHtml(p,POTNAME[j],{ctr:true,border:PILECOL[j],color:PILECOL[j],dashed:st.phase!=='sq'&&st.phase!=='near'})).join('')+'</div>'+
-   '<p class="cap" style="margin-top:10px">The twelve cards</p><div class="deck">'+D.map((v,i)=>cardHtml(v,CARDN[i],{border:st.lab?PILECOL[st.lab[i]]:(I.hand.includes(i)?'#1f2328':null),tag:I.start.includes(i)?'pot '+(I.start.indexOf(i)+1)+'’s start':I.hand.includes(i)?'by hand':''})).join('')+'</div>';
+  let h='<p class="cap">The three centers</p><div class="deck">'+st.pots.map((p,j)=>cardHtml(p,CTRNAME[j],{ctr:true,border:PILECOL[j],color:PILECOL[j],dashed:st.phase!=='sq'&&st.phase!=='near'})).join('')+'</div>'+
+   '<p class="cap" style="margin-top:10px">The twelve cards</p><div class="deck">'+D.map((v,i)=>cardHtml(v,CARDN[i],{border:st.lab?PILECOL[st.lab[i]]:(I.hand.includes(i)?'#1f2328':null),tag:I.start.includes(i)?'center '+(I.start.indexOf(i)+1)+'’s start':I.hand.includes(i)?'by hand':''})).join('')+'</div>';
   if(st.phase==='sq'||st.phase==='near'){
-   h+='<div class="work"><p>For each card and pot, take the seven differences in height, square each, and add them up. The ruler’s length is the square root of that sum.</p><div class="scroll"><table><tr><th></th>'+[0,1,2,3,4,5,6].map(t=>'<th>'+(t*2-6>0?'+':'')+(t*2-6)+' h</th>').join('')+'<th>sum of squares</th><th>ruler</th></tr>';
+   h+='<div class="work"><p>For each card and center, take the seven differences in height, square each, and add them up. The distance is the square root of that sum.</p><div class="scroll"><table><tr><th></th>'+[0,1,2,3,4,5,6].map(t=>'<th>'+(t*2-6>0?'+':'')+(t*2-6)+' h</th>').join('')+'<th>sum of squares</th><th>distance</th></tr>';
    I.hand.forEach((ci,a)=>{
     h+='<tr><th>card '+CARDN[ci]+'</th>'+D[ci].map(x=>'<td><b>'+x+'</b></td>').join('')+'<td></td><td></td></tr>';
     st.pots.forEach((p,j)=>{const k=a*3+j,v=st.ans[k],right=dist2(D[ci],p);
-     h+='<tr><td style="color:'+PILECOL[j]+'">'+POTNAME[j]+'</td>'+p.map(x=>'<td>'+x+'</td>').join('')+
+     h+='<tr><td style="color:'+PILECOL[j]+'">'+CTRNAME[j]+'</td>'+p.map(x=>'<td>'+x+'</td>').join('')+
       '<td><input type="number" min="0" id="sq'+k+'" value="'+(v==null?'':v)+'" class="'+(st.checked&&v!=null?(v===right?'ok':'bad'):'')+'" aria-label="sum of squares, card '+CARDN[ci]+' to '+POTNAME[j]+'"></td>'+
       '<td>'+(st.phase==='near'?f1(Math.sqrt(right)):'')+'</td></tr>';});
    });
    h+='</table></div>';
    if(st.phase==='sq')h+='<div class="btnrow"><button data-act="checksq">Check</button></div>';
-   else h+=I.hand.map((ci,a)=>'<p>Card '+CARDN[ci]+' prints from: '+[0,1,2].map(j=>'<button data-act="near" data-arg="'+a+','+j+'"'+(st.picked[a]===j?' class="primary"':'')+'>'+POTNAME[j]+'</button>').join(' ')+'</p>').join('');
+   else h+=I.hand.map((ci,a)=>'<p>Nearest center to card '+CARDN[ci]+' '+[0,1,2].map(j=>'<button data-act="near" data-arg="'+a+','+j+'"'+(st.picked[a]===j?' class="primary"':'')+'>'+CTRNAME[j]+'</button>').join(' ')+'</p>').join('');
    h+='</div>';
   }
   if(st.phase==='coord'){const j=I.coord.center,h0=I.coord.hour,mine=D.map((v,i)=>st.lab[i]===j?i:-1).filter(i=>i>=0);
-   h+='<div class="work"><p>'+cap(POTNAME[j])+' printed '+plural(mine.length,'card')+'. Their heights at hour '+(h0*2-6)+': '+mine.map(i=>CARDN[i]+' '+D[i][h0]).join(', ')+'. The pot’s new height at that hour is their average.</p>'+
+   h+='<div class="work"><p>'+cap(CTRNAME[j])+' has '+plural(mine.length,'card')+'. Their heights at hour '+(h0*2-6)+' are '+mine.map(i=>CARDN[i]+' '+D[i][h0]).join(', ')+'. The center’s new height at that hour is their average.</p>'+
     '<label>Height at hour '+(h0*2-6)+' <input type="number" min="0" max="10" id="coord"></label> <button data-act="checkcoord">Check</button></div>';}
   if(st.phase==='free'||st.phase==='end')h+=loopButtons(st,'card');
   if(st.phase==='end')h+=MODES.cards.compare(c);
@@ -1164,20 +1167,20 @@ MODES.cards={
  act:{
   checksq(){const st=cur.st,I=cur.inst;st.ans=st.ans.map((_,k)=>{const el=$('#sq'+k);return el&&el.value!==''?+el.value:null;});st.checked=true;
    const right=k=>dist2(I.data[I.hand[Math.floor(k/3)]],st.pots[k%3]),bad=st.ans.filter((v,k)=>v!==right(k)).length;log('check_sq',{ans:st.ans,bad});
-   if(!bad){st.phase='near';say('All six right. Which pot does each card print from?','good');}else say(plural(bad,'sum')+(bad===1?' is':' are')+' not right yet.','warn');},
+   if(!bad){st.phase='near';say('All six right. Which center is each card nearest?','good');}else say(plural(bad,'sum')+(bad===1?' is':' are')+' not right yet.','warn');},
   near(arg){const st=cur.st,I=cur.inst,[a,j]=arg.split(',').map(Number),ci=I.hand[a],want=nearest(I.data[ci],st.pots);log('pick_near',{card:CARDN[ci],pot:j,want});
-   if(j!==want){say('The press takes '+POTNAME[want]+' for card '+CARDN[ci]+': its ruler is '+f1(dist(I.data[ci],st.pots[want]))+', against '+f1(dist(I.data[ci],st.pots[j]))+'.','warn');st.picked[a]=want;}
-   else{st.picked[a]=j;say('Card '+CARDN[ci]+' prints from '+POTNAME[j]+'.','good');}
+   if(j!==want){say('Card '+CARDN[ci]+' is '+f1(dist(I.data[ci],st.pots[want]))+' from '+CTRNAME[want]+' and '+f1(dist(I.data[ci],st.pots[j]))+' from '+CTRNAME[j]+', so it goes to '+CTRNAME[want]+'.','warn');st.picked[a]=want;}
+   else{st.picked[a]=j;say('Card '+CARDN[ci]+' goes to '+CTRNAME[j]+'.','good');}
    if(st.picked.every(x=>x!==null))st.phase='print';},
   checkcoord(){const st=cur.st,I=cur.inst,v=$('#coord').value;log('check_coord',{v});
    if(v!==''&&+v===I.coord.value){st.phase='move';say('Right: '+v+'.','good');}else say('Not right. Add the '+plural(I.coord.count,'height')+' and divide by '+I.coord.count+'.','warn');},
   repaint(){doRepaint(cur.inst.data,()=>{cur.st.phase='end';say('Nothing changed. The loop has stopped.','good');complete([],'L8',{rounds:cur.st.rounds});});},
   reavg(){doReavg(cur.inst.data);}
  },
- go:c=>c.st.phase==='print'?'Print every card from its nearest pot':c.st.phase==='move'?'Move every pot to its cards’ average':null,
+ go:c=>c.st.phase==='print'?'Assign every card to its nearest center':c.st.phase==='move'?'Move every center to its cards’ average':null,
  goAct(c){const st=c.st,D=c.inst.data;
-  if(st.phase==='print'){st.lab=assign(D,st.pots);st.hist.push({kind:'assign',err:labelError(D,st.pots,st.lab)});st.phase='coord';st.next='move';log('repaint',{});say('Each card’s frame shows its pot. Work out one height of a new pot by hand.');}
-  else{st.pots=moveCenters(D,st.pots,st.lab);st.hist.push({kind:'move',err:labelError(D,st.pots,st.lab)});st.phase='free';st.next='assign';st.rounds=1;log('reaverage',{});say('Use the two buttons from here until a print changes nothing.');}}
+  if(st.phase==='print'){st.lab=assign(D,st.pots);st.hist.push({kind:'assign',err:labelError(D,st.pots,st.lab)});st.phase='coord';st.next='move';log('repaint',{});say('Each card’s frame shows its center. Work out one height of a moved center by hand.');}
+  else{st.pots=moveCenters(D,st.pots,st.lab);st.hist.push({kind:'move',err:labelError(D,st.pots,st.lab)});st.phase='free';st.next='assign';st.rounds=1;log('reaverage',{});say('Press Assign again. When nothing changes, the loop has stopped.');}}
 };
 
 /* ===== level 9: family tree ===== */
@@ -1198,7 +1201,7 @@ MODES.tree={
      if(joined)return '<td><button disabled aria-label="not yet worked out">?</button></td>';
      const d=groupDist(D,a,b);
      return '<td><button data-act="merge" data-arg="'+i+','+j+'"'+(st.hint===i+','+j?' class="min"':'')+(st.phase==='hand'?' disabled':'')+'>'+(Number.isInteger(d)?d:f2(d))+'</button></td>';}).join('')+'</tr>').join('')+'</table></div>';
-   if(st.phase==='hand')h+='<p>Group '+MODES.tree.gname(st.newG)+' to card '+CARDN[I.hand.other]+': the average of '+CARDN[st.newG[0]]+'–'+CARDN[I.hand.other]+' ('+D[st.newG[0]][I.hand.other]+') and '+CARDN[st.newG[1]]+'–'+CARDN[I.hand.other]+' ('+D[st.newG[1]][I.hand.other]+'). Enter the average in the empty cell. <button data-act="checkhand">Check</button></p>';
+   if(st.phase==='hand')h+='<p>The distance from group '+MODES.tree.gname(st.newG)+' to card '+CARDN[I.hand.other]+' is the average of '+CARDN[st.newG[0]]+'–'+CARDN[I.hand.other]+' ('+D[st.newG[0]][I.hand.other]+') and '+CARDN[st.newG[1]]+'–'+CARDN[I.hand.other]+' ('+D[st.newG[1]][I.hand.other]+'). Enter the average in the empty cell. <button data-act="checkhand">Check</button></p>';
    h+='</div>';
   }
   h+='<div class="work"><p class="cap">The tree your joins draw'+(st.phase==='cut'?' · click a height to cut it':'')+'</p>'+MODES.tree.dendro(c)+'</div>';
@@ -1233,7 +1236,7 @@ MODES.tree={
    log('merge_try',{a:MODES.tree.gname(G[i]),b:MODES.tree.gname(G[j]),ok:i===bi&&j===bj});
    if(i!==bi||j!==bj){st.hint=bi+','+bj;say(MODES.tree.gname(G[i])+' and '+MODES.tree.gname(G[j])+' are '+num(groupDist(I.D,G[i],G[j]))+' apart, but the marked pair is closer.','warn');return;}
    st.hint=null;const g=G[i].concat(G[j]);st.merges.push({a:G[i],b:G[j],d:bd,members:g});st.groups=G.filter((_,k)=>k!==i&&k!==j).concat([g]);
-   if(st.merges.length===1){st.phase='hand';st.newG=g;say('Joined. The new group needs its distances to the others: work one out yourself.');}
+   if(st.merges.length===1){st.phase='hand';st.newG=g;say('Joined. Work out one of the new group’s distances yourself.');}
    else if(st.groups.length===1){st.phase='cut';say('One group left. Now cut the tree so that it falls into three groups.');}
    else say('Joined at '+num(bd)+'. '+plural(st.groups.length,'group')+' left.');},
   checkhand(){const st=cur.st,v=$('#hand').value;log('hand_avg',{v});
@@ -1247,18 +1250,18 @@ MODES.tree={
 
 /* ===== level 10: the shift ===== */
 MODES.shift={
- init(c){c.inst=makeLevel(lseed(10),10);c.st={pots:c.inst.ff.centers.map(p=>p.slice()),lab:null,hist:[],next:'assign',rounds:0,phase:'free'};say('Press the buttons in turn until a print changes nothing.');},
- rule:()=>'Each gene goes to its nearest pot',
+ init(c){c.inst=makeLevel(lseed(10),10);c.st={pots:c.inst.ff.centers.map(p=>p.slice()),lab:null,hist:[],next:'assign',rounds:0,phase:'free'};say('Press the two buttons in turn until an assignment changes nothing.');},
+ rule:()=>'Each gene goes to its nearest center',
  stage(c){
   const st=c.st,I=c.inst,D=I.data;
-  let h='<p class="cap">Twenty-four genes (illustrative data)</p><div class="deck">'+D.map((v,i)=>cardHtml(v,'gene '+(i+1),{border:st.lab?PILECOL[st.lab[i]]:null,tag:I.ff.idx.includes(i)?'pot '+(I.ff.idx.indexOf(i)+1)+'’s start':''})).join('')+'</div>';
+  let h='<p class="cap">Twenty-four genes (illustrative data)</p><div class="deck">'+D.map((v,i)=>cardHtml(v,'gene '+(i+1),{border:st.lab?PILECOL[st.lab[i]]:null,tag:I.ff.idx.includes(i)?'center '+(I.ff.idx.indexOf(i)+1)+'’s start':''})).join('')+'</div>';
   if(st.phase==='free')h+=loopButtons(st,'gene');
   else h+=MODES.shift.big(c);
   return h;
  },
  big(c){
   const st=c.st,D=c.inst.data,X=i=>40+i*60,Y=y=>190-y*16;
-  let h='<div class="work"><p class="cap">The three pots: each is the average of its genes</p><svg viewBox="0 0 440 230" style="width:100%;max-width:560px" role="img" aria-label="average of each group over time"><rect width="440" height="230" rx="6" fill="#fbf8f1"/>';
+  let h='<div class="work"><p class="cap">The three centers, each the average of its genes</p><svg viewBox="0 0 440 230" style="width:100%;max-width:560px" role="img" aria-label="average of each group over time"><rect width="440" height="230" rx="6" fill="#fbf8f1"/>';
   [0,5,10].forEach(y=>{h+='<line x1="30" x2="420" y1="'+Y(y)+'" y2="'+Y(y)+'" stroke="#e0d8c6"/><text x="24" y="'+(Y(y)+4)+'" font-size="11" text-anchor="end" fill="#6b7078">'+y+'</text>';});
   for(let t=0;t<7;t++)h+='<text x="'+X(t)+'" y="212" font-size="11" text-anchor="middle" fill="#6b7078">'+(t*2-6)+' h</text>';
   h+='<line x1="'+X(3)+'" x2="'+X(3)+'" y1="20" y2="196" stroke="#b4541a" stroke-dasharray="4 3"/><text x="'+(X(3)+4)+'" y="16" font-size="11" fill="#b4541a">glucose depleted</text>';
@@ -1277,7 +1280,7 @@ MODES.shift={
 const BLOCKS={
  L1:()=>'<div class="called"><p>A card’s seven expression measurements are the gene’s '+term('expvec','expression vector')+'. Grouping genes by similarity of their expression profiles is '+term('clustering')+'. Both you and the other student sorted by eye. Deciding which sorting is better requires a measure.</p></div>'+srcCard('derisi'),
  L2:()=>{const c=cur,P=c.pic.px,far=i=>dist(P[i],c.st.pots[nearest(P[i],c.st.pots)]),i=c.inst.strip.reduce((a,b)=>far(b)>far(a)?b:a),p=P[i],q=c.st.pots[nearest(p,c.st.pots)];
-  return '<div class="called"><p>Each pixel is a '+term('point','data point')+': a point whose coordinates are its two ink amounts. Each pot is a '+term('center')+', and the pixels printed from one pot are its '+term('cluster')+'. The ruler measures '+term('euclid','Euclidean distance')+'. For one pixel in your strip, the distance to its nearest pot is √(('+p[0]+' − '+num(q[0])+')² + ('+p[1]+' − '+num(q[1])+')²) = '+f1(dist(p,q))+'. <b>Later levels use these terms.</b></p></div>';},
+  return '<div class="called"><p>Each pixel is a '+term('point','data point')+' whose coordinates are its two ink amounts. Each pot is a '+term('center')+', and the pixels printed from one pot are its '+term('cluster')+'. The ruler measures '+term('euclid','Euclidean distance')+'. For one pixel in your strip, the distance to its nearest pot is √(('+p[0]+' − '+num(q[0])+')² + ('+p[1]+' − '+num(q[1])+')²) = '+f1(dist(p,q))+'. <b>Later levels use these terms.</b></p></div>';},
  L3:()=>{const c=cur,D=c.pic.px;
   return '<div class="called"><p>Choosing k centers so that the worst data point is as close as possible to its center is '+term('kcenter','k-center clustering')+'. No fast algorithm is known for finding the best answer. The move the meter points at, each new center on the data point farthest from every center so far, is '+term('fft','farthest-first traversal')+'.</p></div>'+
    '<div class="row two" style="margin:8px 0">'+c.inst.decoys.map(d=>'<div class="fig"><p class="cap">Pots mixed from '+d.name+': worst '+f1(d.max)+'</p>'+sheetSvg(c.pic,i=>inkOf(d.centers[nearest(D[i],d.centers)]),{label:d.name})+'</div>').join('')+
@@ -1288,7 +1291,7 @@ const BLOCKS={
  L7:()=>'<div class="called"><p>The Lloyd algorithm stopped twice, at two different errors. Where it stops depends on where the centers start. Farthest-first traversal is a cheap way to spread them out. Real software usually picks starts at random, weighted toward far-off points (k-means++), and keeps the best of many runs.</p></div>',
  L8:()=>'<div class="called"><p>Each gene is represented by a seven-dimensional expression vector. The distance calculation extends directly from the two-dimensional ink example, and the distortion now answers level 1’s question.</p></div>',
  L9:()=>'<div class="called"><p>Joining the closest groups and drawing the joins as a tree is '+term('hier','hierarchical clustering')+'. Averaging the distance over every pair of members is the same rule as UPGMA in level 7 of Hollow Mountain, here with genes in place of species. Cutting the tree at one height gives the clusters.</p></div>'+srcCard('eisen'),
- L10:()=>'<div class="called"><p>Glucose depletion triggers a metabolic transition in yeast: the '+term('diauxic','diauxic shift')+'. One set of genes is upregulated, another is downregulated, and many show little change in expression. These cards are illustrative; DeRisi, Iyer and Brown measured nearly every yeast gene through the real shift.</p></div>'+srcCard('derisi')
+ L10:()=>'<div class="called"><p>When yeast runs out of glucose it switches its metabolism, a change called the '+term('diauxic','diauxic shift')+'. One set of genes is upregulated, another is downregulated, and many show little change in expression. These cards are illustrative; DeRisi, Iyer and Brown measured nearly every yeast gene through the real shift.</p></div>'+srcCard('derisi')
 };
 function srcCard(id){const s=SRC[id];
  return '<div class="src"><span class="tag">Primary source</span><a href="'+s.url+'" target="_blank" rel="noopener">'+s.cite+': “'+s.title+'”</a> <span class="gmeta">'+s.where+'.</span><br>'+s.look+'</div>';}

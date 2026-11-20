@@ -141,6 +141,15 @@ test('once the loop stops, both loop buttons are disabled (levels 6, 7, 8, 10)',
  for(const n of [6,7,8,10]){const ui=boot(undefined,{search:'?debug=1&level='+n+'&seed=STOP'});PLAY[n](ui);
   const h=ui.el('#stage').innerHTML;assert.doesNotMatch(h,/data-act="(repaint|reavg)"(?! disabled)/,'level '+n);}
 });
+test('the gene levels (8 and 10) use center and assign, not pots and printing',()=>{
+ for(const n of [8,10]){const ui=boot(undefined,{search:'?debug=1&level='+n+'&seed=WORDS'});
+  if(n===8){const c=ui.api.state(),E=ui.E,I=c.inst;I.hand.forEach((ci,a)=>c.st.pots.forEach((p,j)=>ui.el('#sq'+(a*3+j)).value=String(E.dist2(I.data[ci],p))));
+   ui.api.act('checksq');I.hand.forEach((ci,a)=>ui.api.act('near',a+','+E.nearest(I.data[ci],c.st.pots)));ui.api.go();
+   ui.el('#coord').value=String(I.coord.value);ui.api.act('checkcoord');ui.api.go();}
+  const h=ui.el('#stage').innerHTML,r=ui.el('#rule').textContent;
+  assert.match(h,/Assign every (card|gene) to its nearest center/,'level '+n);assert.match(h,/Move every center to the average/,'level '+n);
+  assert.doesNotMatch(h+r,/\bpots?\b|Print/,'level '+n);}
+});
 test('terms inside reveal sentences are lower case unless they carry a proper name',()=>{
  const ui=boot(undefined,{search:'?debug=1&seed=CASE'});PLAY[1](ui);assert.match(ui.el('#panel').innerHTML,/is <span class="term" tabindex="0">clustering</);
  ui.api.loadLevel(2);PLAY[2](ui);const p=ui.el('#panel').innerHTML;assert.match(p,/>center<span/);assert.match(p,/>cluster<span/);
