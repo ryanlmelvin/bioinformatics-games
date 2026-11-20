@@ -77,6 +77,7 @@ span.term:not(.badge){border-bottom:1px dotted currentColor;font-weight:600}
 .strand button,.strand span{width:2.1em;height:2.4em;padding:0;border-radius:6px;font:700 1.15rem/2.4em ui-monospace,Menlo,monospace;text-align:center;flex:none}
 .strand button.let{background:#fffaf0;border:1px solid #cdbf9a;color:#2a2416}
 .strand button.gap{background:transparent;border:1.5px dashed var(--muted);color:var(--muted);font-weight:400}
+@media (max-width:420px){.strands .strand button,.strands .strand span{width:1.75em;font-size:1rem}}
 .strand span.tail{border:1.5px dotted var(--line);color:var(--line);font-weight:400}
 .strand .hit{background:#d9f2e1!important;border-color:var(--good)!important;color:#14532d!important}
 .strand .let .bA,.tcard .bA{color:#2e7d4f} .strand .let .bC,.tcard .bC{color:#2b5fb3} .strand .let .bG,.tcard .bG{color:#9a6b00} .strand .let .bT,.tcard .bT{color:#b83a4b}
@@ -583,20 +584,21 @@ const plural=(n,w)=>n+' '+w+(n===1?'':'s');
 const fmt=n=>String(n).replace(/\B(?=(\d{3})+(?!\d))/g,',');
 const numWord=n=>['zero','one','two','three','four','five','six','seven','eight','nine','ten','eleven','twelve','thirteen','fourteen','fifteen','sixteen'][n]||String(n);
 const signed=n=>n>0?'+'+n:n<0?'−'+(-n):'0';
+const num=n=>n<0?'−'+(-n):String(n);   /* a score in text, with a true minus sign */
 const letters=s=>[...s].map(ch=>'<span class="b'+ch+'">'+ch+'</span>').join('');
 const RM=()=>{try{return matchMedia('(prefers-reduced-motion: reduce)').matches;}catch(e){return true;}};
 
 const LEVELS=[
   {id:1,mode:'strands',inst:'decks',goal:'Add gaps to line up as many matching nucleotides as you can, then lock in your alignment.',title:'Two strands',
-   brief:'These synthetic DNA sequences represent homologous regions in two species. Insertions and deletions have shifted corresponding nucleotides into different columns. Add gaps to line up as many matches as you can, then lock in your alignment.'},
+   brief:'These synthetic DNA sequences represent homologous regions in two species. Insertions and deletions have shifted corresponding nucleotides into different columns.'},
   {id:2,mode:'decks',inst:'decks',goal:'Play the two decks until you reach par, the highest score possible.',title:'Two decks',
-   brief:'The two sequences are now decks of cards. On each turn, take both outlined cards or discard one. Taking two matching cards earns a point. How many points can you score before a deck runs out?'},
+   brief:'The two sequences are now decks of cards. On each turn, take both outlined cards or discard one. Taking two matching cards earns a point.'},
   {id:3,mode:'table',inst:'decks',goal:'Work out what the two part-played games have in common, then click the dot where tables A and B both stand.',title:'Two games, one table',
    brief:'Two players are part-way through the same deal. They played differently, but the same cards are left on the table.'},
   {id:4,mode:'wall',inst:'twelve',goal:'Start the bot and watch how many games it has to play. Stop it once you can see it will never finish.',title:'Too many games',
    brief:'Each deck has twelve cards. A bot will play every possible game in turn and keep the best score. Start it. You can also play yourself.'},
-  {id:5,mode:'tourist',inst:'city',goal:'Find the route from the top-left corner to the bottom-right corner that passes the most sights.',title:'The tourist',
-   brief:'Help a tourist walk from the top-left corner of the city to the bottom-right. You can go east or south. The number on each street tells you how many sights you’ll see there. Which route passes the most sights?'},
+  {id:5,mode:'tourist',inst:'city',goal:'Walk every route in the small city. Then pencil the big city and run the bot twice, the second time with Remember answers ticked.',title:'The tourist',
+   brief:'Help a tourist walk from the top-left corner of the city to the bottom-right. You can go east or south. The number on each street tells you how many sights you’ll see there.'},
   {id:6,mode:'follow',inst:'city',goal:'Retrace the tourist’s best route. Starting at the far corner, click the corner at the tail of each arrow until you are back at the start.',title:'Follow your arrows',
    brief:'The tourist is at the far corner of the city from level 5. Each arrow points into a corner from the street that gave its best score. Follow the arrows backward to retrace the route.'},
   {id:7,mode:'deckcity',inst:'decks',goal:'Fill in row 1 of the city by choosing the best incoming street at each corner. Then follow the arrows back from the far corner.',title:'The decks are a city',
@@ -604,11 +606,11 @@ const LEVELS=[
   {id:8,mode:'tolls',inst:'decks',goal:'Work out the number at the marked corner. Then follow the arrows back from the far corner to find the best route under tolls.',title:'Tolls',
    brief:'The same city, but now the streets charge. A gold diagonal (two matching cards) still pays +1. A diagonal between two different cards costs 1, and every south or east street costs 2.'},
   {id:9,mode:'taxi',inst:'local',goal:'Choose where the free taxi drops the tourist off and picks them up again, to get the highest score.',title:'Free taxi',
-   brief:'These longer DNA sequences use the same tolls. Aligning them end to end scores below zero. A free taxi lets the tourist walk just part of the route. Where should the walk start and end to earn the highest score?'},
-  {id:10,mode:'overlap',inst:'overlap',goal:'Use the free taxi rides to find the best overlap between the two reads.',title:'Overlap',
+   brief:'These longer DNA sequences use the same tolls. Aligning them end to end scores below zero. A free taxi lets the tourist walk just part of the route.'},
+  {id:10,mode:'overlap',inst:'overlap',goal:'Choose a corner on the left edge where the taxi drops the tourist and a corner on the bottom edge where it picks them up, to get the highest score.',title:'Overlap',
    brief:'Two sequencing reads, the kind you assembled in Bridge Walker. The end of read 1 should be the start of read 2, but one nucleotide was miscalled during sequencing. Here the taxi is free only down the left edge (skipping the start of read 1) and off the bottom edge (skipping the rest of read 2).'},
-  {id:11,mode:'code',inst:null,goal:'Pencil in the city with a real scoring table, then follow the arrows back from the far corner.',title:'The code breakers',
-   brief:'Two real enzymes from two species of soil bacteria. Each one builds an antibiotic, and each picks out the same amino acid, phenylalanine, to build it from. Pencil their city with a real scoring table and follow the arrows.'}
+  {id:11,mode:'code',inst:null,goal:'Work out the number at the marked corner with the BLOSUM62 table. Then follow the arrows back from the far corner.',title:'The code breakers',
+   brief:'Two real enzymes from two species of soil bacteria. Each one builds an antibiotic, and each picks out the same amino acid, phenylalanine, to build it from.'}
 ];
 
 /* Primary sources. Each link was opened (or its PubMed record, where the publisher refuses automated readers). */
@@ -1010,7 +1012,10 @@ MODES.strands={
       else{if(arr.length>=c.inst.v.length+c.inst.w.length)return;arr.splice(k,0,'-');log('gap_add',{row:r+1,at:k});}
       strandTidy(c);render();
     }else if(type==='lock'){
-      const k=strandHits(c),par=c.inst.par,top=strandCols(c).map(([x])=>x===null?'-':x).join(''),bot=strandCols(c).map(([,y])=>y===null?'-':y).join('');
+      const k=strandHits(c),par=c.inst.par;
+      /* the first lock below par keeps the level open and says how many can be lined up */
+      if(k<par&&!c.warned){c.warned=true;log('lock_early',{hits:k,par});say(par+' can be lined up. Keep adding gaps, or lock in anyway.','warn');render();return;}
+      const top=strandCols(c).map(([x])=>x===null?'-':x).join(''),bot=strandCols(c).map(([,y])=>y===null?'-':y).join('');
       log('lock',{hits:k,top,bottom:bot});
       say(k<par?'Locked in with '+k+' lined up.':'Locked in. Nobody can line up more.',k<par?'warn':'good');
       c.final={top,bot,k};
@@ -1022,7 +1027,7 @@ MODES.strands={
   },
   undo(c){if(!c.hist.length)return;[c.a,c.b]=JSON.parse(c.hist.pop());log('undo');},
   canUndo:c=>c.hist.length>0,
-  skip:c=>({label:'Lock it in: '+strandHits(c)+' lined up',act:['lock']})
+  skip:c=>({label:(c.warned&&strandHits(c)<c.inst.par?'Lock in anyway: ':'Lock it in: ')+strandHits(c)+' lined up',act:['lock']})
 };
 
 /* ---------- the card table, shared by levels 2, 3 and 4 ---------- */
@@ -1196,7 +1201,7 @@ MODES.wall={
       },100);
       say('The bot is playing every game in turn.');render();return;
     }
-    if(type==='giveup'){log('gave_up',{played:c.bot.played});clearInterval(c.timer);c.title='Stuck is the right answer';
+    if(type==='giveup'){log('gave_up',{played:c.bot.played});clearInterval(c.timer);c.title='The bot cannot finish';
       say('The bot stopped after '+fmt(c.bot.played)+' games.');
       complete([],[{html:()=>'Twelve cards a deck already make '+fmt(c.total)+' different games, and the count roughly multiplies by six for every card added to both decks. Playing them all is infeasible.'}],{played:c.bot.played});return;}
     if(type==='deal'){c.g=newGame();render();return;}
@@ -1406,6 +1411,15 @@ MODES.deckcity={
   skip:c=>c.phase==='pre'?{label:'Lay the decks out as a city',act:['lay']}:c.phase==='row'&&c.hand>=c.inst.w.length+1?{label:'Let the pencil fill the rest',act:['auto']}:null
 };
 
+/* A wrong number typed at a marked corner (levels 8 and 11). The first time: each corner's number and each street's price.
+   After that: the sums as well. */
+function arrivalHint(g,i,j,val,wrong){
+  const way=x=>x.d==='S'?'from the north':x.d==='E'?'from the west':'along the diagonal';
+  const ar=penArrivals(g,i,j).map(wrong<2
+    ?x=>way(x)+', the corner says '+num(g.s[x.from[0]][x.from[1]])+' and the street '+(x.w<0?'costs '+(-x.w):'pays '+x.w)
+    :x=>way(x)+' '+num(g.s[x.from[0]][x.from[1]])+' '+signed(x.w).replace(/^([+−])/,'$1 ')+' = '+num(x.val));
+  return num(val)+' is not the best arrival. The three ways in: '+ar.join('; ')+'.'+(wrong<2?' Work out each arrival and pencil the largest.':'');
+}
 /* ---------- level 8: tolls ---------- */
 const TOLL_CORNER=[2,2];
 function route7(d){
@@ -1433,7 +1447,7 @@ MODES.tolls={
       tourist:c.pos||null})+'</div>';
     if(c.phase==='one')h+='<div class="entry"><label for="entry">Best arrival at the marked corner (2 cards taken or thrown away from each deck):</label><input id="entry" autocomplete="off" value="'+esc(c.typed||'')+'"><button class="primary" data-act="type">Pencil it</button></div>';
     h+='<div class="pad gmeta">Dashed grey: your best route from level 7.</div>';
-    if(c.done)h+=alignTiles(c.top,c.bot,{label:'The best route under tolls, as a line-up · score '+c.g.s[n][m]});
+    if(c.done)h+=alignTiles(c.top,c.bot,{label:'The best route under tolls, as a line-up · score '+num(c.g.s[n][m])});
     return h;
   },
   act(c,type,a,b){
@@ -1444,8 +1458,7 @@ MODES.tolls={
       if(!raw||!Number.isInteger(val)){say('Type a whole number, such as −3.','warn');render();$('#entry').focus();return;}
       const best=penBest(c.g,ti,tj);c.tries++;log('toll_corner',{typed:val,best});
       if(val!==best){
-        const mn=n=>n<0?'−'+(-n):String(n),ar=penArrivals(c.g,ti,tj).map(x=>(x.d==='S'?'from the north ':x.d==='E'?'from the west ':'along the diagonal ')+mn(c.g.s[x.from[0]][x.from[1]])+' '+signed(x.w).replace(/^([+−])/,'$1 ')+' = '+mn(x.val));
-        stage(signed(val).replace(/^\+/,'')+' is not the best arrival. The three ways in: '+ar.join('; ')+'.','warn');render();$('#entry').focus();$('#entry').select?.();return;
+        c.wrong=(c.wrong||0)+1;stage(arrivalHint(c.g,ti,tj,val,c.wrong),'warn');render();$('#entry').focus();$('#entry').select?.();return;
       }
       const ar=penArrivals(c.g,ti,tj),d=['D','S','E'].find(d=>ar.some(x=>x.d===d&&x.val===best));penSet(c.g,ti,tj,d);c.hand=1;c.stage=null;
       say('Right: '+signed(best).replace(/^\+/,'')+'. The pencil can do the rest the same way.','good');c.phase='ready';render();return;
@@ -1453,13 +1466,13 @@ MODES.tolls={
     if(type==='auto'&&c.phase==='ready'){
       c.phase='fill';const g=c.g,cl={n:g.n,m:g.m,weight:g.weight,s:g.s.map(r=>r.slice()),arrow:g.arrow.map(r=>r.slice())},todo=penAuto(cl);
       show(todo.length+1,40,k=>{const [i,j]=todo[k-1];g.s[i][j]=cl.s[i][j];g.arrow[i][j]=cl.arrow[i][j];},()=>{g.s=cl.s;g.arrow=cl.arrow;c.phase='back';c.pos=[v.length,w.length];c.back=[c.pos.slice()];
-        say('The far corner says '+g.s[v.length][w.length]+'. Walk back along the arrows.');render();});
+        say('The far corner says '+num(g.s[v.length][w.length])+'. Walk back along the arrows.');render();});
       render();return;
     }
     if(type==='corner'&&c.phase==='back')backAct(c,+a,+b,mv=>{
       [c.top,c.bot]=alignRows(v,w,[0,0],mv);
       const old=route7(c.inst).join(''),pairs=matchesOn(v,w,[0,0],mv);
-      say('Back at the start. Under tolls the best route scores '+c.g.s[v.length][w.length]+', and it is not your level 7 route.','good');
+      say('Back at the start. Under tolls the best route scores '+num(c.g.s[v.length][w.length])+', and it is not your level 7 route.','good');
       const M=MATRICES.BLOSUM62,L='ACDEF';
       complete(['global','matrix','indelpen'],[
         {html:()=>'With prices on every street the best route changed. It takes '+plural(pairs,'pair')+', not '+c.inst.par+', because the −2 streets needed to reach the other pairs cost more than those pairs pay. A best route from the top-left corner to the bottom-right under a scoring like this is a '+term('global','global alignment')+': all of one string against all of the other.',src:['nw']},
@@ -1490,7 +1503,7 @@ function taxiMode(kind){
       if(c.on)ov.push({corners:overlapMode?routeCorners([0,0],Array(c.on[0]).fill('S')):[[0,0],c.on],cls:'trail',w:4});
       if(cur2){ov.push({corners:cur2.corners,cls:'route',w:6});ov.push({corners:overlapMode?[c.off].concat(routeCorners(c.off,Array(m-c.off[1]).fill('E')).slice(1)):[c.off,[n,m]],cls:'trail',w:4});}
       const lab=overlapMode?['Read 1','Read 2']:['Strand 1','Strand 2'];
-      let h='<div class="pad sub">'+lab[0]+' down the side · '+lab[1]+' across the top · dashed grey: the best route from corner to corner, score '+c.glob.best+'</div>'+
+      let h='<div class="pad sub">'+lab[0]+' down the side · '+lab[1]+' across the top · dashed grey: the best route from corner to corner, score '+num(c.glob.best)+'</div>'+
         '<div class="cityscroll">'+gridSvg({n,m,rows:v,cols:w,diag:true,P:48,maxw:700,minw:560,label:'Two strands as a city',
         street:(i,j,d)=>{const gold=d==='D'&&v[i-1]===w[j-1];return {cls:gold?'gold':d==='D'?'faint':'',w:d==='D'?(gold?6:3):6,z:gold?1:0};},
         overlays:ov,
@@ -1499,8 +1512,8 @@ function taxiMode(kind){
           const action=ok?((!c.on||c.off)?'Start the walk':'End the walk'):isOn&&!c.off?'Cancel the starting corner':null;
           return {cls:(isOn||isOff?'pick':'')+(!ok&&!isOn&&!isOff&&!c.done?' dim':''),hit:action?action+' at ('+i+', '+j+')':undefined};},
         taxi:[c.on,c.off].filter(Boolean),tourist:c.off||c.on||[0,0]})+'</div>';
-      h+='<div class="pad">'+(cur2?'This ride: '+(overlapMode?'skip '+c.on[0]+' nucleotides of read 1, ':'get out at '+c.on[0]+','+c.on[1]+', ')+(overlapMode?'leave '+(m-c.off[1])+' nucleotides of read 2':'call the taxi at '+c.off[0]+','+c.off[1])+' · the walk between scores <b>'+cur2.score+'</b>':'')+
-        (c.bestTry!==null?'<div class="gmeta">Best walk so far: '+c.bestTry+' · rides tried: '+c.tries.length+'</div>':'')+'</div>';
+      h+='<div class="pad">'+(cur2?'This ride: '+(overlapMode?'skip '+c.on[0]+' nucleotides of read 1, ':'get out at '+c.on[0]+','+c.on[1]+', ')+(overlapMode?'leave '+(m-c.off[1])+' nucleotides of read 2':'call the taxi at '+c.off[0]+','+c.off[1])+' · the walk between scores <b>'+num(cur2.score)+'</b>':'')+
+        (c.bestTry!==null?'<div class="gmeta">Best walk so far: '+num(c.bestTry)+' · rides tried: '+c.tries.length+'</div>':'')+'</div>';
       if(cur2)h+=alignTiles(...alignRows(v,w,c.on,cur2.moves),{label:'The walk between, as a line-up'});
       return h;
     },
@@ -1523,11 +1536,11 @@ function taxiMode(kind){
           complete(['overlap'],[{html:()=>'<div class="alignout"><div class="sub">The two reads, overlapped</div><div class="strand">'+[...v].map((ch,k)=>'<span class="'+(k>=sh?(w[k-sh]===ch?'hit':'mis'):'off')+'">'+ch+'</span>').join('')+'</div><div class="strand">'+[...pad].map(()=>'<span style="visibility:hidden">·</span>').join('')+[...w].map((ch,k)=>'<span class="'+(k<L?(v[sh+k]===ch?'hit':'mis'):'off')+'">'+ch+'</span>').join('')+'</div></div>'+
             'The end of read 1 against the start of read 2, '+L+' nucleotides with one sequencing error (the orange column). The best walk from the left edge to the bottom edge is an '+term('overlap','overlap alignment')+'. An assembler working from real reads, which contain errors, needs this in place of the exact matches Bridge Walker assumed.'}],{tries:c.tries.length});
         }else{
-          complete(['local'],[{html:()=>'The two sequences share one similar region, <b class="mono">'+top+'</b> over <b class="mono">'+bot+'</b>, scoring '+r.score+', while the best route from corner to corner scored '+c.glob.best+'. A best walk between any two corners, with free rides at either end, is a '+term('local','local alignment')+'. For the pencil, the free taxi from the start means a corner never needs a number below 0; the free taxi to the end means the answer is the biggest number anywhere, not the one at the far corner.',src:['sw']}],{tries:c.tries.length});
+          complete(['local'],[{html:()=>'The two sequences share one similar region, <b class="mono">'+top+'</b> over <b class="mono">'+bot+'</b>, scoring '+r.score+', while the best route from corner to corner scored '+num(c.glob.best)+'. A best walk between any two corners, with free rides at either end, is a '+term('local','local alignment')+'. For the pencil, the free taxi from the start means a corner never needs a number below 0; the free taxi to the end means the answer is the biggest number anywhere, not the one at the far corner.',src:['sw']}],{tries:c.tries.length});
         }
         return;
       }
-      say('This walk scores '+r.score+'.'+(c.tries.length>=3&&r.score<A.best?' Gold diagonals in a row are worth looking at.':''),r.score>=A.best?'':'warn');render();
+      say('This walk scores '+num(r.score)+'.'+(c.tries.length>=3&&r.score<A.best?' Gold diagonals in a row are worth looking at.':''),r.score>=A.best?'':'warn');render();
     }
   };
 }
@@ -1535,51 +1548,84 @@ MODES.taxi=taxiMode('local');
 MODES.overlap=taxiMode('overlap');
 
 /* ---------- level 11: the code breakers ---------- */
+const CODE_SC={matrix:'BLOSUM62',indel:-5},CODE_CORNER=[1,1],BACK_BY_HAND=5;
+function codeFinish(c){
+  const same=[...c.r.top].filter((x,k)=>x===c.r.bottom[k]).length;
+  const missing=sweepTerms().filter(id=>!S.badges.includes(id));
+  say(same+' of '+c.r.top.length+' columns hold the same amino acid.','good');
+  complete(missing,[{html:()=>'The two fragments line up with one indel at each end, and '+same+' of their '+c.r.top.length+' columns hold the same amino acid. These are segments of two adenylation domains in nonribosomal peptide synthetases, the domains that select amino acid substrates for antibiotic biosynthesis; both choose phenylalanine. Lining up domains like these, position by position, is how the “code” that predicts a domain’s choice from its sequence was worked out.',src:['stach']},
+    {html:'Sequences: UniProt '+PROTEINS.a.acc+' ('+PROTEINS.a.name+') and UniProt '+PROTEINS.b.acc+' ('+PROTEINS.b.name+'), residue numbers as in UniProt.'+(missing.length?' Terms not named in earlier levels: '+missing.map(x=>term(x)).join(', ')+'.':'')}],{same,tries:c.tries});
+}
 MODES.code={
-  init(c){c.r=codeBreakers();c.phase='ready';c.g=null;
-    say('Pencil the city with BLOSUM62 and an indel penalty of 5.');},
-  rule:()=>'BLOSUM62 · indel penalty 5 · all of one fragment against all of the other',
+  init(c){
+    const a=PROTEINS.a.seq,b=PROTEINS.b.seq;
+    c.r=codeBreakers();c.phase='one';c.tries=0;c.wrong=0;
+    c.g=penInit(a.length,b.length,(i,j,d)=>d==='D'?pairScore(CODE_SC,a[i-1],b[j-1]):CODE_SC.indel);
+    for(let j=1;j<=b.length;j++)penSet(c.g,0,j,'E');
+    for(let i=1;i<=a.length;i++)penSet(c.g,i,0,'S');
+    say('What number goes at the marked corner? Its diagonal pairs '+a[0]+' with '+b[0]+'.');},
+  rule:c=>c.phase==='back'?'Walk back along the arrows':'BLOSUM62 · indel penalty 5 · all of one fragment against all of the other',
   view(c){
-    const a=PROTEINS.a,b=PROTEINS.b,n=a.seq.length,m=b.seq.length,g=c.g;
-    let lo=0,hi=1;if(g)for(const row of g.s)for(const x of row)if(x!==undefined){lo=Math.min(lo,x);hi=Math.max(hi,x);}
+    const a=PROTEINS.a,b=PROTEINS.b,n=a.seq.length,m=b.seq.length,g=c.g,[ti,tj]=CODE_CORNER;
+    let lo=0,hi=1;for(const row of g.s)for(const x of row)if(x!==undefined){lo=Math.min(lo,x);hi=Math.max(hi,x);}
     const heat=x=>{if(x===undefined)return '';const t=(x-lo)/(hi-lo||1);return 'hsl('+(220-180*t)+',70%,'+(85-35*t)+'%)';};
+    const marked=(i,j)=>c.phase==='one'&&i===ti&&j===tj;
     let h='<div class="pad sub">'+a.name+' ('+a.what+', '+a.org+', residues '+a.from+'–'+a.to+') down the side · '+b.name+' ('+b.what+', '+b.org+', residues '+b.from+'–'+b.to+') across the top</div>'+
       '<div class="cityscroll">'+gridSvg({n,m,rows:a.seq,cols:b.seq,prot:true,diag:true,P:30,r:7,maxw:700,minw:560,label:'Two protein fragments as a city',
-      street:(i,j,d)=>{const same=d==='D'&&a.seq[i-1]===b.seq[j-1];return {cls:same?'gold':d==='D'?'faint':'',w:d==='D'?(same?4:1.5):3,z:same?1:0,arrow:!!c.back&&g.arrow[i][j]===d};},
+      street:(i,j,d)=>{const same=d==='D'&&a.seq[i-1]===b.seq[j-1];return {cls:same?'gold':d==='D'?'faint':'',w:d==='D'?(same?4:1.5):3,z:same?1:0,arrow:c.phase==='back'&&g.arrow[i][j]===d};},
       overlays:c.back?[{corners:c.back,cls:'route',w:5}]:[],
-      corner:(i,j)=>({cls:(g&&g.s[i][j]!==undefined?'done':'')+(c.pos&&c.pos[0]===i&&c.pos[1]===j?' here':'')+(c.miss&&c.miss[0]===i&&c.miss[1]===j?' shake':''),fill:g?heat(g.s[i][j]):'',
-        hit:c.phase==='back'&&!c.done?'Row '+i+', column '+j+' · best arrival '+g.s[i][j]:undefined})})+'</div>';
+      corner:(i,j)=>({cls:(marked(i,j)?'ready':g.s[i][j]!==undefined?'done':'')+(c.pos&&c.pos[0]===i&&c.pos[1]===j?' here':'')+(c.miss&&c.miss[0]===i&&c.miss[1]===j?' shake':''),
+        fill:marked(i,j)?'':heat(g.s[i][j]),num:marked(i,j)?'?':undefined,
+        hit:c.phase==='back'&&!c.done?'Row '+i+', column '+j+' · best arrival '+num(g.s[i][j]):undefined}),
+      tourist:c.pos||null})+'</div>';
+    if(c.phase==='one'){
+      const rows=a.seq.slice(0,3),cols=b.seq.slice(0,3),M=MATRICES.BLOSUM62;
+      h+='<div class="pad">Part of BLOSUM62 (a pair of identical amino acids scores high; dissimilar ones score below zero):<table class="mat"><tr><th></th>'+[...cols].map(x=>'<th>'+x+'</th>').join('')+'</tr>'+
+        [...rows].map(r=>'<tr><th>'+r+'</th>'+[...cols].map(x=>'<td>'+num(M[r+x])+'</td>').join('')+'</tr>').join('')+'</table>'+
+        'Every south or east street costs 5.</div>'+
+        '<div class="entry"><label for="entry">Best arrival at the marked corner ('+a.seq[0]+' and '+b.seq[0]+' taken together, or one of them thrown away):</label><input id="entry" autocomplete="off" value="'+esc(c.typed||'')+'"><button class="primary" data-act="type">Pencil it</button></div>';
+    }
     if(c.done){
       const near=(x,y)=>MATRICES.BLOSUM62[x+y]>0;
-      h+=alignTiles(c.r.top,c.r.bottom,{label:'The alignment · score '+c.r.best+' · green: the same amino acid · plain: a similar one (positive score) · orange: a dissimilar one',near});
+      h+=alignTiles(c.r.top,c.r.bottom,{label:'The alignment · score '+num(c.r.best)+' · green: the same amino acid · plain: a similar one (positive score) · orange: a dissimilar one',near});
     }
     return h;
   },
   act(c,type,ca,cb){
     if(c.done)return;
+    const a=PROTEINS.a.seq,b=PROTEINS.b.seq,[ti,tj]=CODE_CORNER;
+    if(type==='type'&&c.phase==='one'){
+      const raw=String(ca!==undefined?ca:$('#entry').value).trim().replace('−','-');c.typed=raw;const val=Number(raw);
+      if(!raw||!Number.isInteger(val)){say('Type a whole number, such as −3.','warn');render();$('#entry').focus();return;}
+      const best=penBest(c.g,ti,tj);c.tries++;log('code_corner',{typed:val,best});
+      if(val!==best){c.wrong++;stage(arrivalHint(c.g,ti,tj,val,c.wrong),'warn');render();$('#entry').focus();$('#entry').select?.();return;}
+      const ar=penArrivals(c.g,ti,tj),d=['D','S','E'].find(d=>ar.some(x=>x.d===d&&x.val===best));penSet(c.g,ti,tj,d);c.stage=null;c.phase='ready';
+      say('Right: '+num(best)+'. The pencil can do the rest the same way, looking up each diagonal in BLOSUM62.','good');render();return;
+    }
     if(type==='fill'&&c.phase==='ready'){
-      const a=PROTEINS.a.seq,b=PROTEINS.b.seq,sc={matrix:'BLOSUM62',indel:-5};
-      c.g=penInit(a.length,b.length,(i,j,d)=>d==='D'?pairScore(sc,a[i-1],b[j-1]):sc.indel);
       const g=c.g,cl={n:g.n,m:g.m,weight:g.weight,s:g.s.map(r=>r.slice()),arrow:g.arrow.map(r=>r.slice())},todo=penAuto(cl);
       c.phase='fill';log('fill');
-      show(a.length+2,90,k=>{todo.filter(([i])=>i===k-1||(k>1&&i<k)).forEach(([i,j])=>{g.s[i][j]=cl.s[i][j];g.arrow[i][j]=cl.arrow[i][j];});},()=>{g.s=cl.s;g.arrow=cl.arrow;c.phase='back';c.pos=[a.length,b.length];c.back=[c.pos];
-        say('The far corner says '+g.s[a.length][b.length]+'. Click the corner the arrow into the outlined corner comes from.');render();});
+      show(a.length+2,90,k=>{todo.filter(([i])=>i<k).forEach(([i,j])=>{g.s[i][j]=cl.s[i][j];g.arrow[i][j]=cl.arrow[i][j];});},()=>{g.s=cl.s;g.arrow=cl.arrow;c.phase='back';c.pos=[a.length,b.length];c.back=[c.pos];
+        say('The far corner says '+num(g.s[a.length][b.length])+'. Find the arrow pointing into the outlined corner. Click the corner at its tail.');render();});
+      render();return;
+    }
+    if(type==='walkrest'&&c.phase==='back'&&c.back.length>BACK_BY_HAND){
+      const rest=penRoute(c.g,c.pos).reverse().slice(1);   /* penRoute runs start to end: walk it end to start */log('back_auto',{left:rest.length});c.phase='walk';
+      let walked=0;const step=()=>{c.pos=rest[walked];c.back.push(rest[walked]);walked++;};
+      show(rest.length+1,120,step,()=>{while(walked<rest.length)step();
+        c.phase='back';codeFinish(c);});
       render();return;
     }
     if(type==='corner'&&c.phase==='back'){
       const i=+ca,j=+cb,[pi,pj]=c.pos,want=fromOf(pi,pj,c.g.arrow[pi][pj]);
       if(i===pi&&j===pj)return;
-      if(i!==want[0]||j!==want[1]){c.miss=[i,j];log('back_reject',{at:[i,j]});stage('The arrow into the outlined corner does not come from there.','warn');render();c.miss=null;return;}
+      if(i!==want[0]||j!==want[1]){c.miss=[i,j];log('back_reject',{at:[i,j]});stage('No arrow into the outlined corner comes from there.','warn');render();c.miss=null;return;}
       c.pos=[i,j];c.back.push([i,j]);c.stage=null;log('back',{to:[i,j]});
-      if(i||j){say(plural(c.back.length-1,'step')+' back.');render();return;}
-      const same=[...c.r.top].filter((x,k)=>x===c.r.bottom[k]).length;
-      const missing=sweepTerms().filter(id=>!S.badges.includes(id));
-      say(same+' of '+c.r.top.length+' columns hold the same amino acid.','good');
-      complete(missing,[{html:()=>'The two fragments line up with one indel at each end, and '+same+' of their '+c.r.top.length+' columns hold the same amino acid. These are segments of two adenylation domains in nonribosomal peptide synthetases, the domains that select amino acid substrates for antibiotic biosynthesis; both choose phenylalanine. Lining up domains like these, position by position, is how the “code” that predicts a domain’s choice from its sequence was worked out.',src:['stach']},
-        {html:'Sequences: UniProt '+PROTEINS.a.acc+' ('+PROTEINS.a.name+') and UniProt '+PROTEINS.b.acc+' ('+PROTEINS.b.name+'), residue numbers as in UniProt.'+(missing.length?' Terms not named in earlier levels: '+missing.map(x=>term(x)).join(', ')+'.':'')}],{same});
+      if(i||j){say(plural(c.back.length-1,'step')+' back.'+(c.back.length-1===BACK_BY_HAND?' The pencil can walk the rest the same way.':''));render();return;}
+      codeFinish(c);
     }
   },
-  skip:c=>c.phase==='ready'?{label:'Pencil the city',act:['fill']}:null
+  skip:c=>c.phase==='ready'?{label:'Pencil the rest of the city',act:['fill']}:c.phase==='back'&&c.back.length>BACK_BY_HAND?{label:'Let the pencil walk the rest',act:['walkrest']}:null
 };
 
 /* ---------- the workbench (?bench=1): paste two strings, run the pencil and the greedy card player ---------- */

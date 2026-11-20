@@ -33,7 +33,8 @@ function walkBack(ui){
 }
 /* Play every level the way a student would, through the same dispatcher the clicks use. */
 const play={
-  1(ui){ui.api.act('gap',0,0);ui.api.act('gap',0,0);assert.equal(st(ui).a[0],st(ui).inst.v[0]);ui.api.act('lock');},
+  1(ui){ui.api.act('gap',0,0);ui.api.act('gap',0,0);assert.equal(st(ui).a[0],st(ui).inst.v[0]);ui.api.act('lock');
+    if(!st(ui).done){assert.match(st(ui).msg.text,/can be lined up/);assert.match(ui.el('#skip').textContent,/Lock in anyway/);ui.api.act('lock');}},
   2(ui){
     const c=st(ui),{v,w}=c.inst,g=ui.E.greedy(v,w);
     for(const d of g.moves){if(st(ui).g.moves.length>=g.moves.length)break;ui.api.act('move',d);}
@@ -89,7 +90,10 @@ const play={
     ui.api.act('corner',0,0);ui.api.act('corner',p.v.length,p.w.length);assert.equal(c.done,false);
     ui.api.act('corner',...p.overlap.start);ui.api.act('corner',...p.overlap.end);
   },
-  11(ui){ui.api.act('skip');assert.equal(st(ui).phase,'back');assert.equal(ui.el('#skip').hidden,true);ui.api.act('corner',0,0);assert.equal(st(ui).back.length,1);walkBack(ui);assert.equal(st(ui).back.length,22);}
+  11(ui){const c=st(ui),b=Math.max(...arrivals(c.g,1,1).map(x=>x.val));assert.equal(c.phase,'one');
+    ui.api.act('type',String(b+1));assert.equal(c.phase,'one');assert.equal(c.g.s[1][1],undefined);
+    ui.api.act('type',String(b));assert.equal(c.phase,'ready');assert.equal(c.g.s[1][1],b);
+    ui.api.act('skip');assert.equal(st(ui).phase,'back');assert.equal(ui.el('#skip').hidden,true);ui.api.act('corner',0,0);assert.equal(st(ui).back.length,1);walkBack(ui);assert.equal(st(ui).back.length,22);}
 };
 
 test('a fresh save plays through every level and earns every term, and the move log records each completion',()=>{
@@ -156,4 +160,26 @@ test('a taxi walk can change its starting corner without restarting',()=>{
     ui.api.act('corner',c.inst.v.length,c.inst.w.length);assert.equal(c.on,null);
     play[level](ui);assert(c.done);
   }
+});
+
+test('level 1: the first lock below par keeps the level open; the second finishes it',()=>{
+  const ui=boot(null,'?debug=1&seed=LOCK&level=1'),c=st(ui);
+  assert(c.inst.par>0);ui.api.act('lock');
+  if(c.done)return;   /* the strands already line up at par */
+  assert.equal(c.done,false);assert.equal(st(ui).msg.kind,'warn');ui.api.act('lock');assert(c.done);
+});
+test('levels 8 and 11: the first wrong number shows prices, the second shows the sums',()=>{
+  for(const [level,at] of [[8,[2,2]],[11,[1,1]]]){
+    const ui=boot(null,'?debug=1&seed=HINT&level='+level),c=st(ui),b=Math.max(...arrivals(c.g,...at).map(x=>x.val));
+    ui.api.act('type',String(b+7));assert.doesNotMatch(c.stage.text,/ = /);assert.match(c.stage.text,/costs/);
+    ui.api.act('type',String(b+8));assert.match(c.stage.text,/ = /);
+    ui.api.act('type','−'+String(-b).replace('-',''));
+  }
+});
+test('level 11: after five steps back by hand the pencil can walk the rest',()=>{
+  const ui=boot(null,'?debug=1&seed=WALK&level=11'),c=st(ui),b=Math.max(...arrivals(c.g,1,1).map(x=>x.val));
+  ui.api.act('type',String(b));ui.api.act('skip');assert.equal(c.phase,'back');
+  for(let k=0;k<5;k++){assert.equal(ui.el('#skip').hidden,true);const [i,j]=c.pos,d=c.g.arrow[i][j],f=d==='S'?[i-1,j]:d==='E'?[i,j-1]:[i-1,j-1];ui.api.act('corner',...f);}
+  assert.match(ui.el('#skip').textContent,/walk the rest/);ui.api.act('skip');
+  assert(c.done);assert.equal(c.back.length,22);assert.deepEqual(Array.from(c.back[21]),[0,0]);
 });
