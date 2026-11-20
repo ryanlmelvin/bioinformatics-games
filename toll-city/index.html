@@ -218,6 +218,9 @@ footer input{font:inherit;width:9em;padding:5px 8px;border:1px solid var(--line)
 .savebar .savenote:empty{display:none}
 .linknote[hidden]{display:none}
 @media print{.savebar,.linknote{display:none}}
+.goal{margin:4px 0 8px;padding:6px 10px;border-left:4px solid var(--accent);max-width:70ch}
+.goal b{margin-right:4px}
+.goal:empty{display:none}
 </style>
 <link rel="icon" href="../book/favicon.svg" type="image/svg+xml">
 <link rel="stylesheet" href="../book/book.css">
@@ -274,6 +277,7 @@ footer input{font:inherit;width:9em;padding:5px 8px;border:1px solid var(--line)
   <div class="badges" id="badges"></div>
 
   <h2 id="title" tabindex="-1"></h2>
+  <p id="goal" class="goal"></p>
   <p id="brief"></p>
   <div class="rule" id="rule"></div>
 
@@ -583,27 +587,27 @@ const letters=s=>[...s].map(ch=>'<span class="b'+ch+'">'+ch+'</span>').join('');
 const RM=()=>{try{return matchMedia('(prefers-reduced-motion: reduce)').matches;}catch(e){return true;}};
 
 const LEVELS=[
-  {id:1,mode:'strands',inst:'decks',title:'Two strands',
+  {id:1,mode:'strands',inst:'decks',goal:'Add gaps to line up as many matching nucleotides as you can, then lock in your alignment.',title:'Two strands',
    brief:'These synthetic DNA sequences represent homologous regions in two species. Insertions and deletions have shifted corresponding nucleotides into different columns. Add gaps to line up as many matches as you can, then lock in your alignment.'},
-  {id:2,mode:'decks',inst:'decks',title:'Two decks',
+  {id:2,mode:'decks',inst:'decks',goal:'Play the two decks until you reach par, the highest score possible.',title:'Two decks',
    brief:'The two sequences are now decks of cards. On each turn, take both outlined cards or discard one. Taking two matching cards earns a point. How many points can you score before a deck runs out?'},
-  {id:3,mode:'table',inst:'decks',title:'Two games, one table',
+  {id:3,mode:'table',inst:'decks',goal:'Work out what the two part-played games have in common, then click the dot where tables A and B both stand.',title:'Two games, one table',
    brief:'Two players are part-way through the same deal. They played differently, but the same cards are left on the table.'},
-  {id:4,mode:'wall',inst:'twelve',title:'Too many games',
+  {id:4,mode:'wall',inst:'twelve',goal:'Start the bot and watch how many games it has to play. Stop it once you can see it will never finish.',title:'Too many games',
    brief:'Each deck has twelve cards. A bot will play every possible game in turn and keep the best score. Start it. You can also play yourself.'},
-  {id:5,mode:'tourist',inst:'city',title:'The tourist',
+  {id:5,mode:'tourist',inst:'city',goal:'Find the route from the top-left corner to the bottom-right corner that passes the most sights.',title:'The tourist',
    brief:'Help a tourist walk from the top-left corner of the city to the bottom-right. You can go east or south. The number on each street tells you how many sights you’ll see there. Which route passes the most sights?'},
-  {id:6,mode:'follow',inst:'city',title:'Follow your arrows',
+  {id:6,mode:'follow',inst:'city',goal:'Retrace the tourist’s best route. Starting at the far corner, click the corner at the tail of each arrow until you are back at the start.',title:'Follow your arrows',
    brief:'The tourist is at the far corner of the city from level 5. Each arrow points into a corner from the street that gave its best score. Follow the arrows backward to retrace the route.'},
-  {id:7,mode:'deckcity',inst:'decks',title:'The decks are a city',
+  {id:7,mode:'deckcity',inst:'decks',goal:'Fill in row 1 of the city by choosing the best incoming street at each corner. Then follow the arrows back from the far corner.',title:'The decks are a city',
    brief:'Your two decks from level 2, laid along the edges of a city: deck 1 down the left side, deck 2 across the top. A step south throws away a card from deck 1, a step east throws away a card from deck 2, and a step south-east takes both. Where the two cards match, that diagonal is gold and pays 1 point.'},
-  {id:8,mode:'tolls',inst:'decks',title:'Tolls',
+  {id:8,mode:'tolls',inst:'decks',goal:'Work out the number at the marked corner. Then follow the arrows back from the far corner to find the best route under tolls.',title:'Tolls',
    brief:'The same city, but now the streets charge. A gold diagonal (two matching cards) still pays +1. A diagonal between two different cards costs 1, and every south or east street costs 2.'},
-  {id:9,mode:'taxi',inst:'local',title:'Free taxi',
+  {id:9,mode:'taxi',inst:'local',goal:'Choose where the free taxi drops the tourist off and picks them up again, to get the highest score.',title:'Free taxi',
    brief:'These longer DNA sequences use the same tolls. Aligning them end to end scores below zero. A free taxi lets the tourist walk just part of the route. Where should the walk start and end to earn the highest score?'},
-  {id:10,mode:'overlap',inst:'overlap',title:'Overlap',
+  {id:10,mode:'overlap',inst:'overlap',goal:'Use the free taxi rides to find the best overlap between the two reads.',title:'Overlap',
    brief:'Two sequencing reads, the kind you assembled in Bridge Walker. The end of read 1 should be the start of read 2, but one nucleotide was miscalled during sequencing. Here the taxi is free only down the left edge (skipping the start of read 1) and off the bottom edge (skipping the rest of read 2).'},
-  {id:11,mode:'code',inst:null,title:'The code breakers',
+  {id:11,mode:'code',inst:null,goal:'Pencil in the city with a real scoring table, then follow the arrows back from the far corner.',title:'The code breakers',
    brief:'Two real enzymes from two species of soil bacteria. Each one builds an antibiotic, and each picks out the same amino acid, phenylalanine, to build it from. Pencil their city with a real scoring table and follow the arrows.'}
 ];
 
@@ -836,6 +840,7 @@ function render(){
   const M=MODES[cur.mode];
   renderHeader();
   $('#title').textContent='Level '+cur.L.id+': '+cur.L.title;
+  $('#goal').innerHTML='<b>Goal:</b>'+esc(cur.L.goal);
   $('#brief').innerHTML=M.brief?M.brief(cur):cur.L.brief;
   $('#rule').textContent=M.rule(cur);
   $('#view').innerHTML=M.view(cur);

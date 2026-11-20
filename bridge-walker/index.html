@@ -228,6 +228,9 @@ footer input{font:inherit;width:9em;padding:5px 8px;border:1px solid var(--line)
 /* ambient life in the scenery; never needed to play */
 #decor .boat{transform:translate(120px,0)}
 @media (prefers-reduced-motion:no-preference){#decor .boat{animation:sail 90s linear infinite}@keyframes sail{from{transform:translate(-40px,0)}to{transform:translate(800px,0)}}#decor .reeds use{transform-box:fill-box;transform-origin:50% 100%}#decor .reeds{animation:sway 4.5s ease-in-out infinite alternate;transform-origin:50% 100%;transform-box:fill-box}@keyframes sway{from{transform:skewX(-1.5deg)}to{transform:skewX(1.5deg)}}.wv{animation:swell 5s ease-in-out infinite alternate}.wv2{animation:swell 3.6s ease-in-out -1.5s infinite alternate}@keyframes swell{from{transform:translate(-5px,1px)}to{transform:translate(6px,-2px)}}}
+.goal{margin:4px 0 8px;padding:6px 10px;border-left:4px solid var(--accent);max-width:70ch}
+.goal b{margin-right:4px}
+.goal:empty{display:none}
 </style>
 <link rel="icon" href="../book/favicon.svg" type="image/svg+xml">
 <link rel="stylesheet" href="../book/book.css">
@@ -246,6 +249,7 @@ footer input{font:inherit;width:9em;padding:5px 8px;border:1px solid var(--line)
   <div class="badges" id="badges"></div>
 
   <h2 id="title" tabindex="-1"></h2>
+  <p id="goal" class="goal"></p>
   <p id="brief"></p>
   <div class="rule" id="rule"></div>
 
@@ -582,29 +586,29 @@ const numWord=n=>['zero','one','two','three','four','five','six','seven','eight'
 $('#ant').innerHTML=$('#a-ant').innerHTML;
 
 const LEVELS=[
-  {id:1,mode:'cards',k:3,n:8,minB:1,maxB:2,title:'Shredded',
+  {id:1,mode:'cards',k:3,n:8,minB:1,maxB:2,goal:'Put all eight reads in a row so that each read starts with the last two nucleotides of the one before it.',title:'Shredded',
    brief:'Rebuild a DNA sequence from these shuffled three-nucleotide reads. Choose a first read, then add one that starts with the last two nucleotides of the previous read. Use each read once.'},
-  {id:2,mode:'ham',share:1,intro:'cards',title:'Put it on a map',
+  {id:2,mode:'ham',share:1,intro:'cards',goal:'Click Put the reads on a map, then walk Mira across the bridges so she visits every island exactly once.',title:'Put it on a map',
    brief:'The same eight reads. Each read becomes an island, with a one-way bridge from one island to another wherever the end of the first read overlaps the start of the second. Islands sink when '+ANT+' the ant leaves them.'},
-  {id:3,mode:'ham',k:3,n:12,minB:2,title:'Twelve nodes',
+  {id:3,mode:'ham',k:3,n:12,minB:2,goal:'Walk Mira across the bridges so she visits all twelve nodes exactly once.',title:'Twelve nodes',
    brief:'Each of the twelve nodes represents a read. Look ahead at forks so '+ANT+' can visit every node once.'},
-  {id:4,mode:'ham',k:3,n:24,minB:6,title:'Two dozen',
+  {id:4,mode:'ham',k:3,n:24,minB:6,goal:'Walk Mira so she visits all twenty-four nodes exactly once. After a few tries, you can ask for a different map.',title:'Two dozen',
    brief:'Twenty-four reads. A real sequencing run produces millions.'},
-  {id:5,mode:'konig',title:'Königsberg, 1736',
+  {id:5,mode:'konig',goal:'Find a walk that crosses each of the seven bridges exactly once, or decide that no such walk exists.',title:'Königsberg, 1736',
    brief:'This is a different city with a different rule. The four pieces of land are the nodes and the seven bridges are the edges. Here the land stays put and each bridge falls once '+ANT+' has crossed it. The townspeople want a walk that crosses every bridge exactly once.'},
-  {id:6,mode:'eul',share:1,intro:'morph',title:'Redraw the map',
+  {id:6,mode:'eul',share:1,intro:'morph',goal:'Click Turn every node into an edge, then walk Mira across every edge exactly once.',title:'Redraw the map',
    brief:'Your first eight reads again. Apply Königsberg’s rule and put each read on an edge instead of a node.'},
-  {id:7,mode:'eul',k:3,n:16,minB:3,title:'Archipelago',
+  {id:7,mode:'eul',k:3,n:16,minB:3,goal:'Choose where Mira starts and walk her across all sixteen edges, each exactly once.',title:'Archipelago',
    brief:'Sixteen reads, sixteen one-way edges. Choose where '+ANT+' starts. If unused edges remain when she gets stuck, look for a place to begin a detour.'},
-  {id:8,mode:'balance',title:'Round trip',
+  {id:8,mode:'balance',goal:'Add the fewest new edges so that every node has as many edges arriving as leaving.',title:'Round trip',
    brief:'No DNA this time: a small graph with numbered nodes. '+ANT+' wants a round trip that crosses every edge once and ends where it began. For that, every node needs as many edges arriving as leaving. Add the fewest new edges that achieve this.'},
-  {id:9,mode:'eul',k:4,n:10,minB:2,build:true,title:'Draw the map yourself',
+  {id:9,mode:'eul',k:4,n:10,minB:2,build:true,goal:'Draw one edge for each of the ten reads, then walk Mira across every edge exactly once.',title:'Draw the map yourself',
    brief:'Ten reads, four nucleotides each. Draw the edge map yourself. Each read is one edge, from the node named by its first three nucleotides to the node named by its last three. Pick a read, then click where its edge starts and where it ends: an existing node, or open water to raise a new one.'},
-  {id:10,mode:'eul',k:4,n:12,minB:2,nomap:true,title:'No map',
+  {id:10,mode:'eul',k:4,n:12,minB:2,nomap:true,goal:'Work out which node Mira must start from, set her down there, and walk her across every edge exactly once.',title:'No map',
    brief:'Twelve reads and no map. Before anything is drawn, decide where '+ANT+' has to start. Click a candidate node to see which reads start with it and which end with it.'},
-  {id:11,mode:'eul',share:4,intro:'morph',noUndo:true,title:'Two dozen, again',
+  {id:11,mode:'eul',share:4,intro:'morph',noUndo:true,goal:'Walk Mira across all twenty-four edges, each exactly once, without undoing a move.',title:'Two dozen, again',
    brief:'These are the twenty-four reads from level 4. This time you have to use every edge without undoing a move. If you get stranded, you can still add a detour.'},
-  {id:12,mode:'eul',pairs:true,title:'Which one is real?',
+  {id:12,mode:'eul',pairs:true,goal:'Walk Mira across every edge exactly once, then use the read-pairs to decide which of the two sequences is real.',title:'Which one is real?',
    brief:'Twenty reads, four nucleotides each. Cross every edge once. Does finding a walk tell you which DNA sequence was really there?'}
 ];
 
@@ -1730,6 +1734,7 @@ function renderControls(){
 function render(){
   renderHeader();
   $('#title').textContent='Level '+cur.L.id+': '+cur.L.title;
+  $('#goal').innerHTML='<b>Goal:</b>'+esc(cur.L.goal);
   $('#brief').textContent=cur.L.brief;
   $('#rule').textContent=ruleText();
   renderScene();renderAsm();renderPairWork();

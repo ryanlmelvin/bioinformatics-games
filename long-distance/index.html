@@ -144,6 +144,9 @@ i.riv{display:inline-block;width:9px;height:9px;border-radius:50%;background:rad
 .stage button.primary{background:#1f6f54;color:#fff;border-color:#1f6f54}
 .slip .chip{margin:0 2px}
 
+.goal{margin:4px 0 8px;padding:6px 10px;border-left:4px solid var(--accent);max-width:70ch}
+.goal b{margin-right:4px}
+.goal:empty{display:none}
 </style>
 <link rel="icon" href="../book/favicon.svg" type="image/svg+xml">
 <link rel="stylesheet" href="../book/book.css">
@@ -170,6 +173,7 @@ i.riv{display:inline-block;width:9px;height:9px;border-radius:50%;background:rad
   <div class="badges" id="badges"></div>
 
   <h2 id="title"></h2>
+  <p id="goal" class="goal"></p>
   <p id="brief"></p>
   <div class="rule" id="rule"></div>
 
@@ -400,25 +404,25 @@ const numWord=n=>['zero','one','two','three','four','five','six','seven','eight'
 const fmt=n=>Math.round(n).toLocaleString('en-US');
 
 const LEVELS=[
-  {id:1,title:'Which genes are expressed?',rule:'Click the first nucleotide of the shared sequence',
+  {id:1,goal:'In each lit strand, click the first nucleotide of the four-nucleotide sequence they share. Then decide whether each of the two unmeasured genes is on or off.',title:'Which genes are expressed?',rule:'Click the first nucleotide of the shared sequence',
    brief:'Each strand is the DNA upstream of one gene, with the gene at its right end. A lit lamp indicates measured gene expression. The three lit strands share one four-nucleotide sequence that the unlit strands lack. Click its first nucleotide in each lit strand.'},
-  {id:2,title:'Pass it along',rule:'A jack hears only the jacks beside it',
+  {id:2,goal:'Run rounds to see whether the signal from GATA reaches the gene, first on a short strand and then on strand A. When it cannot, regroup the strand into one plate per four nucleotides.',title:'Pass it along',rule:'A jack hears only the jacks beside it',
    brief:'Each nucleotide has a jack connected to its neighbors. In each round the signal from GATA travels one jack farther in both directions. Run the rounds and see whether the signal reaches the gene.'},
-  {id:3,title:'A direct line',rule:'One slip for every board',
+  {id:3,goal:'On each board marked “on”, select the plate the active genes share, until every lamp matches the measured result.',title:'A direct line',rule:'One slip for every board',
    brief:'Each jack now has a plate showing four nucleotides. The gene’s jack can connect directly to any plate. On each board labeled “on,” select the plate shared by the active genes.'},
-  {id:4,title:'What comes down the cord',rule:'Cords share the gene’s current equally',
+  {id:4,goal:'Choose which plates answer the query and what each one sends, until every lamp matches the measured result.',title:'What comes down the cord',rule:'Cords share the gene’s current equally',
    brief:'Two boards contain GATA even though their genes are off. Look for another plate those boards share. Select a plate to change whether it answers the query and what value it sends. Match each lamp to the measured result.'},
-  {id:5,title:'One unit of current',rule:'Each agreeing nucleotide doubles a jack’s pull',
+  {id:5,goal:'Work out the gene’s reading on each board: find each jack’s pull, add the pulls, then divide.',title:'One unit of current',rule:'Each agreeing nucleotide doubles a jack’s pull',
    brief:'In this model, a near match such as GATT responds more weakly than an exact GATA match. Every jack now receives a share of the gene’s one unit of current. Closer matches receive larger shares. A jack’s pull starts at 1 and doubles for each nucleotide of its key that agrees with the query. Work out the gene’s reading on board A.'},
-  {id:6,title:'Shuffled',rule:'The same query on every board',
+  {id:6,goal:'Choose a query and test it on all five boards, until every lamp matches the measured result.',title:'Shuffled',rule:'The same query on every board',
    brief:'The gene is on in board A and off in board B. Choose a plate to use as the query and test it on all five boards. Compare its predictions for A and B.'},
-  {id:7,title:'Two questions',rule:'One query asks one question',
+  {id:7,goal:'Set up queries that predict all five boards, until every lamp matches the measured result.',title:'Two questions',rule:'One query asks one question',
    brief:'These genes are on only when a TATA sits one place from the gene and a GATA sits anywhere on the board. Predict all five boards. Click a query to work on it, then click a plate to put its key in.'},
-  {id:8,title:'Two rounds',rule:'Round 2 reads what round 1 wrote',
+  {id:8,goal:'Fill in two rounds that predict all five boards, until every lamp matches the measured result.',title:'Two rounds',rule:'Round 2 reads what round 1 wrote',
    brief:'In this model, GATA activates the gene only when CAGC is beside it. Boards A and C hold the same ten plates. Set up two rounds that predict all five boards. Click a blank in a round, then click a plate to fill it.'},
-  {id:9,title:'Nobody measured these',rule:'The covered plate is the answer key',
+  {id:9,goal:'On each board, select the jack whose plate is under the cover, or say that the board gives too little information.',title:'Nobody measured these',rule:'The covered plate is the answer key',
    brief:'One plate on each board is covered. Look for a pattern in the surrounding plates. Select the jack whose plate you predict is under the cover, or indicate that the board gives too little information.'},
-  {id:10,title:'One nucleotide',rule:'Change one nucleotide · run the exchange again',
+  {id:10,goal:'Test the patient’s three changes one at a time and find the one that turns the prediction off. Then test every possible change.',title:'One nucleotide',rule:'Change one nucleotide · run the exchange again',
    brief:'The model predicts that the reference gene is on. It uses the two rounds from level 8 and the TATA query from level 7. The patient’s gene is off, and the sequence differs from the reference at three positions. Test the variants one at a time to find which changes the prediction.'}
 ];
 
@@ -640,6 +644,7 @@ function render(){
   const ae=document.activeElement,fid=ae&&ae.id,pos=ae&&ae.selectionStart;
   renderHeader();
   $('#title').textContent='Level '+cur.L.id+': '+cur.L.title;
+  $('#goal').innerHTML='<b>Goal:</b>'+esc(cur.L.goal);
   $('#brief').innerHTML=LV[cur.id].brief?LV[cur.id].brief():esc(cur.L.brief);
   $('#rule').textContent=LV[cur.id].rule?LV[cur.id].rule():cur.L.rule;
   $('#stage').innerHTML=LV[cur.id].view();

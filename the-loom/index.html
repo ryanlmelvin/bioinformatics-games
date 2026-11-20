@@ -177,6 +177,9 @@ input.ok{border-color:#2e7d4f!important;background:#cfeedd!important}
 .savebar .savenote:empty{display:none}
 .linknote[hidden]{display:none}
 @media print{.savebar,.linknote{display:none}}
+.goal{margin:4px 0 8px;padding:6px 10px;border-left:4px solid var(--accent);max-width:70ch}
+.goal b{margin-right:4px}
+.goal:empty{display:none}
 </style>
 <link rel="icon" href="../book/favicon.svg" type="image/svg+xml">
 <link rel="stylesheet" href="../book/book.css">
@@ -213,6 +216,7 @@ input.ok{border-color:#2e7d4f!important;background:#cfeedd!important}
   <div class="badges" id="badges"></div>
 
   <h2 id="title"></h2>
+  <p id="goal" class="goal"></p>
   <p id="brief"></p>
   <div class="rule" id="rule"></div>
 
@@ -513,27 +517,27 @@ const fmt=n=>n>=1e15?sci(n):Math.round(n).toLocaleString('en-US');
 const reduced=()=>{try{return matchMedia('(prefers-reduced-motion: reduce)').matches;}catch(e){return true;}};
 
 const LEVELS=[
-  {id:1,title:'Where does this read come from?',rule:'Click where each read starts',
+  {id:1,goal:'Find where each read starts in the reference genome, and click that nucleotide.',title:'Where does this read come from?',rule:'Click where each read starts',
    brief:'Sequencing produces short reads from a patient’s DNA. Locate each read in the reference genome: click the nucleotide where it starts.'},
-  {id:2,title:'A sorted list',rule:'Drag the strips into lexicographic order',
+  {id:2,goal:'Sort the suffixes, type where each one starts, then find every suffix that begins with the pattern.',title:'A sorted list',rule:'Drag the strips into lexicographic order',
    brief:'A text can be indexed before it is searched. Take every suffix of the string, from each position to the end, and sort the suffixes lexicographically.'},
-  {id:3,title:'The bill',rule:'The shelf holds one column of symbols',
+  {id:3,goal:'Find a way to store the index that still fits on the shelf for a three-billion-nucleotide genome. Put each option on the shelf and slide the length up.',title:'The bill',rule:'The shelf holds one column of symbols',
    brief:'Your sorted list found a pattern without scanning the text. Now work out what it costs for a genome of three billion nucleotides.'},
-  {id:4,title:'Make the last column',rule:'Sort the strips · read down the right edge',
+  {id:4,goal:'Sort the strips, then type their last letters from top to bottom.',title:'Make the last column',rule:'Sort the strips · read down the right edge',
    brief:'Write the word on a ring, with the $ after its last letter. Cut the ring before each letter in turn and you get one strip per letter. Sort the strips, then read their last letters from top to bottom.'},
-  {id:5,title:'Is it enough?',rule:'Tie each right-beam letter to the same letter on the left',
+  {id:5,goal:'Tie every letter on the right beam to the same letter on the left beam.',title:'Is it enough?',rule:'Tie each right-beam letter to the same letter on the left',
    brief:null},   /* written by LV[5].brief, which names the word’s own repeated letter */
-  {id:6,title:'Unweave',rule:'Threads of the same letter never cross',
+  {id:6,goal:'Rebuild the loom from the right beam alone and read off the word.',title:'Unweave',rule:'Threads of the same letter never cross',
    brief:'Only the right beam survives. Rebuild everything else from it, and read off the word.'},
-  {id:7,title:'Two fingers',rule:'Read the pattern from its last letter',
+  {id:7,goal:'Count how many times the pattern occurs, using only the two beams. Move the two fingers one letter at a time, from the pattern’s last letter to its first.',title:'Two fingers',rule:'Read the pattern from its last letter',
    brief:'Count how many times the pattern occurs in the word, using only the two beams and their threads. Two fingers mark a band of rows, starting with the whole loom. Read the pattern from right to left. For each letter, select every matching letter on the right beam inside the band. Follow those threads and mark the top and bottom rows they reach.'},
-  {id:8,title:'Where, exactly?',rule:'Follow threads to a tag · add the steps',
+  {id:8,goal:'Find where each of five patterns starts in the word. Follow threads until you reach a row with a tag, then add the steps.',title:'Where, exactly?',rule:'Follow threads to a tag · add the steps',
    brief:'Backward search counts the matches but does not say where they are. A tag on every row giving the start of its strip would cost as much as the full list in level 3, so only the rows whose strips start at 0, 4, 8 and 12 carry a tag.'},
-  {id:9,title:'Tally boards',rule:'Count from the nearest board',
+  {id:9,goal:'Count a nucleotide above a row by starting from the nearest tally board, then mark the band of rows that begin with the pattern.',title:'Tally boards',rule:'Count from the nearest board',
    brief:'Each finger move needs the count of a nucleotide symbol above a row on the right beam. For a genome, that can require scanning millions of symbols. Here are 32 rows of a DNA loom, right beam only.'},
-  {id:10,title:'One sequencing error',rule:'The loom only finds exact matches',
+  {id:10,goal:'Find where in the reference the read came from, even though one of its nucleotides was miscalled.',title:'One sequencing error',rule:'The loom only finds exact matches',
    brief:'Reads can contain sequencing errors. This read came from the reference sequence below, but one nucleotide was miscalled.'},
-  {id:11,title:'The patient',rule:'Look down each column',
+  {id:11,goal:'Find the column where the reads consistently differ from the reference, and select it in the reference row.',title:'The patient',rule:'Look down each column',
    brief:'Eight reads map to the same region of a reference genome with at most one mismatch per read. Compare the reads in each column. Which column shows consistent evidence of a difference? Select it in the reference row.'}
 ];
 
@@ -805,6 +809,7 @@ function render(){
   const ae=document.activeElement,fid=ae&&ae.id,pos=ae&&ae.selectionStart;
   renderHeader();
   $('#title').textContent='Level '+cur.L.id+': '+cur.L.title;
+  $('#goal').innerHTML='<b>Goal:</b>'+esc(cur.L.goal);
   $('#brief').innerHTML=LV[cur.id].brief?LV[cur.id].brief():esc(cur.L.brief);
   $('#rule').textContent=LV[cur.id].rule?LV[cur.id].rule():cur.L.rule;
   $('#stage').innerHTML=LV[cur.id].view();

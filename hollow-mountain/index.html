@@ -195,6 +195,9 @@ footer input{font:inherit;width:9em;padding:5px 8px;border:1px solid var(--line)
 @media print{.savebar,.linknote{display:none}}
 /* ambient life in the scenery; never needed to play */
 @media (prefers-reduced-motion:no-preference){.star{animation:twinkle 3.4s ease-in-out infinite}.star:nth-of-type(3n){animation-delay:-1.2s}.star:nth-of-type(4n+1){animation-duration:4.6s;animation-delay:-2.3s}.star:nth-of-type(5n+2){animation-duration:2.4s}@keyframes twinkle{50%{opacity:.25}}}
+.goal{margin:4px 0 8px;padding:6px 10px;border-left:4px solid var(--accent);max-width:70ch}
+.goal b{margin-right:4px}
+.goal:empty{display:none}
 </style>
 <link rel="icon" href="../book/favicon.svg" type="image/svg+xml">
 <link rel="stylesheet" href="../book/book.css">
@@ -213,6 +216,7 @@ footer input{font:inherit;width:9em;padding:5px 8px;border:1px solid var(--line)
   <div class="badges" id="badges"></div>
 
   <h2 id="title" tabindex="-1"></h2>
+  <p id="goal" class="goal"></p>
   <p id="brief"></p>
   <div class="rule" id="rule"></div>
 
@@ -564,27 +568,27 @@ const LET='ABCDEF';
 const reduced=()=>{try{return matchMedia('(prefers-reduced-motion: reduce)').matches;}catch(e){return true;}};
 
 const LEVELS=[
-  {id:1,mode:'count',title:'Which samples are closest?',
+  {id:1,mode:'count',goal:'Count how many nucleotides differ between pairs of samples, then pick the pairing of the four patients that puts the closest samples together.',title:'Which samples are closest?',
    brief:'Four patients are infected with the same virus, and a short genomic region from each viral sample has been sequenced. Mutations accumulate during replication, so recently diverged viral sequences generally differ at fewer nucleotide positions.'},
-  {id:2,mode:'lit',title:'The mountain, lights on',
+  {id:2,mode:'lit',goal:'Stretch the rope between every pair of entrances to fill in the chart, then count the entrances, junctions and tunnels.',title:'The mountain, lights on',
    brief:'With the lamps lit, you can see the only path between any two entrances. Choose two entrances to stretch a rope along that path and measure its length.'},
-  {id:3,mode:'y',title:'Lights out',
+  {id:3,mode:'y',goal:'Work out the length of each of the three tunnels from the rope readings, type them in, and walk the map to check it.',title:'Lights out',
    brief:'The lamps are out, and you have only the rope readings between three entrances. With three entrances and no loops, the inside can only be one internal node with a tunnel to each leaf. Work out the length of each tunnel, type the three lengths, then walk the map to compare it with the ropes.'},
-  {id:4,mode:'grow',n:4,title:'A fourth entrance',
+  {id:4,mode:'grow',n:4,goal:'Work out how long D’s limb is and which tunnel it branches off, then click that tunnel to dig D in.',title:'A fourth entrance',
    brief:'The three-leaf map is already checked. A fourth leaf, D, has been found, and the surveyor has roped it to the other three. D’s limb branches off a tunnel the map already has. Work out the limb’s length and where it branches off, then click that tunnel to dig D in.'},
-  {id:5,mode:'grow',n:5,title:'Rebuild the mountain',
+  {id:5,mode:'grow',n:5,goal:'Dig in C, D and E one at a time until every rope reading agrees with the map.',title:'Rebuild the mountain',
    brief:'This mountain has five leaves, and you have only the chart. Start from the single tunnel between A and B, and dig in C, D and E one at a time with the same move. A limb calculator now does the arithmetic you did by hand.'},
-  {id:6,mode:'lie',title:'A rope that lies',
+  {id:6,mode:'lie',goal:'Dig D into the map the way you did in level 4. If it will not fit, use the rope sums to show why.',title:'A rope that lies',
    brief:'Longer viral sequences from level 1’s four patients: twenty nucleotides each. The surveyor counted the differences and made a chart. Map it the way you did in level 4.'},
-  {id:7,mode:'clock',title:'Dug at a steady rate',
+  {id:7,mode:'clock',goal:'Rebuild the mountain by joining the two closest groups, again and again, until the last two meet in the first chamber.',title:'Dug at a steady rate',
    brief:'According to the miners, the first crew dug outward from one chamber at a steady rate, splitting into two crews at each junction, until every crew broke through to the surface. Every leaf is therefore the same distance from that first chamber. Rebuild this mountain from that account.'},
-  {id:8,mode:'fast',title:'The fast tunnel',
+  {id:8,mode:'fast',goal:'Walk the map that joining the closest pair builds, and see where it fails. Then do the first round of neighbor joining: row totals, the discounted chart, its smallest entry, and the two limbs.',title:'The fast tunnel',
    brief:'A chart from a mountain where one crew dug much faster than the others. Try the level 7 method on it first.'},
-  {id:9,mode:'join5',title:'Join and repeat',
+  {id:9,mode:'join5',goal:'Do the first round of neighbor joining for five leaves: fill in the discounted chart, click its smallest entry, then work out the two limbs and the merged row.',title:'Join and repeat',
    brief:'Perform the first round of neighbor joining for five leaves. The calculator gives you the row totals, and the game completes the later rounds.'},
-  {id:10,mode:'swap',title:'One swap',
+  {id:10,mode:'swap',goal:'Raise the score to its maximum. Click an inner tunnel and choose one of the other two ways to hang its four groups.',title:'One swap',
    brief:'Closest-pair joining built this map for a chart with a fast lineage. It is close but not correct. The score counts the foursomes of leaves that the map pairs the way the chart’s four-point test pairs them. Click an inner tunnel (internal nodes at both ends) to see the four groups hanging off it, and the two other ways to hang them.'},
-  {id:11,mode:'final',title:'Whose virus?',
+  {id:11,mode:'final',goal:'Join the viruses round by round with neighbor joining. Then click the leaf that hangs nearest to the two human viruses.',title:'Whose virus?',
    brief:'Use neighbor joining to reconstruct a tree of SARS-related coronaviruses sampled from people, palm civets and bats.'}
 ];
 
@@ -1371,6 +1375,7 @@ function renderControls(){
 function render(){
   renderHeader();
   $('#title').textContent='Level '+cur.L.id+': '+cur.L.title;
+  $('#goal').innerHTML='<b>Goal:</b>'+esc(cur.L.goal);
   $('#brief').textContent=typeof cur.L.brief==='function'?cur.L.brief():cur.L.brief;
   const Hd=HANDLERS[cur.mode];
   $('#rule').textContent=Hd.rule(cur);

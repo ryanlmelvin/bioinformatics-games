@@ -233,6 +233,9 @@ dl{margin:0}
 dt{font-weight:700;margin-top:8px}
 dd{margin:0;font-size:.93rem}
 @media (prefers-reduced-motion:reduce){*{animation-duration:.01s!important;transition-duration:.01s!important}}
+.goal{margin:4px 0 8px;padding:6px 10px;border-left:4px solid var(--accent);max-width:70ch}
+.goal b{margin-right:4px}
+.goal:empty{display:none}
 </style>
 <link rel="icon" href="../book/favicon.svg" type="image/svg+xml">
 <link rel="stylesheet" href="../book/book.css">
@@ -253,7 +256,8 @@ dd{margin:0;font-size:.93rem}
 
   <section class="brief">
     <h2 id="title"></h2>
-    <p id="brief"></p>
+    <p id="goal" class="goal"></p>
+  <p id="brief"></p>
     <div id="vocab" class="vocab" hidden></div>
   </section>
 
@@ -366,14 +370,14 @@ const amino=c=>{const o='TCAG';return AA3[AA[o.indexOf(c[0])*16+o.indexOf(c[1])*
 
 /* ---------- parts ---------- */
 const LEVELS=[
- {id:1,title:'The shredded strip',keys:'ACGT',k:3,wall:'strip',skin:'scraps'},
- {id:2,title:'Four lockers',keys:'01',k:2,wall:'full'},
- {id:3,title:'Eight lockers',keys:'01',k:3,wall:'full'},
- {id:4,title:'Sixteen lockers',keys:'01',k:4,wall:'full'},
- {id:5,title:'A new keypad',keys:'ACGT',k:2,wall:'full'},
- {id:6,title:'The codon wall',keys:'ACGT',k:3,wall:'full'},
- {id:7,title:'The shredded strip, again',keys:'ACGT',k:3,wall:'strip'},
- {id:8,title:'Longer scraps',keys:'ACGT',k:4,wall:'strip'}
+ {id:1,goal:'Type one DNA strip that uses every scrap exactly once.',title:'The shredded strip',keys:'ACGT',k:3,wall:'strip',skin:'scraps'},
+ {id:2,goal:'Open all four lockers without a wasted press. After your first key, every press should open a new locker.',title:'Four lockers',keys:'01',k:2,wall:'full'},
+ {id:3,goal:'Open all eight lockers without a wasted press. After your first two keys, every press should open a new locker.',title:'Eight lockers',keys:'01',k:3,wall:'full'},
+ {id:4,goal:'Open all sixteen lockers without a wasted press. After your first three keys, every press should open a new locker.',title:'Sixteen lockers',keys:'01',k:4,wall:'full'},
+ {id:5,goal:'Open all sixteen lockers without a wasted press. After your first key, every press should open a new locker.',title:'A new keypad',keys:'ACGT',k:2,wall:'full'},
+ {id:6,goal:'Open all sixty-four lockers without a wasted press. After your first two keys, every press should open a new locker.',title:'The codon wall',keys:'ACGT',k:3,wall:'full'},
+ {id:7,goal:'Rebuild the strip: open every scrap’s locker without a wasted press.',title:'The shredded strip, again',keys:'ACGT',k:3,wall:'strip'},
+ {id:8,goal:'Rebuild the strip from four-nucleotide scraps: open every scrap’s locker without a wasted press.',title:'Longer scraps',keys:'ACGT',k:4,wall:'strip'}
 ];
 
 /* Vocabulary, in the order it is earned: [term, discovery that earns it, definition shown on hover]. */
@@ -660,6 +664,7 @@ function vocabHTML(){return VOCAB.filter(v=>S.found[v[1]]).map(v=>term(v[0],v[0]
 function renderHead(){
   const L=I.L;
   put('#title',`${L.id}. ${L.id===FINALE+1&&has('recon')?'Longer reads':L.title}`);
+  $('#goal').innerHTML='<b>Goal:</b>'+esc(I.L.goal);
   put('#brief',briefFor()+` <button class="link" type="button" data-a="hint">${showHint?'Hide hint':'Hint'}</button>`);
   put('#lv',LEVELS.map(x=>`<button type="button" data-lvl="${x.id}" class="${x.id===L.id?'on':''}${S.best[keyFor(x)]?' gold':''}"${x.id>S.unlocked?' disabled':''} aria-label="Part ${x.id}: ${x.title}"${x.id===L.id?' aria-current="true"':''}>${x.id}</button>`).join(''));
   put('#codexN',FINDS.filter(F=>S.found[F.id]).length+'/'+FINDS.length);

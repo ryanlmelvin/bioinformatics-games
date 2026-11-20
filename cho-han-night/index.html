@@ -217,6 +217,9 @@ footer input{font:inherit;width:9em;padding:5px 8px;border:1px solid var(--line)
 @media print{.savebar,.linknote{display:none}}
 /* ambient life in the scenery; never needed to play */
 @media (prefers-reduced-motion:no-preference){.lhalo{transform-box:fill-box;transform-origin:center;animation:lflick 2.8s ease-in-out infinite}@keyframes lflick{0%,100%{opacity:.14;transform:scale(1)}40%{opacity:.26;transform:scale(1.1)}55%{opacity:.17}70%{opacity:.24;transform:scale(1.05)}}}
+.goal{margin:4px 0 8px;padding:6px 10px;border-left:4px solid var(--accent);max-width:70ch}
+.goal b{margin-right:4px}
+.goal:empty{display:none}
 </style>
 <link rel="icon" href="../book/favicon.svg" type="image/svg+xml">
 <link rel="stylesheet" href="../book/book.css">
@@ -293,6 +296,7 @@ footer input{font:inherit;width:9em;padding:5px 8px;border:1px solid var(--line)
   <div class="badges" id="badges"></div>
 
   <h2 id="title" tabindex="-1"></h2>
+  <p id="goal" class="goal"></p>
   <p id="brief"></p>
   <div class="rule" id="rule"></div>
 
@@ -638,27 +642,27 @@ const CUP=['fair pair','loaded pair'],CUPS=['fair','loaded'],CALL={S:'7',O:'othe
 const oneIn=p=>p<=0?'probability 0':p>=1?'certain':'1 in '+(1/p<10?(1/p).toFixed(1).replace(/\.0$/,''):fmt(Math.round(1/p)));
 
 const LEVELS=[
-  {id:1,mode:'family',title:'One of the family?',
+  {id:1,mode:'family',goal:'Decide which of the two newcomers belongs to the protein family, and pick it.',title:'One of the family?',
    brief:'Five related protein sequences are written in rows so that homologous amino acid residues share a column. A dash denotes a gap in that sequence. Two newcomers claim to belong, and only one does. Pick it.'},
-  {id:2,mode:'open',title:'Seven or other',
+  {id:2,mode:'open',goal:'Roll both pairs of dice and tally every call. Then work out how many times in six each pair rolls a 7.',title:'Seven or other',
    brief:'Compare two pairs of dice. A fair pair has 36 equally likely rolls, and six of them total 7. The loaded pair is weighted toward 7. After each roll, the dealer calls “7” for a total of 7 or “other” for any other total. Tally the calls for each pair. After six rolls of each, you can let the dealer finish the 24-roll samples.'},
-  {id:3,mode:'swap',title:'The swap',
+  {id:3,mode:'swap',goal:'For each of twelve calls, slide the bead toward the pair you think the dealer rolled, and lock it in.',title:'The swap',
    brief:'The dealer now rolls one pair behind a screen, and you hear only the call. Between rounds, the dealer may switch between the fair and loaded pairs; the house card shows how often. After each of twelve calls, slide the bead toward the pair you think was rolled.'},
-  {id:4,mode:'story',title:'One story',
+  {id:4,mode:'story',goal:'Choose a pair for each of the four rounds, then fill in every probability for that story.',title:'One story',
    brief:'Use the first four calls from level 3. Make up a story by choosing which pair the dealer used in each round. Using transition weights out of 4 and emission weights out of 6, calculate the probability of that sequence of pairs, then the probability of those calls given those pairs.'},
-  {id:5,mode:'wall',title:'Too many stories',
+  {id:5,mode:'wall',goal:'Run the counting machine on four rounds, then on longer nights. Stop it once you can see that counting stories one at a time will not get there.',title:'Too many stories',
    brief:'Four rounds allow 16 possible sequences of pairs. To find the probability of the observed calls, add the probability of each sequence occurring together with those calls. The counting machine considers one sequence at a time.'},
-  {id:6,mode:'ledger',title:'The bookkeeper’s ledger',
+  {id:6,mode:'ledger',goal:'Fill in the fair and loaded rows for rounds 1 to 3, one column at a time.',title:'The bookkeeper’s ledger',
    brief:'Fill the fair and loaded rows for rounds 1–3, one column at a time. Each entry adds up the weights of all stories that match the calls so far and end with that pair. Enter whole numbers and press Enter; the bookkeeper finishes the remaining rounds and converts the totals to probabilities.'},
-  {id:7,mode:'best',title:'The best story',
+  {id:7,mode:'best',goal:'Find the most likely sequence of pairs for six calls. Fill in the first three columns, pick the better incoming path for each entry, then trace back from the last round.',title:'The best story',
    brief:'On this six-call night, find the most likely sequence of pairs. For each entry after round 1, choose the incoming path with the larger weight. Fill in the first three columns yourself. After that, the bookkeeper records the weights as you choose each path. Trace your choices backward from the last round.'},
-  {id:8,mode:'rooms',title:'Rooms',
+  {id:8,mode:'rooms',goal:'Choose how many gaps a column may have and still be a room. Then send each family member through the house and record the tally for the marked room.',title:'Rooms',
    brief:'Back to the protein family from level 1. The bookkeeper builds a house for the family, with a room for each column that most members fill, a trapdoor under each room for a member with a gap there, and a corridor between rooms for residues that belong to no room. Set how many gaps a column may have and still be a room. Then send the members through, one at a time, and keep the tally for the marked room.'},
-  {id:9,mode:'bouncer',title:'The bouncer',
+  {id:9,mode:'bouncer',goal:'Walk both newcomers through the house, then let in the one whose best walk is more likely.',title:'The bouncer',
    brief:'The two newcomers from level 1 are at the door. Every door and every room of the house now carries its tally. Walk each newcomer through, choosing each step yourself. Each step multiplies the probability by the corresponding transition and emission frequencies. Then the bookkeeper shows the best walk there is.'},
-  {id:10,mode:'pebbles',title:'One unseen residue',
+  {id:10,mode:'pebbles',goal:'Walk the cousin through the house. If the house turns them away, change it so that the cousin’s best walk beats the stranger’s.',title:'One unseen residue',
    brief:'A third newcomer is a known member of the family, a cousin. Walk the cousin through the house.'},
-  {id:11,mode:'reunion',title:'Reunion',
+  {id:11,mode:'reunion',goal:'Send all seven newcomers through the house, then set a cutoff with every family member above it and every stranger below it.',title:'Reunion',
    brief:'Send each of the seven newcomers through the house. The bookkeeper uses the pebble counts to score each newcomer’s best walk. Choose a cutoff that puts all family members above the line and all strangers below.'}
 ];
 
@@ -881,6 +885,7 @@ function renderNow(){
   const M=MODES[cur.mode];
   renderHeader();
   $('#title').textContent='Level '+cur.L.id+': '+cur.L.title;
+  $('#goal').innerHTML='<b>Goal:</b>'+esc(cur.L.goal);
   $('#brief').textContent=cur.L.brief;
   $('#rule').textContent=M.rule();
   $('#scene').innerHTML=M.scene();

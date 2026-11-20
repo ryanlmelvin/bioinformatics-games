@@ -166,6 +166,9 @@ footer input{font:inherit;width:9em;padding:5px 8px;border:1px solid var(--line)
 .savebar .savenote:empty{display:none}
 .linknote[hidden]{display:none}
 @media print{.savebar,.linknote{display:none}}
+.goal{margin:4px 0 8px;padding:6px 10px;border-left:4px solid var(--accent);max-width:70ch}
+.goal b{margin-right:4px}
+.goal:empty{display:none}
 </style>
 <link rel="icon" href="../book/favicon.svg" type="image/svg+xml">
 <link rel="stylesheet" href="../book/book.css">
@@ -188,6 +191,7 @@ footer input{font:inherit;width:9em;padding:5px 8px;border:1px solid var(--line)
   <div class="vocabhead">Vocabulary you have earned <span style="text-transform:none;letter-spacing:0">(hover for the definition)</span></div>
   <div class="badges" id="badges"></div>
   <h2 id="title"></h2>
+  <p id="goal" class="goal"></p>
   <p id="brief"></p>
   <div class="rule" id="rule"></div>
   <div class="stage" id="stage"></div>
@@ -565,25 +569,25 @@ const reduced=()=>{try{return matchMedia('(prefers-reduced-motion: reduce)').mat
 
 /* ---------- levels ---------- */
 const LEVELS=[
- {id:1,mode:'sort',title:'Which genes move together?',
+ {id:1,mode:'sort',goal:'Sort the twelve gene cards into three piles of genes whose expression rises and falls together.',title:'Which genes move together?',
   brief:'Each card is one yeast gene. Its seven dots show expression levels at seven time points, two hours apart, as the yeast depleted its glucose. Genes with correlated expression profiles may have related functions. Sort the twelve cards into three groups with similar profiles.'},
- {id:2,mode:'ruler',title:'Two inks',
+ {id:2,mode:'ruler',goal:'For each pixel in the dashed strip, measure its distance to at least two pots, then choose the nearest pot.',title:'Two inks',
   brief:'Each pixel in the tulip has two coordinates on the ink map, one for red and one for blue. Both range from 0 to 10. The press prints each pixel with the nearest of three paint pots. For each pixel in the dashed strip, measure the distance to at least two pots, then choose the nearest.'},
- {id:3,mode:'worst',title:'The worst pixel',
+ {id:3,mode:'worst',goal:'Mix pots 2 and 3 so that the meter’s worst-pixel distance comes down to the shop’s mark.',title:'The worst pixel',
   brief:'This fish is printed from three pots. To mix a pot, click a pixel in the picture or a dot on the map, and the pot matches that ink. Pot 1 is already mixed. The meter shows how far the worst-printed pixel is from its nearest pot. Bring that number down to the shop’s mark. To pour out a pot and mix it again, click it on the map.'},
- {id:4,mode:'stray',title:'One stray pixel',
+ {id:4,mode:'stray',goal:'Mix pots 2 and 3, then move the pots until the average error is under the mark.',title:'One stray pixel',
   brief:'A fly has left one stray pixel on the mushroom print. Pot 1 is ready. Mix each remaining pot to match the pixel farthest from its nearest pot.'},
- {id:5,mode:'gravity',title:'Where should a pot sit?',
+ {id:5,mode:'gravity',goal:'Find the amounts of red and blue that give this pot the lowest average squared error.',title:'Where should a pot sit?',
   brief:'One pot supplies all the red pixels in this heart. Enter amounts of red and blue ink, mix the pot, and check the average squared error. Find the mix with the lowest error.'},
- {id:6,mode:'loop',title:'Repaint, re-average',
+ {id:6,mode:'loop',goal:'Assign each pixel in the marked row to its nearest pot and work out one pot’s average ink. Then press the two buttons in turn until the print stops changing.',title:'Repaint, re-average',
   brief:'The three pots start far from the colors they need to print. Assign each pixel in the marked row to its nearest pot, then calculate the average ink for one pot. After that, alternate printing the sheet and moving the pots until the print stops changing.'},
- {id:7,mode:'bad',title:'A bad start',
+ {id:7,mode:'bad',goal:'Press the two buttons in turn from the bad start until nothing changes. Then start again from better pots and compare the two errors.',title:'A bad start',
   brief:'Two of the three pots for this house start almost the same color. Run the two buttons until nothing changes.'},
- {id:8,mode:'cards',title:'Seven measurements per gene',
+ {id:8,mode:'cards',goal:'Fill in the six sums and assign each card to its nearest center. Then press the two buttons in turn until nothing changes.',title:'Seven measurements per gene',
   brief:'These are your twelve cards from level 1. Each expression vector has seven coordinates, so the data occupy a seven-dimensional space. The distance calculation is the same as in two dimensions. Three cards serve as the initial centers.'},
- {id:9,mode:'tree',title:'Family tree',
+ {id:9,mode:'tree',goal:'Join the two closest groups, again and again, until one group remains. Then cut the tree into three groups.',title:'Family tree',
   brief:'The table shows the distances between eight genes. Repeatedly join the two closest groups until one remains. To find the distance between two groups, average the distances between pairs of genes, taking one gene from each group.'},
- {id:10,mode:'shift',title:'The shift',
+ {id:10,mode:'shift',goal:'Press the two buttons in turn until the groups stop changing.',title:'The shift',
   brief:'These cards show expression profiles for 24 yeast genes from six hours before glucose depletion to six hours after. The starting centers were chosen by farthest-first traversal. Assign the genes to centers, then update the centers until the groups stop changing.'}
 ];
 
@@ -1326,7 +1330,8 @@ function renderStage(){$('#stage').innerHTML=cur.M.stage(cur);cur.justPrinted=fa
 function render(){
  renderHeader();
  $('#title').textContent='Level '+cur.L.id+': '+cur.L.title;
- $('#brief').textContent=cur.L.brief;
+ $('#goal').innerHTML='<b>Goal:</b>'+esc(cur.L.goal);
+  $('#brief').textContent=cur.L.brief;
  $('#rule').textContent=cur.M.rule(cur);
  renderStage();
  $('#status').textContent=cur.msg.text;$('#status').className='status '+cur.msg.kind;
