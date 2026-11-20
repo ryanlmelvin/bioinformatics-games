@@ -597,7 +597,7 @@ const LEVELS=[
   {id:3,title:'Both strands',
    brief:'The DNA strands are antiparallel, with complementary base pairing: A–T and C–G. Read each strand 5′ to 3′; the lower strand runs right to left.'},
   {id:4,title:'Ten genes, one switch',
-   brief:'Ten genes are co-regulated. Each strip shows 24 nucleotides upstream of one gene. A transcription factor binds a six-nucleotide site in each upstream region to activate transcription, and the site varies slightly among genes. Find one six-nucleotide sequence that lights all ten genes.'},
+   brief:'Ten genes are co-regulated. Each strip shows 24 nucleotides upstream of one gene. A transcription factor binds a six-nucleotide site in each upstream region to activate transcription, and the site varies slightly among genes. Find one six-nucleotide sequence that has a close match on all ten strips.'},
   {id:5,title:'The reels',
    brief:'Four of those strips are now reels in a machine. A reel can only slide. The clamp reads the window at the payline on every reel at once.'},
   {id:6,title:'Too many stops',
@@ -1035,7 +1035,7 @@ LV[2]={
     if(a==='submit'&&cur.step==='tol'){
       if(!cur.board||cur.boardD!==cur.d||!cur.dial){say('Find sequences and select one before submitting.','warn');return;}
       const n=litPositions(I.text,cur.dial,cur.d).length;log('submit',{word:cur.dial,d:cur.d});
-      if(cur.dial===I.word&&cur.d===1){cur.step='done';say(cur.dial+' lights '+n+' windows with up to '+plural(cur.d,'mismatch')+', although it never occurs exactly.','good');finish(['ham']);}
+      if(cur.dial===I.word&&cur.d===1){cur.step='done';say(cur.dial+' has '+n+' lit windows with up to '+plural(cur.d,'mismatch')+', although it never occurs exactly.','good');finish(['ham']);}
       else say(cur.d===0?'Exact matches miss the altered copies. Allow a mismatch and find sequences again.':cur.d===2?'Two mismatches admit extra windows. Each of the three windows you compared differed at just one position. Set the limit to 1 and search again.':cur.dial+' lights '+plural(n,'window')+'. Another sequence lights more.','warn');
     }
   },
@@ -1071,8 +1071,8 @@ LV[3]={
     if(a==='sweep'&&cur.step==='sweep'){log('sweep');sweepRun({texts:[I.text],k:5,tallyOf:t=>tally(t,5,1,true),fmt:x=>x.lit+' lit',done:()=>{cur.board=tally([I.text],5,1,true);say('Each sequence now counts its lit windows on both strands, reading the lower strand 5′ to 3′. Click a sequence.');}});}
     if(a==='pick'&&cur.board){
       cur.dial=arg;const n=stripLit(I.text,arg,1,true).length;
-      if(arg===I.word||arg===I.rc){say(arg+' lights '+n+' windows on the two strands. Read from the other strand it is '+revcomp(arg)+', which lights the same windows.','good');cur.step='done';finish(['rc','dnaa','ori']);}
-      else say(arg+' lights '+plural(n,'window')+'.');
+      if(arg===I.word||arg===I.rc){say(arg+' has '+n+' lit windows on the two strands. Read from the other strand it is '+revcomp(arg)+', which has the same lit windows.','good');cur.step='done';finish(['rc','dnaa','ori']);}
+      else say(arg+' has '+plural(n,'lit window')+'.');
     }
   },
   reveal(){const I=cur.inst;return '<p>The lower strand read 5′ to 3′ is the '+term('rc','reverse complement')+' of the upper one: '+I.word+' and '+I.rc+' are the same site seen from the two strands. '+
@@ -1091,16 +1091,16 @@ function stripTally(strips,k,d){
 const clampOff=(s,k,p)=>Math.max(0,Math.min(s.length-k,p));
 
 LV[4]={
-  init(){cur.step='eye';cur.dial=null;cur.d=1;cur.count='windows';cur.board=null;say('Click a nucleotide on any strip to look for the six nucleotides starting there. A gene lights when its strip has a window that differs from that sequence by at most one nucleotide. When you have tried a few, count every six-nucleotide sequence.');},
-  rule(){return 'One clamp per window · a gene lights when the clamp grips its strip';},
+  init(){cur.step='eye';cur.dial=null;cur.d=1;cur.count='windows';cur.board=null;say('Click a nucleotide on any strip to look for the six nucleotides starting there. Windows that differ from it by at most one nucleotide light up, and a strip’s lamp turns on when it has one. When you have tried a few, count every six-nucleotide sequence.');},
+  rule(){return 'One clamp per lit window · a lamp marks each strip with a lit window';},
   lits(){const I=cur.inst;return I.strips.map(s=>cur.dial?litPositions(s,cur.dial,cur.d):[]);},
   draw(){
     const I=cur.inst,sw=cur.sweep&&cur.sweep.p!==undefined?cur.sweep:null,lit=sw?I.strips.map((s,i)=>i===sw.i?[sw.p]:[]):this.lits(),lamps=lit.map(l=>!sw&&l.length>0);
     const svg=rackSvg({reels:I.strips,k:6,mode:'strips',lit,lamps,clamps:true,click:!cur.done&&!sw});
     const nl=lamps.filter(Boolean).length,nw=lit.reduce((a,l)=>a+l.length,0);
-    let t=dialHtml(cur.dial,'Looking for',cur.dial?'<span class="gmeta" style="margin-left:8px">'+plural(nw,'lit window')+' · '+nl+' of 10 genes</span>':'');
+    let t=dialHtml(cur.dial,'Looking for',cur.dial?'<span class="gmeta" style="margin-left:8px">'+plural(nw,'lit window')+' · on '+nl+' of 10 strips</span>':'');
     if(cur.step!=='eye')t+='<div class="row"><span class="sub" style="margin:0">mismatches allowed</span>'+[1,2].map(d=>'<button class="'+(cur.d===d?'on':'')+'" data-act="tol" data-arg="'+d+'">'+d+'</button>').join('')+
-      '<span class="sub" style="margin:0 0 0 10px">the board counts</span>'+[['windows','lit windows'],['strips','strips lit']].map(c=>'<button class="'+(cur.count===c[0]?'on':'')+'" data-act="count" data-arg="'+c[0]+'">'+c[1]+'</button>').join('')+'</div>';
+      '<span class="sub" style="margin:0 0 0 10px">the board counts</span>'+[['windows','lit windows'],['strips','strips']].map(c=>'<button class="'+(cur.count===c[0]?'on':'')+'" data-act="count" data-arg="'+c[0]+'">'+c[1]+'</button>').join('')+'</div>';
     t+=cur.board&&cur.boardKey===cur.d+cur.count?boardHtml(cur.board,x=>cur.boardKey.endsWith('strips')?plural(x.lit,'strip'):x.lit+' lit'):'<div class="row"><button class="primary" data-act="sweep">Count every six-nucleotide sequence</button></div>';
     return {svg,tools:t};
   },
@@ -1119,21 +1119,21 @@ LV[4]={
     cur.board=board;cur.boardKey=cur.d+cur.count;
     if(cur.step==='eye'){cur.step='mode';cur.dial=cur.board[0].word;const nl=this.lits().filter(l=>l.length).length;
       const ties=cur.board.filter(x=>x.lit===cur.board[0].lit).length-1;
-      say('The top of the board, '+cur.dial+', lights '+cur.board[0].lit+' windows, '+(ties?'tied with '+plural(ties,'other sequence'):'more than any other sequence')+'. But it lights only '+numWord(nl)+' of the ten genes. '+
+      say('The top of the board, '+cur.dial+', has '+cur.board[0].lit+' lit windows, '+(ties?'tied with '+plural(ties,'other sequence'):'more than any other sequence')+'. But they are on only '+numWord(nl)+' of the ten strips. '+
         'Two settings are now open above the board: how many mismatches a window may have, and what the board counts. Change them and count again.','warn');}
-    else if(cur.count==='strips'&&cur.board[0].lit<10)say('With '+plural(cur.d,'mismatch')+' allowed, no sequence lights all ten genes. Allow more mismatches and count again.','warn');
-    else if(cur.count==='windows')say('Click a sequence on the board to look for it. The board ranks by lit windows, so a sequence repeated on a few strips can beat one found on every strip. Counting strips lit avoids that.');
+    else if(cur.count==='strips'&&cur.board[0].lit<10)say('With '+plural(cur.d,'mismatch')+' allowed, no sequence has a lit window on all ten strips. Allow more mismatches and count again.','warn');
+    else if(cur.count==='windows')say('Click a sequence on the board to look for it. The board ranks by lit windows, so a sequence repeated on a few strips can beat one found on every strip. Counting strips avoids that.');
     else say('Click a sequence on the board to look for it.');
   },
   report(){
     if(!cur.dial)return;
     const lit=this.lits(),nl=lit.filter(l=>l.length).length;
-    if(nl===10&&cur.step!=='eye'){say(cur.dial+' lights all ten genes.','good');finish(['motif','mf'],{word:cur.dial,d:cur.d});}
-    else say(cur.dial+': '+plural(lit.reduce((a,l)=>a+l.length,0),'lit window')+', '+nl+' of 10 genes.');
+    if(nl===10&&cur.step!=='eye'){say(cur.dial+' has a lit window on all ten strips.','good');finish(['motif','mf'],{word:cur.dial,d:cur.d});}
+    else say(cur.dial+': '+plural(lit.reduce((a,l)=>a+l.length,0),'lit window')+', on '+nl+' of 10 strips.');
   },
   reveal(){const I=cur.inst;return '<p>A short sequence pattern shared, with substitutions, by the upstream regions of co-regulated genes is a '+term('motif','motif')+', and choosing one window on every strip to find it is '+term('mf','motif finding')+'. '+
     'Counting lit windows rewarded '+wordHtml(I.decoy)+', which is common on three strips and absent from the rest. The shared regulatory site must be present in every upstream region.</p>'+
-    '<p>With two mismatches allowed, '+plural(I.allTen.length,'sequence')+(I.allTen.length===1?' lights':' light')+' all ten genes.</p>';},
+    '<p>With two mismatches allowed, '+plural(I.allTen.length,'sequence')+(I.allTen.length===1?' has':' have')+' a lit window on all ten strips.</p>';},
   src:['pevzner']
 };
 
@@ -1251,7 +1251,7 @@ LV[6]={
   skip(){return cur.step==='bot'&&cur.bot.running?'Stop the bot. Search the sequences instead →':'';},
   onSkip(){if(cur.step!=='bot')return;cur.step='hand';log('gave_up',{tried:cur.bot.n});timers.forEach(clearTimeout);say('Click a window on each reel.');},
   reveal(){const B=cur.big;return '<p>Instead of 6 × 10¹² settings of the reels, the machine checked 4,096 sequences, each against every reel’s closest window. A sequence that minimises the sum of mismatches to its closest window on each reel is a '+term('median','median string')+'. '+
-    'Here it is '+wordHtml(B.word)+', one of the sequences that lit all ten genes in level 4. Its closest windows, stacked, score as well as the best setting of the reels.</p>';}
+    'Here it is '+wordHtml(B.word)+', one of the sequences with a lit window on all ten strips in level 4. Its closest windows, stacked, score as well as the best setting of the reels.</p>';}
 };
 
 
