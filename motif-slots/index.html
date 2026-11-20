@@ -785,7 +785,7 @@ function clampSvg(x,y,w,h,bad,slip,slim){
   return '<g class="clampg'+(slip?' slip':'')+'">'+
     '<path class="jaw" d="M'+(x-6)+','+(y-3)+' v-9 q0,-5 5,-5 h'+(w+2)+' q5,0 5,5 v9 h-4 v-5 h-'+(w-2)+' v5 z"/>'+
     '<path class="jaw" d="M'+(x-6)+','+(y+h+3)+' v9 q0,5 5,5 h'+(w+2)+' q5,0 5,-5 v-9 h-4 v5 h-'+(w-2)+' v-5 z"/>'+
-    (slim?'<circle cx="'+(x+2)+'" cy="'+(y-10)+'" r="2.4" fill="#fff"/><circle cx="'+(x+2.5)+'" cy="'+(y-10)+'" r="1.2" fill="#1f1030"/>':'<rect class="jaw2" x="'+(x-12)+'" y="'+(y-12)+'" width="9" height="'+(h+24)+'" rx="4"/><circle cx="'+(x-7.5)+'" cy="'+(y+h/2-5)+'" r="2.6" fill="#fff"/><circle cx="'+(x-7)+'" cy="'+(y+h/2-5)+'" r="1.3" fill="#1f1030"/>')+t+'</g>';
+    (slim?'':'<rect class="jaw2" x="'+(x-12)+'" y="'+(y-12)+'" width="9" height="'+(h+24)+'" rx="4"/>')+t+'</g>';
 }
 function cabinet(W,H,lights){
   let s='<rect class="cab" x="3" y="3" width="'+(W-6)+'" height="'+(H-6)+'" rx="18"/><rect class="trim" x="9" y="9" width="'+(W-18)+'" height="'+(H-18)+'" rx="13"/>';
@@ -842,8 +842,10 @@ function tapeSvg(o){
 function rackSvg(o){
   const t=o.reels.length,n=o.reels[0].length,k=o.k,small=narrow(),cw=26,rh=small&&o.mode==='strips'?34:36,gap=o.mode==='reels'&&o.clamps?(small?18:22):(small?12:14);
   const V=o.mode==='strips'?n:Math.min(2*n-k,small?k+10:26),P0=Math.floor((V-k)/2);
-  const L=o.arrows?50:(small?20:34),areaW=V*cw,xA=L+areaW+(o.arrows?6:4),lampX=xA+(o.arrows?40:0)+14;
-  const W=lampX+(o.lamps?16:0)+(o.lever?62:12)+8,y0=38,H=y0+t*(rh+gap)+(o.lever?34:12);
+  /* on a phone the lamps sit at the left end of each strip, so they stay in view while the long strips scroll */
+  const lampLeft=small&&o.lamps&&!o.arrows;
+  const L=o.arrows?50:(lampLeft?44:(small?20:34)),areaW=V*cw,xA=L+areaW+(o.arrows?6:4),lampX=lampLeft?15:xA+(o.arrows?40:0)+14;
+  const W=(lampLeft?xA+8:lampX+(o.lamps?16:0))+(o.lever?62:12)+8,y0=38,H=y0+t*(rh+gap)+(o.lever?34:12);
   const colX=c=>L+c*cw,yOf=i=>y0+i*(rh+gap);
   const offs=o.off||o.reels.map(()=>0);
   const pm=o.mode==='reels'&&o.miss?paylineMarks(o):null;
@@ -856,7 +858,7 @@ function rackSvg(o){
     const y=yOf(i),str=o.reels[i],dim=o.dim&&o.dim[i],lift=o.lifted===i;
     let g='<g data-row="'+i+'"'+(lift?' opacity=".5"':'')+(o.spin&&o.spin[i]?' class="spinning"':'')+'>';
     g+='<rect class="slot" x="'+(L-5)+'" y="'+(y-4)+'" width="'+(areaW+10)+'" height="'+(rh+8)+'" rx="6"/><rect class="reelbg" x="'+(L-1)+'" y="'+y+'" width="'+(areaW+2)+'" height="'+rh+'" rx="3"/>';
-    g+='<text class="lab" x="'+(o.arrows?13:L/2)+'" y="'+(y+rh/2)+'" style="font-size:'+(small?10:12)+'px">'+(i+1)+'</text>';
+    g+='<text class="lab" x="'+(o.arrows?13:lampLeft?34:L/2)+'" y="'+(y+rh/2)+'" style="font-size:'+(small?10:12)+'px">'+(i+1)+'</text>';
     const lit=o.lit&&o.lit[i]||[];
     if(o.mode==='strips')lit.forEach(p=>{g+='<rect class="litcell" x="'+(colX(p)+1)+'" y="'+(y+2)+'" width="'+(k*cw-2)+'" height="'+(rh-4)+'" rx="4"/>';});
     for(let j=0;j<n;j++){
@@ -1571,7 +1573,7 @@ function render(){
   const M=LV[cur.L.id];
   renderHeader();
   $('#title').textContent='Level '+cur.L.id+': '+cur.L.title;
-  $('#goal').innerHTML='<b>Goal:</b>'+esc(typeof cur.L.goal==='function'?cur.L.goal():cur.L.goal);
+  $('#goal').innerHTML='<b>Goal:</b> '+esc(typeof cur.L.goal==='function'?cur.L.goal():cur.L.goal);
   $('#brief').textContent=cur.L.brief;
   $('#rule').textContent=M.rule();
   const d=M.draw(),m=$('#machine');

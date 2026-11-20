@@ -152,6 +152,9 @@ button.cell{font:inherit;cursor:pointer}
 
 /* house */
 .house{width:100%;height:auto;display:block}
+/* on a phone the scene keeps readable letters and scrolls sideways */
+#scene{overflow-x:auto}
+@media (max-width:600px){#scene>svg{min-width:640px}}
 .board{display:grid;grid-template-columns:repeat(auto-fill,minmax(64px,1fr));gap:4px;margin:6px 0}
 .lkey{min-height:44px;padding:2px;font-weight:700;display:flex;flex-direction:column;align-items:center;line-height:1.1}
 .lkey small{font-weight:400;font-size:.72rem;color:var(--muted)}
@@ -885,7 +888,7 @@ function renderNow(){
   const M=MODES[cur.mode];
   renderHeader();
   $('#title').textContent='Level '+cur.L.id+': '+cur.L.title;
-  $('#goal').innerHTML='<b>Goal:</b>'+esc(cur.L.goal);
+  $('#goal').innerHTML='<b>Goal:</b> '+esc(cur.L.goal);
   $('#brief').textContent=cur.L.brief;
   $('#rule').textContent=M.rule();
   $('#scene').innerHTML=M.scene();

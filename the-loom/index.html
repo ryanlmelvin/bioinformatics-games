@@ -809,7 +809,7 @@ function render(){
   const ae=document.activeElement,fid=ae&&ae.id,pos=ae&&ae.selectionStart;
   renderHeader();
   $('#title').textContent='Level '+cur.L.id+': '+cur.L.title;
-  $('#goal').innerHTML='<b>Goal:</b>'+esc(cur.L.goal);
+  $('#goal').innerHTML='<b>Goal:</b> '+esc(cur.L.goal);
   $('#brief').innerHTML=LV[cur.id].brief?LV[cur.id].brief():esc(cur.L.brief);
   $('#rule').textContent=LV[cur.id].rule?LV[cur.id].rule():cur.L.rule;
   $('#stage').innerHTML=LV[cur.id].view();

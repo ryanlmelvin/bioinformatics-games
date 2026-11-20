@@ -166,6 +166,26 @@ function gamePage(){
   }
   if(title){dressTitle();new MutationObserver(dressTitle).observe(title,{childList:true,characterData:true,subtree:true});}
 
+  // sideways scrolling: a board wider than the screen fades at its right edge and says it scrolls
+  const stageRoot=$('.stage')?.parentElement||document.body;
+  function markScrollers(){
+    stageRoot.querySelectorAll('*').forEach(n=>{
+      if(n.classList.contains('bk-scrollnote'))return;
+      const ox=getComputedStyle(n).overflowX;if(ox!=='auto'&&ox!=='scroll')return;
+      if(n.closest('.bk-bar,.bk-after,dialog'))return;
+      const wide=n.scrollWidth>n.clientWidth+4;
+      n.classList.add('bk-xscroll');
+      n.classList.toggle('bk-more',wide&&n.scrollLeft+n.clientWidth<n.scrollWidth-4);
+      let note=n.nextElementSibling;
+      if(!(note&&note.classList.contains('bk-scrollnote'))){if(!wide)return;note=el('p','bk-scrollnote');note.textContent='Scroll sideways to see the rest of the board.';n.after(note);}
+      note.classList.toggle('show',wide&&n.scrollLeft<4);
+      if(!n.dataset.bkScroll){n.dataset.bkScroll='1';n.addEventListener('scroll',()=>{const w=n.scrollWidth>n.clientWidth+4;n.classList.toggle('bk-more',w&&n.scrollLeft+n.clientWidth<n.scrollWidth-4);const t=n.nextElementSibling;if(t&&t.classList.contains('bk-scrollnote'))t.classList.toggle('show',w&&n.scrollLeft<4);},{passive:true});}
+    });
+  }
+  let msT=0;const queueMark=()=>{clearTimeout(msT);msT=setTimeout(markScrollers,120);};
+  new MutationObserver(queueMark).observe(stageRoot,{childList:true,subtree:true});
+  addEventListener('resize',queueMark);queueMark();
+
   // vocabulary: remember what has been earned, and mark the ones earned just now
   const badges=$('#badges'),freshUntil={};
   let known=null;

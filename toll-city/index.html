@@ -840,10 +840,19 @@ function render(){
   const M=MODES[cur.mode];
   renderHeader();
   $('#title').textContent='Level '+cur.L.id+': '+cur.L.title;
-  $('#goal').innerHTML='<b>Goal:</b>'+esc(cur.L.goal);
+  $('#goal').innerHTML='<b>Goal:</b> '+esc(cur.L.goal);
   $('#brief').innerHTML=M.brief?M.brief(cur):cur.L.brief;
   $('#rule').textContent=M.rule(cur);
+  const oldCity=$('#view .cityscroll'),keepX=oldCity?oldCity.scrollLeft:0;
   $('#view').innerHTML=M.view(cur);
+  /* the city is redrawn on every move: keep its sideways scroll, and on a narrow screen keep the map pin in view */
+  const city=$('#view .cityscroll');
+  if(city&&city.scrollWidth>city.clientWidth+4){
+    city.scrollLeft=keepX;
+    const pin=city.querySelector('#tourist');
+    if(pin){const r=pin.getBoundingClientRect(),c=city.getBoundingClientRect();
+      if(r.right>c.right-8||r.left<c.left+8)city.scrollLeft+=r.left-c.left-(c.width-r.width)/2;}
+  }
   $('#status').textContent=cur.msg.text;$('#status').className='status '+cur.msg.kind;
   const sm=$('#stagemsg');sm.hidden=!cur.stage;if(cur.stage){sm.textContent=cur.stage.text;sm.className='stagemsg '+cur.stage.kind;}
   const sk=M.skip&&!cur.done?M.skip(cur):null,b=$('#skip');

@@ -56,6 +56,9 @@ span.term:not(.badge){border-bottom:1px dotted currentColor;font-weight:600}
 .rule{display:inline-flex;align-items:center;gap:8px;font-size:.9rem;font-weight:600;padding:3px 12px;border-radius:999px;background:var(--chip);margin-bottom:8px}
 .stage{border:1px solid var(--line);border-radius:12px;overflow:hidden;background:var(--panel)}
 svg#map{width:100%;height:auto;display:block;touch-action:manipulation}
+.mapscroll{overflow-x:auto}
+/* maps with many reads keep readable labels on a phone and scroll sideways instead */
+@media (max-width:600px){svg#map.dense{min-width:720px}}
 svg#map.building{cursor:crosshair}
 svg#map.building .pl-base,svg#map.building .pl-top,svg#map.building .mread{pointer-events:none}
 .stagemsg{padding:6px 14px 8px;font-weight:600;font-size:.95rem;border-top:1px solid var(--line)}
@@ -264,7 +267,7 @@ footer input{font:inherit;width:9em;padding:5px 8px;border:1px solid var(--line)
       <div class="tally" id="tally" hidden></div>
     </div>
     <div class="stagemsg" id="stagemsg" role="status" hidden></div>
-    <svg id="map" viewBox="0 0 760 500" role="group" aria-label="Map">
+    <div class="mapscroll"><svg id="map" viewBox="0 0 760 500" role="group" aria-label="Map">
       <defs>
         <!-- ===== ARTWORK: edit these shapes to restyle the game ===== -->
         <pattern id="pWater" width="140" height="90" patternUnits="userSpaceOnUse">
@@ -323,7 +326,7 @@ footer input{font:inherit;width:9em;padding:5px 8px;border:1px solid var(--line)
       </g>
       <g id="scene"></g>
       <g id="ant" visibility="hidden"></g>
-    </svg>
+    </svg></div>
     <div class="asmrow" id="asmrow">
       <div class="sub" id="asmlabel">DNA spelled so far</div>
       <div class="asm" id="asm"></div>
@@ -1659,6 +1662,7 @@ function renderScene(){
   $('#cardView').hidden=!tray;
   $('#map').style.display=m==='cards'||ph==='ask'?'none':'';
   $('#map').classList.toggle('building',ph==='build');
+  $('#map').classList.toggle('dense',![1,2,5,6,8].includes(cur.L.id));
   const water=$('[data-water]');
   const placing=ph==='build'&&cur.bd.sel!==null;
   water.setAttribute('role',placing?'button':'presentation');
@@ -1734,7 +1738,7 @@ function renderControls(){
 function render(){
   renderHeader();
   $('#title').textContent='Level '+cur.L.id+': '+cur.L.title;
-  $('#goal').innerHTML='<b>Goal:</b>'+esc(cur.L.goal);
+  $('#goal').innerHTML='<b>Goal:</b> '+esc(cur.L.goal);
   $('#brief').textContent=cur.L.brief;
   $('#rule').textContent=ruleText();
   renderScene();renderAsm();renderPairWork();

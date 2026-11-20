@@ -664,7 +664,7 @@ function vocabHTML(){return VOCAB.filter(v=>S.found[v[1]]).map(v=>term(v[0],v[0]
 function renderHead(){
   const L=I.L;
   put('#title',`${L.id}. ${L.id===FINALE+1&&has('recon')?'Longer reads':L.title}`);
-  $('#goal').innerHTML='<b>Goal:</b>'+esc(I.L.goal);
+  $('#goal').innerHTML='<b>Goal:</b> '+esc(I.L.goal);
   put('#brief',briefFor()+` <button class="link" type="button" data-a="hint">${showHint?'Hide hint':'Hint'}</button>`);
   put('#lv',LEVELS.map(x=>`<button type="button" data-lvl="${x.id}" class="${x.id===L.id?'on':''}${S.best[keyFor(x)]?' gold':''}"${x.id>S.unlocked?' disabled':''} aria-label="Part ${x.id}: ${x.title}"${x.id===L.id?' aria-current="true"':''}>${x.id}</button>`).join(''));
   put('#codexN',FINDS.filter(F=>S.found[F.id]).length+'/'+FINDS.length);

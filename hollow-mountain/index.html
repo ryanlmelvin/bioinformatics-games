@@ -89,6 +89,8 @@ table.chart{border-collapse:collapse;font-size:.95rem}
 .chart td.ok{background:var(--ok-bg);color:var(--ok-ink)}
 .chart td.pick{cursor:pointer}
 .chart td.pick:hover,.chart td.pick:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
+/* on a phone the column names wrap and the cells tighten, so a six-leaf chart fits without scrolling */
+@media (max-width:480px){table.chart{font-size:.82rem}.chart tr:first-child th{white-space:normal;line-height:1.1;padding:2px}.chart th,.chart td{min-width:2.3em;padding:0 2px}}
 .chart td.chosen{background:var(--accent);color:var(--accent-ink);font-weight:700}
 .chart td small{display:block;font-size:.7rem;line-height:1;color:var(--muted)}
 .chart td.bad small{color:inherit}
@@ -1275,7 +1277,7 @@ HANDLERS.final={
   scene(c){const t=c.r.tree,n=Math.min(c.round,c.r.rounds.length),part={n:6,N:t.N,edges:c.stage==='join'?t.edges.slice(0,2*n):t.edges};
     return {svg:caveSVG(part,c.pos,{style:'chalk',names:c.names,click:c.stage==='ask'&&!c.done,extraLeaves:range(6).filter(v=>!presentLeaves(part).includes(v)),hot:new Set(c.stage==='ask'?[0,1]:[])}),
       surveyor:c.pos.angles[0],label:'The coronavirus tree'};},
-  work(c){const lab='<p><span class="illus">Illustrative</span> These distances were made up to have the shape of the published trees; they are not measurements.</p>';
+  work(c){const lab='<p>These distances are illustrative. They were made up to have the shape of the published trees and are not measurements.</p>';
     if(c.stage==='ask'||c.done){return lab+(c.done?'':'<p>Which virus is the closest relative of the two human samples? Choose its entrance.</p>')+chartHTML(c.D,c.names,{label:'Chart'});}
     const R=c.r.rounds[c.round],nm=R.labels.map(v=>labelName(c.r.tree,v,c.names));
     return lab+'<div class="sub">Round '+(c.round+1)+': the chart</div>'+chartHTML(R.D,nm,{label:'Chart',extraHead:'<th>Total</th>',extraCol:totalsCol(R,nm,false)})+
@@ -1375,7 +1377,7 @@ function renderControls(){
 function render(){
   renderHeader();
   $('#title').textContent='Level '+cur.L.id+': '+cur.L.title;
-  $('#goal').innerHTML='<b>Goal:</b>'+esc(cur.L.goal);
+  $('#goal').innerHTML='<b>Goal:</b> '+esc(cur.L.goal);
   $('#brief').textContent=typeof cur.L.brief==='function'?cur.L.brief():cur.L.brief;
   const Hd=HANDLERS[cur.mode];
   $('#rule').textContent=Hd.rule(cur);

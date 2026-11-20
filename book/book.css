@@ -67,6 +67,21 @@ body.bk-game #title{font-family:var(--bk-serif);font-size:1.5rem;line-height:1.2
 body.bk-game #brief{font-size:1.04rem;line-height:1.6;max-width:68ch}
 /* the rule chip repeated the brief, so it is not shown */
 body.bk-game .rule{display:none}
+/* the goal is a plain paragraph under the title, and labels above stages read as sentences */
+body.bk-game .goal{border-left:0;padding:0;margin:2px 0 10px;font-size:1.04rem;line-height:1.5}
+/* small labels read as ordinary sentence-case text, not letter-spaced capitals */
+body.bk-game :is(.sub,.cap,.tag,.vocabhead,.illus){text-transform:none;letter-spacing:0;font-size:.85rem}
+body.bk-game .illus{border:0;padding:0;font-weight:700}
+/* no stripe down the left of callouts */
+body.bk-game .called,body.bk-game .handover{border-left:0;padding-left:0}
+body.bk-g-the-loom .handover{padding-left:14px;border-radius:8px}
+body.bk-g-lockpick .reveal{border-left:0;border-radius:8px}
+body.bk-g-lockpick .note.dead{border-left:0}
+/* wide stages scroll sideways on a phone; the fade on the right edge shows there is more */
+body.bk-game .bk-xscroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
+body.bk-game .bk-xscroll.bk-more{-webkit-mask-image:linear-gradient(90deg,#000 calc(100% - 28px),transparent);mask-image:linear-gradient(90deg,#000 calc(100% - 28px),transparent)}
+body.bk-game .bk-scrollnote{display:none;font-size:.85rem;color:var(--muted,var(--bk-dim));margin:4px 0 0}
+body.bk-game .bk-scrollnote.show{display:block}
 
 /* the stage */
 body.bk-game .stage{border-radius:6px}
@@ -137,7 +152,7 @@ button.bk-begin:focus-visible{outline:3px solid var(--bk-gold);outline-offset:3p
 
 /* celebrations */
 .bk-confetti{position:fixed;inset:0;width:100vw;height:100vh;z-index:90;pointer-events:none}
-.bk-toast{position:fixed;left:50%;top:56px;z-index:95;max-width:min(560px,calc(100vw - 24px));padding:10px 16px;border-radius:4px;
+.bk-toast{position:fixed;left:50%;bottom:16px;z-index:95;max-width:min(560px,calc(100vw - 24px));padding:10px 16px;border-radius:4px;
   background:var(--bk-spine);color:var(--bk-spine-ink);font:400 .92rem/1.35 var(--bk-sans);
   pointer-events:none;opacity:0;transform:translateX(-50%);transition:opacity .25s}
 .bk-toast.show{opacity:1}

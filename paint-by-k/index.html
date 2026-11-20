@@ -148,6 +148,8 @@ footer input{font:inherit;width:9em;padding:5px 8px;border:1px solid var(--line)
   .row.two .fig.act{flex:1 1 100%}
   .deck{grid-template-columns:repeat(auto-fill,minmax(96px,1fr))}
   .piles{grid-template-columns:1fr}
+  /* the meter stays pinned to the bottom of the screen while the picture above it is tapped */
+  .stage .meter{position:sticky;bottom:0;z-index:2;background:var(--panel);padding:6px 8px;margin-left:-8px;margin-right:-8px;border-top:1px solid var(--line)}
 }
 @media print{
   body{background:#fff;color:#000}
@@ -1249,7 +1251,7 @@ MODES.shift={
  rule:()=>'Each gene goes to its nearest pot',
  stage(c){
   const st=c.st,I=c.inst,D=I.data;
-  let h='<p class="cap">Twenty-four genes <span class="illus">illustrative data</span></p><div class="deck">'+D.map((v,i)=>cardHtml(v,'gene '+(i+1),{border:st.lab?PILECOL[st.lab[i]]:null,tag:I.ff.idx.includes(i)?'pot '+(I.ff.idx.indexOf(i)+1)+'’s start':''})).join('')+'</div>';
+  let h='<p class="cap">Twenty-four genes (illustrative data)</p><div class="deck">'+D.map((v,i)=>cardHtml(v,'gene '+(i+1),{border:st.lab?PILECOL[st.lab[i]]:null,tag:I.ff.idx.includes(i)?'pot '+(I.ff.idx.indexOf(i)+1)+'’s start':''})).join('')+'</div>';
   if(st.phase==='free')h+=loopButtons(st,'gene');
   else h+=MODES.shift.big(c);
   return h;
@@ -1330,7 +1332,7 @@ function renderStage(){$('#stage').innerHTML=cur.M.stage(cur);cur.justPrinted=fa
 function render(){
  renderHeader();
  $('#title').textContent='Level '+cur.L.id+': '+cur.L.title;
- $('#goal').innerHTML='<b>Goal:</b>'+esc(cur.L.goal);
+ $('#goal').innerHTML='<b>Goal:</b> '+esc(cur.L.goal);
   $('#brief').textContent=cur.L.brief;
  $('#rule').textContent=cur.M.rule(cur);
  renderStage();
