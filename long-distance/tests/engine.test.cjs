@@ -61,6 +61,9 @@ test('level 7: no single query predicts every board; TATA at distance 1 and GATA
   assert.deepEqual(plain(x.boards.map(b=>b.on)),[true,false,false,false,true]);
   const hit=(b,w,d)=>E.answers(b.labels,N,{want:[w],dist:d}).length>0;
   new Set(x.boards.flatMap(b=>b.labels)).forEach(w=>{for(const d of [null,1,2,3,4,5,6,7,8,9])assert(!x.boards.every(b=>hit(b,w,d)===b.on));});
+  const words=[...new Set(x.boards.flatMap(b=>b.labels))];
+  for(const u of words)for(const v of words)if(u<v)for(const d of [null,1,2,3,4,5,6,7,8,9])
+    assert(!x.boards.every(b=>(E.answers(b.labels,N,{want:[u,v],dist:d}).length>0)===b.on),'one query with keys '+u+' and '+v);
   assert(x.boards.every(b=>(hit(b,'TATA',1)&&hit(b,'GATA',null))===b.on));assert(!x.boards.every(b=>(hit(b,'TATA',1)||hit(b,'GATA',null))===b.on));
 }));
 test('level 8: A and C hold the same plates; one round fails; two rounds work only at distance 1, with either partner asking',()=>each(8,x=>{

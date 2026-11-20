@@ -38,7 +38,8 @@ function solve(api,id){
   }else if(id===6){
     api.act('plate',plateOf('TATA'));api.act('run');api.skip();api.act('dist',{d:1});api.act('run');
   }else if(id===7){
-    api.act('plate',plateOf('TATA'));api.act('dist',{q:0,d:1});api.act('addq');api.act('plate',plateOf('GATA'));api.act('rule',{r:'both'});api.act('run');
+    api.act('plate',plateOf('TATA'));api.act('plate',plateOf('GATA'));api.act('run');api.act('plate',plateOf('GATA'));
+    api.act('dist',{q:0,d:1});api.act('addq');api.act('plate',plateOf('GATA'));api.act('rule',{r:'both'});api.act('run');
   }else if(id===8){
     api.act('arm',{f:'who'});api.act('plate',plateOf('GATA'));api.act('arm',{f:'want'});api.act('plate',plateOf('CAGC'));api.act('dist',{d:1});
     api.act('arm',{f:'r2'});api.act('plate',plateOf('GATA'));api.act('riv');api.act('run');
@@ -112,8 +113,19 @@ test('level 7: one query cannot predict the boards, and two need the rule "both"
   const api=boot('?debug=1&level=7&seed=HEAD').api,x=api.state().inst;
   const at=w=>{const b=x.boards.findIndex(q=>q.labels.includes(w));return {b,i:x.boards[b].labels.indexOf(w)};};
   for(const w of ['TATA','GATA'])for(const d of [null,1]){api.loadLevel(7);api.act('plate',at(w));if(d)api.act('dist',{q:0,d});api.act('run');assert.equal(api.state().done,false,w+d);}
-  api.loadLevel(7);api.act('plate',at('TATA'));api.act('dist',{q:0,d:1});api.act('addq');api.act('plate',at('GATA'));api.act('run');assert.equal(api.state().done,false);
+  api.loadLevel(7);api.act('plate',at('TATA'));api.act('dist',{q:0,d:1});api.act('addq');assert.equal(api.state().st.q.length,1,'no second query before a failed run');
+  api.act('plate',at('GATA'));assert.deepEqual([...api.state().st.q[0].keys],['TATA','GATA']);api.act('run');assert.equal(api.state().done,false);
+  assert.match(api.state().msg.text,/cannot ask for two plates at once/);
+  api.act('plate',at('GATA'));api.act('addq');assert.equal(api.state().st.q.length,2);api.act('plate',at('GATA'));api.act('run');assert.equal(api.state().done,false);
   api.act('rule',{r:'both'});api.act('run');assert(api.state().done);
+});
+test('level 7: a student who never tries two keys still gets the second query after three misses, and the rule after four',()=>{
+  const api=boot('?debug=1&level=7&seed=HEAD2').api,x=api.state().inst;
+  const at=w=>{const b=x.boards.findIndex(q=>q.labels.includes(w));return {b,i:x.boards[b].labels.indexOf(w)};};
+  api.act('plate',at('TATA'));
+  for(let k=0;k<2;k++){api.act('run');assert.equal(api.state().st.canAdd,false);}
+  api.act('run');assert.equal(api.state().st.canAdd,true);assert.doesNotMatch(api.state().msg.text,/TATA one place/);
+  api.act('run');assert.match(api.state().msg.text,/TATA one place from the gene/);
 });
 test('level 8: one round is not enough, and either partner may do the asking',()=>{
   const api=boot('?debug=1&level=8&seed=LAY').api,x=api.state().inst;
