@@ -33,7 +33,7 @@ const PLAY={
  9(ui){const c=st(ui);fillHands(ui);ui.api.act('cell',{i:c.R.i,j:c.R.j});fillHands(ui);ui.api.act('skip');},
  10(ui){const c=st(ui);const o=ui.E.nniOptions(c.t),idx=o.findIndex(x=>ui.E.quartetScore(x.tree,c.D)===15),pick=o[idx],k=o.filter(x=>x.edge===pick.edge).indexOf(pick);
    ui.api.act('tunnel',{e:pick.edge});ui.api.act('swap',{k});},
- 11(ui){const c=st(ui);for(let g=0;g<6&&c.stage==='join';g++){const R=c.r.rounds[c.round];ui.api.act('cell',{i:R.i,j:R.j});}ui.api.act('node',{v:2});}
+ 11(ui){const c=st(ui);for(let g=0;g<6&&c.stage==='join';g++){const R=c.r.rounds[c.round];ui.api.act('cell',{i:R.i,j:R.j});}ui.api.act('junction',{v:ui.E.adjOf(c.r.tree)[2][0].v});}
 };
 
 test('a fresh save plays every level and ends with every term earned, each completion in the move log',()=>{
@@ -88,6 +88,30 @@ test('level 10: a swap that does not reach the top score leaves the level open, 
  const o=ui.E.nniOptions(c.t),bad=o.find(x=>ui.E.quartetScore(x.tree,c.D)<15),k=o.filter(x=>x.edge===bad.edge).indexOf(bad);
  ui.api.act('tunnel',{e:bad.edge});ui.api.act('swap',{k});assert(!c.done);ui.api.act('undo');assert.equal(ui.E.quartetScore(c.t,c.D),before);
 });
+test('level 4: a failed walk after D is dug says how to find where the limb branches off',()=>{
+ const ui=boot(null,{search:'?debug=1&level=4&seed=TRAP'});const c=st(ui);fillHands(ui);
+ const at=ui.E.attachPoint(c.cave,c.D,3);
+ ui.api.act('tunnel',{e:at.ei});ui.api.act('dig',{e:at.ei,x:at.off,from:at.from,L:at.L+1});ui.api.act('walk');
+ assert(!c.done);assert.match(c.msg.text,/Subtract D’s limb from that reading/);
+});
+test('level 9: the discounted chart is given; the student picks its smallest entry first',()=>{
+ const ui=boot(null,{search:'?debug=1&level=9&seed=NJ5'});const c=st(ui);
+ assert.equal(c.stage,'pick');assert.equal(Object.keys(c.hand).length,0);
+ ui.api.act('cell',{i:c.R.i,j:c.R.j});assert.equal(c.stage,'limbs');
+});
+test('level 10: a swap that does not raise the score names the pair the chart keeps together',()=>{
+ const ui=boot(null,{search:'?debug=1&level=10&seed=SWP'});const c=st(ui),before=ui.E.quartetScore(c.t,c.D);
+ const o=ui.E.nniOptions(c.t),bad=o.find(x=>ui.E.quartetScore(x.tree,c.D)<=before),k=o.filter(x=>x.edge===bad.edge).indexOf(bad);
+ ui.api.act('tunnel',{e:bad.edge});ui.api.act('swap',{k});assert(!c.done);assert.match(c.msg.text,/foursome on the first map puts [A-F] with [A-F] in the chart/);
+});
+test('level 11: only the junction where the civet virus meets the human pair finishes the level',()=>{
+ const ui=boot(null,{search:'?debug=1&level=11&seed=FIN'});const c=st(ui);
+ while(c.stage==='join'){const R=c.r.rounds[c.round];ui.api.act('cell',{i:R.i,j:R.j});}
+ const A=ui.E.adjOf(c.r.tree),civet=A[2][0].v;
+ for(let v=6;v<c.r.tree.N;v++)if(v!==civet&&A[v].length){ui.api.act('junction',{v});assert(!c.done);assert.equal(c.msg.kind,'warn');}
+ ui.api.act('node',{v:2});assert(!c.done);
+ ui.api.act('junction',{v:civet});assert(c.done);
+});
 test('workbench opens with ?bench=1 and saves nothing',()=>{
  const ui=boot(null,{search:'?bench=1'});assert.match(ui.el('#bOut').innerHTML,/Neighbor joining/);assert.match(ui.el('#bOut').innerHTML,/Reproduces the chart/);
  assert.equal(ui.writes.length,0);
@@ -114,5 +138,5 @@ test('the final tree joins the pair selected when two minimum entries tie',()=>{
     assert.deepEqual(Array.from(joined,e=>e.b).sort(),[a,b].sort());
   }
   assert(playedTie);assert(ui.E.sameMatrix(ui.E.leafDist(c.r.tree),c.D));
-  ui.api.act('node',{v:2});assert(c.done);
+  ui.api.act('junction',{v:ui.E.adjOf(c.r.tree)[2][0].v});assert(c.done);
 });
