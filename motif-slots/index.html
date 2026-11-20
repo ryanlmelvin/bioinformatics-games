@@ -594,27 +594,27 @@ function showP(x,den){const f=den?fracOf(x,den):null;if(f)return f;if(!x)return 
 function parseNum(s){s=String(s).trim().replace(/\s+/g,'');if(!s)return NaN;const m=s.match(/^(\d+)\/(\d+)$/);if(m)return +m[2]?+m[1]/+m[2]:NaN;return Number(s);}
 
 const LEVELS=[
-  {id:1,title:'A recurring sequence',goal:'Find the five-nucleotide sequence that occurs most often on the strip. Click to guess one, mark its copies, then check your guess against the machine’s count.',
+  {id:1,goal:'Find the five-nucleotide sequence that occurs most often on the strip. Click to guess one, mark its copies, then check your guess against the machine’s count.',title:'A recurring sequence',
    brief:'The strip is a stretch of bacterial DNA, read left to right.'},
-  {id:2,title:'Close enough',goal:'Find the five-nucleotide sequence with the most near copies on the strip, allowing one substitution, and submit it.',
+  {id:2,goal:'Find the five-nucleotide sequence with the most near copies on the strip, allowing one substitution, and submit it.',title:'Close enough',
    brief:'Another bacterial DNA sequence contains five variants of the same five-nucleotide sequence. Each variant has one nucleotide substitution, at a different position each time.'},
-  {id:3,title:'Both strands',goal:'Find the five-nucleotide sequence with the most near copies when both strands are read. First enter the lower strand at the outlined spot, then count.',
+  {id:3,goal:'Find the five-nucleotide sequence with the most near copies when both strands are read. First enter the lower strand at the outlined spot, then count.',title:'Both strands',
    brief:'The DNA strands are antiparallel, with complementary base pairing: A–T and C–G. Read each strand 5′ to 3′; the lower strand runs right to left.'},
-  {id:4,title:'Ten genes, one switch',goal:'Find one six-nucleotide sequence that has a close match on all ten strips.',
+  {id:4,goal:'Find one six-nucleotide sequence with a window on all ten strips that differs from it by at most two nucleotides.',title:'Ten genes, one switch',
    brief:'Ten genes are co-regulated. Each strip shows 24 nucleotides upstream of one gene. A transcription factor binds a six-nucleotide site in each upstream region to activate transcription, and the site varies slightly among genes.'},
-  {id:5,title:'The reels',goal:()=>'Slide the four reels until the windows on the payline have '+plural(cur.inst.target,'miss')+' or fewer.',
+  {id:5,goal:()=>'Slide the four reels until the windows on the payline have '+plural(cur.inst.target,'miss')+' or fewer.',title:'The reels',
    brief:'Four of those strips are now reels in a machine. A reel can only slide. The clamp reads the window at the payline on every reel at once.'},
-  {id:6,title:'Too many stops',goal:'Find the six-nucleotide sequence closest to all ten strips. Start the bot to see why trying every setting fails, score two sequences by hand, then try all 4,096.',
+  {id:6,goal:'Find the six-nucleotide sequence closest to all ten strips. Start the bot to see why trying every setting fails, score two sequences by hand, then try all 4,096.',title:'Too many stops',
    brief:'Each of the ten reels has 19 stops. Together they give the machine 19¹⁰ possible settings, about 6 × 10¹².'},
-  {id:7,title:'Let the reels vote',goal:'Stop five reels using the reels above as a guide. Fill in the vote, work out one probability, stop reel 5, then stop every reel from the top down.',
+  {id:7,goal:'Fill in one column of the vote and work out one probability. Then stop reel 5 at its most probable window, and stop reels 2 to 5 again starting from reel 1 alone.',title:'Let the reels vote',
    brief:'Each reel shows four nucleotides at the payline. Use the first four reels to predict where the fifth should stop.'},
-  {id:8,title:'One zero spoils everything',goal:'Fix the zero in the vote by adding one to every count, then stop reels 2 to 5 again from the top down.',
+  {id:8,goal:'Fix the zero in the vote by adding one to every count, then stop reels 2 to 5 again from the top down.',title:'One zero spoils everything',
    brief:'Back to your trip down the reels, at the moment reel 2 stopped.'},
-  {id:9,title:'Spin',goal:'Pull the lever and re-stop the reels until nothing improves. Do this twenty times and keep the best spin.',
+  {id:9,goal:'Pull the lever and re-stop the reels until nothing improves. Do this twenty times and keep the best spin.',title:'Spin',
    brief:'Six reels, five nucleotides at the payline. Pull the lever to give each reel a random starting position. Then let the reels vote.'},
-  {id:10,title:'Hold all but one',goal:'Get the machine out of its stall. Lift one reel at a time, and when that stops helping, spin the loaded wheel until the misses drop.',
+  {id:10,goal:()=>'Get the machine out of its stall. Lift one reel at a time. When that stops helping, spin the loaded wheel until the misses reach '+cur.inst.planted+'.',title:'Hold all but one',
    brief:'The same six reels, and the machine is stuck.'},
-  {id:11,title:'Dusk',goal:'Pull the lever and watch the machine find a nine-nucleotide pattern shared by the ten upstream regions.',
+  {id:11,goal:'Pull the lever and watch the machine find a nine-nucleotide pattern shared by the ten upstream regions.',title:'Dusk',
    brief:'The ten genes from level 4 return. This time the machine searches their upstream regions for a nine-nucleotide pattern.'}
 ];
 
@@ -1042,14 +1042,14 @@ LV[2]={
       if(!cur.board||cur.boardD!==cur.d||!cur.dial){say('Find sequences and select one before submitting.','warn');return;}
       const n=litPositions(I.text,cur.dial,cur.d).length;log('submit',{word:cur.dial,d:cur.d});
       if(cur.dial===I.word&&cur.d===1){cur.step='done';say(cur.dial+' has '+n+' lit windows with up to '+plural(cur.d,'mismatch')+', although it never occurs exactly.','good');finish(['ham']);}
-      else say(cur.d===0?'Exact matches miss the altered copies. Allow a mismatch and find sequences again.':cur.d===2?'Two mismatches admit extra windows. Each of the three windows you compared differed at just one position. Set the limit to 1 and search again.':cur.dial+' lights '+plural(n,'window')+'. Another sequence lights more.','warn');
+      else say(cur.d===0?'Exact matches miss the altered copies. Allow a mismatch and find sequences again.':cur.d===2?'Two mismatches admit extra windows. Each of the three windows you compared differed at just one position. Set the limit to 1 and search again.':cur.dial+' has '+plural(n,'lit window')+'. Another sequence has more.','warn');
     }
   },
   reveal(){return '<p>The number of nucleotides that differ between two sequences of the same length is their '+term('ham')+'. A lit window is one within Hamming distance d of the sequence you are looking for, here d = '+cur.d+'. The winning sequence never occurs exactly. It wins because more windows are within distance '+cur.d+' of it than of any other sequence.</p>';}
 };
 
 LV[3]={
-  init(){const I=cur.inst;cur.read={pos:I.handAt,word:revcomp(I.text.substr(I.handAt,I.k))};cur.step='partner';cur.typed='';cur.board=null;cur.dial=null;say('');},
+  init(){const I=cur.inst;cur.read={pos:I.handAt,word:revcomp(I.text.substr(I.handAt,I.k))};cur.step='partner';cur.typed='';cur.board=null;cur.dial=null;say('Enter the outlined nucleotides on the lower strand.');},
   rule(){return cur.step==='partner'?'Complementary bases: A–T, C–G · read the lower strand 5′ to 3′, right to left':'Matching windows light up on either strand';},
   draw(){
     const I=cur.inst,lit=[];
@@ -1144,7 +1144,7 @@ LV[4]={
 };
 
 LV[5]={
-  init(){cur.off=cur.inst.start.slice();say('Use the arrows to line up the reels. Aim for '+plural(cur.inst.target,'miss')+' or fewer across the highlighted columns.');},
+  init(){cur.off=cur.inst.start.slice();cur.slides=0;say('Use the arrows to slide the reels. Aim for '+plural(cur.inst.target,'miss')+' or fewer at the payline.');},
   rule(){return 'Reels only slide · the clamp reads the payline';},
   draw(){
     const I=cur.inst;
@@ -1156,7 +1156,7 @@ LV[5]={
     if(a==='slide'){const [i,dir]=arg.split(':').map(Number);cur.off[i]=clampOff(I.reels[i],6,cur.off[i]+dir);log('slide',{reel:i,off:cur.off[i]});
       const m=scoreAt(I.reels,cur.off,6);
       if(m<=I.target){say('Jackpot: '+plural(m,'miss')+'.','good');finish(['mm','cons','score'],{misses:m});}
-      else say(plural(m,'miss')+'.');}
+      else{cur.slides++;say(plural(m,'miss')+'.'+(cur.slides>=40?' Each reel has a window that differs from '+SWITCH6+' by at most two nucleotides. Put those windows on the payline.':cur.slides>=20?' Slide one reel through every stop and leave it where the misses are lowest. Then do the same with the next reel.':''));}}
   },
   reveal(){return '<p>The stack of payline windows is a '+term('mm','motif matrix')+'. Its row of most frequent nucleotides is the '+term('cons','consensus string')+', and the misses meter is the matrix’s '+term('score','score')+'. Lower is better, and 0 means every window is the same.</p>';}
 };
@@ -1386,7 +1386,7 @@ LV[8]={
 };
 
 LV[9]={
-  init(){cur.step='spin';cur.pos=null;cur.spins=[];cur.hist=[];cur.best=null;say('');},
+  init(){cur.step='spin';cur.pos=null;cur.spins=[];cur.hist=[];cur.best=null;say('Pull the lever.');},
   rule(){return 'Pull: every reel stops at random · then let the reels vote';},
   draw(){
     const I=cur.inst,off=cur.pos||I.dna.map(()=>0);
