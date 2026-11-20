@@ -597,7 +597,7 @@ const LEVELS=[
   {id:3,title:'Both strands',
    brief:'The DNA strands are antiparallel, with complementary base pairing: A–T and C–G. Read each strand 5′ to 3′; the lower strand runs right to left.'},
   {id:4,title:'Ten genes, one switch',
-   brief:'Ten genes are co-regulated. Each strip shows 24 nucleotides upstream of one gene. A transcription factor binds a six-nucleotide site in each upstream region to activate transcription, and the site varies slightly among genes.'},
+   brief:'Ten genes are co-regulated. Each strip shows 24 nucleotides upstream of one gene. A transcription factor binds a six-nucleotide site in each upstream region to activate transcription, and the site varies slightly among genes. Find one six-nucleotide sequence that lights all ten genes.'},
   {id:5,title:'The reels',
    brief:'Four of those strips are now reels in a machine. A reel can only slide. The clamp reads the window at the payline on every reel at once.'},
   {id:6,title:'Too many stops',
@@ -1091,7 +1091,7 @@ function stripTally(strips,k,d){
 const clampOff=(s,k,p)=>Math.max(0,Math.min(s.length-k,p));
 
 LV[4]={
-  init(){cur.step='eye';cur.dial=null;cur.d=1;cur.count='windows';cur.board=null;say('Click a nucleotide on any strip to look for the six nucleotides starting there, with one mismatch allowed. Each strip with a window the clamp can grip lights its gene.');},
+  init(){cur.step='eye';cur.dial=null;cur.d=1;cur.count='windows';cur.board=null;say('Click a nucleotide on any strip to look for the six nucleotides starting there. A gene lights when its strip has a window that differs from that sequence by at most one nucleotide. When you have tried a few, count every six-nucleotide sequence.');},
   rule(){return 'One clamp per window · a gene lights when the clamp grips its strip';},
   lits(){const I=cur.inst;return I.strips.map(s=>cur.dial?litPositions(s,cur.dial,cur.d):[]);},
   draw(){
@@ -1119,7 +1119,10 @@ LV[4]={
     cur.board=board;cur.boardKey=cur.d+cur.count;
     if(cur.step==='eye'){cur.step='mode';cur.dial=cur.board[0].word;const nl=this.lits().filter(l=>l.length).length;
       const ties=cur.board.filter(x=>x.lit===cur.board[0].lit).length-1;
-      say('The top of the board, '+cur.dial+', lights '+cur.board[0].lit+' windows, '+(ties?'tied with '+plural(ties,'other sequence'):'more than any other sequence')+'. It lights '+numWord(nl)+' of the ten genes.','warn');}
+      say('The top of the board, '+cur.dial+', lights '+cur.board[0].lit+' windows, '+(ties?'tied with '+plural(ties,'other sequence'):'more than any other sequence')+'. But it lights only '+numWord(nl)+' of the ten genes. '+
+        'Two settings are now open above the board: how many mismatches a window may have, and what the board counts. Change them and count again.','warn');}
+    else if(cur.count==='strips'&&cur.board[0].lit<10)say('With '+plural(cur.d,'mismatch')+' allowed, no sequence lights all ten genes. Allow more mismatches and count again.','warn');
+    else if(cur.count==='windows')say('Click a sequence on the board to look for it. The board ranks by lit windows, so a sequence repeated on a few strips can beat one found on every strip. Counting strips lit avoids that.');
     else say('Click a sequence on the board to look for it.');
   },
   report(){
