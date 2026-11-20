@@ -134,6 +134,18 @@ test('invalid direct levels fall back to normal saved progress, with every level
  }
 });
 
+test('a new map on level 4 keeps the stranded count that brings up Try a different map',()=>{
+ const ui=boot(4);ui.api.state().strands=3;ui.api.state().skipOK=false;
+ ui.el('#fresh').click();const c=ui.api.state();
+ assert.equal(c.L.id,4);assert.equal(c.strands,3);assert.equal(ui.el('#skip').textContent,'Try a different map →');assert.equal(ui.el('#skip').hidden,false);
+ ui.api.loadLevel(3);ui.el('#fresh').click();assert.equal(ui.api.state().strands,0);
+});
+test('Königsberg offers no detour when Mira is stranded',()=>{
+ const ui=boot(5),c=ui.api.state();ui.api.nodeClick(0);
+ for(let k=0;k<10;k++){const used=new Set(c.b.walk.map(s=>s[0]));const e=c.E.find(e=>!used.has(e.id)&&(e.from===c.b.head||e.to===c.b.head));if(!e)break;ui.api.nodeClick(e.from===c.b.head?e.to:e.from);}
+ assert(c.b.walk.length<c.E.length);assert.match(c.msg.text,/stranded/);assert.doesNotMatch(c.msg.text,/detour/);
+});
+
 /* Every first-load code: a new browser draws one of these, so each is played through every level. */
 test('every first-load code plays every level without a fallback puzzle',()=>{
  const codes=boot().api.codes();assert.equal(codes.length,50);assert.equal(new Set(codes).size,50);

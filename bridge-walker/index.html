@@ -590,21 +590,21 @@ $('#ant').innerHTML=$('#a-ant').innerHTML;
 
 const LEVELS=[
   {id:1,mode:'cards',k:3,n:8,minB:1,maxB:2,goal:'Put all eight reads in a row so that each read starts with the last two nucleotides of the one before it.',title:'Shredded',
-   brief:'Rebuild a DNA sequence from these shuffled three-nucleotide reads. Choose a first read, then add one that starts with the last two nucleotides of the previous read. Use each read once.'},
-  {id:2,mode:'ham',share:1,intro:'cards',goal:'Click Put the reads on a map, then walk Mira across the bridges so she visits every island exactly once.',title:'Put it on a map',
+   brief:'Rebuild a DNA sequence from these shuffled three-nucleotide reads. Click a read to add it to your chain.'},
+  {id:2,mode:'ham',share:1,intro:'cards',goal:'Walk Mira across the bridges so she visits every island exactly once.',title:'Put it on a map',
    brief:'The same eight reads. Each read becomes an island, with a one-way bridge from one island to another wherever the end of the first read overlaps the start of the second. Islands sink when '+ANT+' the ant leaves them.'},
   {id:3,mode:'ham',k:3,n:12,minB:2,goal:'Walk Mira across the bridges so she visits all twelve nodes exactly once.',title:'Twelve nodes',
    brief:'Each of the twelve nodes represents a read. Look ahead at forks so '+ANT+' can visit every node once.'},
-  {id:4,mode:'ham',k:3,n:24,minB:6,goal:'Walk Mira so she visits all twenty-four nodes exactly once. After a few tries, you can ask for a different map.',title:'Two dozen',
-   brief:'Twenty-four reads. A real sequencing run produces millions.'},
+  {id:4,mode:'ham',k:3,n:24,minB:6,goal:'Walk Mira so she visits all twenty-four nodes exactly once. If she keeps getting stranded, a Try a different map button appears.',title:'Two dozen',
+   brief:'These are twenty-four reads. A real sequencing run produces millions.'},
   {id:5,mode:'konig',goal:'Find a walk that crosses each of the seven bridges exactly once, or decide that no such walk exists.',title:'Königsberg, 1736',
    brief:'This is a different city with a different rule. The four pieces of land are the nodes and the seven bridges are the edges. Here the land stays put and each bridge falls once '+ANT+' has crossed it. The townspeople want a walk that crosses every bridge exactly once.'},
-  {id:6,mode:'eul',share:1,intro:'morph',goal:'Click Turn every node into an edge, then walk Mira across every edge exactly once.',title:'Redraw the map',
+  {id:6,mode:'eul',share:1,intro:'morph',goal:'Walk Mira across every edge exactly once.',title:'Redraw the map',
    brief:'Your first eight reads again. Apply Königsberg’s rule and put each read on an edge instead of a node.'},
   {id:7,mode:'eul',k:3,n:16,minB:3,goal:'Choose where Mira starts and walk her across all sixteen edges, each exactly once.',title:'Archipelago',
    brief:'Sixteen reads, sixteen one-way edges. Choose where '+ANT+' starts. If unused edges remain when she gets stuck, look for a place to begin a detour.'},
   {id:8,mode:'balance',goal:'Add the fewest new edges so that every node has as many edges arriving as leaving.',title:'Round trip',
-   brief:'No DNA this time: a small graph with numbered nodes. '+ANT+' wants a round trip that crosses every edge once and ends where it began. For that, every node needs as many edges arriving as leaving. Add the fewest new edges that achieve this.'},
+   brief:'This graph has numbered nodes and no DNA. '+ANT+' wants a round trip that crosses every edge once and ends where it began. That needs every node to have as many edges arriving as leaving.'},
   {id:9,mode:'eul',k:4,n:10,minB:2,build:true,goal:'Draw one edge for each of the ten reads, then walk Mira across every edge exactly once.',title:'Draw the map yourself',
    brief:'Ten reads, four nucleotides each. Draw the edge map yourself. Each read is one edge, from the node named by its first three nucleotides to the node named by its last three. Pick a read, then click where its edge starts and where it ends: an existing node, or open water to raise a new one.'},
   {id:10,mode:'eul',k:4,n:12,minB:2,nomap:true,goal:'Work out which node Mira must start from, set her down there, and walk her across every edge exactly once.',title:'No map',
@@ -612,7 +612,7 @@ const LEVELS=[
   {id:11,mode:'eul',share:4,intro:'morph',noUndo:true,goal:'Walk Mira across all twenty-four edges, each exactly once, without undoing a move.',title:'Two dozen, again',
    brief:'These are the twenty-four reads from level 4. This time you have to use every edge without undoing a move. If you get stranded, you can still add a detour.'},
   {id:12,mode:'eul',pairs:true,goal:'Walk Mira across every edge exactly once, then use the read-pairs to decide which of the two sequences is real.',title:'Which one is real?',
-   brief:'Twenty reads, four nucleotides each. Cross every edge once. Does finding a walk tell you which DNA sequence was really there?'}
+   brief:'Twenty reads, four nucleotides each. Cross every edge once, then check whether one walk is the only possible sequence.'}
 ];
 
 /* Primary sources. Every link and citation here was checked against the publisher's record. */
@@ -692,7 +692,7 @@ const BLOCKS={
   degree:{src:['euler'],html:'Correct, and Euler proved it. Each time '+ANT+' walks onto a node, a second edge is needed to walk off, so edges get used up in pairs. The number of edges at a node is its '+term('degree','degree')+', and <b>all four nodes here have odd degree.</b> A walk that crosses every edge once can have at most two odd nodes, the first and the last.'},
   euler:{pic:'eul',src:['pevzner89'],html:ANT+' crossed every edge exactly once. <b>That’s called an '+term('euler','Eulerian path')+'.</b> The reads moved from the nodes to the edges.'},
   inout:{html:'The number of edges entering a node is its '+term('inout','indegree')+'; the number leaving it is its '+term('inout','outdegree')+'.'},
-  roundtrip:{html:()=>'Every node now has indegree equal to outdegree: each one is a '+term('balanced','balanced node')+'. That is exactly when a round trip over every edge exists, an '+term('cycle','Eulerian cycle')+'. <b>That’s '+term('balance','Euler’s theorem')+'.</b> You needed '+cur.inst.need+' new edges because each one repairs one node that was short an edge out and one that was short an edge in. The table under the map is the graph’s '+term('adj','adjacency list')+'.'},
+  roundtrip:{html:()=>'Every node now has indegree equal to outdegree: each one is a '+term('balanced','balanced node')+'. That is exactly when a round trip over every edge exists, an '+term('cycle','Eulerian cycle')+'. '+(S.earnedAt.balance===cur.L.id?'<b>That’s '+term('balance','Euler’s theorem')+'.</b>':'This is the cycle case of '+term('balance','Euler’s theorem')+'.')+' You needed '+cur.inst.need+' new edges because each one repairs one node that was short an edge out and one that was short an edge in. The table under the map is the graph’s '+term('adj','adjacency list')+'.'},
   debruijn:{src:['debruijn'],html:'You drew a node for every three-nucleotide prefix or suffix and an edge for every read. <b>That map is called a '+term('debruijn','de Bruijn graph')+'.</b> Reads of length k always give nodes of length k − 1.'},
   nomap:{html:'A node’s outdegree is the number of reads that start with it, and its indegree is the number that end with it. '+ANT+' must start where outdegree − indegree = 1. This is '+term('balance','Euler’s theorem')+' for a path.'},
   balance:{html:'You set '+ANT+' down on the right node at the first try in two levels. <b>That’s '+term('balance','Euler’s theorem')+'.</b> Start where one more edge leaves than arrives; you will finish where one more arrives than leaves. Every other node has as many in as out.'},
@@ -907,7 +907,7 @@ function loadLevel(id){
   if(L.mode==='cards'){cur.chain=[];say('');}
   else if(L.mode==='ham'){
     cur.path=[];
-    say(cur.phase==='pre'?'':startMsg());
+    say(cur.phase==='pre'?'Click Put the reads on a map.':startMsg());
     if(L.id===4)cur.skipTimer=setTimeout(()=>{cur.skipOK=true;renderControls();},45000);
   }else if(L.mode==='balance'){
     say('Click the node a new edge should leave from.');
@@ -920,7 +920,7 @@ function loadLevel(id){
       cur.phase='ask';
       cur.nm={cand:null,misses:0,order:shuffled(cur.inst.nodes.length,rng(hashStr(key+'|cand')))};
       say('Which node must '+ANT+' start on?');
-    }else say(cur.phase==='pre'?'The reads as nodes.':startMsg());
+    }else say(cur.phase==='pre'?'The reads are on the nodes. Click Turn every node into an edge.':startMsg());
     if(L.mode==='konig')cur.skipTimer=setTimeout(()=>{cur.skipOK=true;renderControls();},60000);
   }
   log('load',{mode:L.mode});
@@ -1039,6 +1039,8 @@ function moves(v,used){
 }
 function stepFrom(i){const s=cur.b.walk[i],e=cur.E[s[0]];return s[1]===e.to?e.from:e.to;}
 function anchors(){
+  /* Königsberg offers no detours: on the wall level the move cannot succeed, and it belongs to levels 7 and 11 */
+  if(cur.mode==='konig')return [];
   const used=usedSet(),on=new Set(cur.b.walk.map((_,i)=>stepFrom(i)));
   return [...on].filter(v=>moves(v,used).length>0);
 }
@@ -1153,7 +1155,7 @@ function renderPairWork(){
   const inst=cur.inst,won=cur.pairWon;
   el.innerHTML='<p>The blue and purple sequence regions come from the two loops, taken in opposite orders. Each measured pair has four nucleotides at each end and one unknown nucleotide between them (k = 4, d = 1).</p>'+
     (won?'<p><b>This pair settles it.</b> It lines up under string '+AB(won.cand)+' and nowhere under string '+AB(1-won.cand)+'.</p>'
-        :'<p>'+cap(numWord(inst.bench.length))+' of the '+numWord(inst.pairs.length)+' measured pairs are on the bench. Most of them fit both strings and so cannot distinguish them. Find the pair that lines up under only one string, slide it into place there, and choose that string.</p>')+
+        :'<p>'+cap(numWord(inst.bench.length))+' of the '+numWord(inst.pairs.length)+' measured pairs are in the Read-pair list. Most of them fit both strings and so cannot distinguish them. Find the pair that lines up under only one string, slide it into place there, and choose that string.</p>')+
     '<label for="pairSelect">Read-pair </label><select id="pairSelect"'+(won?' disabled':'')+'>'+inst.bench.map(i=>{const p=inst.pairs[i];
       return '<option value="'+i+'"'+(i===cur.pairSel?' selected':'')+'>'+p.left+' · '+p.right+(cur.pairKnown[i]?' (fits both)':'')+'</option>';}).join('')+'</select>'+
     '<div class="pairscroll">'+inst.candidates.map(pairTape).join('')+'</div>';
@@ -1841,7 +1843,12 @@ document.addEventListener('keydown',ev=>{
 });
 $('#undo').onclick=undo;
 $('#restart').onclick=restart;
-$('#fresh').onclick=()=>{S.variants[cur.src.id]=(S.variants[cur.src.id]||0)+1;log('new_puzzle');save();loadLevel(cur.L.id);};
+$('#fresh').onclick=()=>{
+  /* level 4 is the wall: a new map must not reset the count that brings up Try a different map */
+  const keep=cur.L.id===4&&!cur.done?{strands:cur.strands,skipOK:cur.skipOK}:null;
+  S.variants[cur.src.id]=(S.variants[cur.src.id]||0)+1;log('new_puzzle');save();loadLevel(cur.L.id);
+  if(keep){cur.strands=keep.strands;cur.skipOK=keep.skipOK;renderControls();}
+};
 $('#counts').onchange=()=>{log('counts',{on:$('#counts').checked});render();};
 $('#fog').onchange=()=>{log('fog',{on:$('#fog').checked});render();};
 $('#skip').onclick=()=>{
