@@ -269,7 +269,7 @@ function gamePage(){
     if(location.hash==='#handouts')requestAnimationFrame(()=>sec.scrollIntoView());
   }
   const after=el('section','bk-after');after.setAttribute('aria-label',side?'Back to the chapter':'Next chapter');
-  after.innerHTML=nextCard;
+  after.innerHTML=nextCard+(!side&&ch.side?'<a class="bk-nextch bk-sidech" href="'+base+ch.side.dir+'/"><img src="'+base+'book/art/'+ch.side.dir+'.svg" alt=""><span><small>Side quest for this chapter</small><b>'+esc(ch.side.game)+'</b></span></a>':'');
   if(foot)foot.before(after);else wrap.append(after);
 }
 

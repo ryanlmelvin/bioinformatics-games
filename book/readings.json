@@ -79,9 +79,9 @@
     "burrows-wheeler": {
       "readings": [
         {"chapter": 1, "title": "Introduction to algorithms", "focus": "Review binary search and Big O notation as preparation for searching a sorted suffix array."},
-        {"chapter": 4, "title": "Quicksort", "focus": "Review sorting and divide and conquer, then consider the cost of comparing suffixes instead of single numbers."},
-        {"chapter": 7, "title": "Trees", "focus": "For an extension, read the Huffman coding section as another use of structure in compression. It is separate from the Burrows–Wheeler transform and backward search."},
         {"chapter": 2, "title": "Selection sort", "section": "Memory, arrays and linked lists", "pages": "22-34", "focus": "Focus on the memory and data-structure sections and exercises 2.2-2.5. Random access and insertion costs help explain the choice of representation for a suffix index."},
+        {"chapter": 4, "title": "Quicksort", "focus": "Review sorting and divide and conquer, then consider the cost of comparing suffixes instead of single numbers."},
+        {"chapter": 7, "title": "Trees", "focus": "For an extension, read the Huffman coding section as another use of structure in compression."},
         {"chapter": 13, "title": "Where to go next", "section": "Inverted indexes", "pages": "249-250", "focus": "A word-to-location index becomes a k-mer-to-genome-position index. Compare explicit occurrence lists with the suffix-array intervals used in read mapping."}
       ],
       "exercises": "1.1-1.2, 2.2-2.5 and 4.4-4.8.",

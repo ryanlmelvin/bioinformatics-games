@@ -62,13 +62,12 @@
     "the new sign after the last letter (level 3)": "the unique $ after the last letter (level 3)",
     "the word on a ring, cut before each letter: the strips (level 4)": "a strip made by reading once around the ring from a chosen letter (level 4)",
     "what read mappers store": "one part of a read mapper’s index",
-    "a half of the read that must match exactly (level 10)": "an exact match to one half of a read with at most one mismatch (level 10)",
-    "Each question repeats a step from the game.": "Use levels 4, 6 and 1 for questions 1, 2 and 3, respectively. Number rows from 0 at the top.",
+    "a piece of the read that must match exactly (level 10)": "an exact match to one of two pieces of a read with at most one mismatch (level 10)",
+    "Each question repeats a step from the game.": "Use levels 4, 6 and 7 for questions 1, 2 and 3, respectively. Number rows from 0 at the top.",
     " on a ring and cut it before each letter,": " on a ring. From each of the six symbols, read once around the ring to make a strip. Sort the strips with $ first, then copy the last column from top to bottom.",
     "Only this right beam survived, top to bottom: ": "The right beam reads ",
     ". As in level 6: write the left beam, number": ". Sort those symbols to fill the left beam. On each beam, number the copies of each letter from top to bottom and join matching copies. Start at row 0 on the right. Write its letter to the left of $, follow its thread, and repeat one box farther left each time.",
     "The text, from its right end:": "Fill the empty boxes from right to left.",
-    "What is the Multiple Pattern Matching Problem,": "In level 1 you placed several reads on one reference. What inputs and output define this pattern-matching problem? Which comparisons does a fresh scan repeat for each new read?",
     "The game is The Loom, at ": "Play the 11 levels of The Loom at https://bioinformatics.ryanlmelvin.com/the-loom/. Fill in the table as you discover its 11 terms, then solve the three paper exercises."
   },
   "clustering-coding-and-paper-tasks": {
@@ -196,10 +195,10 @@
     "the bookkeeper’s page that keeps the better way in, with its kept ways": "the ledger that records the best way into each cell",
     "Each question repeats a step from the game.": "Use level 7 for the most likely path, level 4 for the probability of a particular path and its calls, and level 8 for the protein-family model.",
     "A hidden switch selects either a fair pair": "The dealer calls other, other, 7, 7, other. Use the probabilities below to fill a Viterbi table with rows F (fair) and L (loaded). Trace the best path back from the final round. When does it switch pairs? Does it switch back on the final “other”?",
-    "Start with probability 1/2 for each pair.": "To work in whole numbers, give each starting pair weight 1. Use 3 for a stay and 1 for a switch. For “7” and “other,” use weights 1 and 5 with the fair pair and 4 and 2 with the loaded pair.",
-    "Keeps his pair 3 rounds in 4, swaps 1 in 4": "Between rounds: stay with probability 3/4 or switch with probability 1/4",
+    "Start with probability 1/2 for each pair.": "To work in whole numbers, give each starting pair weight 1. Use 3 to keep the pair and 1 to swap. For “7” and “other,” use weights 1 and 5 with the fair pair and 4 and 2 with the loaded pair.",
+    "Keeps his pair 3 rounds in 4, swaps 1 in 4": "Between rounds: keep the pair with probability 3/4 or swap with probability 1/4",
     "Five members of a family:": "Five aligned protein-family members appear below. A dash marks a gap.",
-    "A column is a room when at most 2 of the": "Keep a column as a room if it contains at most two gaps. List the retained column numbers and number the rooms from left to right. Which residues occur in the third room, and what fraction of the five members has each one?"
+    "A column is a room when at most 2 of the": "Keep a column as a room if it contains at most two gaps. List the retained column numbers and number the rooms from left to right. Which residues occur in the third room, and what fraction of the five members has each one? Out of the third room, how many members go into the next room, and how many drop through the trapdoor?"
   },
   "motifs-coding-and-paper-tasks": {
     "Here is an 18-letter text. Take k = 3 and one wrong letter allowed.": "Use k = 3 and allow at most one mismatch in each window of this 18-letter text.",
@@ -225,13 +224,13 @@
     "Is the answer it stops at the best possible?": "Find a choice of windows that beats this run’s final score. How does level 9 give the search another chance?"
   },
   "motifs-play-guide": {
-    "The game is Motif Slots, at https://bioinformatics.ryanlmelvin.com/motif-slots/.": "Play Motif Slots at https://bioinformatics.ryanlmelvin.com/motif-slots/. Complete levels 1–10, then finish level 11 to collect any remaining terms. Fill in the table as you play, define the terms and answer the three questions by hand.",
+    "The game is Motif Slots, at https://bioinformatics.ryanlmelvin.com/motif-slots/.": "Play Motif Slots at https://bioinformatics.ryanlmelvin.com/motif-slots/. Play all eleven levels, in any order, to earn the 18 vocabulary terms. Fill in the table as you play, define the terms and answer the three questions by hand.",
     "letters different": "positions where two sequences differ",
     "a lit window (“wrong letters allowed” is d)": "a window lit with d mismatches allowed",
     "a site the protein ________________": "a possible site where the protein could _______",
     "one string of Dna": "one DNA sequence",
     "“fav.”: each column’s favourite letter": "the “fav.” row of most frequent letters",
-    "the word whose closest windows add up to the fewest letters different": "the word with the fewest total mismatches across its closest windows",
+    "the word whose closest windows add up to the fewest letters different": "the sequence with the fewest total mismatches across its closest windows",
     "Each question repeats a step from the game.": "Use the mismatch and strand rules from levels 2 and 3 for question 1. For questions 2 and 3, read columns as you did in levels 5 and 7.",
     "Write the reverse complement of ATCCA. Then,": "Write the reverse complement of ATCCA. Allow one mismatch. In the text below, mark the windows that match ATCCA and those that match its reverse complement. Report the two counts separately.",
     "Here are four windows at the payline, stacked.": "Find the score of these four payline windows. Write one consensus string and mark any column where more than one nucleotide could be chosen.",
@@ -261,9 +260,9 @@
     "with base e in a trained model": "usually computed with base e",
     "covering a plate and asking for it back (level 9)": "predicting a covered plate from the surrounding plates (level 9)",
     "training without measurements": "training from the sequence itself",
-    "Each question repeats a step from the game.": "Question 1 uses level 5. Question 2 combines the rules from levels 7 and 8 as in the level 10 model. Question 3 compares levels 2 and 3. A plate’s pull starts at 1 and doubles for each letter that matches the query at the same position.",
+    "Each question repeats a step from the game.": "Question 1 uses level 5. Question 2 combines the rules from levels 7 and 8 as in the level 10 model. Question 3 compares levels 2 and 3. A plate’s pull starts at 1 and doubles for each nucleotide that matches the query at the same position.",
     " at distance 1, and a jack that is answered": " one plate away on either side. A jack that finds a match gains a rivet. In round 2, the gene asks for ",
-    "In level 2 the line of jacks could not bring": "On the longer board in level 2, why did the GATA signal fall short of the gene after three rounds? Explain how one cord reached it in level 3 and why that cord must connect to a different jack on some boards.",
+    "In level 2 the line of jacks could not bring": "On strand A in level 2, why did the GATA signal fall short of the gene after three rounds? Explain how one cord reached it in level 3 and why that cord must connect to a different jack on some boards.",
     "The game is Long Distance, at ": "Play the 10 levels of Long Distance at https://bioinformatics.ryanlmelvin.com/long-distance/. Fill in the table as you discover its 17 terms, then solve the three paper exercises."
   }
 }

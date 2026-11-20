@@ -133,6 +133,7 @@ body.bk-game details.guide>summary{font-family:var(--bk-serif);font-size:1.05rem
 .bk-nextch img{width:38%;aspect-ratio:16/10;object-fit:cover;flex:none;border:1px solid var(--line,var(--bk-line));border-radius:3px}
 .bk-nextch small{display:block;font-size:.82rem;color:var(--muted,var(--bk-dim))}
 .bk-nextch b{font-family:var(--bk-serif);font-size:1.15rem}
+.bk-sidech{margin-top:16px}
 
 /* the chapter cover */
 body.bk-locked{overflow:hidden}
