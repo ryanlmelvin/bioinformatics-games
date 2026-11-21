@@ -20,8 +20,7 @@ function loop(ui){let n=0;const c=()=>ui.api.state();while(!c().done&&n++<40)ui.
 function mixFF(ui){const c=ui.api.state(),ff=c.inst.ff.idx;for(const i of ff.slice(1))ui.api.act('mix',String(i));}
 const PLAY={
  1(ui){const c=ui.api.state();c.inst.deck.forEach((d,i)=>{ui.api.act('card',String(i));ui.api.act('pile',String(d.group));});ui.api.go();ui.api.act('judge','cant');},
- 2(ui){const c=ui.api.state(),E=ui.E;c.inst.strip.forEach((i,s)=>{const [a,b]=c.inst.pairs[s];ui.api.act('pot',String(a));ui.api.act('pot',String(b));
-   ui.api.act('pot',String(E.nearest(c.pic.px[i],c.st.pots)));});ui.api.go();},
+ 2(ui){const c=ui.api.state();for(const i of c.inst.strip)ui.api.act('pot',String(ui.E.nearest(c.pic.px[i],c.st.pots)));ui.api.go();},
  3(ui){mixFF(ui);},
  4(ui){const c=ui.api.state();mixFF(ui);ui.api.go();c.inst.sq.forEach((v,k)=>ui.el('#sq'+k).value=String(v));ui.api.act('checksq');ui.api.go();
    c.inst.good.centers.map(p=>p.map(Math.round)).forEach((p,j)=>{ui.api.act('sel',String(j));ui.api.act('spot',p.join(','));});},
@@ -65,11 +64,43 @@ test('?level=N never reads or writes saved progress',()=>{
   assert.equal(ui.writes.length,0);assert.deepEqual(ui.persisted(),saved);
  }
 });
-test('level 2: choosing the farther pot is overruled by the press',()=>{
- const ui=boot(undefined,{search:'?debug=1&level=2&seed=WRONG'}),c=ui.api.state(),i=c.inst.strip[0],P=c.pic.px;
- const [a,b]=c.inst.pairs[0],want=ui.E.nearest(P[i],c.st.pots),far=want===a?b:a;
- ui.api.act('pot',String(a));ui.api.act('pot',String(b));ui.api.act('pot',String(far));
- assert.equal(c.st.lab[i],want);assert.match(c.msg.text,/took pot/);assert.equal(c.st.misses,1);
+test('level 2 shows every distance before a choice and prints one strip pixel per choice',()=>{
+ const ui=boot(undefined,{search:'?debug=1&level=2&seed=RULER'}),c=ui.api.state();
+ for(const [step,i] of c.inst.strip.entries()){
+  const stage=ui.el('#stage').innerHTML,pixel=c.pic.px[i];
+  assert.equal((stage.match(/<line class="ruler\b/g)||[]).length,3);
+  assert.equal((stage.match(/<g\b[^>]*\bdata-act="pot"/g)||[]).length,3);
+  const buttons=Array.from(stage.matchAll(/<button\b([^>]*\bdata-act="pot"[^>]*)>([\s\S]*?)<\/button>/g));
+  assert.equal(buttons.length,3);
+  for(const [j,pot] of c.st.pots.entries()){
+   const choice=buttons.find(([,attrs])=>attrs.includes('data-arg="'+j+'"'));
+   assert.ok(choice,'pot '+(j+1)+' has a choice button');
+   assert.ok(choice[2].replace(/<[^>]+>/g,'').includes(ui.E.dist(pixel,pot).toFixed(1)+' away'));
+  }
+  assert.equal(ui.el('#go').hidden,true);
+  const nearest=ui.E.nearest(pixel,c.st.pots);
+  ui.api.act('pot',String(nearest));
+  assert.equal(c.st.s,step+1);
+  assert.equal(c.st.lab[i],nearest);
+  assert.equal(c.st.lab.filter(j=>j!==null).length,step+1);
+ }
+ assert.equal(c.st.misses,0);
+ assert.equal(c.done,false);
+ assert.doesNotMatch(ui.el('#stage').innerHTML,/data-act="pot"/);
+ assert.equal(ui.el('#go').hidden,false);
+ ui.api.go();
+ assert.ok(c.done);
+ assert.deepEqual(plain(c.st.lab),plain(ui.E.assign(c.pic.px,c.st.pots)));
+});
+test('level 2 corrects a farther pot immediately and undo restores the pixel and its choices',()=>{
+ const ui=boot(undefined,{search:'?debug=1&level=2&seed=WRONG'}),c=ui.api.state(),i=c.inst.strip[0];
+ const before=ui.el('#stage').innerHTML,nearest=ui.E.nearest(c.pic.px[i],c.st.pots);
+ ui.api.act('pot',String((nearest+1)%3));
+ assert.equal(c.st.lab[i],nearest);assert.equal(c.st.s,1);assert.equal(c.msg.kind,'warn');assert.equal(c.st.misses,1);
+ assert.match(c.msg.text,new RegExp('pot '+(nearest+1),'i'));
+ ui.api.undo();
+ assert.equal(c.st.lab[i],null);assert.equal(c.st.s,0);assert.equal(c.st.misses,0);
+ assert.equal(ui.el('#stage').innerHTML,before);
 });
 test('level 3: three pots off the mark do not finish the level',()=>{
  const ui=boot(undefined,{search:'?debug=1&level=3&seed=WRONG'}),c=ui.api.state();

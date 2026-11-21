@@ -75,6 +75,9 @@ span.term:not(.badge){border-bottom:1px dotted currentColor;font-weight:600}
 .rowbtns{display:grid;grid-template-columns:repeat(12,1fr);gap:2px;margin-top:6px}
 .rowbtns button{height:44px;padding:0;border-radius:4px;border:1px solid #8b8475;min-width:0}
 .btnrow{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+.pot-choices{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;max-width:360px}
+.pot-choices button{padding:6px 2px;font-variant-numeric:tabular-nums}
+.pot-choices small{display:block}
 /* cards */
 .deck{display:grid;grid-template-columns:repeat(auto-fill,minmax(112px,1fr));gap:8px}
 .gcard{padding:4px 4px 2px;border:2px solid var(--paper-edge);border-radius:8px;background:var(--paper);cursor:pointer;color:#2a2416;text-align:left}
@@ -118,11 +121,11 @@ footer input{font:inherit;width:9em;padding:5px 8px;border:1px solid var(--line)
 .dot{stroke:#2a2416;stroke-width:.8;cursor:pointer}
 .spot{fill:transparent;cursor:crosshair}
 .spot:hover{fill:rgba(0,0,0,.06)}
-.pot{cursor:pointer}
+.pot[data-act]{cursor:pointer}
 .pot .can{fill:#c9ced4;stroke:#3d444c;stroke-width:1.2}
 .pot .band{fill:#9aa3ad}
 .pot .lid{stroke:#3d444c;stroke-width:1.2}
-.pot .num{font-size:10px;font-weight:700;fill:#1f2328;text-anchor:middle}
+.pot .num{font-size:10px;font-weight:700;fill:#1f2328;text-anchor:middle;paint-order:stroke;stroke:var(--paper);stroke-width:3px}
 .pot.sel .can{stroke:var(--accent);stroke-width:2.6}
 .pot.locked{cursor:default}
 .ruler{stroke:#2a2416;stroke-width:2.2;stroke-dasharray:5 3}
@@ -411,14 +414,13 @@ function pileError(data,piles,k){
   const C=[];for(let j=0;j<k;j++){const m=data.filter((_,i)=>piles[i]===j);C.push(m.length?centroid(m):data[0]);}
   return labelError(data,C,piles);
 }
-/* Level 2: tulip, three pots on the region inks, a strip of eight pixels measured by hand. */
+/* Level 2: tulip, three pots near the region inks, eight pixels to print by hand. */
 GEN[2]=function(key){
   const pic=makePicture(key,'tulip'),pots=['a','b','c'].map(r=>pic.base[r].slice());
   // pots are nudged one unit so they are not exactly any region's ink
   const rand=rng(hashStr(key+'|pots2'));pots.forEach(p=>{p[0]=clampInk(p[0]+(rand()<.5?1:-1));});
   const row=8,strip=[];for(let x=2;x<10;x++)strip.push(row*12+x);
-  const pairs=strip.map(i=>{const d=pots.map((c,j)=>({j,d:dist2(pic.px[i],c)})).sort((a,b)=>a.d-b.d||a.j-b.j);return [d[0].j,d[1].j].sort((a,b)=>a-b);});
-  return {pic,pots,strip,pairs};
+  return {pic,pots,strip};
 };
 /* Level 3: fish. Pots are mixed to match pixels; the first is pixel 0. */
 GEN[3]=function(key){
@@ -574,8 +576,8 @@ const reduced=()=>{try{return matchMedia('(prefers-reduced-motion: reduce)').mat
 const LEVELS=[
  {id:1,mode:'sort',goal:'Sort the twelve gene cards into three piles of genes whose expression rises and falls together.',title:'Which genes move together?',
   brief:'Each card is one yeast gene. Its seven dots show expression levels at seven time points, two hours apart, as the yeast depleted its glucose. Genes with correlated expression profiles may have related functions. Sort the twelve cards into three groups with similar profiles.'},
- {id:2,mode:'ruler',goal:'For each pixel in the dashed strip, measure its distance to at least two pots, then choose the nearest pot.',title:'Two inks',
-  brief:'Each pixel in the tulip has two coordinates on the ink map, one for red and one for blue. Both range from 0 to 10. The press prints each pixel with the nearest of three paint pots. For each pixel in the dashed strip, measure the distance to at least two pots, then choose the nearest.'},
+ {id:2,mode:'ruler',goal:'Choose the nearest pot to print each highlighted pixel in the strip.',title:'Two inks',
+  brief:'The ink map shows how much red and blue each pixel contains, from 0 to 10. The three ruler lines show the distances from the highlighted pixel to the pots.'},
  {id:3,mode:'worst',goal:'Mix pots 2 and 3 so that the meter’s worst-pixel distance comes down to the shop’s mark.',title:'The worst pixel',
   brief:'This fish is printed from three pots. To mix a pot, click a pixel in the picture or a dot on the map, and the pot matches that ink. Pot 1 is already mixed. The meter shows how far the worst-printed pixel is from its nearest pot. Bring that number down to the shop’s mark. To pour out a pot and mix it again, click it on the map.'},
  {id:4,mode:'stray',goal:'Mix pots 2 and 3 on the pixels the meter points at, and fill in six squared lengths. Then move the pots until the average squared length is under the mark.',title:'One stray pixel',
@@ -759,12 +761,12 @@ function sheetSvg(pic,fill,o){
 const MX=r=>36+r*24,MY=b=>264-b*24;
 function potSvg(p,j,o){
  o=o||{};const x=MX(p[0]),y=MY(p[1]);
- return '<g class="pot'+(o.sel?' sel':'')+(o.locked?' locked':'')+'"'+(o.act?' data-act="'+o.act+'" data-arg="'+j+'"':'')+' role="button" tabindex="0" aria-label="'+POTNAME[j]+', red '+f1(p[0])+', blue '+f1(p[1])+'">'+
+ return '<g class="pot'+(o.sel?' sel':'')+(o.locked?' locked':'')+'"'+(o.act?' data-act="'+o.act+'" data-arg="'+j+'" role="button" tabindex="0"':' role="img"')+' aria-label="'+POTNAME[j]+(o.distance?', '+o.distance+' away':'')+', red '+f1(p[0])+', blue '+f1(p[1])+'">'+
   '<path class="can" d="M'+(x-9)+','+(y-4)+'v12a9,3.2 0 0 0 18,0v-12"/><rect class="band" x="'+(x-9)+'" y="'+(y+2)+'" width="18" height="2.4"/>'+
   '<ellipse class="lid" cx="'+x+'" cy="'+(y-4)+'" rx="9" ry="3.4" fill="'+inkOf(p)+'"/>'+
   '<circle cx="'+x+'" cy="'+y+'" r="2" fill="#1f2328"/>'+
   '<circle cx="'+x+'" cy="'+(y+3)+'" r="16" fill="transparent"/>'+
-  '<text class="num" x="'+x+'" y="'+(y+23)+'">'+(j+1)+'</text></g>';
+  '<text class="num" x="'+x+'" y="'+(y-12)+'">'+(j+1)+'</text></g>';
 }
 /* o: {points:[[r,b]], pots:[{p,sel,locked}], potAct, dotAct, spots:act, rulers:[{a,b,best,label}], worst:[r,b], tries:[{p,label}], focus:[r,b]} */
 function mapSvg(o){
@@ -783,8 +785,8 @@ function mapSvg(o){
  if(o.focus)h+='<circle class="curpx" cx="'+MX(o.focus[0])+'" cy="'+MY(o.focus[1])+'" r="11" pointer-events="none"/>';
  (o.rulers||[]).forEach(r=>{const x1=MX(r.a[0]),y1=MY(r.a[1]),x2=MX(r.b[0]),y2=MY(r.b[1]);
   h+='<line class="ruler'+(r.best?' best':'')+'" x1="'+x1+'" y1="'+y1+'" x2="'+x2+'" y2="'+y2+'" pointer-events="none"/>'+
-   '<text class="rlab" x="'+((x1+x2)/2)+'" y="'+((y1+y2)/2-5)+'">'+(r.label||f1(dist(r.a,r.b)))+'</text>';});
- (o.pots||[]).forEach((q,j)=>{h+=potSvg(q.p,j,{sel:q.sel,locked:q.locked,act:o.potAct});});
+   (r.label===false?'':'<text class="rlab" x="'+((x1+x2)/2)+'" y="'+((y1+y2)/2-5)+'">'+(r.label||f1(dist(r.a,r.b)))+'</text>');});
+ (o.pots||[]).forEach((q,j)=>{h+=potSvg(q.p,j,{...q,act:o.potAct});});
  return h+'</svg>';
 }
 /* A gene card: seven heights 0..10 joined by a line. */
@@ -913,29 +915,24 @@ MODES.sort={
 
 /* ===== level 2: the ruler ===== */
 MODES.ruler={
- init(c){c.inst=makeLevel(lseed(2),2);c.pic=c.inst.pic;c.st={pots:c.inst.pots,lab:Array(144).fill(null),s:0,measured:[],misses:0,phase:'strip'};
-  say('Pixel 1 of 8. Click two pots to measure their distances.');},
+ init(c){c.inst=makeLevel(lseed(2),2);c.pic=c.inst.pic;c.st={pots:c.inst.pots,lab:Array(144).fill(null),s:0,misses:0,phase:'strip'};},
  rule:()=>'Every pixel is printed from its nearest pot',
  stage(c){
   const st=c.st,pic=c.pic,i=st.phase==='strip'?c.inst.strip[st.s]:null,p=i!==null?pic.px[i]:null;
-  const rulers=p?st.measured.map(j=>({a:p,b:st.pots[j]})):[];
+  const pots=st.pots.map(q=>({p:q,distance:p?f1(dist(p,q)):null}));
+  const rulers=p?st.pots.map(q=>({a:p,b:q,label:false})):[];
+  const choices=p?'<p id="strip-pixel"><b>Pixel '+(st.s+1)+' of '+c.inst.strip.length+'</b> · <span class="swatch" style="background:'+inkOf(p)+'"></span> red '+p[0]+', blue '+p[1]+'</p>'+
+   '<div class="pot-choices" role="group" aria-labelledby="strip-pixel">'+pots.map((pot,j)=>'<button data-act="pot" data-arg="'+j+'">'+cap(POTNAME[j])+' <small>'+pot.distance+' away</small></button>').join('')+'</div>':'';
   return trio(sheetSvg(pic,own(pic),{strip:c.inst.strip,curPx:i}),sheetSvg(pic,printFill(st),{anim:c.justPrinted,strip:c.inst.strip,curPx:i,label:'the print'}),
-   mapSvg({points:pic.px,pots:potsOf(st),potAct:'pot',rulers,focus:p}))+
-   (p?'<p class="meter">This pixel: <span class="swatch" style="background:'+inkOf(p)+'"></span> red '+p[0]+', blue '+p[1]+
-     (st.measured.length?' · '+st.measured.map(j=>POTNAME[j]+' '+f1(dist(p,st.pots[j]))).join(' · '):'')+'</p>':'');
+   mapSvg({points:pic.px,pots,potAct:p?'pot':null,rulers,focus:p})+choices);
  },
  act:{
   pot(j){const st=cur.st;j=+j;if(st.phase!=='strip')return;const i=cur.inst.strip[st.s],p=cur.pic.px[i];
-   if(!st.measured.includes(j)){st.measured.push(j);log('measure',{px:i,pot:j,d:dist(p,st.pots[j])});
-    say(st.measured.length<2?'The ruler says '+f1(dist(p,st.pots[j]))+' to '+POTNAME[j]+'. Now another pot.':'Click a measured pot to print this pixel, or measure the third pot.');return;}
-   if(st.measured.length<2){say('Lay the ruler to a second pot first.','warn');return;}
    const want=nearest(p,st.pots);st.lab[i]=want;log('print_px',{px:i,pot:j,nearest:want});
-   if(j!==want){st.misses++;say('The press took '+POTNAME[want]+'. It is '+f1(dist(p,st.pots[want]))+' away, compared with '+f1(dist(p,st.pots[j]))+' for '+POTNAME[j]+'.','warn');}
-   else say('Printed from '+POTNAME[j]+'.','good');
-   st.s++;st.measured=[];
-   if(st.s>=8){st.phase='rest';cur.msg.text+=' The press can now print the remaining pixels.';}
-   else if(j===want)say('Printed from '+POTNAME[j]+'. Pixel '+(st.s+1)+' of 8.','good');
-   else cur.msg.text+=' Pixel '+(st.s+1)+' of 8.';
+   st.s++;
+   if(j!==want){st.misses++;say('For pixel '+st.s+', the press took '+POTNAME[want]+' ('+f1(dist(p,st.pots[want]))+' away). '+cap(POTNAME[j])+' was '+f1(dist(p,st.pots[j]))+' away.','warn');}
+   else say('Printed pixel '+st.s+' from '+POTNAME[j]+'.','good');
+   if(st.s===cur.inst.strip.length){st.phase='rest';cur.msg.text+=' The strip is complete.';}
   }
  },
  go:c=>c.st.phase==='rest'?'Print the rest of the picture':null,
@@ -1349,8 +1346,13 @@ function render(){
 function act(name,arg){
  if(cur.done&&name!=='noop')return;
  const fn=cur.M.act&&cur.M.act[name];if(!fn)return;
+ const focusedPot=name==='pot'&&document.activeElement?.dataset?.act==='pot'?document.activeElement:null;
  cur.hist.push(JSON.stringify(cur.st));if(cur.hist.length>200)cur.hist.shift();
  fn(arg);render();
+ if(focusedPot){
+  const next=cur.st.phase==='strip'?$(focusedPot.localName+'[data-act="pot"][data-arg="'+arg+'"]'):$('#go');
+  next.focus();
+ }
 }
 function goNext(){if(cur.done||!cur.M.go||!cur.M.go(cur))return;cur.hist.push(JSON.stringify(cur.st));cur.M.goAct(cur);render();}
 function undo(){if(cur.done||!cur.hist.length)return;cur.st=JSON.parse(cur.hist.pop());log('undo');say('Undone.');render();}
