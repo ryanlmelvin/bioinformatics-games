@@ -2,6 +2,8 @@
 
 Interactive games and general learning resources, published at [Bioinformatics Algorithms](https://bioinformatics.ryanlmelvin.com/).
 
+By [Ryan L. Melvin](https://ryanlmelvin.com/). The source code, textbook, and original teaching materials are licensed under the [GNU General Public License, version 3 only](LICENSE) (`GPL-3.0-only`).
+
 The topic index follows a suggested learning path:
 
 - `motif-slots/`: finding motifs, from frequent words to Gibbs sampling.

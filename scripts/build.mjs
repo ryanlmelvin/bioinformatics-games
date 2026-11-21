@@ -8,7 +8,7 @@ const canonicalBase='https://bioinformatics.ryanlmelvin.com/';
 // Only these reviewed learning resources are public. Never copy whole material folders.
 const units=['motifs','genome-assembly','alignment','hmm','evolutionary-trees','clustering','burrows-wheeler','transformers'];
 const resources=['play-guide','discussion-questions','coding-and-paper-tasks','pictionary-cards'];
-const publicFiles=['index.html','motif-slots/index.html','bridge-walker/index.html','toll-city/index.html','hollow-mountain/index.html',
+const publicFiles=['license.txt','index.html','motif-slots/index.html','bridge-walker/index.html','toll-city/index.html','hollow-mountain/index.html',
   'paint-by-k/index.html','the-loom/index.html','cho-han-night/index.html','long-distance/index.html','lockpick/index.html',
   ...units.flatMap(unit=>resources.map(resource=>`materials/${unit}-${resource}.docx`)),
   // the shared book shell: bar, covers, sound and celebrations
@@ -19,7 +19,11 @@ const publicFiles=['index.html','motif-slots/index.html','bridge-walker/index.ht
   'materials/learning-guide.docx','materials/suggested-investigations.docx','materials/presentation-checklist.docx'];
 const aliases={'bridge-walker/level-12/index.html':'bridge-walker/index.html'};
 await rm(output,{recursive:true,force:true});
-for(const file of publicFiles){await mkdir(path.dirname(path.join(output,file)),{recursive:true});await copyFile(path.join(root,file),path.join(output,file));}
+for(const file of publicFiles){
+  const source=file==='license.txt'?'LICENSE':file;
+  await mkdir(path.dirname(path.join(output,file)),{recursive:true});
+  await copyFile(path.join(root,source),path.join(output,file));
+}
 for(const [dest,src] of Object.entries(aliases)){await mkdir(path.dirname(path.join(output,dest)),{recursive:true});
   // an alias sits one folder deeper, so its links to the shared shell and the contents page need one more step up
   const html=await readFile(path.join(root,src),'utf8');await writeFile(path.join(output,dest),html.replaceAll('"../','"../../'));}
@@ -29,11 +33,13 @@ const readings=JSON.parse(await readFile(path.join(root,'book/readings.json'),'u
 for(const unit of units)if(!readings.chapters[unit])throw new Error(`Missing suggested readings for ${unit}`);
 const chapterFile=path.join(output,'book/chapters.js');
 await writeFile(chapterFile,(await readFile(chapterFile,'utf8'))+'\nwindow.BOOK.readings='+JSON.stringify(readings)+';\n');
-// Every published page identifies its permanent address, including the deeper practice page.
+// Include the canonical URL and a printable credit on every page, including the deeper practice page.
 for(const file of [...publicFiles,...Object.keys(aliases)].filter(f=>f.endsWith('.html'))){
   const html=await readFile(path.join(output,file),'utf8');
   const url=new URL(file.replace(/index\.html$/,''),canonicalBase).href;
-  await writeFile(path.join(output,file),html.replace('</head>',`<link rel="canonical" href="${url}">\n</head>`));
+  const license=path.posix.relative(path.posix.dirname(file),'license.txt');
+  const credit=`<footer class="bk-credit" aria-label="Publication">By <a rel="author" href="https://ryanlmelvin.com/">Ryan L. Melvin</a> · Licensed under <a rel="license" href="${license}">GNU GPLv3</a>.</footer>`;
+  await writeFile(path.join(output,file),html.replace('</head>',`<link rel="canonical" href="${url}">\n</head>`).replace('</body>',credit+'\n</body>'));
 }
 // the offline worker learns which pages to keep (everything but the Word files, which it keeps once opened) and a version that changes with them
 const keep=[...publicFiles,...Object.keys(aliases)].filter(f=>!f.endsWith('.docx')&&f!=='sw.js');

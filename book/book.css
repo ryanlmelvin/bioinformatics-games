@@ -11,6 +11,8 @@
   :root{--bk-paper:#12161b; --bk-card:#1b2027; --bk-ink:#ece8df; --bk-dim:#9aa2ad; --bk-line:#323943; --bk-link:#ff9b5e;}
 }
 html{scroll-padding-top:60px}
+.bk-credit{display:block;margin:0;padding:0 16px 16px;border:0;text-align:center;color:var(--muted,var(--bk-dim));font:.88rem/1.5 var(--bk-sans)}
+.bk-credit a{color:inherit;text-decoration:underline;text-underline-offset:.15em}
 
 /* ---------- the bar ---------- */
 .bk-bar{position:sticky;top:0;z-index:60;display:flex;align-items:center;gap:14px;height:44px;padding:0 max(12px,calc((100vw - 1080px)/2));

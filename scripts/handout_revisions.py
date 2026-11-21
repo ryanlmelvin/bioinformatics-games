@@ -8,6 +8,7 @@ import re
 from docx.oxml import OxmlElement
 from docx.oxml.ns import qn
 from docx.opc.constants import RELATIONSHIP_TYPE as RT
+from docx.enum.text import WD_ALIGN_PARAGRAPH
 from docx.shared import Pt, RGBColor
 from docx.text.paragraph import Paragraph
 from docx.text.run import Run
@@ -41,6 +42,39 @@ def link_text(paragraph, label, url):
         return
     run = next(run for run in paragraph.runs if label in run.text)
     _link_run(paragraph, run, label, url)
+
+
+def add_license_footers(doc):
+    """Credit the author in each active footer, preserving labels and page fields."""
+    credit = 'By Ryan L. Melvin · Licensed under GNU GPLv3.'
+    changed = False
+    for section in doc.sections:
+        footers = [section.footer]
+        if section.different_first_page_header_footer:
+            footers.append(section.first_page_footer)
+        if doc.settings.odd_and_even_pages_header_footer:
+            footers.append(section.even_page_footer)
+        for footer in footers:
+            paragraph = footer.paragraphs[-1]
+            if paragraph.text.endswith(credit):
+                continue
+            font_name = next((r.font.name for r in paragraph.runs if r.font.name), 'Arial')
+            if paragraph.text or paragraph.runs:
+                label = '  ·  ' + credit
+            else:
+                label = credit
+                paragraph.alignment = WD_ALIGN_PARAGRAPH.CENTER
+                paragraph.paragraph_format.space_before = Pt(0)
+                paragraph.paragraph_format.space_after = Pt(0)
+                paragraph.paragraph_format.line_spacing = Pt(10)
+            run = paragraph.add_run(label)
+            run.font.name = font_name
+            run.font.size = Pt(9)
+            run.font.color.rgb = RGBColor.from_string('555555')
+            link_text(paragraph, 'Ryan L. Melvin', 'https://ryanlmelvin.com/')
+            link_text(paragraph, 'GNU GPLv3', 'https://www.gnu.org/licenses/gpl-3.0.html')
+            changed = True
+    return changed
 
 
 def link_game_urls(doc):

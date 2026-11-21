@@ -17,7 +17,7 @@ from docx.text.run import Run
 from docx.enum.style import WD_STYLE_TYPE
 
 from handout_cards import prepare_cards
-from handout_revisions import link_game_urls, link_text, revise_chapter
+from handout_revisions import add_license_footers, link_game_urls, link_text, revise_chapter
 
 READINGS = json.loads((Path(__file__).resolve().parent.parent/'book/readings.json').read_text())
 
@@ -186,6 +186,7 @@ def finish(doc, output, *, chapter=False):
         link_game_urls(doc)
     for p in paragraphs(doc):
         assert not re.search(r'INFO\s*40[36]|INFO\s*602|class [12]|spring break|roster|\b2027\b|course points|course grade|instructor|randomly grade|turn it in',p.text,re.I), (output.name,p.text)
+    add_license_footers(doc)
     doc.save(output)
 
 

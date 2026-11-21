@@ -7,6 +7,8 @@ from docx import Document
 from docx.enum.table import WD_ROW_HEIGHT_RULE
 from docx.shared import Twips
 
+from handout_revisions import add_license_footers
+
 # The teaching master supplies the terms, order, unaffected definitions and cut grid.
 # Keep public revisions keyed by term so a reordered deck retains its own layout.
 DEFINITIONS = {
@@ -78,7 +80,7 @@ def prepare_cards(source, output):
     slug = output.name.removesuffix('-pictionary-cards.docx')
     revisions = DEFINITIONS[slug]
     doc = Document(source)
-    changed = False
+    changed = add_license_footers(doc)
     found = set()
     for table in doc.tables:
         for row in table.rows:
